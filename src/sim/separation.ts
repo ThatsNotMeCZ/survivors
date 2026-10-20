@@ -1,4 +1,5 @@
 import { aabbOverlap, clamp } from './collision';
+import { resolveObstacleBodies } from './obstacles';
 import { hashClear, hashInsert, hashQuery } from './spatial-hash';
 import type { World } from './world';
 
@@ -13,6 +14,7 @@ export function resolveBodyOverlaps(world: World): void {
     if (world.player.dashRemain <= 0) {
       resolvePlayerEnemies(world);
     }
+    resolveObstacleBodies(world);
     clampActors(world);
   }
 }

@@ -3,7 +3,7 @@
   "entries": [
     {
       "id": "bolt",
-      "name": "Bolt",
+      "name": "Ignis Bolt",
       "slot": "primary",
       "input": "hold",
       "cooldown": 0.16,
@@ -19,7 +19,7 @@
     },
     {
       "id": "dash",
-      "name": "Dash",
+      "name": "Phase Step",
       "slot": "utility",
       "input": "press",
       "cooldown": 0.9,

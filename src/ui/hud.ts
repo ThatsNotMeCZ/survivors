@@ -1,6 +1,13 @@
 import { SMOKE_DOTS, SMOKE_PASS_FPS } from '../config';
+import { hasQueryFlag } from './settings';
 
 export type HudStatus = 'boot' | 'warmup' | 'pass' | 'fail' | 'arena';
+
+export type HudItem = {
+  name: string;
+  stacks: number;
+  rarity: string;
+};
 
 const statusEl = () => document.getElementById('hud-status');
 const fpsEl = () => document.getElementById('hud-fps');
@@ -16,22 +23,29 @@ const stageEl = () => document.getElementById('hud-stage');
 const xpFillEl = () => document.getElementById('xp-fill');
 const hpFillEl = () => document.getElementById('hp-fill');
 const coeffEl = () => document.getElementById('hud-coeff');
+const coeffPlayEl = () => document.getElementById('hud-coeff-play');
 const objectiveLabelEl = () => document.getElementById('hud-objective-label');
 const objectiveDetailEl = () => document.getElementById('hud-objective-detail');
+const objectiveFillEl = () => document.getElementById('hud-objective-fill');
+const dashRingEl = () => document.getElementById('dash-ring');
+const skillEl = () => document.getElementById('hud-skill');
+const itemListEl = () => document.getElementById('hud-item-list');
+const itemsRootEl = () => document.getElementById('hud-items');
 
-let debugOn =
-  typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug');
+let debugOn = hasQueryFlag('debug');
 let keysBound = false;
 let playMode = false;
 
 export function hideHud(): void {
   playMode = false;
+  syncPlayAttr();
   hudEl()?.classList.add('hidden');
   document.getElementById('hud-play')?.classList.add('hidden');
 }
 
 export function initHud(rendererName: string): void {
   playMode = false;
+  syncPlayAttr();
   showHud();
   document.getElementById('hud-play')?.classList.add('hidden');
   document.getElementById('hud-debug')?.classList.remove('hidden');
@@ -48,6 +62,7 @@ export function initHud(rendererName: string): void {
 
 export function initArenaHud(rendererName: string): void {
   playMode = true;
+  syncPlayAttr();
   bindDebugToggle();
   showHud();
   document.getElementById('hud-play')?.classList.remove('hidden');
@@ -73,6 +88,7 @@ export function setHudFps(fps: number): void {
 
 export function setHudCombat(state: {
   stage: string;
+  biome: string;
   playerHp: number;
   playerMax: number;
   level: number;
@@ -80,12 +96,16 @@ export function setHudCombat(state: {
   xpNeed: number;
   runTime: number;
   coefficient: number;
+  dashName: string;
   dashCd: number;
+  dashMax: number;
   iframe: boolean;
   objective: string;
   objectiveDetail: string;
+  objectivePct: number;
   holding: boolean;
   boss: boolean;
+  items: HudItem[];
 }): void {
   const stage = stageEl();
   const hp = hpEl();
@@ -95,19 +115,31 @@ export function setHudCombat(state: {
   const fill = xpFillEl();
   const hpFill = hpFillEl();
   const coeff = coeffEl();
+  const coeffPlay = coeffPlayEl();
   const objective = objectiveLabelEl();
   const detail = objectiveDetailEl();
+  const objFill = objectiveFillEl();
+  const ring = dashRingEl();
+  const skill = skillEl();
   if (stage) stage.textContent = state.stage;
   if (hp) hp.textContent = `${Math.max(0, state.playerHp).toFixed(0)}/${state.playerMax.toFixed(0)}`;
   if (lv) lv.textContent = `Lv ${state.level}`;
   if (time) time.textContent = formatTime(state.runTime);
   if (dash) {
-    dash.textContent = state.iframe ? 'dash iframe' : state.dashCd > 0 ? `dash ${state.dashCd.toFixed(1)}s` : 'dash ready';
+    const label = state.dashName;
+    dash.textContent = state.iframe
+      ? `${label} · between-worlds`
+      : state.dashCd > 0
+        ? `${label} ${state.dashCd.toFixed(1)}s`
+        : `${label} ready`;
   }
   if (objective) objective.textContent = state.objective;
   if (detail) {
     detail.textContent = state.objectiveDetail;
     detail.classList.toggle('hidden', state.objectiveDetail.length === 0);
+  }
+  if (objFill) {
+    objFill.style.width = `${Math.round(Math.min(1, Math.max(0, state.objectivePct)) * 100)}%`;
   }
   if (fill) {
     const pct = state.xpNeed > 0 ? Math.min(1, state.xp / state.xpNeed) : 0;
@@ -118,6 +150,19 @@ export function setHudCombat(state: {
     hpFill.style.width = `${Math.round(pct * 100)}%`;
   }
   if (coeff) coeff.textContent = `×${state.coefficient.toFixed(2)}`;
+  if (coeffPlay) coeffPlay.textContent = `×${state.coefficient.toFixed(2)}`;
+  if (ring) {
+    const max = state.dashMax > 0 ? state.dashMax : 1;
+    const ready = state.dashCd <= 0 ? 1 : Math.max(0, 1 - state.dashCd / max);
+    ring.style.setProperty('--ready', String(ready));
+    ring.dataset.key = '⇧';
+  }
+  if (skill) {
+    skill.dataset.ready = state.dashCd <= 0 ? '1' : '0';
+    skill.dataset.iframe = state.iframe ? '1' : '0';
+  }
+  renderItems(state.items);
+  document.documentElement.dataset.biome = state.biome;
   const hud = hudEl();
   if (state.iframe || state.holding) hud?.setAttribute('data-status', 'pass');
   else if (state.playerHp < state.playerMax * 0.35) hud?.setAttribute('data-status', 'fail');
@@ -135,8 +180,28 @@ export function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+function renderItems(items: HudItem[]): void {
+  const list = itemListEl();
+  const root = itemsRootEl();
+  if (!list || !root) return;
+  root.classList.toggle('hidden', items.length === 0);
+  list.replaceChildren();
+  for (const item of items) {
+    const chip = document.createElement('span');
+    chip.className = 'hud-item';
+    chip.dataset.rarity = item.rarity;
+    chip.textContent = item.stacks > 1 ? `${item.name} ×${item.stacks}` : item.name;
+    list.appendChild(chip);
+  }
+}
+
 function showHud(): void {
   hudEl()?.classList.remove('hidden');
+}
+
+function syncPlayAttr(): void {
+  if (typeof document === 'undefined') return;
+  document.documentElement.dataset.play = playMode ? '1' : '0';
 }
 
 function bindDebugToggle(): void {

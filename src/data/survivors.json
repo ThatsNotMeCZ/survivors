@@ -3,7 +3,8 @@
   "entries": [
     {
       "id": "runner",
-      "name": "Runner",
+      "name": "Homunculus",
+      "lore": "Clay and quicksilver, stolen from a failed Great Work. You kite the dross until the seal holds.",
       "stats": {
         "speed": 280,
         "maxHp": 100,

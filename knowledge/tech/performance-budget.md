@@ -10,6 +10,7 @@ Measured 2026-10-20: **20_000 SpriteGPULayer dots @ 1920×1080, 60 fps.** Render
 | Projectiles | 256 | pool, AABB, no physics |
 | XP gems | 64 | pool |
 | Elites / bosses | 2–8 | full sprites |
+| Obstacles | 31 | sprites (14 pillars + 8 hazards + 9 volatiles) |
 | VFX particles | ~8_000 | GPU only (arena spark layer 256; 20k measured headroom) |
 | Target | 60 fps | 1080p |
 

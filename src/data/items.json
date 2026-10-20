@@ -3,83 +3,136 @@
   "entries": [
     {
       "id": "glass-cannon",
-      "name": "Glass Cannon",
+      "name": "Vitriol Veins",
       "rarity": "uncommon",
       "stack": "linear",
       "hooks": [
         { "op": "pct", "stat": "damage", "value": 0.4 },
         { "op": "pct", "stat": "maxHp", "value": -0.15 }
-      ]
+      ],
+      "lore": "Distilled volatile acid replaces your blood. Your strikes shatter stone; a stiff breeze shatters you."
     },
     {
       "id": "goat-hoof",
-      "name": "Goat Hoof",
+      "name": "Cloven Sinew",
       "rarity": "common",
       "stack": "linear",
       "hooks": [
         { "op": "pct", "stat": "speed", "value": 0.14 },
         { "op": "pct", "stat": "maxHp", "value": -0.06 }
-      ]
+      ],
+      "lore": "Grafted tendon from a sacrificial beast. It never stops running, mostly because it is eating your vitality."
     },
     {
       "id": "brittle-plate",
-      "name": "Brittle Plate",
+      "name": "Slag Carapace",
       "rarity": "common",
       "stack": "linear",
       "hooks": [
         { "op": "pct", "stat": "maxHp", "value": 0.28 },
         { "op": "pct", "stat": "speed", "value": -0.12 }
-      ]
+      ],
+      "lore": "Cooled furnace dross fused directly to the ribs. Heavy, crude, and deeply unpleasant to walk in."
     },
     {
       "id": "hair-trigger",
-      "name": "Hair Trigger",
+      "name": "Spasmodic Nerve",
       "rarity": "uncommon",
       "stack": "linear",
       "hooks": [
         { "op": "pct", "stat": "cooldown", "value": -0.15 },
         { "op": "pct", "stat": "radius", "value": 0.12 }
-      ]
+      ],
+      "lore": "Quicksilver injected into the spine makes your fingers twitch uncontrollably. Unfortunately, it also causes severe bodily swelling."
     },
     {
       "id": "overclock",
-      "name": "Overclock",
+      "name": "Bellows Heart",
       "rarity": "uncommon",
       "stack": "linear",
       "hooks": [
         { "op": "pct", "stat": "damage", "value": 0.22 },
         { "op": "pct", "stat": "cooldown", "value": 0.12 }
-      ]
+      ],
+      "lore": "Draws twice the aether into each cast. The resulting blast is magnificent, provided you survive the pause to vent the ash."
     },
     {
       "id": "wax-wings",
-      "name": "Wax Wings",
+      "name": "Waxen Pinions",
       "rarity": "common",
       "stack": "linear",
       "hooks": [
         { "op": "pct", "stat": "speed", "value": 0.16 },
         { "op": "pct", "stat": "maxHp", "value": -0.08 }
-      ]
+      ],
+      "lore": "Feathers bound in boiling tallow. They carry you swiftly across the yard, dripping scalding wax down your neck."
     },
     {
       "id": "hungry-clip",
-      "name": "Hungry Clip",
+      "name": "Parasitic Alembic",
       "rarity": "rare",
       "stack": "linear",
       "hooks": [
         { "op": "pct", "stat": "damage", "value": 0.28 },
         { "op": "pct", "stat": "radius", "value": 0.14 }
-      ]
+      ],
+      "lore": "A living glass vessel that feeds on your flesh to engorge your projectiles. You become a much larger target."
     },
     {
       "id": "lead-core",
-      "name": "Lead Core",
+      "name": "Lead Plumbum",
       "rarity": "common",
       "stack": "linear",
       "hooks": [
         { "op": "add", "stat": "maxHp", "value": 18 },
         { "op": "pct", "stat": "damage", "value": -0.08 }
-      ]
+      ],
+      "lore": "Swallowing a two-pound sphere of base lead anchors the soul to the body, though it dulls the spark of your casts."
+    },
+    {
+      "id": "mercury-vial",
+      "name": "Quicksilver Draught",
+      "rarity": "uncommon",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "cooldown", "value": -0.18 },
+        { "op": "pct", "stat": "maxHp", "value": -0.12 }
+      ],
+      "lore": "Liquid metal thins the humors. Your hands blur with haste, though your organs are slowly dissolving."
+    },
+    {
+      "id": "calcined-lens",
+      "name": "Astrologer's Ocular",
+      "rarity": "rare",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "damage", "value": 0.32 },
+        { "op": "pct", "stat": "speed", "value": -0.1 }
+      ],
+      "lore": "A heavy brass reticle bolted to the brow. Reveals every fracture in the enemy's shell, at the cost of your peripheral vision and stride."
+    },
+    {
+      "id": "salt-ward",
+      "name": "Salt Effigy",
+      "rarity": "common",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "radius", "value": -0.15 },
+        { "op": "pct", "stat": "damage", "value": -0.1 }
+      ],
+      "lore": "Desiccates the body into a shrunken, harder-to-hit husk. Your strikes lose some weight along with your flesh."
+    },
+    {
+      "id": "lunar-tithe",
+      "name": "Pale Moon Covenant",
+      "rarity": "lunar",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "damage", "value": 0.75 },
+        { "op": "pct", "stat": "maxHp", "value": -0.35 },
+        { "op": "pct", "stat": "radius", "value": 0.18 }
+      ],
+      "lore": "Heresy against the Order. Your bolts burn with pale astral fire, your frame bloats with cold light, and a single mistake is fatal."
     }
   ]
 }

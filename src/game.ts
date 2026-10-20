@@ -9,7 +9,7 @@ export function startGame(parent: string, smoke: boolean): Phaser.Game {
     parent,
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
-    backgroundColor: '#0b1016',
+    backgroundColor: '#0c0a0d',
     banner: false,
     audio: { noAudio: true },
     pixelArt: true,

@@ -32,7 +32,7 @@
     },
     {
       "id": "ember-chaser",
-      "name": "Ember",
+      "name": "Ember Warden",
       "role": "elite",
       "tags": ["elite", "chaser"],
       "stats": { "speed": 102, "maxHp": 90, "radius": 22 },

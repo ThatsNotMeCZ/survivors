@@ -1,0 +1,57 @@
+@import '@fontsource/cinzel/latin-400.css';
+@import '@fontsource/cinzel/latin-700.css';
+@import '@fontsource/source-sans-3/latin-400.css';
+@import '@fontsource/source-sans-3/latin-600.css';
+
+:root {
+  color-scheme: dark;
+  --ink: #0c0a0d;
+  --chamber: #140e12;
+  --obsidian: #1a1216;
+  --panel: rgba(20, 14, 18, 0.86);
+  --panel-solid: #140e12;
+  --brass: #c4a35a;
+  --brass-dim: #8a6a32;
+  --brass-deep: #5c4520;
+  --brass-glow: rgba(196, 163, 90, 0.42);
+  --ember: #8b1e1e;
+  --ember-hot: #d4542a;
+  --mercury: #5ec8d4;
+  --mercury-hot: #77ffff;
+  --parchment: #e8dcc8;
+  --ash: #a89890;
+  --soot: #6e605a;
+  --alizarin: #7a1f24;
+  --alizarin-hot: #9a2a32;
+  --gold-molten: #d4b46a;
+  --lunar: #7aa7c4;
+  --accent: var(--brass);
+  --xp: var(--gold-molten);
+  --hp: var(--alizarin-hot);
+  --danger: var(--alizarin);
+  --font-display: 'Cinzel', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+  --ease: 180ms ease-out;
+  --z-hud: 10;
+  --z-prompt: 16;
+  --z-sting: 18;
+  --z-overlay: 24;
+  font-family: var(--font-body);
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+html[data-biome='cinder'] {
+  --accent: var(--ember-hot);
+  --xp: var(--gold-molten);
+}
+
+html[data-biome='rime'] {
+  --accent: var(--mercury);
+  --xp: var(--mercury-hot);
+}

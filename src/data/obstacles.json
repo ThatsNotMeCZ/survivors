@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "counts": {
+    "pillar": 14,
+    "hazard": 8,
+    "volatile": 9
+  },
+  "borderPad": 160,
+  "playerKeepOut": 200,
+  "teleporterKeepOut": 230,
+  "volatileTeleporterKeepOut": 200,
+  "minSpacing": 190,
+  "placeRetries": 80,
+  "pillar": {
+    "radius": 52
+  },
+  "hazard": {
+    "radius": 68,
+    "playerSpeedMul": 0.65,
+    "enemySpeedMul": 0.85,
+    "dps": 4
+  },
+  "volatile": {
+    "radius": 22,
+    "hp": 25,
+    "prime": 0.4,
+    "explosionRadius": 110,
+    "enemyDamage": 45,
+    "playerDamage": 18,
+    "rimeSlowDuration": 2,
+    "rimeSlowMul": 0.7
+  },
+  "biomes": {
+    "cinder-yard": {
+      "pillar": "Obsidian Kiln",
+      "hazard": "Slag Fissure",
+      "volatile": "Brimstone Urn"
+    },
+    "rime-dock": {
+      "pillar": "Frozen Bollard",
+      "hazard": "Brine Pool",
+      "volatile": "Pressurized Rime Cask"
+    }
+  }
+}

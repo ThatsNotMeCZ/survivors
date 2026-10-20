@@ -20,7 +20,7 @@
 
 ## Current milestone
 
-GPU smoke **passed**. Combat verb **A locked**. Dash live. Run slice: leveling, 8 items, 2 stages, teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Smoke: `/?smoke=1`.
+GPU smoke **passed**. Combat verb **A locked**. Phase Step (`dash`) live. Arena **obstacles** + procedural 32px pixel art live. HTML hall/HUD in `src/ui/`. Run slice: leveling, **12 items**, 2 stages, teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Smoke: `/?smoke=1`. Skip hall: `/?dev=1`. Theme: Dark Hermetic (display strings, not ids).
 
 ## Commands
 

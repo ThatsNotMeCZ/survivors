@@ -1,7 +1,9 @@
-import { FX_MUZZLE } from '../config';
+import { FX_DEATH, FX_MUZZLE } from '../config';
 import type { EntityDef, EntityRole, RangedAi } from '../data/schema';
-import { clamp } from './collision';
+import { circlesOverlap, clamp } from './collision';
 import { emitFx } from './fx';
+import { spawnGem } from './gems';
+import { grantXp } from './level';
 import { TEAM_ENEMY, spawnProjectile } from './projectiles';
 import type { World } from './world';
 
@@ -30,6 +32,9 @@ export type EnemyPool = {
   credits: Float32Array;
   attackCd: Float32Array;
   windup: Float32Array;
+  aimX: Float32Array;
+  aimY: Float32Array;
+  slowRemain: Float32Array;
   defId: (string | null)[];
 };
 
@@ -49,6 +54,9 @@ export function createEnemyPool(cap: number): EnemyPool {
     credits: new Float32Array(cap),
     attackCd: new Float32Array(cap),
     windup: new Float32Array(cap),
+    aimX: new Float32Array(cap),
+    aimY: new Float32Array(cap),
+    slowRemain: new Float32Array(cap),
     defId: new Array<string | null>(cap).fill(null),
   };
 }
@@ -85,6 +93,9 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
     enemies.credits[i] = def.rewards.credits;
     enemies.attackCd[i] = def.ai.type === 'ranged' ? def.ai.cooldown * Math.random() : 0;
     enemies.windup[i] = 0;
+    enemies.aimX[i] = x;
+    enemies.aimY[i] = y;
+    enemies.slowRemain[i] = 0;
     enemies.defId[i] = def.id;
     if (role === ROLE_FODDER) world.counts.fodder += 1;
     else if (role === ROLE_ELITE) world.counts.elite += 1;
@@ -101,6 +112,28 @@ export function spawnAround(world: World, def: EntityDef): number {
   return spawnEnemy(world, def, point.x, point.y);
 }
 
+export function killEnemy(world: World, index: number): void {
+  const { enemies } = world;
+  if (enemies.alive[index] === 0) return;
+  const role = enemies.role[index];
+  const x = enemies.x[index];
+  const y = enemies.y[index];
+  const xp = enemies.xp[index];
+  world.credits += enemies.credits[index];
+  emitFx(world.fx, FX_DEATH, x, y, 0xffd35a);
+  enemies.alive[index] = 0;
+  if (role === ROLE_FODDER) world.counts.fodder -= 1;
+  else if (role === ROLE_ELITE) world.counts.elite -= 1;
+  else if (role === ROLE_BOSS) {
+    world.counts.boss -= 1;
+    world.portal.x = x;
+    world.portal.y = y;
+  }
+  if (!spawnGem(world.gems, x, y, xp)) {
+    grantXp(world, xp);
+  }
+}
+
 export function stepEnemies(world: World, dt: number): void {
   const { enemies, player } = world;
   const bounds = world.catalog.world;
@@ -111,11 +144,12 @@ export function stepEnemies(world: World, dt: number): void {
     const dx = player.x - enemies.x[i];
     const dy = player.y - enemies.y[i];
     const len = Math.hypot(dx, dy);
+    const speed = enemies.speed[i] * localEnemySpeedMul(world, i);
     if (ai.type === 'ranged') {
-      stepRanged(world, i, ai, dx, dy, len, dt);
+      stepRanged(world, i, ai, dx, dy, len, dt, speed);
     } else if (len > 0.001) {
-      enemies.x[i] += (dx / len) * enemies.speed[i] * dt;
-      enemies.y[i] += (dy / len) * enemies.speed[i] * dt;
+      enemies.x[i] += (dx / len) * speed * dt;
+      enemies.y[i] += (dy / len) * speed * dt;
     }
     const pad = enemies.radius[i] + 8;
     enemies.x[i] = clamp(enemies.x[i], pad, bounds.width - pad);
@@ -131,20 +165,21 @@ function stepRanged(
   dy: number,
   len: number,
   dt: number,
+  speed: number,
 ): void {
   const { enemies } = world;
   if (len > 0.001) {
     const nx = dx / len;
     const ny = dy / len;
     if (len > ai.range) {
-      enemies.x[i] += nx * enemies.speed[i] * dt;
-      enemies.y[i] += ny * enemies.speed[i] * dt;
+      enemies.x[i] += nx * speed * dt;
+      enemies.y[i] += ny * speed * dt;
     } else if (len < ai.keep) {
-      enemies.x[i] -= nx * enemies.speed[i] * dt;
-      enemies.y[i] -= ny * enemies.speed[i] * dt;
+      enemies.x[i] -= nx * speed * dt;
+      enemies.y[i] -= ny * speed * dt;
     } else {
-      enemies.x[i] += -ny * enemies.speed[i] * 0.45 * dt;
-      enemies.y[i] += nx * enemies.speed[i] * 0.45 * dt;
+      enemies.x[i] += -ny * speed * 0.45 * dt;
+      enemies.y[i] += nx * speed * 0.45 * dt;
     }
   }
 
@@ -161,7 +196,26 @@ function stepRanged(
   enemies.attackCd[i] = Math.max(0, enemies.attackCd[i] - dt);
   if (len <= ai.range && enemies.attackCd[i] <= 0) {
     enemies.windup[i] = ai.windup;
+    enemies.aimX[i] = world.player.x;
+    enemies.aimY[i] = world.player.y;
   }
+}
+
+function localEnemySpeedMul(world: World, index: number): number {
+  const cfg = world.catalog.obstacles;
+  let mul = 1;
+  if (world.enemies.slowRemain[index] > 0) mul *= cfg.volatile.rimeSlowMul;
+  const { enemies, obstacles } = world;
+  for (let i = 0; i < obstacles.cap; i += 1) {
+    if (obstacles.alive[i] === 0) continue;
+    const obs = obstacles.items[i];
+    if (obs.type !== 'hazard') continue;
+    if (circlesOverlap(enemies.x[index], enemies.y[index], enemies.radius[index], obs.x, obs.y, obs.radius)) {
+      mul *= cfg.hazard.enemySpeedMul;
+      break;
+    }
+  }
+  return mul;
 }
 
 function fireEnemyBolt(world: World, i: number, ai: RangedAi): void {

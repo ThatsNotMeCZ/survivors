@@ -11,6 +11,10 @@ Working title: **survivors**. Hybrid of Vampire Survivors **pacing** and Risk of
 
 ## Fantasy
 
+Dark hermetic alchemy. You are a **Homunculus** (the Vessel) kiting failed transmutations. Primary is **Ignis Bolt**. Utility is **Phase Step**. XP pickups are **Mercury Drops** (Essence). The hold is a Transmutation Circle; the exit is a Rift. The hall (main menu) and all HUD copy use these names, never raw ids.
+
+Cinder Yard props: Obsidian Kiln, Slag Fissure, Brimstone Urn. Rime Dock: Frozen Bollard, Brine Pool, Pressurized Rime Cask. The teleporter is always the **Transmutation Circle** in player-facing copy.
+
 You are not watching a build win. You **move through** a horde that gets *meaner*, not just denser. Late run = fewer bodies, scarier elites, a point you must hold.
 
 ## Combat

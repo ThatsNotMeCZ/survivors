@@ -1,4 +1,4 @@
-import { FX_DEATH, FX_HIT } from '../config';
+import { FX_HIT } from '../config';
 import { catalog, type Catalog } from '../data/catalog';
 import type {
   ItemDef,
@@ -12,19 +12,26 @@ import type {
 import { aabbOverlap, clamp } from './collision';
 import { stepDirector } from './director';
 import {
-  ROLE_BOSS,
-  ROLE_ELITE,
   ROLE_FODDER,
   createEnemyPool,
+  killEnemy,
   stepEnemies,
   type EnemyPool,
 } from './enemies';
 import { clearFx, createFxPool, emitFx, type FxPool } from './fx';
-import { createGemPool, spawnGem, stepGems, type GemPool } from './gems';
+import { createGemPool, stepGems, type GemPool } from './gems';
 import type { InputFrame } from './input-frame';
 import { emptyCds } from './input-frame';
-import { grantXp, xpForLevel } from './level';
+import { xpForLevel } from './level';
 import { beginStage, stepLoop } from './loop';
+import {
+  createObstaclePool,
+  hitObstacleProjectiles,
+  obstacleCap,
+  playerSpeedMul,
+  stepObstacles,
+  type ObstaclePool,
+} from './obstacles';
 import {
   TEAM_ENEMY,
   TEAM_PLAYER,
@@ -54,6 +61,7 @@ export type PlayerState = Actor & {
   dashVx: number;
   dashVy: number;
   iframeRemain: number;
+  slowRemain: number;
 };
 
 export type FocusState = {
@@ -74,6 +82,7 @@ export type World = {
   projectiles: ProjectilePool;
   enemies: EnemyPool;
   gems: GemPool;
+  obstacles: ObstaclePool;
   hash: SpatialHash;
   scratch: number[];
   runTime: number;
@@ -106,8 +115,8 @@ export type World = {
   fx: FxPool;
 };
 
-export function createWorld(): World {
-  const survivor = catalog.survivor(catalog.world.defaultSurvivor);
+export function createWorld(survivorId = catalog.world.defaultSurvivor): World {
+  const survivor = catalog.survivor(survivorId);
   const inventory: ItemInstance[] = survivor.startingItems.map((id) => ({ id, stacks: 1 }));
   const stats = resolveStats(survivor.stats, inventory, catalog.item);
   const loop = catalog.loop;
@@ -124,6 +133,7 @@ export function createWorld(): World {
     projectiles: createProjectilePool(catalog.world.maxProjectiles),
     enemies: createEnemyPool(enemyCap),
     gems: createGemPool(loop.maxGems),
+    obstacles: createObstaclePool(obstacleCap(catalog.obstacles.counts), loop.hashCell),
     hash: createHash(loop.hashCell),
     scratch: new Array<number>(enemyCap).fill(0),
     runTime: 0,
@@ -170,9 +180,11 @@ export function stepWorld(world: World, input: InputFrame, dt: number): void {
   rebuildHash(world);
   resolveBodyOverlaps(world);
   rebuildHash(world);
+  hitObstacleProjectiles(world);
   hitEnemies(world);
   hitPlayer(world);
   contactDamage(world, dt);
+  stepObstacles(world, dt);
   stepGems(world, dt);
   stepLoop(world, dt);
 }
@@ -196,8 +208,9 @@ function movePlayer(world: World, input: InputFrame, dt: number): void {
       mx /= mag;
       my /= mag;
     }
-    player.x += mx * stats.speed * dt;
-    player.y += my * stats.speed * dt;
+    const speed = stats.speed * playerSpeedMul(world);
+    player.x += mx * speed * dt;
+    player.y += my * speed * dt;
   }
   player.x = clamp(player.x, player.radius, bounds.width - player.radius);
   player.y = clamp(player.y, player.radius, bounds.height - player.radius);
@@ -294,28 +307,6 @@ function contactDamage(world: World, dt: number): void {
   }
 }
 
-function killEnemy(world: World, index: number): void {
-  const { enemies } = world;
-  if (enemies.alive[index] === 0) return;
-  const role = enemies.role[index];
-  const x = enemies.x[index];
-  const y = enemies.y[index];
-  const xp = enemies.xp[index];
-  world.credits += enemies.credits[index];
-  emitFx(world.fx, FX_DEATH, x, y, 0xffd35a);
-  enemies.alive[index] = 0;
-  if (role === ROLE_FODDER) world.counts.fodder -= 1;
-  else if (role === ROLE_ELITE) world.counts.elite -= 1;
-  else if (role === ROLE_BOSS) {
-    world.counts.boss -= 1;
-    world.portal.x = x;
-    world.portal.y = y;
-  }
-  if (!spawnGem(world.gems, x, y, xp)) {
-    grantXp(world, xp);
-  }
-}
-
 function makePlayer(defId: string, stats: ResolvedStats, width: number, height: number): PlayerState {
   return {
     defId,
@@ -330,5 +321,6 @@ function makePlayer(defId: string, stats: ResolvedStats, width: number, height: 
     dashVx: 0,
     dashVy: 0,
     iframeRemain: 0,
+    slowRemain: 0,
   };
 }

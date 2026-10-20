@@ -56,6 +56,7 @@ export type ViewDot = {
 export type SurvivorDef = {
   id: string;
   name: string;
+  lore?: string;
   stats: SurvivorStats;
   skills: Record<SkillSlot, string | null>;
   startingItems: string[];
@@ -93,6 +94,54 @@ export type ItemDef = {
   rarity: ItemRarity;
   stack: 'linear' | 'none';
   hooks: ItemHook[];
+  lore: string;
+};
+
+export type ObstacleKind = 'pillar' | 'hazard' | 'volatile';
+export type ObstacleLife = 'intact' | 'primed' | 'detonated';
+
+export type Obstacle = {
+  id: number;
+  type: ObstacleKind;
+  x: number;
+  y: number;
+  radius: number;
+  hp: number;
+  maxHp: number;
+  state: ObstacleLife;
+  timer: number;
+  biomeVariant: string;
+};
+
+export type BiomeObstacleNames = Record<ObstacleKind, string>;
+
+export type ObstacleCatalog = {
+  version: number;
+  counts: Record<ObstacleKind, number>;
+  borderPad: number;
+  playerKeepOut: number;
+  teleporterKeepOut: number;
+  volatileTeleporterKeepOut: number;
+  minSpacing: number;
+  placeRetries: number;
+  pillar: { radius: number };
+  hazard: {
+    radius: number;
+    playerSpeedMul: number;
+    enemySpeedMul: number;
+    dps: number;
+  };
+  volatile: {
+    radius: number;
+    hp: number;
+    prime: number;
+    explosionRadius: number;
+    enemyDamage: number;
+    playerDamage: number;
+    rimeSlowDuration: number;
+    rimeSlowMul: number;
+  };
+  biomes: Record<string, BiomeObstacleNames>;
 };
 
 export type WorldDef = {

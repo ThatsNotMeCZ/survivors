@@ -11,6 +11,8 @@
     "smoke:loop": "bun scripts/loop-smoke.ts"
   },
   "dependencies": {
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/source-sans-3": "^5.3.1",
     "phaser": "4.2.1"
   },
   "devDependencies": {

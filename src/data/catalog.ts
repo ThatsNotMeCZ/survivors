@@ -1,11 +1,14 @@
 import entitiesRaw from './entities.json';
 import itemsRaw from './items.json';
 import loopRaw from './loop.json';
+import obstaclesRaw from './obstacles.json';
 import {
   CATALOG_VERSION,
   type EntityDef,
   type ItemDef,
   type LoopDef,
+  type ObstacleCatalog,
+  type ObstacleKind,
   type SkillDef,
   type SkillEffect,
   type StageDef,
@@ -22,12 +25,14 @@ const IMPLEMENTED_EFFECTS = new Set<SkillEffect['type']>(['projectile', 'dash'])
 export type Catalog = {
   world: WorldDef;
   loop: LoopDef;
+  obstacles: ObstacleCatalog;
   skill: (id: string) => SkillDef;
   survivor: (id: string) => SurvivorDef;
   entity: (id: string) => EntityDef;
   item: (id: string) => ItemDef;
   items: ItemDef[];
   entities: EntityDef[];
+  survivors: SurvivorDef[];
 };
 
 export const catalog: Catalog = loadCatalog();
@@ -35,6 +40,7 @@ export const catalog: Catalog = loadCatalog();
 function loadCatalog(): Catalog {
   const world = asWorld(worldRaw);
   const loop = asLoop(loopRaw);
+  const obstacles = asObstacles(obstaclesRaw);
   const skills = indexById('skills.json', asList<SkillDef>(skillsRaw as VersionedList<SkillDef>, 'skills.json'));
   const survivors = indexById(
     'survivors.json',
@@ -79,6 +85,9 @@ function loadCatalog(): Catalog {
     assertStageEntity(entities, stage, 'fodder');
     assertStageEntity(entities, stage, 'elite');
     assertStageEntity(entities, stage, 'boss');
+    if (!obstacles.biomes[stage.id]) {
+      throw new Error(`obstacles.json missing biome names for stage "${stage.id}"`);
+    }
     if (stage.ranged) {
       const ranged = entities.get(stage.ranged);
       if (!ranged) {
@@ -96,12 +105,14 @@ function loadCatalog(): Catalog {
   return {
     world,
     loop,
+    obstacles,
     skill: get(skills, 'skill'),
     survivor: get(survivors, 'survivor'),
     entity: get(entities, 'entity'),
     item: get(items, 'item'),
     items: [...items.values()],
     entities: [...entities.values()],
+    survivors: [...survivors.values()],
   };
 }
 
@@ -135,6 +146,20 @@ function asLoop(raw: unknown): LoopDef {
   }
   if (!Array.isArray(data.stages)) {
     throw new Error('loop.json missing stages[]');
+  }
+  return data;
+}
+
+function asObstacles(raw: unknown): ObstacleCatalog {
+  const data = raw as ObstacleCatalog;
+  if (data.version !== CATALOG_VERSION) {
+    throw new Error(`obstacles.json version ${data.version}, expected ${CATALOG_VERSION}`);
+  }
+  const kinds: ObstacleKind[] = ['pillar', 'hazard', 'volatile'];
+  for (const kind of kinds) {
+    if (!(data.counts[kind] > 0)) {
+      throw new Error(`obstacles.json counts.${kind} must be > 0`);
+    }
   }
   return data;
 }

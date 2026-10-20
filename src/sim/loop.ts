@@ -1,6 +1,9 @@
+import { clamp } from './collision';
 import { ROLE_BOSS, ROLE_ELITE, clearEnemies, ringPoint, spawnEnemy } from './enemies';
 import { clearGems } from './gems';
+import { clearObstacles, placeStageObstacles } from './obstacles';
 import { clearProjectiles } from './projectiles';
+import { hashString, mulberry32 } from './rng';
 import type { World } from './world';
 
 export type ObjectiveKind = 'wait' | 'hold' | 'boss' | 'portal';
@@ -12,6 +15,7 @@ export type Objective = {
   targetX: number;
   targetY: number;
   hasTarget: boolean;
+  name: string;
 };
 
 export function currentStage(world: World) {
@@ -28,6 +32,7 @@ export function currentObjective(world: World): Objective {
       targetX: world.portal.x,
       targetY: world.portal.y,
       hasTarget: true,
+      name: '',
     };
   }
   if (world.bossSpawned && world.counts.boss > 0) {
@@ -35,6 +40,7 @@ export function currentObjective(world: World): Objective {
     for (let i = 0; i < enemies.cap; i += 1) {
       if (enemies.alive[i] === 0 || enemies.role[i] !== ROLE_BOSS) continue;
       const max = enemies.maxHp[i] > 0 ? enemies.maxHp[i] : 1;
+      const defId = enemies.defId[i];
       return {
         kind: 'boss',
         remaining: 0,
@@ -42,6 +48,7 @@ export function currentObjective(world: World): Objective {
         targetX: enemies.x[i],
         targetY: enemies.y[i],
         hasTarget: true,
+        name: defId ? world.catalog.entity(defId).name : 'Boss',
       };
     }
   }
@@ -54,6 +61,7 @@ export function currentObjective(world: World): Objective {
       targetX: world.teleporter.x,
       targetY: world.teleporter.y,
       hasTarget: true,
+      name: '',
     };
   }
   const stage = currentStage(world);
@@ -64,6 +72,7 @@ export function currentObjective(world: World): Objective {
     targetX: 0,
     targetY: 0,
     hasTarget: false,
+    name: '',
   };
 }
 
@@ -82,14 +91,20 @@ export function beginStage(world: World, index: number): void {
   world.teleporter.radius = stage.teleporterRadius;
   world.portal.open = false;
   world.portal.hold = 0;
+  world.portal.x = 0;
+  world.portal.y = 0;
   clearEnemies(world);
   clearGems(world.gems);
   clearProjectiles(world.projectiles);
+  clearObstacles(world.obstacles);
   world.player.x = world.catalog.world.width * 0.5;
   world.player.y = world.catalog.world.height * 0.5;
   world.player.hp = world.stats.maxHp;
   world.player.dashRemain = 0;
   world.player.iframeRemain = 0;
+  world.player.slowRemain = 0;
+  reserveTeleporter(world);
+  placeStageObstacles(world);
 }
 
 export function stepLoop(world: World, dt: number): void {
@@ -110,10 +125,7 @@ function updateCoefficient(world: World): void {
 function stepTeleporter(world: World, dt: number): void {
   const stage = currentStage(world);
   if (world.teleporter.state === 'hidden' && world.stageTime >= stage.teleporterAt) {
-    const point = ringPoint(world, world.player.x, world.player.y, 8);
     world.teleporter.state = 'charging';
-    world.teleporter.x = point.x;
-    world.teleporter.y = point.y;
     world.teleporter.charge = 0;
   }
   if (world.teleporter.state !== 'charging') return;
@@ -162,6 +174,30 @@ function stepPortal(world: World, dt: number): void {
   } else {
     world.portal.hold = 0;
   }
+}
+
+function reserveTeleporter(world: World): void {
+  const stage = currentStage(world);
+  const rng = mulberry32(
+    hashString(stage.id) ^ ((world.stageIndex + 3) * 0x9e3779b9) ^ (world.stageGen * 0x27d4eb2d),
+  );
+  const bounds = world.catalog.world;
+  const pad = stage.teleporterRadius + 48;
+  const ox = world.player.x;
+  const oy = world.player.y;
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    const dist = 480 + rng() * 320;
+    const ang = rng() * Math.PI * 2;
+    const x = clamp(ox + Math.cos(ang) * dist, pad, bounds.width - pad);
+    const y = clamp(oy + Math.sin(ang) * dist, pad, bounds.height - pad);
+    if (Math.hypot(x - ox, y - oy) >= 360) {
+      world.teleporter.x = x;
+      world.teleporter.y = y;
+      return;
+    }
+  }
+  world.teleporter.x = clamp(ox + 520, pad, bounds.width - pad);
+  world.teleporter.y = clamp(oy, pad, bounds.height - pad);
 }
 
 function updateFocus(world: World): void {

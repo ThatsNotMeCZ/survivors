@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>survivors</title>
+    <link rel="stylesheet" href="/src/ui/theme.css" />
     <link rel="stylesheet" href="/src/ui/hud.css" />
   </head>
   <body>
@@ -21,11 +22,12 @@
         <div id="hud-meta">
           <p id="hud-stage">--</p>
           <p id="hud-time">0:00</p>
-          <p id="hud-dash">dash ready</p>
+          <p id="hud-coeff-play">×1.00</p>
         </div>
         <div id="hud-objective">
           <p id="hud-objective-label">Survive</p>
           <p id="hud-objective-detail"></p>
+          <div id="hud-objective-bar" aria-hidden="true"><div id="hud-objective-fill"></div></div>
         </div>
         <div id="hud-vitals">
           <div class="vital-row">
@@ -38,12 +40,32 @@
             <div class="bar xp-track" aria-hidden="true"><div id="xp-fill"></div></div>
           </div>
         </div>
+        <div id="hud-skill">
+          <div id="dash-ring" data-key="⇧" aria-hidden="true"></div>
+          <p id="hud-dash">Phase Step ready</p>
+        </div>
+        <div id="hud-items" class="hidden">
+          <p class="vital-label">Tablets</p>
+          <div id="hud-item-list"></div>
+        </div>
       </div>
     </aside>
-    <div id="overlay" class="hidden" role="dialog" aria-modal="true" aria-hidden="true">
+    <div id="prompt" class="hidden" aria-live="polite">
+      <p id="prompt-title"></p>
+      <p id="prompt-detail"></p>
+      <div id="prompt-bar" aria-hidden="true"><div id="prompt-fill"></div></div>
+    </div>
+    <div id="sting" class="hidden" aria-live="polite">
+      <p id="sting-kicker"></p>
+      <h2 id="sting-title"></h2>
+      <p id="sting-sub"></p>
+    </div>
+    <div id="overlay" class="hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="overlay-title">
       <div class="overlay-card">
-        <h2 id="overlay-title">Paused</h2>
+        <p class="overlay-kicker" id="overlay-kicker"></p>
+        <h2 id="overlay-title"></h2>
         <p id="overlay-sub"></p>
+        <div id="overlay-body"></div>
         <div id="overlay-choices"></div>
         <div id="overlay-actions"></div>
       </div>
