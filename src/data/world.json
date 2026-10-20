@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "width": 2560,
+  "height": 2560,
+  "viewZoom": 2.5,
+  "maxProjectiles": 128,
+  "defaultSurvivor": "runner",
+  "defaultEnemy": "ember-chaser"
+}

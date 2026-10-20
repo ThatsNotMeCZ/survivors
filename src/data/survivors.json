@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "runner",
+      "name": "Runner",
+      "stats": {
+        "speed": 280,
+        "maxHp": 100,
+        "radius": 14
+      },
+      "skills": {
+        "primary": "bolt",
+        "secondary": null,
+        "utility": "dash",
+        "special": null
+      },
+      "startingItems": [],
+      "view": {
+        "kind": "chevron",
+        "size": 32,
+        "inner": "#dff6ff",
+        "mid": "#5ad4ff"
+      }
+    }
+  ]
+}

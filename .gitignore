@@ -1,0 +1,8 @@
+node_modules
+dist
+.DS_Store
+*.log
+.vite
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "xpBase": 10,
+  "xpGrowth": 1.28,
+  "gemPickup": 36,
+  "gemMagnet": 88,
+  "gemMagnetSpeed": 320,
+  "maxFodder": 32,
+  "maxElites": 3,
+  "maxGems": 64,
+  "hashCell": 128,
+  "fodderContactCap": 4,
+  "levelChoices": 3,
+  "portalRadius": 70,
+  "portalHold": 1.4,
+  "director": {
+    "creditRate": 3.6,
+    "fodderCost": 7,
+    "eliteCost": 42,
+    "fodderInterval": 0.5,
+    "eliteInterval": 14,
+    "spawnMin": 340,
+    "spawnMax": 520
+  },
+  "difficulty": {
+    "perSecond": 0.006,
+    "stageBonus": 0.35,
+    "speedPerCoeff": 0.05
+  },
+  "rarityWeight": {
+    "common": 1,
+    "uncommon": 0.55,
+    "rare": 0.22,
+    "lunar": 0.08
+  },
+  "stages": [
+    {
+      "id": "cinder-yard",
+      "name": "Cinder Yard",
+      "fodder": "ember-mite",
+      "ranged": "ember-spitter",
+      "rangedChance": 0.22,
+      "elite": "ember-chaser",
+      "boss": "cinder-heart",
+      "firstEliteAt": 15,
+      "teleporterAt": 55,
+      "teleporterHold": 20,
+      "teleporterRadius": 160,
+      "view": {
+        "grid": "#2a1814",
+        "border": "#5a3020",
+        "zone": "#e35d5d",
+        "portal": "#ffb347"
+      }
+    },
+    {
+      "id": "rime-dock",
+      "name": "Rime Dock",
+      "fodder": "frost-mite",
+      "ranged": "frost-spitter",
+      "rangedChance": 0.22,
+      "elite": "frost-warden",
+      "boss": "frost-sovereign",
+      "firstEliteAt": 12,
+      "teleporterAt": 50,
+      "teleporterHold": 22,
+      "teleporterRadius": 150,
+      "view": {
+        "grid": "#142033",
+        "border": "#3a5a7a",
+        "zone": "#5ad4ff",
+        "portal": "#dff6ff"
+      }
+    }
+  ]
+}

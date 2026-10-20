@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "ember-mite",
+      "name": "Ember Mite",
+      "role": "fodder",
+      "tags": ["fodder", "chaser"],
+      "stats": { "speed": 92, "maxHp": 14, "radius": 10 },
+      "contact": { "dps": 3 },
+      "rewards": { "xp": 3, "credits": 1 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 18, "inner": "#ffe8e8", "mid": "#c94a4a" }
+    },
+    {
+      "id": "ember-spitter",
+      "name": "Ember Spitter",
+      "role": "fodder",
+      "tags": ["fodder", "ranged"],
+      "stats": { "speed": 68, "maxHp": 12, "radius": 11 },
+      "contact": { "dps": 2 },
+      "rewards": { "xp": 4, "credits": 1 },
+      "ai": {
+        "type": "ranged",
+        "range": 280,
+        "keep": 200,
+        "cooldown": 2.1,
+        "windup": 0.4,
+        "projectile": { "speed": 240, "lifetime": 1.35, "radius": 6, "damage": 5 }
+      },
+      "view": { "kind": "dot", "size": 20, "inner": "#fff0c8", "mid": "#ff7a3a" }
+    },
+    {
+      "id": "ember-chaser",
+      "name": "Ember",
+      "role": "elite",
+      "tags": ["elite", "chaser"],
+      "stats": { "speed": 102, "maxHp": 90, "radius": 22 },
+      "contact": { "dps": 28 },
+      "rewards": { "xp": 14, "credits": 8 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 48, "inner": "#ffe8e8", "mid": "#e35d5d" }
+    },
+    {
+      "id": "cinder-heart",
+      "name": "Cinder Heart",
+      "role": "boss",
+      "tags": ["boss", "chaser"],
+      "stats": { "speed": 78, "maxHp": 520, "radius": 36 },
+      "contact": { "dps": 34 },
+      "rewards": { "xp": 40, "credits": 0 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 72, "inner": "#fff0c8", "mid": "#ff7a3a" }
+    },
+    {
+      "id": "frost-mite",
+      "name": "Frost Mite",
+      "role": "fodder",
+      "tags": ["fodder", "chaser"],
+      "stats": { "speed": 104, "maxHp": 18, "radius": 10 },
+      "contact": { "dps": 4 },
+      "rewards": { "xp": 4, "credits": 1 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 18, "inner": "#e8f6ff", "mid": "#4aa0d4" }
+    },
+    {
+      "id": "frost-spitter",
+      "name": "Frost Spitter",
+      "role": "fodder",
+      "tags": ["fodder", "ranged"],
+      "stats": { "speed": 76, "maxHp": 16, "radius": 11 },
+      "contact": { "dps": 2 },
+      "rewards": { "xp": 5, "credits": 1 },
+      "ai": {
+        "type": "ranged",
+        "range": 300,
+        "keep": 210,
+        "cooldown": 1.9,
+        "windup": 0.38,
+        "projectile": { "speed": 260, "lifetime": 1.4, "radius": 6, "damage": 5 }
+      },
+      "view": { "kind": "dot", "size": 20, "inner": "#f4fbff", "mid": "#7ad4ff" }
+    },
+    {
+      "id": "frost-warden",
+      "name": "Frost Warden",
+      "role": "elite",
+      "tags": ["elite", "chaser"],
+      "stats": { "speed": 90, "maxHp": 140, "radius": 24 },
+      "contact": { "dps": 34 },
+      "rewards": { "xp": 18, "credits": 9 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 52, "inner": "#e8f6ff", "mid": "#3d8ad4" }
+    },
+    {
+      "id": "frost-sovereign",
+      "name": "Frost Sovereign",
+      "role": "boss",
+      "tags": ["boss", "chaser"],
+      "stats": { "speed": 80, "maxHp": 620, "radius": 40 },
+      "contact": { "dps": 40 },
+      "rewards": { "xp": 60, "credits": 0 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 80, "inner": "#f4fbff", "mid": "#7ad4ff" }
+    }
+  ]
+}

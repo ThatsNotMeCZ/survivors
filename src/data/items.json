@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "glass-cannon",
+      "name": "Glass Cannon",
+      "rarity": "uncommon",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "damage", "value": 0.4 },
+        { "op": "pct", "stat": "maxHp", "value": -0.15 }
+      ]
+    },
+    {
+      "id": "goat-hoof",
+      "name": "Goat Hoof",
+      "rarity": "common",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "speed", "value": 0.14 },
+        { "op": "pct", "stat": "maxHp", "value": -0.06 }
+      ]
+    },
+    {
+      "id": "brittle-plate",
+      "name": "Brittle Plate",
+      "rarity": "common",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "maxHp", "value": 0.28 },
+        { "op": "pct", "stat": "speed", "value": -0.12 }
+      ]
+    },
+    {
+      "id": "hair-trigger",
+      "name": "Hair Trigger",
+      "rarity": "uncommon",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "cooldown", "value": -0.15 },
+        { "op": "pct", "stat": "radius", "value": 0.12 }
+      ]
+    },
+    {
+      "id": "overclock",
+      "name": "Overclock",
+      "rarity": "uncommon",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "damage", "value": 0.22 },
+        { "op": "pct", "stat": "cooldown", "value": 0.12 }
+      ]
+    },
+    {
+      "id": "wax-wings",
+      "name": "Wax Wings",
+      "rarity": "common",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "speed", "value": 0.16 },
+        { "op": "pct", "stat": "maxHp", "value": -0.08 }
+      ]
+    },
+    {
+      "id": "hungry-clip",
+      "name": "Hungry Clip",
+      "rarity": "rare",
+      "stack": "linear",
+      "hooks": [
+        { "op": "pct", "stat": "damage", "value": 0.28 },
+        { "op": "pct", "stat": "radius", "value": 0.14 }
+      ]
+    },
+    {
+      "id": "lead-core",
+      "name": "Lead Core",
+      "rarity": "common",
+      "stack": "linear",
+      "hooks": [
+        { "op": "add", "stat": "maxHp", "value": 18 },
+        { "op": "pct", "stat": "damage", "value": -0.08 }
+      ]
+    }
+  ]
+}

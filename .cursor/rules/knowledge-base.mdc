@@ -1,0 +1,14 @@
+---
+description: Read and update knowledge/ as the design source of truth
+alwaysApply: true
+---
+
+# Knowledge base
+
+`knowledge/` is canonical. `.cursor/rules/` only encodes hard engineering constraints.
+
+Before changing combat, items, director, loop, or stack, read `knowledge/README.md` and the matching file.
+
+If a task changes design, update the knowledge file in the same change. Do not leave chat-only decisions.
+
+Do not add systems that violate `knowledge/design/anti-idle.md`.

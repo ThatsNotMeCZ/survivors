@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>survivors</title>
+    <link rel="stylesheet" href="/src/ui/hud.css" />
+  </head>
+  <body>
+    <div id="game-container"></div>
+    <aside id="hud" class="hidden" aria-live="polite">
+      <div id="hud-debug" class="hud-panel hidden">
+        <p class="hud-title" id="hud-title">survivors</p>
+        <p><span class="k">status</span> <span id="hud-status">boot</span></p>
+        <p><span class="k">fps</span> <span id="hud-fps">--</span></p>
+        <p id="row-dots"><span class="k">dots</span> <span id="hud-dots">0</span></p>
+        <p id="row-coeff" class="hidden"><span class="k">diff</span> <span id="hud-coeff">--</span></p>
+        <p><span class="k">renderer</span> <span id="hud-renderer">--</span></p>
+      </div>
+      <div id="hud-play" class="hidden">
+        <div id="hud-meta">
+          <p id="hud-stage">--</p>
+          <p id="hud-time">0:00</p>
+          <p id="hud-dash">dash ready</p>
+        </div>
+        <div id="hud-objective">
+          <p id="hud-objective-label">Survive</p>
+          <p id="hud-objective-detail"></p>
+        </div>
+        <div id="hud-vitals">
+          <div class="vital-row">
+            <span class="vital-label">HP</span>
+            <div class="bar hp-track" aria-hidden="true"><div id="hp-fill"></div></div>
+            <span id="hud-hp">--</span>
+          </div>
+          <div class="vital-row">
+            <span class="vital-label" id="hud-lv">Lv 1</span>
+            <div class="bar xp-track" aria-hidden="true"><div id="xp-fill"></div></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div id="overlay" class="hidden" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="overlay-card">
+        <h2 id="overlay-title">Paused</h2>
+        <p id="overlay-sub"></p>
+        <div id="overlay-choices"></div>
+        <div id="overlay-actions"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

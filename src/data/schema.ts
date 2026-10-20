@@ -1,0 +1,179 @@
+export const CATALOG_VERSION = 1;
+
+export type SkillSlot = 'primary' | 'secondary' | 'utility' | 'special';
+export type SkillInput = 'hold' | 'press';
+export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'lunar';
+export type EntityRole = 'fodder' | 'elite' | 'boss';
+export type RunPhase = 'play' | 'levelup' | 'portal' | 'victory' | 'defeat';
+export type TeleporterState = 'hidden' | 'charging' | 'done';
+
+export type StatId = 'speed' | 'maxHp' | 'radius' | 'damage' | 'cooldown';
+
+export type ItemHook =
+  | { op: 'add'; stat: StatId; value: number }
+  | { op: 'pct'; stat: StatId; value: number };
+
+export type ProjectileEffect = {
+  type: 'projectile';
+  speed: number;
+  lifetime: number;
+  radius: number;
+  damage: number;
+};
+
+export type DashEffect = {
+  type: 'dash';
+  distance: number;
+  duration: number;
+  iframe: number;
+};
+
+/** Add a variant here and a case in `sim/skills.ts`. */
+export type SkillEffect = ProjectileEffect | DashEffect;
+
+export type SkillDef = {
+  id: string;
+  name: string;
+  slot: SkillSlot;
+  input: SkillInput;
+  cooldown: number;
+  effects: SkillEffect[];
+};
+
+export type SurvivorStats = {
+  speed: number;
+  maxHp: number;
+  radius: number;
+};
+
+export type ViewDot = {
+  kind: 'dot' | 'chevron';
+  size: number;
+  inner: string;
+  mid: string;
+};
+
+export type SurvivorDef = {
+  id: string;
+  name: string;
+  stats: SurvivorStats;
+  skills: Record<SkillSlot, string | null>;
+  startingItems: string[];
+  view: ViewDot;
+};
+
+export type ChaseAi = { type: 'chase' };
+
+export type RangedAi = {
+  type: 'ranged';
+  range: number;
+  keep: number;
+  cooldown: number;
+  windup: number;
+  projectile: { speed: number; lifetime: number; radius: number; damage: number };
+};
+
+export type EntityAi = ChaseAi | RangedAi;
+
+export type EntityDef = {
+  id: string;
+  name: string;
+  role: EntityRole;
+  tags: string[];
+  stats: { speed: number; maxHp: number; radius: number };
+  contact: { dps: number };
+  rewards: { xp: number; credits: number };
+  ai: EntityAi;
+  view: ViewDot;
+};
+
+export type ItemDef = {
+  id: string;
+  name: string;
+  rarity: ItemRarity;
+  stack: 'linear' | 'none';
+  hooks: ItemHook[];
+};
+
+export type WorldDef = {
+  version: number;
+  width: number;
+  height: number;
+  viewZoom: number;
+  maxProjectiles: number;
+  defaultSurvivor: string;
+  defaultEnemy: string;
+};
+
+export type StageView = {
+  grid: string;
+  border: string;
+  zone: string;
+  portal: string;
+};
+
+export type StageDef = {
+  id: string;
+  name: string;
+  fodder: string;
+  ranged?: string;
+  rangedChance?: number;
+  elite: string;
+  boss: string;
+  firstEliteAt: number;
+  teleporterAt: number;
+  teleporterHold: number;
+  teleporterRadius: number;
+  view: StageView;
+};
+
+export type LoopDef = {
+  version: number;
+  xpBase: number;
+  xpGrowth: number;
+  gemPickup: number;
+  gemMagnet: number;
+  gemMagnetSpeed: number;
+  maxFodder: number;
+  maxElites: number;
+  maxGems: number;
+  hashCell: number;
+  fodderContactCap: number;
+  levelChoices: number;
+  portalRadius: number;
+  portalHold: number;
+  director: {
+    creditRate: number;
+    fodderCost: number;
+    eliteCost: number;
+    fodderInterval: number;
+    eliteInterval: number;
+    spawnMin: number;
+    spawnMax: number;
+  };
+  difficulty: {
+    perSecond: number;
+    stageBonus: number;
+    speedPerCoeff: number;
+  };
+  rarityWeight: Record<ItemRarity, number>;
+  stages: StageDef[];
+};
+
+export type VersionedList<T> = {
+  version: number;
+  entries: T[];
+};
+
+export type ItemInstance = {
+  id: string;
+  stacks: number;
+};
+
+export type ResolvedStats = {
+  speed: number;
+  maxHp: number;
+  radius: number;
+  damageMul: number;
+  cooldownMul: number;
+};

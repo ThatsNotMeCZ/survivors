@@ -1,0 +1,23 @@
+---
+description: Phaser 4 only — never copy v3 APIs
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+# Phaser 4
+
+- Use Phaser **4.2.x** APIs. Ignore Phaser 3 pipeline/FX/Matter examples.
+- Before using an unfamiliar Phaser API, read `node_modules/phaser/skills/` (especially `v4-new-features` and `v3-to-v4-migration`).
+- Force `Phaser.WEBGL`. SpriteGPULayer does not run on Canvas.
+- Filters/blend modes on every projectile break batching. Keep them off swarms.
+- Pixel art: power-of-two textures, `pixelArt: true`.
+- `this.add.spriteGPULayer(texture, size)` — one texture, not an atlas.
+
+```ts
+// BAD — Phaser 3 habit
+this.cameras.main.setPipeline('...')
+sprite.preFX.addGlow()
+
+// GOOD
+this.add.spriteGPULayer('dot', 20_000)
+```

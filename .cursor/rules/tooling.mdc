@@ -1,0 +1,11 @@
+---
+description: Use Bun, never npm/npx/yarn/pnpm
+alwaysApply: true
+---
+
+# Tooling
+
+- Package manager is **Bun**. Lockfile is `bun.lock`.
+- Install: `bun install`. Scripts: `bun run dev`, `bun run build`.
+- One-off binaries: `bunx vite`, never `npx`.
+- Do not create or commit `package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml`.

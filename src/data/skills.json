@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "bolt",
+      "name": "Bolt",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.16,
+      "effects": [
+        {
+          "type": "projectile",
+          "speed": 780,
+          "lifetime": 0.85,
+          "radius": 5,
+          "damage": 10
+        }
+      ]
+    },
+    {
+      "id": "dash",
+      "name": "Dash",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 0.9,
+      "effects": [
+        {
+          "type": "dash",
+          "distance": 210,
+          "duration": 0.16,
+          "iframe": 0.22
+        }
+      ]
+    }
+  ]
+}

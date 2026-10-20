@@ -1,0 +1,12 @@
+---
+description: TypeScript strictness for agent-written game code
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+# TypeScript
+
+- `strict` stays on. No `any`. No `as unknown as`.
+- Prefer typed arrays / object pools over class-per-entity.
+- Gameplay constants that designers will tune belong in `src/data/` or `src/config.ts`, not magic numbers in `update()`.
+- Keep functions small. One file = one job (`director.ts`, not `gameplay.ts`).

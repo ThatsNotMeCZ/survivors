@@ -1,0 +1,24 @@
+---
+description: Sim/view split, pooling, and physics limits
+alwaysApply: true
+---
+
+# Architecture
+
+- `src/sim/` is CPU gameplay. It must not import Phaser.
+- `src/view/` only draws sim state. No combat rules in scenes.
+- `src/data/` holds JSON balance. Do not hardcode item/enemy numbers in classes.
+- New content is JSON. New skill *behaviors* need a sim effect case.
+- HUD, pause, level-up, menus = HTML/CSS in `src/ui/`. Not Phaser text.
+
+Pools and collision:
+
+- Pool every gameplay object. No `new Sprite()` in the update loop.
+- Projectiles and fodder enemies use AABB + spatial hash (~128px cells).
+- Arcade/Matter physics: player vs world only. Never on bullets or swarms.
+
+Two render paths:
+
+- Player, elites, bosses = normal sprites.
+- Fodder, gems, sparks = `SpriteGPULayer` / GPU particles.
+- Populate GPU layers once. Hide members with `alpha`/`scale` 0. Do not `removeMembers` per frame.
