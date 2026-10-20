@@ -6,7 +6,7 @@
       "name": "Ignis Bolt",
       "slot": "primary",
       "input": "hold",
-      "cooldown": 0.16,
+      "cooldown": 0.28,
       "lore": "A needle of fire. It only flies where you point.",
       "hook": "Aimed bolt. Never auto-fires.",
       "effects": [
@@ -82,7 +82,7 @@
       "name": "Censer Lob",
       "slot": "primary",
       "input": "hold",
-      "cooldown": 0.38,
+      "cooldown": 0.42,
       "lore": "Heavy glass, thrown in an arc. The air between you and the stain is empty.",
       "hook": "Mortar splash on impact only. Flies over foes.",
       "effects": [
