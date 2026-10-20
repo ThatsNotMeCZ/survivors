@@ -1,5 +1,6 @@
 import { catalog } from '../data/catalog';
-import type { ItemDef, ItemHook, SkillDef, StatId, SurvivorDef } from '../data/schema';
+import type { ItemDef, ItemHook, SkillDef, SkillSlot, StatId, SurvivorDef } from '../data/schema';
+import { survivorPortrait } from '../view/procedural-pixel-art';
 import { formatTime } from './hud';
 import { applySettingsToDom, getSettings, patchSettings, skipShell, type GameSettings } from './settings';
 
@@ -28,6 +29,7 @@ export type RunRecap = {
   time: number;
   level: number;
   coefficient: number;
+  bosses: number;
   items: { name: string; stacks: number }[];
   survivor: string;
 };
@@ -49,6 +51,7 @@ let handlers: OverlayHandlers = {
   onRestart: () => undefined,
 };
 let keysBound = false;
+let hallBound = false;
 let mode: OverlayMode = 'hidden';
 let origin: 'menu' | 'pause' = 'menu';
 let runPaused = false;
@@ -60,6 +63,7 @@ export function bindOverlay(next: Partial<OverlayHandlers>): void {
   if (!keysBound) {
     keysBound = true;
     window.addEventListener('keydown', onOverlayKey, true);
+    document.getElementById('settings-close')?.addEventListener('click', () => settingsDialog()?.close());
     applySettingsToDom();
   }
   syncOverlayAttr();
@@ -85,6 +89,7 @@ export function hideOverlay(): void {
   syncOverlayAttr();
   if (!root) return;
   blurOverlay(root);
+  settingsDialog()?.close();
   root.classList.add('hidden');
   root.setAttribute('aria-hidden', 'true');
   root.removeAttribute('data-screen');
@@ -93,20 +98,7 @@ export function hideOverlay(): void {
 export function showMainMenu(): void {
   runPaused = false;
   origin = 'menu';
-  const survivor = selectedSurvivor();
-  renderScreen({
-    screen: 'menu',
-    kicker: 'A sealed chamber',
-    title: 'survivors',
-    sub: 'Aimed Ignis Bolt · channel the circle · descend the Rift. Cinder Yard to Rime Dock.',
-    body: dossierCard(survivor, true),
-    actions: [
-      { label: 'Start run', onClick: () => handlers.onStart(), primary: true },
-      { label: 'The Vessel', onClick: showSurvivorSelect },
-      { label: 'How to play', onClick: () => showHowTo('menu') },
-      { label: 'Settings', onClick: () => showSettings('menu') },
-    ],
-  });
+  renderHall();
 }
 
 export function showSurvivorSelect(): void {
@@ -158,15 +150,11 @@ export function showHowTo(from: 'menu' | 'pause' = origin): void {
 
 export function showSettings(from: 'menu' | 'pause' = origin): void {
   origin = from;
-  const settings = getSettings();
-  renderScreen({
-    screen: 'settings',
-    kicker: 'The choir is unbound',
-    title: 'Settings',
-    sub: 'Volume is stored for when the chamber learns to sing. It will not crash the working.',
-    body: settingsForm(settings),
-    actions: [{ label: 'Back', onClick: goBack, primary: true }],
-  });
+  const dialog = settingsDialog();
+  const body = document.getElementById('settings-body');
+  if (!dialog || !body) return;
+  body.replaceChildren(settingsForm(getSettings()));
+  if (!dialog.open) dialog.showModal();
 }
 
 export function showPause(): void {
@@ -175,13 +163,12 @@ export function showPause(): void {
   renderScreen({
     screen: 'pause',
     kicker: 'The working stills',
-    title: 'Paused',
+    title: 'Simulation Paused',
     sub: 'Esc or Enter to resume. The horde waits.',
     actions: [
-      { label: 'Resume', onClick: () => handlers.onResume(), primary: true },
+      { label: 'Resume Sequence', onClick: () => handlers.onResume(), primary: true },
       { label: 'Settings', onClick: () => showSettings('pause') },
-      { label: 'How to play', onClick: () => showHowTo('pause') },
-      { label: 'Abandon run', onClick: showAbandon },
+      { label: 'Abandon Vessel', onClick: showAbandon },
     ],
   });
 }
@@ -193,9 +180,9 @@ export function showAbandon(): void {
     screen: 'abandon',
     kicker: 'Break the vessel?',
     title: 'Abandon run',
-    sub: 'The Homunculus shatters. Progress in this working is lost.',
+    sub: 'The vessel shatters. Progress in this working is lost.',
     actions: [
-      { label: 'Shatter and return', onClick: () => handlers.onQuit(), primary: true },
+      { label: 'Abandon Vessel', onClick: () => handlers.onQuit(), primary: true },
       { label: 'Keep working', onClick: showPause },
     ],
   });
@@ -216,7 +203,7 @@ export function showLevelUp(items: ItemDef[]): void {
     name.textContent = item.name;
     const hooks = document.createElement('span');
     hooks.className = 'choice-hooks';
-    hooks.textContent = describeHooks(item);
+    hooks.append(...hookLines(item));
     const lore = document.createElement('span');
     lore.className = 'choice-lore';
     lore.textContent = item.lore;
@@ -307,14 +294,26 @@ export function setHoldPrompt(state: {
 }
 
 export function describeHooks(item: ItemDef): string {
-  return item.hooks.map(formatHook).join(' · ');
+  return item.hooks.map((hook) => formatHook(hook).text).join(' · ');
 }
 
-function formatHook(hook: ItemHook): string {
+function hookLines(item: ItemDef): HTMLElement[] {
+  return item.hooks.map((hook) => {
+    const line = document.createElement('span');
+    const formatted = formatHook(hook);
+    line.className = formatted.up ? 'hook-up' : 'hook-down';
+    line.textContent = formatted.text;
+    return line;
+  });
+}
+
+function formatHook(hook: ItemHook): { text: string; up: boolean } {
   const sign = hook.value > 0 ? '+' : '';
   const amount =
     hook.op === 'pct' ? `${sign}${Math.round(hook.value * 100)}%` : `${sign}${hook.value}`;
-  return `${amount} ${STAT_LABEL[hook.stat]}`;
+  const hurt = hook.stat === 'radius' || hook.stat === 'cooldown';
+  const up = hook.value === 0 ? true : hurt ? hook.value < 0 : hook.value > 0;
+  return { text: `${amount} ${STAT_LABEL[hook.stat]}`, up };
 }
 
 function isEscape(event: KeyboardEvent): boolean {
@@ -325,9 +324,14 @@ function onOverlayKey(event: KeyboardEvent): void {
   if (isEscape(event)) {
     event.preventDefault();
     if (event.repeat) return;
+    const dialog = settingsDialog();
+    if (dialog?.open) {
+      dialog.close();
+      return;
+    }
     if (mode === 'pause') {
       handlers.onResume();
-    } else if (mode === 'settings' || mode === 'howto' || mode === 'survivor' || mode === 'abandon') {
+    } else if (mode === 'howto' || mode === 'survivor' || mode === 'abandon') {
       goBack();
     } else if (mode === 'hidden') {
       handlers.onPause();
@@ -335,6 +339,7 @@ function onOverlayKey(event: KeyboardEvent): void {
     return;
   }
   if (event.key === 'Enter') {
+    if (settingsDialog()?.open) return;
     if (mode === 'menu') {
       event.preventDefault();
       handlers.onStart();
@@ -344,7 +349,7 @@ function onOverlayKey(event: KeyboardEvent): void {
     } else if (mode === 'abandon') {
       event.preventDefault();
       handlers.onQuit();
-    } else if (mode === 'survivor' || mode === 'howto' || mode === 'settings') {
+    } else if (mode === 'survivor' || mode === 'howto') {
       event.preventDefault();
       goBack();
     } else if (mode === 'runend') {
@@ -387,6 +392,8 @@ function renderScreen(spec: {
   mode = spec.screen;
   syncOverlayAttr();
   root.dataset.screen = spec.screen;
+  root.setAttribute('aria-labelledby', 'overlay-title');
+  hallEl()?.classList.add('hidden');
   kicker.textContent = spec.kicker;
   title.textContent = spec.title;
   sub.textContent = spec.sub;
@@ -408,6 +415,16 @@ function settingsForm(settings: GameSettings): HTMLElement {
   wrap.appendChild(
     rangeRow('Master volume', 'Silent until audio is bound. Stored anyway.', settings.masterVolume, (value) => {
       patchSettings({ masterVolume: value });
+    }),
+  );
+  wrap.appendChild(
+    rangeRow('SFX', 'Hits, dashes, and the choir of brass.', settings.sfxVolume, (value) => {
+      patchSettings({ sfxVolume: value });
+    }),
+  );
+  wrap.appendChild(
+    rangeRow('Music', 'The working’s drone, when it learns to sing.', settings.musicVolume, (value) => {
+      patchSettings({ musicVolume: value });
     }),
   );
   wrap.appendChild(
@@ -489,7 +506,9 @@ function controlsTable(): HTMLElement {
     ['WASD', 'Walk the vessel.'],
     ['Mouse', `Aim ${primary?.name ?? 'Ignis Bolt'}.`],
     ['Hold LMB', 'Cast along the aim. Never auto-fires.'],
+    ['RMB', 'Secondary. Aimed press.'],
     ['Shift / Space', dashLine],
+    ['Q', 'Ultimate. Aimed press.'],
     ['1 / 2 / 3', 'Choose a tablet when you level.'],
     ['Hold in the circle', 'Channel the Transmutation Circle. Step out and the seal cools.'],
     ['Esc', 'Pause the working.'],
@@ -543,11 +562,11 @@ function recapBody(recap: RunRecap): HTMLElement {
   const rows: [string, string][] = [
     ['Vessel', recap.survivor],
     ['Stage', recap.stage],
-    ['Time', formatTime(recap.time)],
-    ['Level', String(recap.level)],
-    ['Difficulty', `×${recap.coefficient.toFixed(2)}`],
+    ['Total Time', formatTime(recap.time)],
+    ['Level Reached', String(recap.level)],
+    ['Bosses Defeated', String(recap.bosses)],
     [
-      'Tablets',
+      'Final Inventory',
       recap.items.length > 0 ? recap.items.map((item) => `${item.name} ×${item.stacks}`).join(', ') : 'None',
     ],
   ];
@@ -571,9 +590,126 @@ function selectedSurvivor(): SurvivorDef {
   return hit ?? catalog.survivor(catalog.world.defaultSurvivor);
 }
 
-function skillFor(survivor: SurvivorDef, slot: 'primary' | 'utility'): SkillDef | null {
+function skillFor(survivor: SurvivorDef, slot: SkillSlot): SkillDef | null {
   const id = survivor.skills[slot];
   return id ? catalog.skill(id) : null;
+}
+
+function renderHall(): void {
+  const root = overlayEl();
+  const hall = hallEl();
+  if (!root || !hall) return;
+  mode = 'menu';
+  syncOverlayAttr();
+  root.dataset.screen = 'menu';
+  root.setAttribute('aria-labelledby', 'hall-brand');
+  bindHall();
+  fillHallNav();
+  fillHallPreview();
+  fillHallDossier();
+  showRoot(root);
+}
+
+function bindHall(): void {
+  if (hallBound) return;
+  hallBound = true;
+  document.getElementById('hall-commence')?.addEventListener('click', () => handlers.onStart());
+}
+
+function fillHallNav(): void {
+  const nav = document.getElementById('hall-nav');
+  if (!nav) return;
+  nav.replaceChildren();
+  const current = getSettings().survivorId;
+  nav.appendChild(navLabel('Vessel Selection'));
+  for (const survivor of catalog.survivors) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'vessel-pick';
+    btn.dataset.active = survivor.id === current ? '1' : '0';
+    btn.textContent = survivor.name;
+    btn.addEventListener('click', () => {
+      patchSettings({ survivorId: survivor.id });
+      renderHall();
+    });
+    nav.appendChild(btn);
+  }
+  const archives = document.createElement('button');
+  archives.type = 'button';
+  archives.textContent = 'Archives';
+  archives.addEventListener('click', () => showHowTo('menu'));
+  nav.appendChild(archives);
+  const desk = document.createElement('button');
+  desk.type = 'button';
+  desk.textContent = "Alchemist's Desk";
+  desk.addEventListener('click', () => showSettings('menu'));
+  nav.appendChild(desk);
+}
+
+function fillHallPreview(): void {
+  const root = document.getElementById('hall-preview');
+  if (!root) return;
+  const survivor = selectedSurvivor();
+  const src = survivorPortrait(survivor.id);
+  const canvas = document.createElement('canvas');
+  canvas.width = src.width;
+  canvas.height = src.height;
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', survivor.name);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2d context missing');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(src, 0, 0);
+  const ash = document.createElement('div');
+  ash.className = 'hall-particles';
+  root.replaceChildren(ash, canvas);
+}
+
+function fillHallDossier(): void {
+  const root = document.getElementById('hall-dossier');
+  if (!root) return;
+  const survivor = selectedSurvivor();
+  const name = document.createElement('h2');
+  name.className = 'hall-name';
+  name.textContent = survivor.name;
+  const title = document.createElement('p');
+  title.className = 'hall-title';
+  title.textContent = survivor.title ?? 'The Vessel';
+  const lore = document.createElement('p');
+  lore.className = 'hall-lore';
+  lore.textContent = survivor.lore ?? '';
+  const skills = document.createElement('div');
+  skills.className = 'hall-skills';
+  const slots: SkillSlot[] = ['primary', 'secondary', 'utility', 'special'];
+  const glyphs = ['I', 'II', 'III', 'IV'];
+  slots.forEach((slot, index) => {
+    const skill = skillFor(survivor, slot);
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'hall-skill';
+    cell.textContent = skill ? glyphs[index] : '—';
+    if (skill) {
+      const tip = document.createElement('span');
+      tip.className = 'tip';
+      const strong = document.createElement('strong');
+      strong.textContent = skill.name;
+      const hook = document.createElement('span');
+      hook.textContent = skill.hook ?? skill.slot;
+      const flavor = document.createElement('em');
+      flavor.textContent = skill.lore ?? '';
+      tip.append(strong, hook, flavor);
+      cell.appendChild(tip);
+    }
+    skills.appendChild(cell);
+  });
+  root.replaceChildren(name, title, lore, skills);
+}
+
+function navLabel(text: string): HTMLElement {
+  const el = document.createElement('p');
+  el.className = 'dossier-role';
+  el.textContent = text;
+  return el;
 }
 
 function actionButton(label: string, onClick: () => void, primary = false): HTMLButtonElement {
@@ -594,6 +730,14 @@ function showRoot(root: HTMLElement): void {
 
 function overlayEl(): HTMLElement | null {
   return document.getElementById('overlay');
+}
+
+function hallEl(): HTMLElement | null {
+  return document.getElementById('hall');
+}
+
+function settingsDialog(): HTMLDialogElement | null {
+  return document.getElementById('settings-dialog') as HTMLDialogElement | null;
 }
 
 function syncOverlayAttr(): void {

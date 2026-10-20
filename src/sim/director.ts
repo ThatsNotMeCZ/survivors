@@ -1,5 +1,5 @@
+import { countSnipers, spawnAround } from './enemies';
 import type { World } from './world';
-import { spawnAround } from './enemies';
 
 export function stepDirector(world: World, dt: number): void {
   const { loop } = world.catalog;
@@ -7,6 +7,7 @@ export function stepDirector(world: World, dt: number): void {
   world.credits += loop.director.creditRate * world.coefficient * dt;
 
   tryFodder(world);
+  trySniper(world);
   if (world.bossSpawned) return;
   if (world.stageTime >= stage.firstEliteAt) {
     tryElite(world);
@@ -26,6 +27,20 @@ function tryFodder(world: World): void {
   if (spawned < 0) return;
   world.credits -= loop.director.fodderCost;
   world.lastFodderAt = world.stageTime;
+}
+
+function trySniper(world: World): void {
+  const { loop } = world.catalog;
+  const stage = loop.stages[world.stageIndex];
+  if (!stage.sniper) return;
+  if (world.counts.fodder >= loop.maxFodder) return;
+  if (countSnipers(world) >= loop.director.maxSnipers) return;
+  if (world.credits < loop.director.sniperCost) return;
+  if (world.stageTime - world.lastSniperAt < loop.director.sniperInterval) return;
+  const spawned = spawnAround(world, world.catalog.entity(stage.sniper));
+  if (spawned < 0) return;
+  world.credits -= loop.director.sniperCost;
+  world.lastSniperAt = world.stageTime;
 }
 
 function tryElite(world: World): void {

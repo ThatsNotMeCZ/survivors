@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>survivors</title>
+    <title>Hermetic Rifts</title>
     <link rel="stylesheet" href="/src/ui/theme.css" />
     <link rel="stylesheet" href="/src/ui/hud.css" />
   </head>
@@ -19,33 +19,51 @@
         <p><span class="k">renderer</span> <span id="hud-renderer">--</span></p>
       </div>
       <div id="hud-play" class="hidden">
-        <div id="hud-meta">
-          <p id="hud-stage">--</p>
-          <p id="hud-time">0:00</p>
-          <p id="hud-coeff-play">×1.00</p>
-        </div>
         <div id="hud-objective">
           <p id="hud-objective-label">Survive</p>
           <p id="hud-objective-detail"></p>
           <div id="hud-objective-bar" aria-hidden="true"><div id="hud-objective-fill"></div></div>
         </div>
+        <div id="hud-meta">
+          <p id="hud-stage">--</p>
+          <p id="hud-time">0:00</p>
+        </div>
         <div id="hud-vitals">
-          <div class="vital-row">
-            <span class="vital-label">HP</span>
-            <div class="bar hp-track" aria-hidden="true"><div id="hp-fill"></div></div>
-            <span id="hud-hp">--</span>
+          <div class="flask" aria-hidden="true">
+            <div class="flask-neck"></div>
+            <div class="flask-body">
+              <div id="hp-fill"></div>
+            </div>
           </div>
-          <div class="vital-row">
-            <span class="vital-label" id="hud-lv">Lv 1</span>
-            <div class="bar xp-track" aria-hidden="true"><div id="xp-fill"></div></div>
+          <div class="vital-copy">
+            <span id="hud-hp">100 / 100</span>
+            <div class="xp-line" aria-hidden="true"><div id="xp-fill"></div></div>
+            <span id="hud-lv">Lv 1</span>
           </div>
         </div>
-        <div id="hud-skill">
-          <div id="dash-ring" data-key="⇧" aria-hidden="true"></div>
-          <p id="hud-dash">Phase Step ready</p>
+        <div id="hud-skills">
+          <div class="skill-slot" data-slot="primary" data-key="LMB">
+            <div class="skill-sweep"></div>
+            <span class="skill-glyph">I</span>
+            <span class="skill-cd"></span>
+          </div>
+          <div class="skill-slot" data-slot="secondary" data-key="RMB">
+            <div class="skill-sweep"></div>
+            <span class="skill-glyph">II</span>
+            <span class="skill-cd"></span>
+          </div>
+          <div class="skill-slot" data-slot="utility" data-key="⇧">
+            <div class="skill-sweep"></div>
+            <span class="skill-glyph">III</span>
+            <span class="skill-cd"></span>
+          </div>
+          <div class="skill-slot" data-slot="special" data-key="Q">
+            <div class="skill-sweep"></div>
+            <span class="skill-glyph">IV</span>
+            <span class="skill-cd"></span>
+          </div>
         </div>
         <div id="hud-items" class="hidden">
-          <p class="vital-label">Tablets</p>
           <div id="hud-item-list"></div>
         </div>
       </div>
@@ -61,6 +79,14 @@
       <p id="sting-sub"></p>
     </div>
     <div id="overlay" class="hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="overlay-title">
+      <div id="hall" class="hidden">
+        <div class="hall-circle" aria-hidden="true"></div>
+        <h1 id="hall-brand" class="hall-brand">Hermetic Rifts</h1>
+        <nav id="hall-nav" class="hall-nav"></nav>
+        <div id="hall-preview" class="hall-preview"></div>
+        <div id="hall-dossier" class="hall-dossier"></div>
+        <button type="button" id="hall-commence" class="hall-commence">Commence Transmutation</button>
+      </div>
       <div class="overlay-card">
         <p class="overlay-kicker" id="overlay-kicker"></p>
         <h2 id="overlay-title"></h2>
@@ -70,6 +96,13 @@
         <div id="overlay-actions"></div>
       </div>
     </div>
+    <dialog id="settings-dialog" aria-labelledby="settings-title">
+      <p class="overlay-kicker">The choir is unbound</p>
+      <h2 id="settings-title">Settings</h2>
+      <p class="settings-lead">Volume is stored for when the chamber learns to sing.</p>
+      <div id="settings-body"></div>
+      <button type="button" id="settings-close" class="seal-btn action-primary">Close</button>
+    </dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

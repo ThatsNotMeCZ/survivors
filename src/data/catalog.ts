@@ -20,7 +20,14 @@ import skillsRaw from './skills.json';
 import survivorsRaw from './survivors.json';
 import worldRaw from './world.json';
 
-const IMPLEMENTED_EFFECTS = new Set<SkillEffect['type']>(['projectile', 'dash']);
+const IMPLEMENTED_EFFECTS = new Set<SkillEffect['type']>([
+  'projectile',
+  'dash',
+  'self-slow',
+  'delayed-strike',
+  'slow-line',
+  'tether',
+]);
 
 export type Catalog = {
   world: WorldDef;
@@ -100,6 +107,18 @@ function loadCatalog(): Catalog {
         throw new Error(`Stage "${stage.id}" ranged "${stage.ranged}" ai must be ranged`);
       }
     }
+    if (stage.sniper) {
+      const sniper = entities.get(stage.sniper);
+      if (!sniper) {
+        throw new Error(`Stage "${stage.id}" sniper missing: "${stage.sniper}"`);
+      }
+      if (sniper.role !== 'fodder') {
+        throw new Error(`Stage "${stage.id}" sniper "${stage.sniper}" has role "${sniper.role}"`);
+      }
+      if (sniper.ai.type !== 'sniper') {
+        throw new Error(`Stage "${stage.id}" sniper "${stage.sniper}" ai must be sniper`);
+      }
+    }
   }
 
   return {
@@ -160,6 +179,9 @@ function asObstacles(raw: unknown): ObstacleCatalog {
     if (!(data.counts[kind] > 0)) {
       throw new Error(`obstacles.json counts.${kind} must be > 0`);
     }
+  }
+  if (!(data.dynamicHazards >= 0)) {
+    throw new Error('obstacles.json dynamicHazards must be >= 0');
   }
   return data;
 }

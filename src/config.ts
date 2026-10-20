@@ -19,3 +19,4 @@ export const FX_HIT = 0;
 export const FX_DEATH = 1;
 export const FX_MUZZLE = 2;
 export const FX_DASH = 3;
+export const FX_STRIKE = 4;

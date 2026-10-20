@@ -5,7 +5,7 @@ Content lives in `src/data/*.json`. Numbers do not belong in `src/sim/` classes.
 | File | Contains |
 |---|---|
 | `world.json` | map size, camera `viewZoom`, default survivor/enemy, projectile pool |
-| `loop.json` | stages, director, XP curve, teleporter, caps |
+| `loop.json` | stages, director, XP curve (`xpBase` 32, `xpGrowth` 1.30), teleporter, caps |
 | `obstacles.json` | pillar / hazard / volatile counts, radii, keep-outs, biome display names |
 | `survivors.json` | stats, 4 skill slots, starting items, view |
 | `skills.json` | primary / secondary / utility / special |
@@ -16,16 +16,27 @@ Schema: `src/data/schema.ts`. Loader: `src/data/catalog.ts` (version check, uniq
 
 ## Skill slots
 
-`primary` LMB · `secondary` RMB · `utility` Shift/Space · `special` unused
+`primary` LMB · `secondary` RMB · `utility` Shift/Space · `special` Q
 
 `input`: `hold` or `press` (rising edge).
 
 ## Implemented effects
 
-- `projectile` — aimed bolt
-- `dash` — move burst + i-frames
+- `projectile` — aimed bolt. Optional `pierce`, `flyOver`, `impactRadius` (mortar lands at cursor, ignores enemies in flight)
+- `dash` — move burst + i-frames. Optional `decoyDuration` (fodder-only aggro dummy)
+- `self-slow` — player speed mul for a duration
+- `delayed-strike` — telegraph, then small-radius AoE at cursor
+- `slow-line` — brimstone seam; fodder-only slow
+- `tether` — first elite/boss hit is rooted; fodder touching it burn. Fodder or miss wastes the cooldown
 
 Unknown `type` throws at boot. To add one: variant in `schema.ts` → case in `sim/skills.ts` → this list.
+
+## Survivors
+
+| id | Display | Role |
+|---|---|---|
+| `runner` | Homunculus | Fast skirmisher. Bolt, Piercing Aether, Phase Step, Crucible Cull |
+| `penitent` | The Penitent | Caster/controller. Censer Lob, Brimstone Line, Ash Step, Condemnation Tether |
 
 ## Items
 
@@ -46,18 +57,21 @@ Hooks only. Every draft item has a tradeoff (no pure screen-clear). Equip via `s
 | `salt-ward` | Salt Effigy | common | −15% hurtbox, −10% damage |
 | `lunar-tithe` | Pale Moon Covenant | lunar (weight 0.08) | +75% damage, −35% max HP, +18% hurtbox |
 
-Display names elsewhere: survivor `runner` → **Homunculus**; skill `bolt` → **Ignis Bolt**; skill `dash` → **Phase Step**; XP gems → **Mercury Drops** / Essence.
+Display names elsewhere: survivor `runner` → **Homunculus**; `penitent` → **The Penitent**; skill `bolt` → **Ignis Bolt**; skill `dash` → **Phase Step**; XP gems → **Mercury Drops** / Essence.
 
 ## Entity AI
 
-- `chase` — seek player
+- `chase` — seek player (fodder peel toward an Ash Step decoy if one is live)
 - `ranged` — keep `keep`–`range`, windup telegraph, then `projectile` bolt (enemy team)
+- `sniper` — stay at `keep`, 1.5s laser telegraph, hitscan. Pillars block. Directed separately (`sniperCost`)
+
+Elites spawn with the **Noxious** modifier: contact slow, corpse explode, permanent acid `hazard`.
 
 Unknown `ai.type` is a catalog/schema miss; add the JSON shape then a case in `sim/enemies.ts`.
 
 ## Stages
 
-`loop.json` `stages[]`. Each stage points at fodder / elite / boss ids. Optional `ranged` fodder id + `rangedChance` (slice: 0.22). Slice: Cinder Yard → Rime Dock.
+`loop.json` `stages[]`. Each stage points at fodder / elite / boss ids. Optional `ranged` fodder id + `rangedChance` (slice: 0.22). Optional `sniper` id. Slice: Cinder Yard → Rime Dock.
 
 ## Obstacles (sim)
 
@@ -65,7 +79,7 @@ Unknown `ai.type` is a catalog/schema miss; add the JSON shape then a case in `s
 
 ## View
 
-`src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor). `pixel-textures.ts` uploads them once. Player / elites / bosses / obstacles = sprites. Fodder / gems / sparks = `SpriteGPULayer`. Keys are biome+frame so a PNG swap later does not touch combat.
+`src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor). `pixel-textures.ts` uploads any key Phaser does not already have (so a destroyed Game can boot again). Player / elites / bosses / obstacles = sprites. Fodder / gems / sparks = `SpriteGPULayer`. Player keys are vessel+biome; other keys are biome+frame so a PNG swap later does not touch combat. Hall portraits seal interior holes (no hall-circle showing through the vessel).
 
 ## UI (HTML overlay)
 
@@ -74,9 +88,9 @@ Menus and HUD are `src/ui/`, not Phaser text. One overlay stack: HUD < prompts <
 | Module | Role |
 |---|---|
 | `theme.css` | Dark Hermetic tokens (brass, ember, mercury, parchment) |
-| `hud.css` / `hud.ts` | In-run vitals, dash seal, items, objective |
-| `overlay.ts` | Hall, vessel, how-to, settings, pause, level-up, recap, stings, hold prompt |
-| `settings.ts` | localStorage volume/mute/screenshake/reduce-VFX + selected vessel |
+| `hud.css` / `hud.ts` | Objective banner, biome clock, flask HP, 4 skill slots, 24px item grid |
+| `overlay.ts` | 3-column hall, how-to, pause, hermetic tablets, recap, stings, hold prompt |
+| `settings.ts` | `<dialog>`: master/SFX/music, mute, screenshake, reduce-VFX, selected vessel |
 
 Display strings come from catalog `name` / `lore`. Settings persist even though audio is `noAudio` for now.
 

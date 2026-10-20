@@ -1,9 +1,10 @@
 import { FX_DEATH, FX_HIT } from '../config';
 import type { Obstacle, ObstacleKind } from '../data/schema';
 import { aabbOverlap, circlesOverlap, pushCircles } from './collision';
-import { ROLE_BOSS, killEnemy } from './enemies';
+import { ROLE_BOSS, startEnemyDeath } from './enemies';
 import { emitFx } from './fx';
-import { TEAM_PLAYER, killProjectile } from './projectiles';
+import { FLAG_FLYOVER, TEAM_PLAYER, killProjectile } from './projectiles';
+import { applyEnemySlow, applySlow, tickSlow } from './status';
 import { hashString, mulberry32 } from './rng';
 import { createHash, hashClear, hashInsert, hashQuery, type SpatialHash } from './spatial-hash';
 import type { World } from './world';
@@ -17,8 +18,8 @@ export type ObstaclePool = {
   nextId: number;
 };
 
-export function obstacleCap(counts: Record<ObstacleKind, number>): number {
-  return counts.pillar + counts.hazard + counts.volatile;
+export function obstacleCap(counts: Record<ObstacleKind, number>, dynamicHazards = 0): number {
+  return counts.pillar + counts.hazard + counts.volatile + dynamicHazards;
 }
 
 export function createObstaclePool(cap: number, cell: number): ObstaclePool {
@@ -56,8 +57,7 @@ export function playerPhasing(world: World): boolean {
 }
 
 export function playerSpeedMul(world: World): number {
-  let mul = 1;
-  if (world.player.slowRemain > 0) mul *= world.catalog.obstacles.volatile.rimeSlowMul;
+  let mul = world.player.slowMul;
   if (!playerPhasing(world) && overlappingHazard(world, world.player.x, world.player.y, world.player.radius)) {
     mul *= world.catalog.obstacles.hazard.playerSpeedMul;
   }
@@ -65,8 +65,7 @@ export function playerSpeedMul(world: World): number {
 }
 
 export function enemySpeedMul(world: World, index: number): number {
-  let mul = 1;
-  if (world.enemies.slowRemain[index] > 0) mul *= world.catalog.obstacles.volatile.rimeSlowMul;
+  let mul = world.enemies.slowMul[index];
   if (overlappingHazard(world, world.enemies.x[index], world.enemies.y[index], world.enemies.radius[index])) {
     mul *= world.catalog.obstacles.hazard.enemySpeedMul;
   }
@@ -156,6 +155,7 @@ export function hitObstacleProjectiles(world: World): void {
       }
     }
     if (hit < 0) continue;
+    if ((projectiles.flags[i] & FLAG_FLYOVER) !== 0) continue;
     const obs = obstacles.items[hit];
     emitFx(world.fx, FX_HIT, projectiles.x[i], projectiles.y[i], 0xfff4c8);
     if (projectiles.team[i] === TEAM_PLAYER && obs.type === 'volatile' && obs.state === 'intact') {
@@ -170,14 +170,16 @@ export function hitObstacleProjectiles(world: World): void {
   }
 }
 
+export function spawnAcidPool(world: World, x: number, y: number): void {
+  const stage = world.catalog.loop.stages[world.stageIndex];
+  const name = world.catalog.obstacles.biomes[stage.id].hazard;
+  spawnObstacle(world, 'hazard', x, y, name);
+  rebuildObstacleHash(world);
+}
+
 export function stepObstacles(world: World, dt: number): void {
   const { player, obstacles } = world;
-  if (player.slowRemain > 0) player.slowRemain = Math.max(0, player.slowRemain - dt);
-  const { enemies } = world;
-  for (let i = 0; i < enemies.cap; i += 1) {
-    if (enemies.alive[i] === 0) continue;
-    if (enemies.slowRemain[i] > 0) enemies.slowRemain[i] = Math.max(0, enemies.slowRemain[i] - dt);
-  }
+  tickSlow(player, dt);
 
   if (!playerPhasing(world) && overlappingHazard(world, player.x, player.y, player.radius)) {
     player.hp -= world.catalog.obstacles.hazard.dps * world.coefficient * dt;
@@ -221,13 +223,13 @@ function detonateVolatile(world: World, index: number): void {
     if (enemies.alive[i] === 0) continue;
     if (!circlesOverlap(obs.x, obs.y, blast, enemies.x[i], enemies.y[i], enemies.radius[i])) continue;
     enemies.hp[i] -= enemyDmg;
-    if (rime) enemies.slowRemain[i] = Math.max(enemies.slowRemain[i], cfg.rimeSlowDuration);
-    if (enemies.hp[i] <= 0) killEnemy(world, i);
+    if (rime) applyEnemySlow(enemies, i, cfg.rimeSlowMul, cfg.rimeSlowDuration);
+    if (enemies.hp[i] <= 0) startEnemyDeath(world, i);
   }
   const { player } = world;
   if (circlesOverlap(obs.x, obs.y, blast, player.x, player.y, player.radius)) {
     if (player.iframeRemain <= 0) player.hp -= cfg.playerDamage;
-    if (rime) player.slowRemain = Math.max(player.slowRemain, cfg.rimeSlowDuration);
+    if (rime) applySlow(player, cfg.rimeSlowMul, cfg.rimeSlowDuration);
   }
   obs.state = 'detonated';
   obs.timer = 0;

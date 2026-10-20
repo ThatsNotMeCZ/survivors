@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
-import { FX_DASH, FX_DEATH, FX_HIT, FX_MUZZLE, SPARK_CAP } from '../config';
+import { FX_DASH, FX_DEATH, FX_HIT, FX_MUZZLE, FX_STRIKE, SPARK_CAP } from '../config';
 import { catalog } from '../data/catalog';
-import type { ItemDef } from '../data/schema';
+import type { ItemDef, SkillSlot } from '../data/schema';
 import { ROLE_BOSS, ROLE_ELITE, ROLE_FODDER } from '../sim/enemies';
 import { emptyInput, type InputFrame } from '../sim/input-frame';
 import { applyLevelChoice } from '../sim/level';
 import { currentObjective, currentStage, type Objective } from '../sim/loop';
-import { TEAM_ENEMY } from '../sim/projectiles';
+import { FLAG_IMPACT, FLAG_PIERCE, FLAG_TETHER, TEAM_ENEMY } from '../sim/projectiles';
+import { ZONE_LINE, ZONE_STRIKE } from '../sim/zones';
 import { aimAngle, createWorld, stepWorld, type World } from '../sim/world';
 import { formatTime, initArenaHud, setHudCombat, setHudFps } from '../ui/hud';
 import {
@@ -118,7 +119,11 @@ export class ArenaScene extends Phaser.Scene {
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   private shift!: Phaser.Input.Keyboard.Key;
   private space!: Phaser.Input.Keyboard.Key;
+  private qKey!: Phaser.Input.Keyboard.Key;
+  private decoySprite!: Phaser.GameObjects.Image;
   private utilityWasDown = false;
+  private secondaryWasDown = false;
+  private specialWasDown = false;
   private lastStageGen = -1;
   private lastPhase: World['phase'] = 'play';
   private lastStageIndex = 0;
@@ -178,9 +183,10 @@ export class ArenaScene extends Phaser.Scene {
 
     this.playerGlow = this.add.image(0, 0, 'px-glow').setDepth(4).setAlpha(0.18).setScale(2.4);
     this.playerGlow.setBlendMode(Phaser.BlendModes.ADD);
-    this.playerSprite = this.add.image(this.world.player.x, this.world.player.y, playerBodyKey(biome)).setDepth(5);
-    this.playerEyes = this.add.image(0, 0, playerEyesKey(biome)).setDepth(6);
-    this.playerCatalyst = this.add.image(0, 0, playerCatalystKey(biome)).setDepth(6);
+    this.playerSprite = this.add.image(this.world.player.x, this.world.player.y, this.bodyKey(biome)).setDepth(5);
+    this.playerEyes = this.add.image(0, 0, this.eyesKey(biome)).setDepth(6);
+    this.playerCatalyst = this.add.image(0, 0, this.catalystKey(biome)).setDepth(6);
+    this.decoySprite = this.add.image(0, 0, this.bodyKey(biome)).setVisible(false).setDepth(4).setAlpha(0.45).setTint(0xc4a05a);
     this.eliteSprites = [];
     this.eliteGlyphs = [];
     for (let i = 0; i < loop.maxElites; i += 1) {
@@ -213,7 +219,7 @@ export class ArenaScene extends Phaser.Scene {
     this.ghosts = [];
     this.ghostLife = new Float32Array(GHOST_CAP);
     for (let i = 0; i < GHOST_CAP; i += 1) {
-      this.ghosts.push(this.add.image(0, 0, playerBodyKey(biome)).setVisible(false).setDepth(4).setAlpha(0).setTint(0xb8fff8));
+      this.ghosts.push(this.add.image(0, 0, this.bodyKey(biome)).setVisible(false).setDepth(4).setAlpha(0).setTint(0xb8fff8));
     }
 
     this.ambientSprites = [];
@@ -234,6 +240,7 @@ export class ArenaScene extends Phaser.Scene {
     this.wasd = this.input.keyboard.addKeys('W,A,S,D') as typeof this.wasd;
     this.shift = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.qKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
     this.input.mouse?.disableContextMenu();
 
     hideOverlay();
@@ -280,8 +287,6 @@ export class ArenaScene extends Phaser.Scene {
       tel.state === 'charging' &&
       Math.hypot(this.world.player.x - tel.x, this.world.player.y - tel.y) <= tel.radius;
     const copy = objectiveCopy(objective);
-    const utilityId = this.world.survivor.skills.utility;
-    const utility = utilityId ? this.world.catalog.skill(utilityId) : null;
     setHudCombat({
       stage: stage.name,
       biome: this.biome(),
@@ -292,15 +297,13 @@ export class ArenaScene extends Phaser.Scene {
       xpNeed: this.world.xpNeed,
       runTime: this.world.runTime,
       coefficient: this.world.coefficient,
-      dashName: utility?.name ?? 'Phase Step',
-      dashCd: this.world.player.skillCd.utility,
-      dashMax: utility ? utility.cooldown * this.world.stats.cooldownMul : 0.9,
       iframe: this.world.player.iframeRemain > 0,
       objective: copy.label,
       objectiveDetail: copy.detail,
       objectivePct: objective.pct,
       holding,
       boss: this.world.focus.kind === 'boss',
+      skills: hudSkills(this.world),
       items: this.world.inventory.map((inst) => {
         const def = this.world.catalog.item(inst.id);
         return { name: def.name, stacks: inst.stacks, rarity: def.rarity };
@@ -310,6 +313,22 @@ export class ArenaScene extends Phaser.Scene {
 
   private biome(): BiomeId {
     return stageBiome(currentStage(this.world).id);
+  }
+
+  private vesselId(): string {
+    return this.world.survivor.id;
+  }
+
+  private bodyKey(biome: BiomeId): string {
+    return playerBodyKey(biome, this.vesselId());
+  }
+
+  private eyesKey(biome: BiomeId): string {
+    return playerEyesKey(biome, this.vesselId());
+  }
+
+  private catalystKey(biome: BiomeId): string {
+    return playerCatalystKey(biome, this.vesselId());
   }
 
   private readInput(): void {
@@ -325,6 +344,8 @@ export class ArenaScene extends Phaser.Scene {
       this.inputFrame.pressed.utility = false;
       this.inputFrame.pressed.special = false;
       this.utilityWasDown = this.shift.isDown || this.space.isDown;
+      this.secondaryWasDown = this.input.activePointer.rightButtonDown();
+      this.specialWasDown = this.qKey.isDown;
       return;
     }
     const left = this.cursors.left.isDown || this.wasd.A.isDown;
@@ -340,15 +361,19 @@ export class ArenaScene extends Phaser.Scene {
     this.inputFrame.aimY = worldPoint.y;
 
     const utilityDown = this.shift.isDown || this.space.isDown;
+    const secondaryDown = pointer.rightButtonDown();
+    const specialDown = this.qKey.isDown;
     this.inputFrame.held.primary = pointer.leftButtonDown();
-    this.inputFrame.held.secondary = pointer.rightButtonDown();
+    this.inputFrame.held.secondary = secondaryDown;
     this.inputFrame.held.utility = utilityDown;
-    this.inputFrame.held.special = false;
+    this.inputFrame.held.special = specialDown;
     this.inputFrame.pressed.primary = false;
-    this.inputFrame.pressed.secondary = false;
+    this.inputFrame.pressed.secondary = secondaryDown && !this.secondaryWasDown;
     this.inputFrame.pressed.utility = utilityDown && !this.utilityWasDown;
-    this.inputFrame.pressed.special = false;
+    this.inputFrame.pressed.special = specialDown && !this.specialWasDown;
     this.utilityWasDown = utilityDown;
+    this.secondaryWasDown = secondaryDown;
+    this.specialWasDown = specialDown;
   }
 
   private syncView(dt: number): void {
@@ -357,9 +382,9 @@ export class ArenaScene extends Phaser.Scene {
     if (this.lastStageGen !== this.world.stageGen) {
       this.lastStageGen = this.world.stageGen;
       this.floor.setTexture(`px-floor-${biome}`);
-      this.playerSprite.setTexture(playerBodyKey(biome));
-      this.playerEyes.setTexture(playerEyesKey(biome));
-      this.playerCatalyst.setTexture(playerCatalystKey(biome));
+      this.playerSprite.setTexture(this.bodyKey(biome));
+      this.playerEyes.setTexture(this.eyesKey(biome));
+      this.playerCatalyst.setTexture(this.catalystKey(biome));
       this.lastCircleKey = '';
     }
     this.syncPlayer(dt, biome);
@@ -386,6 +411,22 @@ export class ArenaScene extends Phaser.Scene {
       sprite.setTexture(projectiles.team[i] === TEAM_ENEMY ? enemyBolt : 'px-bolt-player');
       sprite.setVisible(true);
       sprite.setPosition(Math.round(projectiles.x[i]), Math.round(projectiles.y[i]));
+      if (projectiles.team[i] === TEAM_ENEMY) {
+        sprite.clearTint();
+        sprite.setScale(1);
+      } else if ((projectiles.flags[i] & FLAG_TETHER) !== 0) {
+        sprite.setTint(0xc4a05a);
+        sprite.setScale(1.6);
+      } else if ((projectiles.flags[i] & FLAG_PIERCE) !== 0) {
+        sprite.setTint(0x88ffff);
+        sprite.setScale(1.5, 0.7);
+      } else if ((projectiles.flags[i] & FLAG_IMPACT) !== 0) {
+        sprite.setTint(0xffaa55);
+        sprite.setScale(1.3);
+      } else {
+        sprite.clearTint();
+        sprite.setScale(1);
+      }
     }
   }
 
@@ -402,6 +443,14 @@ export class ArenaScene extends Phaser.Scene {
     const y = Math.round(player.y + bob);
     this.playerSprite.setPosition(x, y);
     this.playerSprite.setAlpha(player.iframeRemain > 0 ? 0.45 : 1);
+    if (this.world.decoy.active) {
+      this.decoySprite.setTexture(this.bodyKey(biome));
+      this.decoySprite.setVisible(true);
+      this.decoySprite.setPosition(Math.round(this.world.decoy.x), Math.round(this.world.decoy.y));
+      this.decoySprite.setAlpha(0.3 + 0.2 * Math.sin(this.world.runTime * 8));
+    } else {
+      this.decoySprite.setVisible(false);
+    }
     this.playerGlow.setPosition(x, y);
     this.playerGlow.setAlpha(biome === 'cinder' ? 0.16 : 0.12);
     this.playerEyes.setPosition(x + Math.round(Math.cos(ang) * 2), y - 4 + Math.round(Math.sin(ang) * 1));
@@ -457,19 +506,21 @@ export class ArenaScene extends Phaser.Scene {
       this.hideFodderSlot(i);
       if (fodder) {
         const defId = enemies.defId[i];
-        const ranged = defId ? this.world.catalog.entity(defId).ai.type === 'ranged' : false;
+        const aiType = defId ? this.world.catalog.entity(defId).ai.type : 'chase';
+        const ranged = aiType === 'ranged' || aiType === 'sniper';
         const layer = ranged ? this.spitterLayers[biome] : this.miteLayers[biome][miteFrame];
         const key = ranged ? `spitter-${biome}` : `mite-${biome}-${miteFrame}`;
+        const tint = aiType === 'sniper' ? 0xb47aff : 0xffffff;
         this.gpuMember.x = enemies.x[i];
         this.gpuMember.y = enemies.y[i];
         this.gpuMember.scaleX = 1;
         this.gpuMember.scaleY = 1;
         this.gpuMember.alpha = 1;
-        this.gpuMember.tintBlend = 0;
-        this.gpuMember.tintBottomLeft = 0xffffff;
-        this.gpuMember.tintTopLeft = 0xffffff;
-        this.gpuMember.tintBottomRight = 0xffffff;
-        this.gpuMember.tintTopRight = 0xffffff;
+        this.gpuMember.tintBlend = aiType === 'sniper' ? 0.55 : 0;
+        this.gpuMember.tintBottomLeft = tint;
+        this.gpuMember.tintTopLeft = tint;
+        this.gpuMember.tintBottomRight = tint;
+        this.gpuMember.tintTopRight = tint;
         layer.editMember(i, this.gpuMember);
         this.fodderShown[key][i] = 1;
       }
@@ -506,6 +557,13 @@ export class ArenaScene extends Phaser.Scene {
         glyph.setVisible(true);
         glyph.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i] + 18));
         glyph.setRotation(this.world.runTime * 1.1);
+        glyph.setTint(0x66ff88);
+        if (enemies.corpseRemain[i] > 0) {
+          const flashCorpse = Math.floor(this.world.runTime * 16) % 2 === 0;
+          sprite.setTint(flashCorpse ? 0x88ffaa : 0x226644);
+        } else {
+          sprite.clearTint();
+        }
         eliteSlot += 1;
       }
     }
@@ -668,6 +726,7 @@ export class ArenaScene extends Phaser.Scene {
       level: this.world.level,
       coefficient: this.world.coefficient,
       survivor: this.world.survivor.name,
+      bosses: this.world.bossesDefeated,
       items: this.world.inventory.map((inst) => {
         const def = this.world.catalog.item(inst.id);
         return { name: def.name, stacks: inst.stacks };
@@ -722,11 +781,42 @@ export class ArenaScene extends Phaser.Scene {
     g.clear();
     const { enemies } = this.world;
     const flash = Math.floor(this.world.runTime * 12) % 2 === 0;
-    const line = flash ? (biome === 'cinder' ? 0xffffff : 0xffffff) : biome === 'cinder' ? 0xff7a3a : 0x55ffff;
+    const line = flash ? 0xffffff : biome === 'cinder' ? 0xff7a3a : 0x55ffff;
     for (let i = 0; i < enemies.cap; i += 1) {
-      if (enemies.alive[i] === 0 || enemies.windup[i] <= 0) continue;
+      if (enemies.alive[i] === 0) continue;
+      if (enemies.corpseRemain[i] > 0) {
+        const pop = this.world.catalog.loop.noxious.popRadius;
+        g.lineStyle(2, flash ? 0xccffdd : 0x33cc66, 0.95);
+        g.strokeCircle(Math.round(enemies.x[i]), Math.round(enemies.y[i]), pop);
+      }
+      if (enemies.rootRemain[i] > 0) {
+        g.lineStyle(2, 0xc4a05a, 0.85);
+        g.lineBetween(
+          Math.round(this.world.player.x),
+          Math.round(this.world.player.y),
+          Math.round(enemies.x[i]),
+          Math.round(enemies.y[i]),
+        );
+      }
+      if (enemies.windup[i] <= 0) continue;
       const defId = enemies.defId[i];
       const ai = defId ? this.world.catalog.entity(defId).ai : null;
+      if (ai?.type === 'sniper') {
+        const laser = flash ? 0xff2244 : 0x4488ff;
+        const dx = enemies.aimX[i] - enemies.x[i];
+        const dy = enemies.aimY[i] - enemies.y[i];
+        const len = Math.hypot(dx, dy) || 1;
+        const far = 980;
+        dashedLine(g, enemies.x[i], enemies.y[i], enemies.x[i] + (dx / len) * far, enemies.y[i] + (dy / len) * far, laser);
+        g.lineStyle(2, laser, 0.55);
+        g.lineBetween(
+          Math.round(enemies.x[i]),
+          Math.round(enemies.y[i]),
+          Math.round(enemies.x[i] + (dx / len) * far),
+          Math.round(enemies.y[i] + (dy / len) * far),
+        );
+        continue;
+      }
       const max = ai && ai.type === 'ranged' ? ai.windup : 0.4;
       const grow = max > 0 ? 1 - enemies.windup[i] / max : 1;
       dashedLine(g, enemies.x[i], enemies.y[i], enemies.aimX[i], enemies.aimY[i], line);
@@ -741,6 +831,23 @@ export class ArenaScene extends Phaser.Scene {
       const radius = this.world.catalog.obstacles.volatile.explosionRadius;
       g.lineStyle(1, flash ? 0xffffff : 0xff3322, 0.95);
       g.strokeCircle(Math.round(obs.x), Math.round(obs.y), radius);
+    }
+    const { zones } = this.world;
+    for (let i = 0; i < zones.cap; i += 1) {
+      if (zones.alive[i] === 0) continue;
+      if (zones.kind[i] === ZONE_STRIKE) {
+        const grow = Math.max(0.25, 1 - zones.remain[i] / 0.7);
+        g.lineStyle(2, flash ? 0xfff4c8 : 0xffaa33, 0.95);
+        g.strokeCircle(Math.round(zones.x[i]), Math.round(zones.y[i]), Math.round(zones.radius[i] * grow));
+      } else if (zones.kind[i] === ZONE_LINE) {
+        const half = zones.length[i] * 0.5;
+        const x0 = zones.x[i] - zones.dirX[i] * half;
+        const y0 = zones.y[i] - zones.dirY[i] * half;
+        const x1 = zones.x[i] + zones.dirX[i] * half;
+        const y1 = zones.y[i] + zones.dirY[i] * half;
+        g.lineStyle(Math.max(2, zones.width[i] * 0.35), flash ? 0xffcc66 : 0xff5522, 0.8);
+        g.lineBetween(Math.round(x0), Math.round(y0), Math.round(x1), Math.round(y1));
+      }
     }
   }
 
@@ -787,6 +894,7 @@ export class ArenaScene extends Phaser.Scene {
       else if (kind === FX_DEATH) spawnBurst(this.sparks, x, y, tint, 10, 140, 0.28);
       else if (kind === FX_MUZZLE) spawnBurst(this.sparks, x, y, tint, 3, 70, 0.14);
       else if (kind === FX_DASH) spawnBurst(this.sparks, x, y, tint, 6, 110, 0.2);
+      else if (kind === FX_STRIKE) spawnBurst(this.sparks, x, y, tint, 14, 160, 0.32);
     }
     fx.count = 0;
   }
@@ -825,11 +933,11 @@ export class ArenaScene extends Phaser.Scene {
       if (slot >= 0) {
         this.ghostLife[slot] = 0.18;
         const ghost = this.ghosts[slot];
-        ghost.setTexture(playerBodyKey(biome));
+        ghost.setTexture(this.bodyKey(biome));
         ghost.setPosition(Math.round(player.x), Math.round(player.y));
         ghost.setVisible(true);
         ghost.setAlpha(0.5);
-        ghost.setTint(0xb8fff8);
+        ghost.setTint(this.world.survivor.id === 'penitent' ? 0xffc878 : 0xb8fff8);
       }
     }
     for (let i = 0; i < GHOST_CAP; i += 1) {
@@ -1029,6 +1137,27 @@ function dashedLine(
     );
     d += 9;
   }
+}
+
+function hudSkills(world: World) {
+  const slots: SkillSlot[] = ['primary', 'secondary', 'utility', 'special'];
+  const glyphs = ['I', 'II', 'III', 'IV'];
+  return slots.map((slot, index) => {
+    const id = world.survivor.skills[slot];
+    if (!id) {
+      return { slot, name: '', glyph: glyphs[index], cd: 0, max: 0, empty: true, iframe: false };
+    }
+    const skill = world.catalog.skill(id);
+    return {
+      slot,
+      name: skill.name,
+      glyph: glyphs[index],
+      cd: world.player.skillCd[slot],
+      max: skill.cooldown * world.stats.cooldownMul,
+      empty: false,
+      iframe: slot === 'utility' && world.player.iframeRemain > 0,
+    };
+  });
 }
 
 function resolveSurvivorId(): string {

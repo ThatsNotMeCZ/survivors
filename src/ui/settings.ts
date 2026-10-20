@@ -1,5 +1,7 @@
 export type GameSettings = {
   masterVolume: number;
+  sfxVolume: number;
+  musicVolume: number;
   muted: boolean;
   screenshake: boolean;
   reduceVfx: boolean;
@@ -10,6 +12,8 @@ const STORAGE_KEY = 'survivors.settings.v1';
 
 const DEFAULTS: GameSettings = {
   masterVolume: 0.7,
+  sfxVolume: 0.8,
+  musicVolume: 0.6,
   muted: false,
   screenshake: true,
   reduceVfx: false,
@@ -22,12 +26,16 @@ export function getSettings(): GameSettings {
   if (cached) return cached;
   cached = { ...DEFAULTS, ...readStored() };
   cached.masterVolume = clamp01(cached.masterVolume);
+  cached.sfxVolume = clamp01(cached.sfxVolume ?? DEFAULTS.sfxVolume);
+  cached.musicVolume = clamp01(cached.musicVolume ?? DEFAULTS.musicVolume);
   return cached;
 }
 
 export function patchSettings(partial: Partial<GameSettings>): GameSettings {
   const next = { ...getSettings(), ...partial };
   next.masterVolume = clamp01(next.masterVolume);
+  next.sfxVolume = clamp01(next.sfxVolume);
+  next.musicVolume = clamp01(next.musicVolume);
   cached = next;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -44,6 +52,8 @@ export function applySettingsToDom(settings = getSettings()): void {
   document.documentElement.dataset.reduceVfx = settings.reduceVfx ? '1' : '0';
   document.documentElement.dataset.screenshake = settings.screenshake ? '1' : '0';
   document.documentElement.style.setProperty('--master-volume', String(settings.masterVolume));
+  document.documentElement.style.setProperty('--sfx-volume', String(settings.sfxVolume));
+  document.documentElement.style.setProperty('--music-volume', String(settings.musicVolume));
 }
 
 export function hasQueryFlag(name: string): boolean {

@@ -7,14 +7,16 @@ Verb: **A — player aims primary.**
 | WASD | move |
 | Mouse | aim (character faces cursor) |
 | Hold LMB | fire primary along aim |
-| Shift / Space | Phase Step (`dash` skill) with i-frames |
+| RMB | secondary (aimed press) |
+| Shift / Space | utility dash with i-frames |
+| Q | ultimate (aimed press) |
 | Esc | pause (HTML overlay; sim frozen) |
 
 Primary never auto-aims and never fires without a held/pressed input. Screen-clear and orbital weapons are banned on primary.
 
 Dash is a press skill: i-frames skip **contact damage and enemy projectiles**. Direction = move vector, or aim if standing. During dash the player is **not** body-separated, so the dash still cuts through a pack.
 
-Secondary / special slots exist on the survivor but are unbound. Content: `knowledge/tech/catalog.md`.
+Homunculus: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull. The Penitent: Censer Lob / Brimstone Line / Ash Step / Condemnation Tether. Numbers: `src/data/skills.json`.
 
 ## Bodies
 
@@ -32,6 +34,10 @@ Volatiles are a skill-shot, not an AFK farm. Pillars break edge-kiting; they are
 
 ## Ranged
 
-Fodder spitters keep distance, telegraph a line (view aims at player position at windup start), then fire a team-tagged bolt. Player bolts hit enemies; enemy bolts hit the player. Standing still is punished by snipers, not by extra HP sponges.
+Fodder spitters keep distance, telegraph a line (view aims at player position at windup start), then fire a team-tagged bolt. Player bolts hit enemies; enemy bolts hit the player.
 
-Run (`ArenaScene`): director-spawned fodder + spitters + elites, teleporter hold, stage boss, arena obstacles. Primary never auto-aims.
+**Astral Watcher** (`enemy-astral-sniper`): off-ring sniper. 1.5s red/blue laser locked at windup start, then hitscan. Pillars block the line. I-frames or stepping off the line negate it. Low HP, high director credit.
+
+**Noxious elites** (`elite-poison-slow`): every elite. Contact applies a slow. On death, 0.5s corpse telegraph, then a pop and a **permanent acid pool** (`hazard`). Kill them outside the Transmutation Circle or the Hold loses floor.
+
+Run (`ArenaScene`): director-spawned fodder + spitters + snipers + noxious elites, teleporter hold, stage boss, arena obstacles. Primary never auto-aims.

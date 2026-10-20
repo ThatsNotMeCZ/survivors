@@ -6,10 +6,7 @@ import {
   type BiomeId,
 } from './procedural-pixel-art';
 
-let uploaded = false;
-
 export function uploadPixelTextures(scene: Phaser.Scene): void {
-  if (uploaded) return;
   const canvases = generateAllEntityCanvases();
   canvases.forEach((canvas, key) => addCanvasTexture(scene, key, canvas));
   const { width, height } = catalog.world;
@@ -17,7 +14,6 @@ export function uploadPixelTextures(scene: Phaser.Scene): void {
   for (const biome of biomes) {
     addCanvasTexture(scene, `px-floor-${biome}`, generateFloor(biome, width, height));
   }
-  uploaded = true;
 }
 
 function addCanvasTexture(scene: Phaser.Scene, key: string, canvas: HTMLCanvasElement): void {

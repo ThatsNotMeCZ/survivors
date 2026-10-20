@@ -5,6 +5,7 @@
     "hazard": 8,
     "volatile": 9
   },
+  "dynamicHazards": 8,
   "borderPad": 160,
   "playerKeepOut": 200,
   "teleporterKeepOut": 230,

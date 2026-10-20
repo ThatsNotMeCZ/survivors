@@ -9,6 +9,16 @@ export type HudItem = {
   rarity: string;
 };
 
+export type HudSkill = {
+  slot: string;
+  name: string;
+  glyph: string;
+  cd: number;
+  max: number;
+  empty: boolean;
+  iframe: boolean;
+};
+
 const statusEl = () => document.getElementById('hud-status');
 const fpsEl = () => document.getElementById('hud-fps');
 const dotsEl = () => document.getElementById('hud-dots');
@@ -16,19 +26,15 @@ const rendererEl = () => document.getElementById('hud-renderer');
 const hudEl = () => document.getElementById('hud');
 const titleEl = () => document.getElementById('hud-title');
 const hpEl = () => document.getElementById('hud-hp');
-const dashEl = () => document.getElementById('hud-dash');
 const lvEl = () => document.getElementById('hud-lv');
 const timeEl = () => document.getElementById('hud-time');
 const stageEl = () => document.getElementById('hud-stage');
 const xpFillEl = () => document.getElementById('xp-fill');
 const hpFillEl = () => document.getElementById('hp-fill');
 const coeffEl = () => document.getElementById('hud-coeff');
-const coeffPlayEl = () => document.getElementById('hud-coeff-play');
 const objectiveLabelEl = () => document.getElementById('hud-objective-label');
 const objectiveDetailEl = () => document.getElementById('hud-objective-detail');
 const objectiveFillEl = () => document.getElementById('hud-objective-fill');
-const dashRingEl = () => document.getElementById('dash-ring');
-const skillEl = () => document.getElementById('hud-skill');
 const itemListEl = () => document.getElementById('hud-item-list');
 const itemsRootEl = () => document.getElementById('hud-items');
 
@@ -96,43 +102,29 @@ export function setHudCombat(state: {
   xpNeed: number;
   runTime: number;
   coefficient: number;
-  dashName: string;
-  dashCd: number;
-  dashMax: number;
   iframe: boolean;
   objective: string;
   objectiveDetail: string;
   objectivePct: number;
   holding: boolean;
   boss: boolean;
+  skills: HudSkill[];
   items: HudItem[];
 }): void {
   const stage = stageEl();
   const hp = hpEl();
-  const dash = dashEl();
   const lv = lvEl();
   const time = timeEl();
   const fill = xpFillEl();
   const hpFill = hpFillEl();
   const coeff = coeffEl();
-  const coeffPlay = coeffPlayEl();
   const objective = objectiveLabelEl();
   const detail = objectiveDetailEl();
   const objFill = objectiveFillEl();
-  const ring = dashRingEl();
-  const skill = skillEl();
   if (stage) stage.textContent = state.stage;
-  if (hp) hp.textContent = `${Math.max(0, state.playerHp).toFixed(0)}/${state.playerMax.toFixed(0)}`;
+  if (hp) hp.textContent = `${Math.max(0, state.playerHp).toFixed(0)} / ${state.playerMax.toFixed(0)}`;
   if (lv) lv.textContent = `Lv ${state.level}`;
   if (time) time.textContent = formatTime(state.runTime);
-  if (dash) {
-    const label = state.dashName;
-    dash.textContent = state.iframe
-      ? `${label} · between-worlds`
-      : state.dashCd > 0
-        ? `${label} ${state.dashCd.toFixed(1)}s`
-        : `${label} ready`;
-  }
   if (objective) objective.textContent = state.objective;
   if (detail) {
     detail.textContent = state.objectiveDetail;
@@ -147,23 +139,14 @@ export function setHudCombat(state: {
   }
   if (hpFill) {
     const pct = state.playerMax > 0 ? Math.min(1, Math.max(0, state.playerHp) / state.playerMax) : 0;
-    hpFill.style.width = `${Math.round(pct * 100)}%`;
+    hpFill.style.height = `${Math.round(pct * 100)}%`;
   }
   if (coeff) coeff.textContent = `×${state.coefficient.toFixed(2)}`;
-  if (coeffPlay) coeffPlay.textContent = `×${state.coefficient.toFixed(2)}`;
-  if (ring) {
-    const max = state.dashMax > 0 ? state.dashMax : 1;
-    const ready = state.dashCd <= 0 ? 1 : Math.max(0, 1 - state.dashCd / max);
-    ring.style.setProperty('--ready', String(ready));
-    ring.dataset.key = '⇧';
-  }
-  if (skill) {
-    skill.dataset.ready = state.dashCd <= 0 ? '1' : '0';
-    skill.dataset.iframe = state.iframe ? '1' : '0';
-  }
+  renderSkills(state.skills);
   renderItems(state.items);
   document.documentElement.dataset.biome = state.biome;
   const hud = hudEl();
+  hud?.setAttribute('data-holding', state.holding ? '1' : '0');
   if (state.iframe || state.holding) hud?.setAttribute('data-status', 'pass');
   else if (state.playerHp < state.playerMax * 0.35) hud?.setAttribute('data-status', 'fail');
   else if (state.boss) hud?.setAttribute('data-status', 'warmup');
@@ -180,6 +163,24 @@ export function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+function renderSkills(skills: HudSkill[]): void {
+  for (const skill of skills) {
+    const slot = document.querySelector<HTMLElement>(`.skill-slot[data-slot="${skill.slot}"]`);
+    if (!slot) continue;
+    const glyph = slot.querySelector('.skill-glyph');
+    const cd = slot.querySelector('.skill-cd');
+    if (glyph) glyph.textContent = skill.empty ? '—' : skill.glyph;
+    const ready = !skill.empty && skill.cd <= 0;
+    const cdPct = skill.empty || skill.max <= 0 || skill.cd <= 0 ? 0 : Math.min(1, skill.cd / skill.max);
+    slot.style.setProperty('--cd', String(cdPct));
+    slot.dataset.ready = ready ? '1' : '0';
+    slot.dataset.empty = skill.empty ? '1' : '0';
+    slot.dataset.iframe = skill.iframe ? '1' : '0';
+    slot.title = skill.empty ? '' : skill.name;
+    if (cd) cd.textContent = !skill.empty && skill.cd > 0.05 ? skill.cd.toFixed(1) : '';
+  }
+}
+
 function renderItems(items: HudItem[]): void {
   const list = itemListEl();
   const root = itemsRootEl();
@@ -190,7 +191,8 @@ function renderItems(items: HudItem[]): void {
     const chip = document.createElement('span');
     chip.className = 'hud-item';
     chip.dataset.rarity = item.rarity;
-    chip.textContent = item.stacks > 1 ? `${item.name} ×${item.stacks}` : item.name;
+    chip.title = item.stacks > 1 ? `${item.name} ×${item.stacks}` : item.name;
+    chip.textContent = item.name.slice(0, 1).toUpperCase();
     list.appendChild(chip);
   }
 }

@@ -4,6 +4,7 @@
     {
       "id": "runner",
       "name": "Homunculus",
+      "title": "The Runner",
       "lore": "Clay and quicksilver, stolen from a failed Great Work. You kite the dross until the seal holds.",
       "stats": {
         "speed": 280,
@@ -12,9 +13,9 @@
       },
       "skills": {
         "primary": "bolt",
-        "secondary": null,
+        "secondary": "skill-aether-pierce",
         "utility": "dash",
-        "special": null
+        "special": "skill-crucible-cull"
       },
       "startingItems": [],
       "view": {
@@ -22,6 +23,30 @@
         "size": 32,
         "inner": "#dff6ff",
         "mid": "#5ad4ff"
+      }
+    },
+    {
+      "id": "penitent",
+      "name": "The Penitent",
+      "title": "The Caster",
+      "lore": "A monk who walked into the kiln and did not burn. He draws circles the horde must not cross.",
+      "stats": {
+        "speed": 245,
+        "maxHp": 135,
+        "radius": 14
+      },
+      "skills": {
+        "primary": "skill-censer-lob",
+        "secondary": "skill-brimstone-line",
+        "utility": "dash-ash-step",
+        "special": "skill-condemn-tether"
+      },
+      "startingItems": [],
+      "view": {
+        "kind": "chevron",
+        "size": 32,
+        "inner": "#f0e0c8",
+        "mid": "#c4783a"
       }
     }
   ]

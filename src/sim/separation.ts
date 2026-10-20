@@ -36,6 +36,7 @@ function resolveEnemyPairs(world: World): void {
     for (let k = 0; k < n; k += 1) {
       const j = scratch[k];
       if (j <= i || enemies.alive[j] === 0) continue;
+      if (enemies.corpseRemain[i] > 0 || enemies.corpseRemain[j] > 0) continue;
       if (
         !aabbOverlap(
           enemies.x[i],
@@ -71,7 +72,7 @@ function resolvePlayerEnemies(world: World): void {
   const n = hashQuery(hash, player.x, player.y, player.radius + 48, scratch);
   for (let k = 0; k < n; k += 1) {
     const i = scratch[k];
-    if (enemies.alive[i] === 0) continue;
+    if (enemies.alive[i] === 0 || enemies.corpseRemain[i] > 0) continue;
     if (!aabbOverlap(player.x, player.y, player.radius, enemies.x[i], enemies.y[i], enemies.radius[i])) {
       continue;
     }

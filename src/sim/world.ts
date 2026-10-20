@@ -9,12 +9,15 @@ import type {
   SurvivorDef,
   TeleporterState,
 } from '../data/schema';
-import { aabbOverlap, clamp } from './collision';
+import { aabbOverlap, circlesOverlap, clamp } from './collision';
 import { stepDirector } from './director';
 import {
+  ROLE_BOSS,
+  ROLE_ELITE,
   ROLE_FODDER,
+  applyNoxiousContact,
   createEnemyPool,
-  killEnemy,
+  startEnemyDeath,
   stepEnemies,
   type EnemyPool,
 } from './enemies';
@@ -33,10 +36,16 @@ import {
   type ObstaclePool,
 } from './obstacles';
 import {
+  FLAG_FLYOVER,
+  FLAG_IMPACT,
+  FLAG_PIERCE,
+  FLAG_TETHER,
   TEAM_ENEMY,
   TEAM_PLAYER,
   createProjectilePool,
   killProjectile,
+  markProjectileHit,
+  projectileHasHit,
   stepProjectiles,
   type ProjectilePool,
 } from './projectiles';
@@ -44,6 +53,13 @@ import { resolveBodyOverlaps } from './separation';
 import { tickSkillCooldowns, trySkills } from './skills';
 import { createHash, hashClear, hashInsert, hashQuery, type SpatialHash } from './spatial-hash';
 import { resolveStats } from './stats';
+import {
+  createZonePool,
+  emptyDecoy,
+  stepZones,
+  type DecoyState,
+  type ZonePool,
+} from './zones';
 
 export type Actor = {
   defId: string;
@@ -62,6 +78,7 @@ export type PlayerState = Actor & {
   dashVy: number;
   iframeRemain: number;
   slowRemain: number;
+  slowMul: number;
 };
 
 export type FocusState = {
@@ -113,6 +130,10 @@ export type World = {
   portal: { open: boolean; x: number; y: number; hold: number };
   focus: FocusState;
   fx: FxPool;
+  zones: ZonePool;
+  decoy: DecoyState;
+  bossesDefeated: number;
+  lastSniperAt: number;
 };
 
 export function createWorld(survivorId = catalog.world.defaultSurvivor): World {
@@ -133,7 +154,10 @@ export function createWorld(survivorId = catalog.world.defaultSurvivor): World {
     projectiles: createProjectilePool(catalog.world.maxProjectiles),
     enemies: createEnemyPool(enemyCap),
     gems: createGemPool(loop.maxGems),
-    obstacles: createObstaclePool(obstacleCap(catalog.obstacles.counts), loop.hashCell),
+    obstacles: createObstaclePool(
+      obstacleCap(catalog.obstacles.counts, catalog.obstacles.dynamicHazards),
+      loop.hashCell,
+    ),
     hash: createHash(loop.hashCell),
     scratch: new Array<number>(enemyCap).fill(0),
     runTime: 0,
@@ -157,6 +181,10 @@ export function createWorld(survivorId = catalog.world.defaultSurvivor): World {
     portal: { open: false, x: 0, y: 0, hold: 0 },
     focus: { kind: 'none', hp: 0, maxHp: 0, name: '' },
     fx: createFxPool(),
+    zones: createZonePool(),
+    decoy: emptyDecoy(),
+    bossesDefeated: 0,
+    lastSniperAt: -99,
   };
   beginStage(world, 0);
   return world;
@@ -175,6 +203,7 @@ export function stepWorld(world: World, input: InputFrame, dt: number): void {
   trySkills(world, input);
   movePlayer(world, input, dt);
   stepProjectiles(world.projectiles, dt);
+  detonateImpacts(world);
   stepDirector(world, dt);
   stepEnemies(world, dt);
   rebuildHash(world);
@@ -184,6 +213,7 @@ export function stepWorld(world: World, input: InputFrame, dt: number): void {
   hitEnemies(world);
   hitPlayer(world);
   contactDamage(world, dt);
+  stepZones(world, dt);
   stepObstacles(world, dt);
   stepGems(world, dt);
   stepLoop(world, dt);
@@ -225,17 +255,44 @@ function rebuildHash(world: World): void {
   }
 }
 
+function detonateImpacts(world: World): void {
+  const { projectiles, enemies } = world;
+  for (let i = 0; i < projectiles.alive.length; i += 1) {
+    if (projectiles.alive[i] === 0) continue;
+    if ((projectiles.flags[i] & FLAG_IMPACT) === 0) continue;
+    const dx = projectiles.destX[i] - projectiles.x[i];
+    const dy = projectiles.destY[i] - projectiles.y[i];
+    if (projectiles.life[i] > 0 && dx * dx + dy * dy > 64) continue;
+    const x = projectiles.x[i];
+    const y = projectiles.y[i];
+    const radius = projectiles.impactRadius[i];
+    const damage = projectiles.damage[i];
+    emitFx(world.fx, FX_HIT, x, y, 0xffaa55);
+    for (let e = 0; e < enemies.cap; e += 1) {
+      if (enemies.alive[e] === 0 || enemies.corpseRemain[e] > 0) continue;
+      if (!circlesOverlap(x, y, radius, enemies.x[e], enemies.y[e], enemies.radius[e])) continue;
+      enemies.hp[e] -= damage;
+      if (enemies.hp[e] <= 0) startEnemyDeath(world, e);
+    }
+    killProjectile(projectiles, i);
+  }
+}
+
 function hitEnemies(world: World): void {
   const { projectiles, enemies, hash, scratch } = world;
   for (let i = 0; i < projectiles.alive.length; i += 1) {
     if (projectiles.alive[i] === 0 || projectiles.team[i] !== TEAM_PLAYER) continue;
+    if ((projectiles.flags[i] & FLAG_FLYOVER) !== 0) continue;
+    const pierce = (projectiles.flags[i] & FLAG_PIERCE) !== 0;
+    const tether = (projectiles.flags[i] & FLAG_TETHER) !== 0;
     const reach = projectiles.radius[i] + 48;
     const n = hashQuery(hash, projectiles.x[i], projectiles.y[i], reach, scratch);
-    let hit = -1;
+    const hits: number[] = [];
+    let nearest = -1;
     let best = Infinity;
     for (let k = 0; k < n; k += 1) {
       const idx = scratch[k];
-      if (enemies.alive[idx] === 0) continue;
+      if (enemies.alive[idx] === 0 || enemies.corpseRemain[idx] > 0) continue;
       if (
         !aabbOverlap(
           projectiles.x[i],
@@ -248,20 +305,43 @@ function hitEnemies(world: World): void {
       ) {
         continue;
       }
+      if (pierce && projectileHasHit(projectiles, i, idx)) continue;
       const dx = enemies.x[idx] - projectiles.x[i];
       const dy = enemies.y[idx] - projectiles.y[i];
       const dist = dx * dx + dy * dy;
+      if (pierce) {
+        hits.push(idx);
+        continue;
+      }
       if (dist < best) {
         best = dist;
-        hit = idx;
+        nearest = idx;
       }
     }
-    if (hit < 0) continue;
-    emitFx(world.fx, FX_HIT, projectiles.x[i], projectiles.y[i], 0xfff4c8);
-    enemies.hp[hit] -= projectiles.damage[i];
+    if (pierce) {
+      if (hits.length === 0) continue;
+      for (const hit of hits) applyPlayerHit(world, i, hit, tether);
+      continue;
+    }
+    if (nearest < 0) continue;
+    applyPlayerHit(world, i, nearest, tether);
     killProjectile(projectiles, i);
-    if (enemies.hp[hit] <= 0) killEnemy(world, hit);
   }
+}
+
+function applyPlayerHit(world: World, proj: number, enemy: number, tether: boolean): void {
+  const { projectiles, enemies } = world;
+  emitFx(world.fx, FX_HIT, projectiles.x[proj], projectiles.y[proj], 0xfff4c8);
+  markProjectileHit(projectiles, proj, enemy);
+  if (tether) {
+    if (enemies.role[enemy] === ROLE_ELITE || enemies.role[enemy] === ROLE_BOSS) {
+      enemies.rootRemain[enemy] = Math.max(enemies.rootRemain[enemy], projectiles.rootDuration[proj]);
+      enemies.tetherDps[enemy] = projectiles.tetherDps[proj];
+    }
+    return;
+  }
+  enemies.hp[enemy] -= projectiles.damage[proj];
+  if (enemies.hp[enemy] <= 0) startEnemyDeath(world, enemy);
 }
 
 function hitPlayer(world: World): void {
@@ -299,11 +379,13 @@ function contactDamage(world: World, dt: number): void {
     if (!aabbOverlap(player.x, player.y, player.radius, enemies.x[idx], enemies.y[idx], enemies.radius[idx])) {
       continue;
     }
+    if (enemies.corpseRemain[idx] > 0) continue;
     if (enemies.role[idx] === ROLE_FODDER) {
       if (fodderHits >= cap) continue;
       fodderHits += 1;
     }
     player.hp -= enemies.contactDps[idx] * dt;
+    applyNoxiousContact(world, idx);
   }
 }
 
@@ -322,5 +404,6 @@ function makePlayer(defId: string, stats: ResolvedStats, width: number, height: 
     dashVy: 0,
     iframeRemain: 0,
     slowRemain: 0,
+    slowMul: 1,
   };
 }

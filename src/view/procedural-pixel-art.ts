@@ -1,20 +1,34 @@
 export type BiomeId = 'cinder' | 'rime';
+export type VesselId = 'runner' | 'penitent';
 
 const cache = new Map<string, HTMLCanvasElement>();
+const VESSELS: VesselId[] = ['runner', 'penitent'];
 
 export const OUTLINE: Record<BiomeId, string> = {
   cinder: '#120a0d',
   rime: '#08101a',
 };
 
+type PixelArtOpts = {
+  /** Fill enclosed transparent pixels before outline so hall previews stay opaque. */
+  seal?: string;
+  dither?: boolean;
+};
+
 export function stageBiome(stageId: string): BiomeId {
   return stageId === 'rime-dock' ? 'rime' : 'cinder';
 }
 
-export function cachedPixel(key: string, size: number, biome: BiomeId, draw: (px: PixelBuf) => void): HTMLCanvasElement {
+export function cachedPixel(
+  key: string,
+  size: number,
+  biome: BiomeId,
+  draw: (px: PixelBuf) => void,
+  opts?: PixelArtOpts,
+): HTMLCanvasElement {
   const hit = cache.get(key);
   if (hit) return hit;
-  const canvas = renderPixelArt(size, OUTLINE[biome], draw);
+  const canvas = renderPixelArt(size, OUTLINE[biome], draw, opts);
   cache.set(key, canvas);
   return canvas;
 }
@@ -27,14 +41,18 @@ export function cachedRaw(key: string, build: () => HTMLCanvasElement): HTMLCanv
   return canvas;
 }
 
-export function playerBodyKey(biome: BiomeId): string {
-  return `px-player-body-${biome}`;
+export function resolveVessel(id: string): VesselId {
+  return id === 'penitent' ? 'penitent' : 'runner';
 }
-export function playerEyesKey(biome: BiomeId): string {
-  return `px-player-eyes-${biome}`;
+
+export function playerBodyKey(biome: BiomeId, vesselId = 'runner'): string {
+  return `px-player-body-${resolveVessel(vesselId)}-${biome}`;
 }
-export function playerCatalystKey(biome: BiomeId): string {
-  return `px-player-catalyst-${biome}`;
+export function playerEyesKey(biome: BiomeId, vesselId = 'runner'): string {
+  return `px-player-eyes-${resolveVessel(vesselId)}-${biome}`;
+}
+export function playerCatalystKey(biome: BiomeId, vesselId = 'runner'): string {
+  return `px-player-catalyst-${resolveVessel(vesselId)}-${biome}`;
 }
 export function miteKey(biome: BiomeId, frame: 0 | 1): string {
   return `px-mite-${biome}-${frame}`;
@@ -47,6 +65,10 @@ export function eliteKey(biome: BiomeId): string {
 }
 export function eliteGlyphKey(): string {
   return 'px-elite-glyph';
+}
+
+export function survivorPortrait(id: string): HTMLCanvasElement {
+  return resolveVessel(id) === 'penitent' ? makePenitentPortrait() : makeHomunculusPortrait();
 }
 export function bossKey(id: 'cinder-heart' | 'frost-sovereign'): string {
   return `px-boss-${id}`;
@@ -70,7 +92,12 @@ export type PixelBuf = {
   dot: (x: number, y: number, color: string) => void;
 };
 
-export function renderPixelArt(size: number, outline: string, draw: (px: PixelBuf) => void): HTMLCanvasElement {
+export function renderPixelArt(
+  size: number,
+  outline: string,
+  draw: (px: PixelBuf) => void,
+  opts?: PixelArtOpts,
+): HTMLCanvasElement {
   const canvas = makeCanvas(size, size);
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('2d context missing');
@@ -88,7 +115,8 @@ export function renderPixelArt(size: number, outline: string, draw: (px: PixelBu
     },
   };
   draw(px);
-  outlinePass(ctx, size, size, outline);
+  if (opts?.seal) fillInteriorHoles(ctx, size, size, opts.seal);
+  outlinePass(ctx, size, size, outline, opts?.dither !== false);
   return canvas;
 }
 
@@ -96,9 +124,11 @@ export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   const out = new Map<string, HTMLCanvasElement>();
   const biomes: BiomeId[] = ['cinder', 'rime'];
   for (const biome of biomes) {
-    put(out, playerBodyKey(biome), makePlayerBody(biome));
-    put(out, playerEyesKey(biome), makePlayerEyes(biome));
-    put(out, playerCatalystKey(biome), makePlayerCatalyst(biome));
+    for (const vessel of VESSELS) {
+      put(out, playerBodyKey(biome, vessel), makePlayerBody(biome, vessel));
+      put(out, playerEyesKey(biome, vessel), makePlayerEyes(biome, vessel));
+      put(out, playerCatalystKey(biome, vessel), makePlayerCatalyst(biome, vessel));
+    }
     put(out, miteKey(biome, 0), makeMite(biome, 0));
     put(out, miteKey(biome, 1), makeMite(biome, 1));
     put(out, spitterKey(biome), makeSpitter(biome));
@@ -151,37 +181,64 @@ function put(out: Map<string, HTMLCanvasElement>, key: string, canvas: HTMLCanva
   out.set(key, canvas);
 }
 
-function makePlayerBody(biome: BiomeId): HTMLCanvasElement {
-  const trim = biome === 'cinder' ? '#c94a4a' : '#5ad4ff';
-  return cachedPixel(playerBodyKey(biome), 32, biome, (px) => {
-    px.fill(10, 6, 12, 4, '#3a3244');
-    px.fill(8, 8, 16, 5, '#52465c');
-    px.fill(7, 12, 18, 14, '#2a2430');
-    px.fill(9, 24, 5, 6, '#2a2430');
-    px.fill(18, 24, 5, 6, '#2a2430');
-    px.fill(8, 12, 16, 2, trim);
-    px.fill(11, 4, 10, 5, '#1c1822');
-    px.fill(12, 3, 8, 3, '#1c1822');
+function makePlayerBody(biome: BiomeId, vessel: VesselId): HTMLCanvasElement {
+  return cachedPixel(playerBodyKey(biome, vessel), 32, biome, (px) => {
+    if (vessel === 'penitent') drawPenitentBody(px, biome);
+    else drawHomunculusBody(px, biome);
   });
 }
 
-function makePlayerEyes(biome: BiomeId): HTMLCanvasElement {
-  const glow = biome === 'cinder' ? '#ffdd66' : '#77ffff';
-  return cachedPixel(playerEyesKey(biome), 8, biome, (px) => {
+function makePlayerEyes(biome: BiomeId, vessel: VesselId): HTMLCanvasElement {
+  const glow = vessel === 'penitent' ? (biome === 'rime' ? '#ffe8a0' : '#ffdd66') : biome === 'cinder' ? '#b8fff8' : '#77ffff';
+  return cachedPixel(playerEyesKey(biome, vessel), 8, biome, (px) => {
     px.fill(1, 3, 2, 1, glow);
     px.fill(5, 3, 2, 1, glow);
   });
 }
 
-function makePlayerCatalyst(biome: BiomeId): HTMLCanvasElement {
+function makePlayerCatalyst(biome: BiomeId, vessel: VesselId): HTMLCanvasElement {
   const core = biome === 'cinder' ? '#ffaa33' : '#55ffff';
-  return cachedPixel(playerCatalystKey(biome), 16, biome, (px) => {
+  return cachedPixel(playerCatalystKey(biome, vessel), 16, biome, (px) => {
+    if (vessel === 'penitent') {
+      px.fill(7, 1, 2, 5, '#6a5030');
+      px.fill(4, 6, 8, 8, '#8a6a3a');
+      px.fill(5, 7, 6, 6, '#c4a05a');
+      px.fill(6, 8, 4, 4, core);
+      px.fill(7, 9, 2, 2, '#fff4c8');
+      return;
+    }
     px.fill(4, 5, 8, 7, '#8a6a3a');
     px.fill(5, 6, 6, 5, '#c4a05a');
     px.fill(6, 7, 4, 3, core);
     px.fill(7, 8, 2, 1, '#fff4c8');
     px.fill(3, 8, 2, 2, '#6a5030');
   });
+}
+
+function drawHomunculusBody(px: PixelBuf, biome: BiomeId): void {
+  const trim = biome === 'cinder' ? '#c94a4a' : '#5ad4ff';
+  px.fill(10, 6, 12, 4, '#3a3244');
+  px.fill(8, 8, 16, 5, '#52465c');
+  px.fill(7, 12, 18, 14, '#2a2430');
+  px.fill(8, 24, 16, 3, '#2a2430');
+  px.fill(9, 26, 5, 4, '#2a2430');
+  px.fill(18, 26, 5, 4, '#2a2430');
+  px.fill(8, 12, 16, 2, trim);
+  px.fill(11, 4, 10, 5, '#1c1822');
+  px.fill(12, 3, 8, 3, '#1c1822');
+}
+
+function drawPenitentBody(px: PixelBuf, biome: BiomeId): void {
+  const sash = biome === 'cinder' ? '#c4783a' : '#88d0e8';
+  const robe = biome === 'cinder' ? '#3a2418' : '#243040';
+  const hood = biome === 'cinder' ? '#2a1810' : '#1a2430';
+  px.fill(8, 4, 16, 6, hood);
+  px.fill(6, 10, 20, 16, robe);
+  px.fill(8, 24, 16, 6, hood);
+  px.fill(12, 6, 8, 5, '#1a100c');
+  px.fill(7, 8, 18, 3, biome === 'cinder' ? '#8a6a32' : '#6a8898');
+  px.fill(10, 12, 12, 3, sash);
+  px.fill(14, 18, 4, 6, biome === 'cinder' ? '#5c4520' : '#3a5060');
 }
 
 function makeMite(biome: BiomeId, frame: 0 | 1): HTMLCanvasElement {
@@ -235,7 +292,7 @@ function makeElite(biome: BiomeId): HTMLCanvasElement {
 
 function makeEliteGlyph(): HTMLCanvasElement {
   return cachedPixel(eliteGlyphKey(), 48, 'cinder', (px) => {
-    const c = '#c4a05a';
+    const c = '#66ff88';
     for (let i = 8; i < 40; i += 2) {
       px.dot(i, 8, c);
       px.dot(i, 39, c);
@@ -246,6 +303,35 @@ function makeEliteGlyph(): HTMLCanvasElement {
     px.fill(14, 22, 20, 4, c);
     px.fill(18, 18, 12, 12, '#00000000');
   });
+}
+
+function makeHomunculusPortrait(): HTMLCanvasElement {
+  return cachedPixel(
+    'px-portrait-runner',
+    32,
+    'rime',
+    (px) => {
+      drawHomunculusBody(px, 'rime');
+      px.fill(13, 9, 2, 2, '#77ffff');
+      px.fill(17, 9, 2, 2, '#77ffff');
+      px.fill(12, 16, 8, 6, '#3a90b8');
+    },
+    { seal: '#2a2430', dither: false },
+  );
+}
+
+function makePenitentPortrait(): HTMLCanvasElement {
+  return cachedPixel(
+    'px-portrait-penitent',
+    32,
+    'cinder',
+    (px) => {
+      drawPenitentBody(px, 'cinder');
+      px.fill(13, 14, 2, 2, '#ffdd66');
+      px.fill(17, 14, 2, 2, '#ffdd66');
+    },
+    { seal: '#3a2418', dither: false },
+  );
 }
 
 function makeCinderHeart(): HTMLCanvasElement {
@@ -446,7 +532,64 @@ function drawBoundary(ctx: CanvasRenderingContext2D, width: number, height: numb
   }
 }
 
-function outlinePass(ctx: CanvasRenderingContext2D, width: number, height: number, outline: string): void {
+function fillInteriorHoles(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  fill: string,
+): void {
+  const img = ctx.getImageData(0, 0, width, height);
+  const { data } = img;
+  const exterior = new Uint8Array(width * height);
+  const stack: number[] = [];
+  const push = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const p = y * width + x;
+    if (exterior[p] === 1) return;
+    if (data[p * 4 + 3] > 16) return;
+    exterior[p] = 1;
+    stack.push(p);
+  };
+  for (let x = 0; x < width; x += 1) {
+    push(x, 0);
+    push(x, height - 1);
+  }
+  for (let y = 0; y < height; y += 1) {
+    push(0, y);
+    push(width - 1, y);
+  }
+  while (stack.length > 0) {
+    const p = stack.pop() ?? 0;
+    const x = p % width;
+    const y = (p / width) | 0;
+    push(x - 1, y);
+    push(x + 1, y);
+    push(x, y - 1);
+    push(x, y + 1);
+  }
+  const rgb = hexRgb(fill);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const p = y * width + x;
+      if (exterior[p] === 1) continue;
+      const i = p * 4;
+      if (data[i + 3] > 16) continue;
+      data[i] = rgb[0];
+      data[i + 1] = rgb[1];
+      data[i + 2] = rgb[2];
+      data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+function outlinePass(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  outline: string,
+  dither = true,
+): void {
   const img = ctx.getImageData(0, 0, width, height);
   const { data } = img;
   const src = new Uint8ClampedArray(data);
@@ -463,12 +606,12 @@ function outlinePass(ctx: CanvasRenderingContext2D, width: number, height: numbe
         let r = src[i];
         let g = src[i + 1];
         let b = src[i + 2];
-        const dither = ((x ^ y) & 1) === 0;
-        if (dither && y < height * 0.4) {
+        const checker = dither && ((x ^ y) & 1) === 0;
+        if (checker && y < height * 0.4) {
           r = Math.min(255, r + 22);
           g = Math.min(255, g + 18);
           b = Math.min(255, b + 16);
-        } else if (dither && y > height * 0.62) {
+        } else if (checker && y > height * 0.62) {
           r = Math.floor(r * 0.78);
           g = Math.floor(g * 0.78);
           b = Math.floor(b * 0.82);

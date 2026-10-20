@@ -5,6 +5,7 @@ import { clearObstacles, placeStageObstacles } from './obstacles';
 import { clearProjectiles } from './projectiles';
 import { hashString, mulberry32 } from './rng';
 import type { World } from './world';
+import { clearZones } from './zones';
 
 export type ObjectiveKind = 'wait' | 'hold' | 'boss' | 'portal';
 
@@ -84,6 +85,7 @@ export function beginStage(world: World, index: number): void {
   world.bossSpawned = false;
   world.lastFodderAt = -99;
   world.lastEliteAt = -99;
+  world.lastSniperAt = -99;
   world.credits = 0;
   world.teleporter.state = 'hidden';
   world.teleporter.charge = 0;
@@ -103,6 +105,10 @@ export function beginStage(world: World, index: number): void {
   world.player.dashRemain = 0;
   world.player.iframeRemain = 0;
   world.player.slowRemain = 0;
+  world.player.slowMul = 1;
+  world.decoy.active = false;
+  world.decoy.remain = 0;
+  clearZones(world.zones);
   reserveTeleporter(world);
   placeStageObstacles(world);
 }

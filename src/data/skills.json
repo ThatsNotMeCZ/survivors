@@ -7,6 +7,8 @@
       "slot": "primary",
       "input": "hold",
       "cooldown": 0.16,
+      "lore": "A needle of fire. It only flies where you point.",
+      "hook": "Aimed bolt. Never auto-fires.",
       "effects": [
         {
           "type": "projectile",
@@ -23,12 +25,133 @@
       "slot": "utility",
       "input": "press",
       "cooldown": 0.9,
+      "lore": "The vessel slips between worlds for a breath.",
+      "hook": "I-frames through contact and bolts.",
       "effects": [
         {
           "type": "dash",
           "distance": 210,
           "duration": 0.16,
           "iframe": 0.22
+        }
+      ]
+    },
+    {
+      "id": "skill-aether-pierce",
+      "name": "Piercing Aether",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 4,
+      "lore": "A thin ray of stolen sky. Line them up or waste the breath.",
+      "hook": "Pierces all in a line. 50% self-slow for 0.25s.",
+      "effects": [
+        {
+          "type": "projectile",
+          "speed": 1400,
+          "lifetime": 0.45,
+          "radius": 6,
+          "damage": 22,
+          "pierce": true
+        },
+        {
+          "type": "self-slow",
+          "mul": 0.5,
+          "duration": 0.25
+        }
+      ]
+    },
+    {
+      "id": "skill-crucible-cull",
+      "name": "Crucible Cull",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 12,
+      "lore": "A hammer of the Great Work, dropped where you will it.",
+      "hook": "45px strike after 0.7s. Precision, not a nuke.",
+      "effects": [
+        {
+          "type": "delayed-strike",
+          "delay": 0.7,
+          "radius": 45,
+          "damage": 95
+        }
+      ]
+    },
+    {
+      "id": "skill-censer-lob",
+      "name": "Censer Lob",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.38,
+      "lore": "Heavy glass, thrown in an arc. The air between you and the stain is empty.",
+      "hook": "Mortar splash on impact only. Flies over foes.",
+      "effects": [
+        {
+          "type": "projectile",
+          "speed": 420,
+          "lifetime": 1.1,
+          "radius": 7,
+          "damage": 14,
+          "flyOver": true,
+          "impactRadius": 30
+        }
+      ]
+    },
+    {
+      "id": "skill-brimstone-line",
+      "name": "Brimstone Line",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 5,
+      "lore": "A seam of sulfur drawn across the yard. The small ones fear it.",
+      "hook": "80% fodder slow. Elites and bosses ignore it.",
+      "effects": [
+        {
+          "type": "slow-line",
+          "length": 150,
+          "width": 18,
+          "duration": 2.4,
+          "slowMul": 0.2,
+          "damage": 2,
+          "fodderOnly": true,
+          "offset": 56
+        }
+      ]
+    },
+    {
+      "id": "dash-ash-step",
+      "name": "Ash Step",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 1.1,
+      "lore": "Leave a husk of ash. The mites chase the ghost.",
+      "hook": "Dash plus 1.5s fodder decoy. Elites ignore it.",
+      "effects": [
+        {
+          "type": "dash",
+          "distance": 210,
+          "duration": 0.16,
+          "iframe": 0.22,
+          "decoyDuration": 1.5
+        }
+      ]
+    },
+    {
+      "id": "skill-condemn-tether",
+      "name": "Condemnation Tether",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 15,
+      "lore": "A chain for the proud. Miss, and the working waits.",
+      "hook": "Roots first elite or boss 2.5s. Fodder burn on contact. Miss wastes it.",
+      "effects": [
+        {
+          "type": "tether",
+          "speed": 640,
+          "lifetime": 0.7,
+          "radius": 8,
+          "rootDuration": 2.5,
+          "fodderContactDps": 18
         }
       ]
     }

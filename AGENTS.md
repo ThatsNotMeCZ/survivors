@@ -20,7 +20,7 @@
 
 ## Current milestone
 
-GPU smoke **passed**. Combat verb **A locked**. Phase Step (`dash`) live. Arena **obstacles** + procedural 32px pixel art live. HTML hall/HUD in `src/ui/`. Run slice: leveling, **12 items**, 2 stages, teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Smoke: `/?smoke=1`. Skip hall: `/?dev=1`. Theme: Dark Hermetic (display strings, not ids).
+GPU smoke **passed**. Combat verb **A locked**. Homunculus kit complete (Bolt / Piercing Aether / Phase Step / Crucible Cull). **The Penitent** live. Astral Watcher + Noxious elites. HTML hall/HUD in `src/ui/`. Run slice: leveling, **12 items**, 2 stages, teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Smoke: `/?smoke=1`. Skip hall: `/?dev=1`. Theme: Dark Hermetic (display strings, not ids).
 
 ## Commands
 

@@ -19,6 +19,9 @@ export type ProjectileEffect = {
   lifetime: number;
   radius: number;
   damage: number;
+  pierce?: boolean;
+  flyOver?: boolean;
+  impactRadius?: number;
 };
 
 export type DashEffect = {
@@ -26,10 +29,50 @@ export type DashEffect = {
   distance: number;
   duration: number;
   iframe: number;
+  decoyDuration?: number;
+};
+
+export type SelfSlowEffect = {
+  type: 'self-slow';
+  mul: number;
+  duration: number;
+};
+
+export type DelayedStrikeEffect = {
+  type: 'delayed-strike';
+  delay: number;
+  radius: number;
+  damage: number;
+};
+
+export type SlowLineEffect = {
+  type: 'slow-line';
+  length: number;
+  width: number;
+  duration: number;
+  slowMul: number;
+  damage: number;
+  fodderOnly: boolean;
+  offset?: number;
+};
+
+export type TetherEffect = {
+  type: 'tether';
+  speed: number;
+  lifetime: number;
+  radius: number;
+  rootDuration: number;
+  fodderContactDps: number;
 };
 
 /** Add a variant here and a case in `sim/skills.ts`. */
-export type SkillEffect = ProjectileEffect | DashEffect;
+export type SkillEffect =
+  | ProjectileEffect
+  | DashEffect
+  | SelfSlowEffect
+  | DelayedStrikeEffect
+  | SlowLineEffect
+  | TetherEffect;
 
 export type SkillDef = {
   id: string;
@@ -37,6 +80,8 @@ export type SkillDef = {
   slot: SkillSlot;
   input: SkillInput;
   cooldown: number;
+  lore?: string;
+  hook?: string;
   effects: SkillEffect[];
 };
 
@@ -56,6 +101,7 @@ export type ViewDot = {
 export type SurvivorDef = {
   id: string;
   name: string;
+  title?: string;
   lore?: string;
   stats: SurvivorStats;
   skills: Record<SkillSlot, string | null>;
@@ -74,7 +120,16 @@ export type RangedAi = {
   projectile: { speed: number; lifetime: number; radius: number; damage: number };
 };
 
-export type EntityAi = ChaseAi | RangedAi;
+export type SniperAi = {
+  type: 'sniper';
+  keep: number;
+  cooldown: number;
+  windup: number;
+  damage: number;
+  lineWidth: number;
+};
+
+export type EntityAi = ChaseAi | RangedAi | SniperAi;
 
 export type EntityDef = {
   id: string;
@@ -118,6 +173,7 @@ export type BiomeObstacleNames = Record<ObstacleKind, string>;
 export type ObstacleCatalog = {
   version: number;
   counts: Record<ObstacleKind, number>;
+  dynamicHazards: number;
   borderPad: number;
   playerKeepOut: number;
   teleporterKeepOut: number;
@@ -167,6 +223,7 @@ export type StageDef = {
   fodder: string;
   ranged?: string;
   rangedChance?: number;
+  sniper?: string;
   elite: string;
   boss: string;
   firstEliteAt: number;
@@ -195,10 +252,20 @@ export type LoopDef = {
     creditRate: number;
     fodderCost: number;
     eliteCost: number;
+    sniperCost: number;
     fodderInterval: number;
     eliteInterval: number;
+    sniperInterval: number;
+    maxSnipers: number;
     spawnMin: number;
     spawnMax: number;
+  };
+  noxious: {
+    contactSlowMul: number;
+    contactSlowDuration: number;
+    corpseDelay: number;
+    popRadius: number;
+    popDamage: number;
   };
   difficulty: {
     perSecond: number;

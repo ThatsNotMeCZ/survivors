@@ -102,6 +102,24 @@
       "rewards": { "xp": 60, "credits": 0 },
       "ai": { "type": "chase" },
       "view": { "kind": "dot", "size": 80, "inner": "#f4fbff", "mid": "#7ad4ff" }
+    },
+    {
+      "id": "enemy-astral-sniper",
+      "name": "Astral Watcher",
+      "role": "fodder",
+      "tags": ["fodder", "sniper"],
+      "stats": { "speed": 36, "maxHp": 8, "radius": 10 },
+      "contact": { "dps": 1 },
+      "rewards": { "xp": 6, "credits": 2 },
+      "ai": {
+        "type": "sniper",
+        "keep": 480,
+        "cooldown": 3.2,
+        "windup": 1.5,
+        "damage": 28,
+        "lineWidth": 10
+      },
+      "view": { "kind": "dot", "size": 22, "inner": "#f0e8ff", "mid": "#7a3aff" }
     }
   ]
 }

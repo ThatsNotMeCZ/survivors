@@ -8,13 +8,13 @@ Difficulty coefficient rises with time, not with a flat spawn-more curve. Number
 
 HTML overlays in `src/ui/` (not Phaser text). Phaser starts after **Start run**. `/?smoke=1` is the GPU smoke scene (no hall). `/?dev=1` skips the hall and auto-starts a run. Headless loop smoke (`bun run smoke:loop`) never opens a menu.
 
-- Main menu (the hall): Start run, The Vessel, How to play, Settings. Enter starts.
-- Vessel dossier: display name + starting skill names (Ignis Bolt / Phase Step), no raw ids.
-- Pause: Esc during `phase === 'play'` while the overlay is hidden. HTML `window` capture keydown owns Escape (`key`/`code` `Escape`); Phaser does not bind it (a second edge-toggle was closing pause on the same press). `preventDefault` so the browser does not consume Esc. Nested pause screens (settings, how-to, abandon confirm) back out first. Level-up and recaps swallow Esc. Resume with Esc or Resume. Sim does not step, including nested pause screens.
+- Main menu (the hall): title **Hermetic Rifts** across the top. 3-column Dark Hermetic lobby — left nav (Vessel Selection / Archives / Alchemist's Desk), center 32px vessel preview, right dossier + 4 skill tooltips, **Commence Transmutation**. Enter starts.
+- Vessel dossier: display name, title, lore, skill icons with hover hooks. No raw ids.
+- Pause: Esc during `phase === 'play'` while the overlay is hidden. Copy: **Simulation Paused** · Resume Sequence · Settings · Abandon Vessel. HTML `window` capture keydown owns Escape (`key`/`code` `Escape`); Phaser does not bind it (a second edge-toggle was closing pause on the same press). `preventDefault` so the browser does not consume Esc. Nested pause screens (settings dialog, how-to, abandon confirm) back out first. Level-up and recaps swallow Esc. Resume with Esc or Resume Sequence. Sim does not step, including nested pause screens.
 - Cursor: OS pointer is `cursor: none` during an unpaused run (`data-play=1` + overlay hidden). Shown again on hall, pause, settings, how-to, vessel, level-up, abandon, and recaps. Aim still uses mouse position; the world crosshair stays. No pointer lock.
-- Level-up: 3 hermetic tablets. Keys 1–3. Same pick pipeline.
+- Level-up: 3 hermetic tablets (rust/copper/silver/cyan rarity). Green/red hook text. Keys 1–3. Backdrop `blur(4px) brightness(30%)`. Same pick pipeline.
 - Boss intro sting + stage interstitial: HTML title cards, do **not** pause combat. Skipped when `smoke` or `dev` is set.
-- Death: **Vessel Shattered**. Victory: **Transmutation Complete**. Recap + Run again or hall.
+- Death: **Vessel Shattered**. Victory: **Transmutation Complete**. Recap: total time, level reached, bosses defeated, final inventory. Run again or Return to Hall.
 
 ## Slice clocks (v1)
 
@@ -52,7 +52,7 @@ Keep-out:
 
 ## HUD
 
-Corner-anchored HTML: HP / XP / Phase Step seal / stage clock / difficulty / items / center **objective**. Biome tint is subtle (Cinder warmer, Rime colder). FPS stays behind `?debug=1` or F3. Palette tokens live in `src/ui/theme.css`.
+HTML overlay, not Phaser text. Top center gold objective banner (Hold fills with pulsing gold). Top right biome + run clock. Bottom left alchemical flask HP + numeric + thin XP line and level. Bottom center 4 skill slots (ready / cooldown sweep / i-frame flash). Bottom right 24×24 item grid. Biome tint is subtle (Cinder warmer, Rime colder). FPS stays behind `?debug=1` or F3. Palette tokens live in `src/ui/theme.css`.
 
 ## Director (RoR2, not VS)
 
@@ -60,7 +60,7 @@ Spends a credit budget. Credits buy **elites and bosses**, not 2000 bats. Fodder
 
 ## Level-up (VS)
 
-XP gems. Pause via **HTML overlay**, pick 1 of 3. Fast dopamine stays. The pick must not be a screen-clear.
+XP gems (Mercury Drops). Pause via **HTML overlay**, pick 1 of 3. Fast dopamine stays: first level is ~8–12s of farming, not four mites. Curve in `loop.json`: `round(xpBase * xpGrowth^(level-1))` with **xpBase 32**, **xpGrowth 1.30** (level 1 = 32 XP, Ember Mite = 3 → ~11 mites). The pick must not be a screen-clear.
 
 ## Death / win
 

@@ -176,6 +176,25 @@ function steer(world: ReturnType<typeof createWorld>, input: ReturnType<typeof e
   let dodgeX = 0;
   let dodgeY = 0;
   let threat = false;
+  for (let i = 0; i < enemies.cap; i += 1) {
+    if (enemies.alive[i] === 0 || enemies.windup[i] <= 0) continue;
+    const defId = enemies.defId[i];
+    if (!defId || world.catalog.entity(defId).ai.type !== 'sniper') continue;
+    const dx = enemies.aimX[i] - enemies.x[i];
+    const dy = enemies.aimY[i] - enemies.y[i];
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = dx / len;
+    const ny = dy / len;
+    const along = (player.x - enemies.x[i]) * nx + (player.y - enemies.y[i]) * ny;
+    const px = player.x - enemies.x[i] - along * nx;
+    const py = player.y - enemies.y[i] - along * ny;
+    const dist = Math.hypot(px, py);
+    if (dist < 28) {
+      threat = true;
+      dodgeX += px;
+      dodgeY += py;
+    }
+  }
   for (let i = 0; i < projectiles.alive.length; i += 1) {
     if (projectiles.alive[i] === 0 || projectiles.team[i] !== TEAM_ENEMY) continue;
     const dx = projectiles.x[i] - player.x;

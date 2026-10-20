@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "xpBase": 10,
-  "xpGrowth": 1.28,
+  "xpBase": 32,
+  "xpGrowth": 1.30,
   "gemPickup": 36,
   "gemMagnet": 88,
   "gemMagnetSpeed": 320,
@@ -17,10 +17,20 @@
     "creditRate": 3.6,
     "fodderCost": 7,
     "eliteCost": 42,
+    "sniperCost": 30,
     "fodderInterval": 0.5,
     "eliteInterval": 14,
+    "sniperInterval": 7,
+    "maxSnipers": 2,
     "spawnMin": 340,
     "spawnMax": 520
+  },
+  "noxious": {
+    "contactSlowMul": 0.5,
+    "contactSlowDuration": 1.1,
+    "corpseDelay": 0.5,
+    "popRadius": 40,
+    "popDamage": 8
   },
   "difficulty": {
     "perSecond": 0.006,
@@ -40,6 +50,7 @@
       "fodder": "ember-mite",
       "ranged": "ember-spitter",
       "rangedChance": 0.22,
+      "sniper": "enemy-astral-sniper",
       "elite": "ember-chaser",
       "boss": "cinder-heart",
       "firstEliteAt": 15,
@@ -59,6 +70,7 @@
       "fodder": "frost-mite",
       "ranged": "frost-spitter",
       "rangedChance": 0.22,
+      "sniper": "enemy-astral-sniper",
       "elite": "frost-warden",
       "boss": "frost-sovereign",
       "firstEliteAt": 12,

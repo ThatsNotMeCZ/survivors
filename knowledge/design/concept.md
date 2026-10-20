@@ -1,6 +1,6 @@
 # Concept — Stage Director
 
-Working title: **survivors**. Hybrid of Vampire Survivors **pacing** and Risk of Rain 2 **pressure**.
+Title: **Hermetic Rifts**. Hybrid of Vampire Survivors **pacing** and Risk of Rain 2 **pressure**.
 
 ## Steal / leave
 
