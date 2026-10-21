@@ -1,3 +1,6 @@
+import { applyAudioSettings, getAudioBus } from '../audio/bus';
+import { retryMusicPlay } from '../audio/music';
+
 export type GameSettings = {
   masterVolume: number;
   sfxVolume: number;
@@ -43,6 +46,8 @@ export function patchSettings(partial: Partial<GameSettings>): GameSettings {
     /* private mode / blocked storage */
   }
   applySettingsToDom(next);
+  applyAudioSettings(next);
+  void getAudioBus()?.ctx.resume().then(() => retryMusicPlay());
   return next;
 }
 

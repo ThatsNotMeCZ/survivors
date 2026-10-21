@@ -1,4 +1,4 @@
-import { FX_DEATH, FX_HIT, FX_MUZZLE } from '../config';
+import { FX_DEATH, FX_HURT, FX_MUZZLE } from '../config';
 import type { EntityDef, EntityRole, RangedAi, SniperAi } from '../data/schema';
 import { circlesOverlap, clamp } from './collision';
 import { emitFx } from './fx';
@@ -6,6 +6,7 @@ import { spawnGem } from './gems';
 import { grantXp } from './level';
 import { spawnAcidPool } from './obstacles';
 import { TEAM_ENEMY, spawnProjectile } from './projectiles';
+import { onKillHeal } from './stats';
 import { applySlow, tickEnemySlow } from './status';
 import type { World } from './world';
 
@@ -151,6 +152,10 @@ export function killEnemy(world: World, index: number): void {
   const y = enemies.y[index];
   const xp = enemies.xp[index];
   world.credits += enemies.credits[index];
+  const heal = onKillHeal(world.inventory, world.catalog.item);
+  if (heal > 0) {
+    world.player.hp = Math.min(world.player.maxHp, world.player.hp + heal);
+  }
   emitFx(world.fx, FX_DEATH, x, y, 0xffd35a);
   enemies.alive[index] = 0;
   if (role === ROLE_FODDER) world.counts.fodder -= 1;
@@ -317,7 +322,7 @@ function fireSniper(world: World, i: number, ai: SniperAi): void {
   if (pillarBlocksShot(world, x0, y0, player.x, player.y)) return;
   const dist = pointToSegment(player.x, player.y, x0, y0, x1, y1);
   if (dist > ai.lineWidth + player.radius) return;
-  emitFx(world.fx, FX_HIT, player.x, player.y, 0xff3355);
+  emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
   player.hp -= ai.damage * world.coefficient;
 }
 
@@ -342,6 +347,7 @@ function explodeNoxious(world: World, index: number): void {
     player.iframeRemain <= 0 &&
     circlesOverlap(x, y, cfg.popRadius, player.x, player.y, player.radius)
   ) {
+    emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
     player.hp -= cfg.popDamage * world.coefficient;
   }
   spawnAcidPool(world, x, y);

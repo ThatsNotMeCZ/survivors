@@ -1,7 +1,9 @@
+import { playSfx, setMusicOverlay, setMusicScene, type SfxId } from '../audio';
 import { catalog } from '../data/catalog';
 import type { ItemDef, ItemHook, SkillDef, SkillSlot, StatId, SurvivorDef } from '../data/schema';
 import { formatTime, getHudItems, type HudItem } from './hud';
 import { ITEM_CHOICE_PX, makeItemChip, makeItemIcon } from './item-art';
+import { SKILL_SLOT_PX, makeSkillIcon } from './skill-art';
 import { mountVesselArt } from './vessel-art';
 import { applySettingsToDom, getSettings, patchSettings, skipShell, type GameSettings } from './settings';
 
@@ -58,6 +60,7 @@ let origin: 'menu' | 'pause' = 'menu';
 let runPaused = false;
 let stingTimer = 0;
 let stingUntil = 0;
+let lastSfxPreview = 0;
 
 export function bindOverlay(next: Partial<OverlayHandlers>): void {
   handlers = { ...handlers, ...next };
@@ -83,11 +86,14 @@ export function isModalOpen(): boolean {
 }
 
 export function hideOverlay(): void {
+  const wasPause = mode === 'pause';
   const root = overlayEl();
   mode = 'hidden';
   runPaused = false;
   origin = 'menu';
   syncOverlayAttr();
+  syncChill();
+  if (wasPause) playSfx('close');
   if (!root) return;
   blurOverlay(root);
   settingsDialog()?.close();
@@ -131,8 +137,8 @@ export function showSurvivorSelect(): void {
         : 'Choose who walks the yard.',
     body,
     actions: [
-      { label: 'Confirm', onClick: () => showMainMenu(), primary: true },
-      { label: 'Back', onClick: () => showMainMenu() },
+      { label: 'Confirm', onClick: () => showMainMenu(), primary: true, sfx: 'confirm' },
+      { label: 'Back', onClick: () => showMainMenu(), sfx: 'close' },
     ],
   });
 }
@@ -145,7 +151,7 @@ export function showHowTo(from: 'menu' | 'pause' = origin): void {
     title: 'How to play',
     sub: 'Kite the dross. Aim the bolt. Hold the seal. Do not stand still.',
     body: controlsTable(),
-    actions: [{ label: 'Back', onClick: goBack, primary: true }],
+    actions: [{ label: 'Back', onClick: goBack, primary: true, sfx: 'close' }],
   });
 }
 
@@ -159,8 +165,10 @@ export function showSettings(from: 'menu' | 'pause' = origin): void {
 }
 
 export function showPause(): void {
+  const alreadyChill = origin === 'pause' && (mode === 'abandon' || mode === 'howto' || mode === 'pause');
   runPaused = true;
   origin = 'pause';
+  if (!alreadyChill) playSfx('open');
   renderScreen({
     screen: 'pause',
     kicker: 'The working stills',
@@ -168,7 +176,7 @@ export function showPause(): void {
     sub: 'Esc or Enter to resume. The horde waits.',
     body: inventoryStrip(getHudItems()),
     actions: [
-      { label: 'Resume Sequence', onClick: () => handlers.onResume(), primary: true },
+      { label: 'Resume Sequence', onClick: () => handlers.onResume(), primary: true, sfx: null },
       { label: 'Settings', onClick: () => showSettings('pause') },
       { label: 'Abandon Vessel', onClick: showAbandon },
     ],
@@ -184,14 +192,15 @@ export function showAbandon(): void {
     title: 'Abandon run',
     sub: 'The vessel shatters. Progress in this working is lost.',
     actions: [
-      { label: 'Abandon Vessel', onClick: () => handlers.onQuit(), primary: true },
-      { label: 'Keep working', onClick: showPause },
+      { label: 'Abandon Vessel', onClick: () => handlers.onQuit(), primary: true, sfx: 'error' },
+      { label: 'Keep working', onClick: showPause, sfx: null },
     ],
   });
 }
 
 export function showLevelUp(items: ItemDef[]): void {
   runPaused = true;
+  playSfx('open');
   const detail = document.createElement('div');
   detail.className = 'choice-detail';
   detail.id = 'choice-detail';
@@ -218,7 +227,10 @@ export function showLevelUp(items: ItemDef[]): void {
     key.className = 'choice-key';
     key.textContent = String(index + 1);
     btn.append(icon, key);
-    btn.addEventListener('click', () => handlers.onPick(index));
+    btn.addEventListener('click', () => {
+      playSfx('confirm');
+      handlers.onPick(index);
+    });
     btn.addEventListener('mouseenter', () => btn.focus({ preventScroll: true }));
     btn.addEventListener('focus', () => fillDetail(item));
     choices.appendChild(btn);
@@ -239,6 +251,7 @@ export function showLevelUp(items: ItemDef[]): void {
 
 export function showRunEnd(kind: 'victory' | 'defeat', detail: string, recap?: RunRecap): void {
   runPaused = true;
+  playSfx(kind === 'victory' ? 'victory' : 'defeat');
   renderScreen({
     screen: 'runend',
     kicker: kind === 'victory' ? 'The Great Work holds' : 'The clay splits',
@@ -246,8 +259,8 @@ export function showRunEnd(kind: 'victory' | 'defeat', detail: string, recap?: R
     sub: detail,
     body: recap ? recapBody(recap) : undefined,
     actions: [
-      { label: 'Run again', onClick: () => handlers.onRestart(), primary: true },
-      { label: 'Return to hall', onClick: () => handlers.onQuit() },
+      { label: 'Run again', onClick: () => handlers.onRestart(), primary: true, sfx: 'confirm' },
+      { label: 'Return to hall', onClick: () => handlers.onQuit(), sfx: 'close' },
     ],
   });
 }
@@ -360,6 +373,9 @@ function hookLines(item: ItemDef): HTMLElement[] {
 
 function formatHook(hook: ItemHook): { text: string; up: boolean } {
   const sign = hook.value > 0 ? '+' : '';
+  if (hook.op === 'on-kill') {
+    return { text: `${sign}${hook.value} HP on kill`, up: hook.value > 0 };
+  }
   const amount =
     hook.op === 'pct' ? `${sign}${Math.round(hook.value * 100)}%` : `${sign}${hook.value}`;
   const hurt = hook.stat === 'radius' || hook.stat === 'cooldown';
@@ -393,12 +409,14 @@ function onOverlayKey(event: KeyboardEvent): void {
     if (settingsDialog()?.open) return;
     if (mode === 'menu') {
       event.preventDefault();
+      playSfx('confirm');
       handlers.onStart();
     } else if (mode === 'pause') {
       event.preventDefault();
       handlers.onResume();
     } else if (mode === 'abandon') {
       event.preventDefault();
+      playSfx('error');
       handlers.onQuit();
     } else if (mode === 'survivor' || mode === 'howto') {
       event.preventDefault();
@@ -412,6 +430,7 @@ function onOverlayKey(event: KeyboardEvent): void {
   if (mode !== 'levelup') return;
   if (event.key === '1' || event.key === '2' || event.key === '3') {
     event.preventDefault();
+    playSfx('confirm');
     handlers.onPick(Number(event.key) - 1);
     return;
   }
@@ -426,7 +445,7 @@ function goBack(): void {
   else showMainMenu();
 }
 
-type ActionSpec = { label: string; onClick: () => void; primary?: boolean };
+type ActionSpec = { label: string; onClick: () => void; primary?: boolean; sfx?: SfxId | null };
 
 function renderScreen(spec: {
   screen: OverlayMode;
@@ -461,21 +480,26 @@ function renderScreen(spec: {
   }
   actions.replaceChildren();
   for (const action of spec.actions ?? []) {
-    actions.appendChild(actionButton(action.label, action.onClick, action.primary));
+    actions.appendChild(actionButton(action.label, action.onClick, action.primary, action.sfx));
   }
   showRoot(root);
+  syncChill();
 }
 
 function settingsForm(settings: GameSettings): HTMLElement {
   const wrap = document.createElement('div');
   wrap.appendChild(
-    rangeRow('Master volume', 'Silent until audio is bound. Stored anyway.', settings.masterVolume, (value) => {
+    rangeRow('Master volume', 'Chamber, choir, and the working’s drone.', settings.masterVolume, (value) => {
       patchSettings({ masterVolume: value });
     }),
   );
   wrap.appendChild(
     rangeRow('SFX', 'Hits, dashes, and the choir of brass.', settings.sfxVolume, (value) => {
       patchSettings({ sfxVolume: value });
+      const now = performance.now();
+      if (now - lastSfxPreview < 120) return;
+      lastSfxPreview = now;
+      playSfx('click');
     }),
   );
   wrap.appendChild(
@@ -486,6 +510,7 @@ function settingsForm(settings: GameSettings): HTMLElement {
   wrap.appendChild(
     checkRow('Mute', 'Keeps the choir dark.', settings.muted, (value) => {
       patchSettings({ muted: value });
+      if (!value) playSfx('click');
     }),
   );
   wrap.appendChild(
@@ -502,15 +527,17 @@ function settingsForm(settings: GameSettings): HTMLElement {
 }
 
 function rangeRow(label: string, hint: string, value: number, onChange: (value: number) => void): HTMLElement {
-  const row = document.createElement('div');
+  const row = document.createElement('label');
   row.className = 'setting-row';
-  const text = document.createElement('label');
+  const copy = document.createElement('span');
   const title = document.createElement('span');
   title.textContent = label;
   const note = document.createElement('span');
   note.className = 'hint';
   note.textContent = hint;
-  text.append(title, note);
+  copy.append(title, note);
+  const control = document.createElement('span');
+  control.className = 'setting-control';
   const input = document.createElement('input');
   input.type = 'range';
   input.min = '0';
@@ -518,28 +545,42 @@ function rangeRow(label: string, hint: string, value: number, onChange: (value: 
   input.step = '0.05';
   input.value = String(value);
   input.setAttribute('aria-label', label);
-  input.addEventListener('input', () => onChange(Number(input.value)));
-  row.append(text, input);
+  const readout = document.createElement('span');
+  readout.className = 'setting-value';
+  readout.textContent = pct(value);
+  const apply = (): void => {
+    const next = Number(input.value);
+    readout.textContent = pct(next);
+    onChange(next);
+  };
+  input.addEventListener('input', apply);
+  input.addEventListener('change', apply);
+  control.append(input, readout);
+  row.append(copy, control);
   return row;
 }
 
 function checkRow(label: string, hint: string, value: boolean, onChange: (value: boolean) => void): HTMLElement {
-  const row = document.createElement('div');
+  const row = document.createElement('label');
   row.className = 'setting-row';
-  const text = document.createElement('label');
+  const copy = document.createElement('span');
   const title = document.createElement('span');
   title.textContent = label;
   const note = document.createElement('span');
   note.className = 'hint';
   note.textContent = hint;
-  text.append(title, note);
+  copy.append(title, note);
   const input = document.createElement('input');
   input.type = 'checkbox';
   input.checked = value;
   input.setAttribute('aria-label', label);
   input.addEventListener('change', () => onChange(input.checked));
-  row.append(text, input);
+  row.append(copy, input);
   return row;
+}
+
+function pct(value: number): string {
+  return `${Math.round(value * 100)}%`;
 }
 
 function controlsTable(): HTMLElement {
@@ -665,12 +706,17 @@ function renderHall(): void {
   fillHallPreview();
   fillHallDossier();
   showRoot(root);
+  setMusicScene({ kind: 'menu' });
+  syncChill();
 }
 
 function bindHall(): void {
   if (hallBound) return;
   hallBound = true;
-  document.getElementById('hall-commence')?.addEventListener('click', () => handlers.onStart());
+  document.getElementById('hall-commence')?.addEventListener('click', () => {
+    playSfx('confirm');
+    handlers.onStart();
+  });
 }
 
 function fillHallNav(): void {
@@ -689,6 +735,7 @@ function fillHallNav(): void {
     label.textContent = survivor.name;
     btn.appendChild(label);
     btn.addEventListener('click', () => {
+      playSfx('click');
       patchSettings({ survivorId: survivor.id });
       renderHall();
     });
@@ -697,12 +744,18 @@ function fillHallNav(): void {
   const archives = document.createElement('button');
   archives.type = 'button';
   archives.textContent = 'Archives';
-  archives.addEventListener('click', () => showHowTo('menu'));
+  archives.addEventListener('click', () => {
+    playSfx('click');
+    showHowTo('menu');
+  });
   nav.appendChild(archives);
   const desk = document.createElement('button');
   desk.type = 'button';
   desk.textContent = "Alchemist's Desk";
-  desk.addEventListener('click', () => showSettings('menu'));
+  desk.addEventListener('click', () => {
+    playSfx('click');
+    showSettings('menu');
+  });
   nav.appendChild(desk);
 }
 
@@ -738,19 +791,32 @@ function fillHallDossier(): void {
     const cell = document.createElement('button');
     cell.type = 'button';
     cell.className = 'hall-skill';
-    cell.textContent = skill ? glyphs[index] : '—';
-    if (skill) {
-      const tip = document.createElement('span');
-      tip.className = 'tip';
-      const strong = document.createElement('strong');
-      strong.textContent = skill.name;
-      const hook = document.createElement('span');
-      hook.textContent = skill.hook ?? skill.slot;
-      const flavor = document.createElement('em');
-      flavor.textContent = skill.lore ?? '';
-      tip.append(strong, hook, flavor);
-      cell.appendChild(tip);
+    if (!skill) {
+      cell.textContent = '—';
+      skills.appendChild(cell);
+      return;
     }
+    const glyph = document.createElement('span');
+    glyph.className = 'hall-skill-glyph';
+    glyph.textContent = glyphs[index];
+    const icon = makeSkillIcon(skill.id, skill.name, 'hall-skill-icon', SKILL_SLOT_PX);
+    icon.addEventListener('error', () => {
+      icon.remove();
+      cell.dataset.hasIcon = '0';
+    });
+    icon.addEventListener('load', () => {
+      cell.dataset.hasIcon = '1';
+    });
+    const tip = document.createElement('span');
+    tip.className = 'tip';
+    const strong = document.createElement('strong');
+    strong.textContent = skill.name;
+    const hook = document.createElement('span');
+    hook.textContent = skill.hook ?? skill.slot;
+    const flavor = document.createElement('em');
+    flavor.textContent = skill.lore ?? '';
+    tip.append(strong, hook, flavor);
+    cell.append(glyph, icon, tip);
     skills.appendChild(cell);
   });
   root.replaceChildren(name, title, lore, skills);
@@ -763,13 +829,27 @@ function navLabel(text: string): HTMLElement {
   return el;
 }
 
-function actionButton(label: string, onClick: () => void, primary = false): HTMLButtonElement {
+function actionButton(
+  label: string,
+  onClick: () => void,
+  primary = false,
+  sfx: SfxId | null = 'click',
+): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = primary ? 'seal-btn action-primary' : 'seal-btn';
   btn.textContent = label;
-  btn.addEventListener('click', onClick);
+  btn.addEventListener('click', () => {
+    if (sfx) playSfx(sfx);
+    onClick();
+  });
   return btn;
+}
+
+function syncChill(): void {
+  const chill =
+    mode === 'pause' || mode === 'abandon' || (mode === 'howto' && origin === 'pause');
+  setMusicOverlay(chill);
 }
 
 function showRoot(root: HTMLElement): void {

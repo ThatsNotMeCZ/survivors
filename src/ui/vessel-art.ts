@@ -58,7 +58,11 @@ export function mountVesselArt(
   paintCanvas(canvas, src);
   parent.appendChild(canvas);
   const vessel = resolveVessel(survivorId);
-  const candidates = [`px-player-body-${vessel}-cinder-front`, `px-portrait-${vessel}`];
+  const candidates = [
+    `px-player-body-${vessel}-cinder-side`,
+    `px-player-body-${vessel}-cinder-front`,
+    `px-portrait-${vessel}`,
+  ];
   void loadManifestKeys().then(async (keys) => {
     const hit = candidates.find((key) => keys.includes(key));
     if (!hit || !canvas.isConnected) return;

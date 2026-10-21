@@ -5,8 +5,8 @@ Snapshot herního designu pro **NotebookLM** a Gemini chat mimo Cursor.
 `knowledge/` zůstává kanonické pro agenty v Cursoru.  
 Tato složka je **export pro konzultanta**. Čísla ber z JSON v `src/data/`, ne z chatu.
 
-**Datum snapshotu:** 2026-10-20  
-**Playable slice:** 2 stage + boss, 1 survivor, 12 itemů, aimed primary, překážky.
+**Datum snapshotu:** 2026-10-21  
+**Playable slice:** 2 stage + boss, **2 survivors** (4 skilly), 13 itemů, aimed primary, překážky, Astral Watcher, Noxious elite.
 
 ## Co nahrát do NotebookLM
 
@@ -28,14 +28,13 @@ Notebook → Sources → Upload. Po nahrání ověř, že NotebookLM cituje tyto
 
 Nenahrávej `knowledge/` zároveň s touto složkou. Duplicitní zdroje Gemini pletou LIVE a TARGET.
 
-## Rozdíl proti starému draftu (8 itemů)
+## Rozdíl proti snapshotu 2026-10-20
 
-Tento snapshot opravuje draft, který měl 8 itemů a žádné překážky:
-
-- **12 itemů** live, včetně lunar **Pale Moon Covenant**
-- Dark Hermetic názvy (Homunculus, Ignis Bolt, Phase Step, Transmutation Circle)
-- Arena **obstacles** live (14 pillars, 8 hazards, 9 volatiles)
-- Hall: Start, Vessel, How to play, Settings
-- Anti-idle má **6. zákon** (překážky jsou tlak, ne cover)
-- Spitter bolt damage **5** (ne 6/7)
-- Stage 1 elite display: **Ember Warden**
+- **2 survivors LIVE:** Homunculus + The Penitent, každý 4 skilly
+- Secondary (RMB) a ultimate (Q) **bound a mířené**
+- Ignis Bolt cooldown **0.28 s** (ne 0.16)
+- LIVE effecty: `projectile` / `dash` / `self-slow` / `delayed-strike` / `slow-line` / `tether`
+- **Astral Watcher** sniper LIVE (max 2, cost 30, interval 7 s)
+- **Noxious** na každé elitě LIVE (contact slow, corpse pop, permanent acid pool)
+- Hall: výběr vesselu, 3 sloupce (Vessel Selection / Archives / Alchemist's Desk)
+- Web Audio bus (Phaser `noAudio`)

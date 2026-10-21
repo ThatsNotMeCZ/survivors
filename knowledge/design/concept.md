@@ -24,7 +24,7 @@ Mouse-aimed primary (locked **A**). WASD move. You win by kiting and hitting eli
 ## v1 scope
 
 - 2 survivors (4 skills each: primary, secondary, dash, ultimate)
-- 12 items, all with a hook (no pure +damage win)
+- 13 items, all with a hook (no pure +damage win)
 - 4 enemy archetypes + 3 elite modifiers
 - 2 biomes, 3 stages + finale
 - ~20 minute run

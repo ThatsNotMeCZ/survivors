@@ -1,6 +1,6 @@
 # survivors — LIVE vs TARGET vs ZAKÁZÁNO
 
-Snapshot: **2026-10-20**.  
+Snapshot: **2026-10-21**.  
 Když navrhuješ feature, nejdřív ji zařaď sem. Neoznačený návrh ber jako podezřelý.
 
 ## LIVE (playable teď)
@@ -8,30 +8,35 @@ Když navrhuješ feature, nejdřív ji zařaď sem. Neoznačený návrh ber jako
 Playtest slice, hodiny zkrácené.
 
 - Combat verb **A**: mouse-aimed primary, hold LMB
-- Homunculus (`runner`): Ignis Bolt + Phase Step
+- **2 survivors**, každý 4 bound skilly
+- Homunculus: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull
+- The Penitent: Censer Lob / Brimstone Line / Ash Step / Condemnation Tether
+- RMB secondary + Q ultimate, oba aimed press
 - 2 stage: Cinder Yard → Rime Dock, pak victory
 - Director + difficulty coefficient
-- 12 itemů s tradeoffem, včetně lunar Pale Moon Covenant
+- 13 itemů s tradeoffem, včetně lunar Pale Moon Covenant a on-kill Cinnabar Leech
 - Level-up 1 of 3, sim pause
 - Transmutation Circle hold, pak stage boss, pak Rift (jen po stage 1)
 - Ranged spitters ~22 %
-- Arena obstacles: 14 pillars, 8 hazards, 9 volatiles
+- Astral Watcher sniper (max 2)
+- Noxious na každé elitě (contact slow, corpse pop, permanent acid)
+- Arena obstacles: 14 pillars, 8 hazards, 9 volatiles + až 8 acid pools
 - Contact DPS (fodder cap 4), dash i-frames
-- HTML hall / pause / HUD / recap / settings
-- Dark Hermetic display copy
+- HTML hall s výběrem vesselu / pause / HUD 4 sloty / recap / settings
+- Dark Hermetic display copy (hall title Hermetic Rifts)
 - GPU fodder, gems, sparks; sprite player/elite/boss/obstacles
+- Web Audio bus (menu / map / pause overlay)
 - Soft slice cap: 32 fodder + 3 elite + 1 boss
 
 ## TARGET v1 (schváleno, není v kódu)
 
-- 2 survivors, každý 4 skilly (primary, secondary, dash, ultimate)
-- Secondary (RMB) a ultimate bound a **mířené**
-- 4 enemy archetypes
-- 3 elite modifiers: burn / chain lightning / poison slow (recolor + glyph)
+- 2 survivors × 4 skilly — **už LIVE**
+- 13 itemů s hookem — **už LIVE**; další item jen s novým hookem
+- 4. enemy archetype (chase / ranged / sniper už LIVE)
+- Elite modifiers burn (červená) a chain lightning (modrá)
+- Noxious jako **roll mezi 3 modifiers**, ne default na každé elitě
 - 3 stage + finale, produkční hodiny (~6 min/stage, circle ~min 4, hold ~60 s)
-- Standing-still tresty navíc: telegraph elite hits, sniper archetype, corpse explosions
 - Late game: méně těl, scarier elite
-- 12 itemů s hookem už **je LIVE**; další item jen s novým hookem, ne jako doplnění kvóty
 
 ## ZAKÁZÁNO (ani jako experiment v návrhu)
 
@@ -50,15 +55,17 @@ Playtest slice, hodiny zkrácené.
 
 | Není LIVE | Co je LIVE místo toho |
 |---|---|
-| 8 itemů | 12 itemů |
+| 1 survivor, secondary/ultimate unbound | 2 survivors, 4 skilly bound |
+| Ignis Bolt CD 0.16 s | **0.28 s** |
+| Effecty jen `projectile` / `dash` | + `self-slow` / `delayed-strike` / `slow-line` / `tether` |
+| Sniper / corpse explosions = TARGET | Astral Watcher + Noxious corpse acid = **LIVE** |
+| Elite modifiers burn/chain/poison | jen **Noxious**, na každé elitě |
+| 8 itemů | 13 itemů |
 | Žádný lunar item | Pale Moon Covenant |
 | Runner / Bolt / Dash jako hráčské názvy | Homunculus / Ignis Bolt / Phase Step |
-| Prázdná aréna | 31 překážek |
-| Telegraph elite hits, snipers, corpse explosions | jen v TARGET |
+| Prázdná aréna | 31 překážek + acid pools |
 | 3 stage + finale | 2 stage slice |
 | Hold 60 s | Hold 20 / 22 s |
-| Elite modifiers burn/chain/poison | elite = větší chaseři |
-| Secondary / ultimate | unbound |
 | Spitter bolt 6 / 7 | bolt damage **5** |
 | Elite stage 1 „Ember“ | **Ember Warden** (`ember-chaser`) |
 

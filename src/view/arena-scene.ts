@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { FX_DASH, FX_DEATH, FX_HIT, FX_MUZZLE, FX_STRIKE, SPARK_CAP } from '../config';
+import { playSfx, setMusicScene } from '../audio';
+import { FX_DASH, FX_DEATH, FX_GEM, FX_HIT, FX_HURT, FX_MUZZLE, FX_STRIKE, SPARK_CAP } from '../config';
 import { catalog } from '../data/catalog';
 import type { ItemDef, SkillSlot } from '../data/schema';
 import { ROLE_BOSS, ROLE_ELITE, ROLE_FODDER } from '../sim/enemies';
@@ -35,7 +36,8 @@ import {
   playerIdleKey,
   pickPlayerSprite,
   moveFacing,
-  type PlayerFacing,
+  spriteFacing,
+  type HorizontalFacing,
   type WalkFrame,
   playerCatalystKey,
   playerEyesKey,
@@ -141,7 +143,7 @@ export class ArenaScene extends Phaser.Scene {
   private circleSparkCd = 0;
   private lastCircleKey = '';
   private pngKeys = new Set<string>();
-  private lastFacing: PlayerFacing = 'front';
+  private lastFacing: HorizontalFacing = 'right';
 
   constructor() {
     super({ key: 'arena' });
@@ -289,6 +291,7 @@ export class ArenaScene extends Phaser.Scene {
 
     const webgl = this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer;
     initArenaHud(webgl ? 'webgl' : 'canvas');
+    setMusicScene({ kind: 'stage', stageId: currentStage(this.world).id });
   }
 
   update(_time: number, delta: number): void {
@@ -347,7 +350,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private bodyKey(biome: BiomeId): string {
-    return playerIdleKey(biome, this.vesselId(), this.lastFacing);
+    return playerIdleKey(biome, this.vesselId());
   }
 
   private fitBody(image: Phaser.GameObjects.Image): void {
@@ -467,21 +470,19 @@ export class ArenaScene extends Phaser.Scene {
     const moving = this.inputFrame.moveX !== 0 || this.inputFrame.moveY !== 0;
     if (moving && player.dashRemain <= 0) this.walkPhase += dt * 8;
     const bob = Math.round(Math.sin(this.walkPhase) * 1.5);
-    const facing = moveFacing(this.inputFrame.moveX, this.inputFrame.moveY) ?? this.lastFacing;
-    if (moving) this.lastFacing = facing;
+    this.lastFacing = spriteFacing(moveFacing(this.inputFrame.moveX, this.inputFrame.moveY), this.lastFacing);
     const frame = (Math.floor(this.walkPhase) % 3) as WalkFrame;
     const { key: body, flipX } = pickPlayerSprite(
-      this.pngKeys,
       biome,
       this.vesselId(),
-      facing,
+      this.lastFacing,
       moving,
       frame,
     );
     if (this.playerSprite.texture.key !== body) this.playerSprite.setTexture(body);
     this.fitBody(this.playerSprite);
     this.playerSprite.setFlipX(flipX);
-    this.playerEyes.setVisible(!this.pngKeys.has(playerIdleKey(biome, this.vesselId(), 'front')));
+    this.playerEyes.setVisible(!this.pngKeys.has(playerIdleKey(biome, this.vesselId())));
     if (player.skillCd.primary > this.lastPrimaryCd + 0.02) this.catalystRecoil = 1;
     this.lastPrimaryCd = player.skillCd.primary;
     this.catalystRecoil = Math.max(0, this.catalystRecoil - dt * 8);
@@ -704,6 +705,7 @@ export class ArenaScene extends Phaser.Scene {
       this.lastStageIndex = this.world.stageIndex;
       this.lastBossSpawned = false;
       const stage = currentStage(this.world);
+      setMusicScene({ kind: 'stage', stageId: stage.id });
       showSting(
         {
           kicker: 'The Rift yields',
@@ -939,11 +941,27 @@ export class ArenaScene extends Phaser.Scene {
       const x = fx.x[i];
       const y = fx.y[i];
       const tint = fx.tint[i] || 0xffffff;
-      if (kind === FX_HIT) spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
-      else if (kind === FX_DEATH) spawnBurst(this.sparks, x, y, tint, 10, 140, 0.28);
-      else if (kind === FX_MUZZLE) spawnBurst(this.sparks, x, y, tint, 3, 70, 0.14);
-      else if (kind === FX_DASH) spawnBurst(this.sparks, x, y, tint, 6, 110, 0.2);
-      else if (kind === FX_STRIKE) spawnBurst(this.sparks, x, y, tint, 14, 160, 0.32);
+      if (kind === FX_HIT) {
+        spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
+        playSfx('hit');
+      } else if (kind === FX_HURT) {
+        spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
+        playSfx('hurt');
+      } else if (kind === FX_DEATH) {
+        spawnBurst(this.sparks, x, y, tint, 10, 140, 0.28);
+        playSfx(tint === 0xff8844 ? 'break' : 'death');
+      } else if (kind === FX_MUZZLE) {
+        spawnBurst(this.sparks, x, y, tint, 3, 70, 0.14);
+        playSfx('muzzle');
+      } else if (kind === FX_DASH) {
+        spawnBurst(this.sparks, x, y, tint, 6, 110, 0.2);
+        playSfx('dash');
+      } else if (kind === FX_STRIKE) {
+        spawnBurst(this.sparks, x, y, tint, 14, 160, 0.32);
+        playSfx('strike');
+      } else if (kind === FX_GEM) {
+        playSfx('gem');
+      }
     }
     fx.count = 0;
   }
@@ -1196,11 +1214,12 @@ function hudSkills(world: World) {
   return slots.map((slot, index) => {
     const id = world.survivor.skills[slot];
     if (!id) {
-      return { slot, name: '', glyph: glyphs[index], cd: 0, max: 0, empty: true, iframe: false };
+      return { slot, id: '', name: '', glyph: glyphs[index], cd: 0, max: 0, empty: true, iframe: false };
     }
     const skill = world.catalog.skill(id);
     return {
       slot,
+      id,
       name: skill.name,
       glyph: glyphs[index],
       cd: world.player.skillCd[slot],

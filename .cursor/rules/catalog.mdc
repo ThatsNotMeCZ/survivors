@@ -10,4 +10,4 @@ alwaysApply: false
 - New enemy/item/survivor = JSON entry. Do not add stats to `world.ts`.
 - New skill effect = `SkillEffect` variant + `applyEffect` case + `knowledge/tech/catalog.md`.
 - Unknown effect types must throw at load, never silently no-op.
-- Items use `add` / `pct` hooks. No screen-clear or AFK-win hooks.
+- Items use `add` / `pct` / `on-kill` hooks. No screen-clear or AFK-win hooks.

@@ -282,10 +282,21 @@ select:focus-visible,
   position: absolute;
   left: 3px;
   top: 2px;
+  z-index: 2;
   font-size: 8px;
   letter-spacing: 0.04em;
   color: var(--brass);
   font-family: var(--font-display);
+}
+
+.skill-icon {
+  position: absolute;
+  inset: 6px;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
 .skill-glyph {
@@ -298,10 +309,15 @@ select:focus-visible,
   color: var(--parchment);
 }
 
+.skill-slot[data-has-icon='1'] .skill-glyph {
+  display: none;
+}
+
 .skill-cd {
   position: absolute;
   right: 3px;
   bottom: 2px;
+  z-index: 2;
   font-size: 10px;
   color: var(--gold-molten);
   font-variant-numeric: tabular-nums;
@@ -310,6 +326,8 @@ select:focus-visible,
 .skill-sweep {
   position: absolute;
   inset: 0;
+  z-index: 1;
+  pointer-events: none;
   background: conic-gradient(from 0deg, rgba(12, 10, 13, 0.72) calc(var(--cd, 0) * 360deg), transparent 0);
 }
 
@@ -324,6 +342,10 @@ select:focus-visible,
 
 .skill-slot[data-ready='0'] .skill-glyph {
   color: var(--soot);
+}
+
+.skill-slot[data-ready='0'] .skill-icon {
+  opacity: 0.42;
 }
 
 .skill-slot[data-empty='1'] {
@@ -869,6 +891,7 @@ select:focus-visible,
   padding: 8px 0;
   border-top: 1px solid rgba(138, 106, 50, 0.28);
   font-size: 14px;
+  cursor: pointer;
 }
 
 .setting-row:first-child {
@@ -887,15 +910,32 @@ select:focus-visible,
   margin-top: 2px;
 }
 
+.setting-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .setting-row input[type='range'] {
   width: 140px;
+  height: 24px;
   accent-color: var(--brass);
+  cursor: pointer;
+}
+
+.setting-value {
+  width: 3.2em;
+  color: var(--ash);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  text-align: right;
 }
 
 .setting-row input[type='checkbox'] {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   accent-color: var(--brass);
+  cursor: pointer;
 }
 
 .recap-list {
@@ -1109,6 +1149,8 @@ select:focus-visible,
 
 .hall-skill {
   position: relative;
+  display: grid;
+  place-items: center;
   width: 44px;
   height: 44px;
   border: 1px solid var(--brass-dim);
@@ -1117,6 +1159,28 @@ select:focus-visible,
   font-family: var(--font-display);
   font-size: 12px;
   cursor: default;
+}
+
+.hall-skill-glyph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.hall-skill-icon {
+  position: absolute;
+  inset: 6px;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.hall-skill[data-has-icon='1'] .hall-skill-glyph {
+  display: none;
 }
 
 .hall-skill:hover {
@@ -1186,6 +1250,14 @@ select:focus-visible,
   color: var(--parchment);
   border: 1px solid var(--brass);
   box-shadow: inset 0 0 0 5px var(--obsidian);
+  z-index: 80;
+  pointer-events: auto;
+}
+
+#settings-dialog,
+#settings-dialog * {
+  cursor: auto;
+  pointer-events: auto;
 }
 
 #settings-dialog::backdrop {

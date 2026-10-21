@@ -11,7 +11,8 @@ export type StatId = 'speed' | 'maxHp' | 'radius' | 'damage' | 'cooldown';
 
 export type ItemHook =
   | { op: 'add'; stat: StatId; value: number }
-  | { op: 'pct'; stat: StatId; value: number };
+  | { op: 'pct'; stat: StatId; value: number }
+  | { op: 'on-kill'; stat: 'hp'; value: number };
 
 export type ProjectileEffect = {
   type: 'projectile';

@@ -14,7 +14,12 @@
     "art:generate": "bun scripts/comfy-generate.ts",
     "art:list": "bun scripts/comfy-generate.ts --list",
     "art:item": "bun scripts/comfy-generate.ts --item",
-    "art:ref": "bun scripts/comfy-generate.ts --ref-front --vessel"
+    "art:item-ref": "bun scripts/comfy-generate.ts --item-ref",
+    "art:skill": "bun scripts/comfy-generate.ts --skill",
+    "art:skill-ref": "bun scripts/comfy-generate.ts --skill-ref",
+    "art:ref": "bun scripts/comfy-generate.ts --ref --vessel",
+    "art:walk": "bun scripts/comfy-generate.ts --walk --vessel",
+    "art:slice": "bun scripts/slice-vessel-sheets.ts"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.3.0",

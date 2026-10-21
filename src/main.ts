@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { bootAudio } from './audio';
 import { startGame } from './game';
 import { hideHud } from './ui/hud';
 import { bindOverlay, hideOverlay, hideSting, setHoldPrompt, showMainMenu } from './ui/overlay';
@@ -19,6 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     startGame('game-container', true);
     return;
   }
+
+  bootAudio();
 
   hideHud();
   if (skipShell()) {

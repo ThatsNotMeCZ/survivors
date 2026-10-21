@@ -10,7 +10,7 @@ Content lives in `src/data/*.json`. Numbers do not belong in `src/sim/` classes.
 | `survivors.json` | stats, 4 skill slots, starting items, view |
 | `skills.json` | primary / secondary / utility / special |
 | `entities.json` | fodder / elite / boss, tags, AI (`chase` or `ranged`), contact DPS, rewards, view |
-| `items.json` | stackable hooks (`add` / `pct` on a stat) plus display `name` / `lore` |
+| `items.json` | stackable hooks (`add` / `pct` on a stat, `on-kill` heal) plus display `name` / `lore` |
 
 Schema: `src/data/schema.ts`. Loader: `src/data/catalog.ts` (version check, unique ids, skill refs, stage entity roles).
 
@@ -40,7 +40,7 @@ Unknown `type` throws at boot. To add one: variant in `schema.ts` → case in `s
 
 ## Items
 
-Hooks only. Every draft item has a tradeoff (no pure screen-clear). Equip via `startingItems` or level-up overlay. Slice: **12 items** in `items.json`. Ids stay kebab-case; `name` / `lore` are player-facing Dark Hermetic copy.
+Hooks only. Every draft item has a tradeoff (no pure screen-clear). Equip via `startingItems` or level-up overlay. Slice: **13 items** in `items.json`. Ids stay kebab-case; `name` / `lore` are player-facing Dark Hermetic copy. `on-kill` heals current HP on `killEnemy` (clamped to max); it is not a stat in `resolveStats`.
 
 | id | Display | Rarity | Hook |
 |---|---|---|---|
@@ -56,6 +56,7 @@ Hooks only. Every draft item has a tradeoff (no pure screen-clear). Equip via `s
 | `calcined-lens` | Astrologer's Ocular | rare | +32% damage, −10% speed |
 | `salt-ward` | Salt Effigy | common | −15% hurtbox, −10% damage |
 | `lunar-tithe` | Pale Moon Covenant | lunar (weight 0.08) | +75% damage, −35% max HP, +18% hurtbox |
+| `cinnabar-leech` | Cinnabar Leech | common | +0.2 HP on kill, +8% hurtbox |
 
 Display names elsewhere: survivor `runner` → **Homunculus**; `penitent` → **The Penitent**; skill `bolt` → **Ignis Bolt**; skill `dash` → **Phase Step**; XP gems → **Mercury Drops** / Essence.
 
@@ -79,7 +80,7 @@ Unknown `ai.type` is a catalog/schema miss; add the JSON shape then a case in `s
 
 ## View
 
-`src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor). Player idle keys are `px-player-body-{vessel}-{biome}-{front|side|back}`. Walk keys are `-walk-{front|left|right|down|up}-{0|1|2}`. `ArenaScene.preload` loads `public/sprites/manifest.json` PNGs under the same `px-*` keys and draws the vessel at 40px. `pixel-textures.ts` uploads any key Phaser does not already have. Hall vessel picker / preview use idle body art (`src/ui/vessel-art.ts`). Comfy writes vessel fronts to `public/sprites/_ref/` (512px identity for the external generator) and icons at game size (`knowledge/tech/comfy.md`).
+`src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor). Homunculus idle key is `px-player-body-runner-{biome}-side`; The Penitent stays `-front`. Walk keys are `-walk-side-{0|1|2}` (sliced from `_in/` sheets, or Comfy ControlNet). Until walk PNGs exist in `public/sprites/`, moving reuses idle. Arena `flipX` for left. `ArenaScene.preload` loads `public/sprites/manifest.json` PNGs under the same `px-*` keys and draws the vessel at 40px. `pixel-textures.ts` uploads any key Phaser does not already have. Hall vessel picker prefers side, then front (`src/ui/vessel-art.ts`). Comfy still writes a front idle ref to `public/sprites/_ref/` at 1024px (not loaded by the game). Item refs go to `_ref/items/` then 24px HUD icons, skill refs to `_ref/skills/` then 24px HUD/hall icons (`knowledge/tech/comfy.md`).
 
 ## UI (HTML overlay)
 
@@ -88,11 +89,11 @@ Menus and HUD are `src/ui/`, not Phaser text. One overlay stack: HUD < prompts <
 | Module | Role |
 |---|---|
 | `theme.css` | Dark Hermetic tokens (brass, ember, mercury, parchment) |
-| `hud.css` / `hud.ts` | Objective banner, biome clock, flask HP, 4 skill slots, 32px item grid (`sprites/px-item-{id}.png`, stack counts) |
+| `hud.css` / `hud.ts` | Objective banner, biome clock, flask HP, 4 skill slots (`sprites/px-skill-{id}.png`), 32px item grid (`sprites/px-item-{id}.png`, stack counts) |
 | `overlay.ts` | 3-column hall, how-to, pause (inventory strip), level-up (96px icons + shared detail + inventory), recap, stings, hold prompt |
 | `settings.ts` | `<dialog>`: master/SFX/music, mute, screenshake, reduce-VFX, selected vessel |
 
-Display strings come from catalog `name` / `lore`. Settings persist even though audio is `noAudio` for now. Asset folders: `knowledge/tech/audio.md`.
+Display strings come from catalog `name` / `lore`. Settings drive the Web Audio bus (`knowledge/tech/audio.md`). Phaser stays `noAudio`.
 
 ## Do
 

@@ -20,7 +20,7 @@
 
 ## Current milestone
 
-GPU smoke **passed**. Combat verb **A locked**. Homunculus kit complete (Bolt / Piercing Aether / Phase Step / Crucible Cull). **The Penitent** live. Astral Watcher + Noxious elites. HTML hall/HUD in `src/ui/`. Run slice: leveling, **12 items**, 2 stages, teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Smoke: `/?smoke=1`. Skip hall: `/?dev=1`. Theme: Dark Hermetic (display strings, not ids).
+GPU smoke **passed**. Combat verb **A locked**. Homunculus kit complete (Bolt / Piercing Aether / Phase Step / Crucible Cull). **The Penitent** live. Astral Watcher + Noxious elites. HTML hall/HUD in `src/ui/`. Run slice: leveling, **13 items**, 2 stages, teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Smoke: `/?smoke=1`. Skip hall: `/?dev=1`. Theme: Dark Hermetic (display strings, not ids).
 
 ## Commands
 
@@ -29,9 +29,14 @@ bun install
 bun run dev           # http://127.0.0.1:8080
 bun run smoke:loop    # 2 stages + boss, no browser
 bun run art:comfy     # start ComfyUI (127.0.0.1:8188)
-bun run art:download  # Pixel Art XL LoRA into ~/ComfyUI
-bun run art:ref -- runner            # 512px character ref → public/sprites/_ref/
-bun run art:item -- glass-cannon
+bun run art:download  # LoRA + OpenPose ControlNet into ~/ComfyUI
+bun run art:ref -- runner              # 1024px front idle → public/sprites/_ref/
+bun run art:walk -- runner             # 3 walk frames (ControlNet, needs idle)
+bun run art:slice                      # crop _in/runner_{idle,walk}.jpeg → 40px game
+bun run art:item-ref -- glass-cannon # 1024px only → _ref/items/
+bun run art:item -- glass-cannon     # 1024px _ref/items/ + 24px HUD icon
+bun run art:skill-ref -- bolt        # 1024px only → _ref/skills/
+bun run art:skill -- bolt            # 1024px _ref/skills/ + 24px HUD icon
 bun run art:generate                 # missing refs + icons
 bun run build
 ```

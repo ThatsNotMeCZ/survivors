@@ -1,4 +1,4 @@
-import { FX_DEATH, FX_HIT } from '../config';
+import { FX_DEATH, FX_HIT, FX_HURT } from '../config';
 import type { Obstacle, ObstacleKind } from '../data/schema';
 import { aabbOverlap, circlesOverlap, pushCircles } from './collision';
 import { ROLE_BOSS, startEnemyDeath } from './enemies';
@@ -228,7 +228,10 @@ function detonateVolatile(world: World, index: number): void {
   }
   const { player } = world;
   if (circlesOverlap(obs.x, obs.y, blast, player.x, player.y, player.radius)) {
-    if (player.iframeRemain <= 0) player.hp -= cfg.playerDamage;
+    if (player.iframeRemain <= 0) {
+      emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
+      player.hp -= cfg.playerDamage;
+    }
     if (rime) applySlow(player, cfg.rimeSlowMul, cfg.rimeSlowDuration);
   }
   obs.state = 'detonated';

@@ -47,39 +47,17 @@ export function resolveVessel(id: string): VesselId {
 
 export const PLAYER_WALK_DIRS = ['front', 'left', 'right', 'down', 'up'] as const;
 export type PlayerFacing = (typeof PLAYER_WALK_DIRS)[number];
+export type HorizontalFacing = 'left' | 'right';
 export type WalkFrame = 0 | 1 | 2;
 
-export function playerIdleKey(
-  biome: BiomeId,
-  vesselId = 'runner',
-  facing: PlayerFacing = 'front',
-): string {
+export function playerIdleKey(biome: BiomeId, vesselId = 'runner'): string {
   const vessel = resolveVessel(vesselId);
-  if (facing === 'left' || facing === 'right') return `px-player-body-${vessel}-${biome}-side`;
-  if (facing === 'up') return `px-player-body-${vessel}-${biome}-back`;
-  return `px-player-body-${vessel}-${biome}-front`;
+  const view = vessel === 'runner' ? 'side' : 'front';
+  return `px-player-body-${vessel}-${biome}-${view}`;
 }
 
-export function playerWalkKey(
-  biome: BiomeId,
-  vesselId = 'runner',
-  facing: PlayerFacing,
-  frame: WalkFrame,
-): string {
-  return `px-player-body-${resolveVessel(vesselId)}-${biome}-walk-${facing}-${frame}`;
-}
-
-export function playerBodyKey(
-  biome: BiomeId,
-  vesselId = 'runner',
-  facing: PlayerFacing | 'side' | 'back' = 'front',
-  frame: 0 | 1 | 2 = 0,
-): string {
-  const vessel = resolveVessel(vesselId);
-  if (facing === 'side') return `px-player-body-${vessel}-${biome}-side-${frame === 0 ? 0 : 1}`;
-  if (facing === 'back') return `px-player-body-${vessel}-${biome}-back`;
-  if (facing === 'front' && frame === 0) return `px-player-body-${vessel}-${biome}-front`;
-  return playerWalkKey(biome, vessel, facing, (frame % 3) as WalkFrame);
+export function playerWalkKey(biome: BiomeId, vesselId = 'runner', frame: WalkFrame): string {
+  return `px-player-body-${resolveVessel(vesselId)}-${biome}-walk-side-${frame}`;
 }
 
 export function moveFacing(moveX: number, moveY: number): PlayerFacing | null {
@@ -88,32 +66,22 @@ export function moveFacing(moveX: number, moveY: number): PlayerFacing | null {
   return moveY < 0 ? 'up' : 'down';
 }
 
+export function spriteFacing(move: PlayerFacing | null, last: HorizontalFacing): HorizontalFacing {
+  if (move === 'left' || move === 'right') return move;
+  return last;
+}
+
 export function pickPlayerSprite(
-  pngKeys: ReadonlySet<string>,
   biome: BiomeId,
   vesselId: string,
-  facing: PlayerFacing,
+  facing: HorizontalFacing,
   moving: boolean,
   frame: WalkFrame,
 ): { key: string; flipX: boolean } {
   const vessel = resolveVessel(vesselId);
-  if (moving) {
-    const walk = playerWalkKey(biome, vessel, facing, frame);
-    if (facing === 'left') {
-      const right = playerWalkKey(biome, vessel, 'right', frame);
-      if (pngKeys.has(walk)) return { key: walk, flipX: false };
-      if (pngKeys.has(right)) return { key: right, flipX: true };
-      return { key: walk, flipX: true };
-    }
-    if (facing === 'down') {
-      const front = playerWalkKey(biome, vessel, 'front', frame);
-      if (pngKeys.has(walk)) return { key: walk, flipX: false };
-      if (pngKeys.has(front)) return { key: front, flipX: false };
-      return { key: walk, flipX: false };
-    }
-    return { key: walk, flipX: false };
-  }
-  return { key: playerIdleKey(biome, vessel, facing), flipX: facing === 'left' };
+  const flipX = facing === 'left';
+  if (moving) return { key: playerWalkKey(biome, vessel, frame), flipX };
+  return { key: playerIdleKey(biome, vessel), flipX };
 }
 export function playerEyesKey(biome: BiomeId, vesselId = 'runner'): string {
   return `px-player-eyes-${resolveVessel(vesselId)}-${biome}`;
@@ -139,7 +107,7 @@ export function survivorPortrait(id: string): HTMLCanvasElement {
 }
 
 export function vesselIdleCanvas(id: string): HTMLCanvasElement {
-  return makeIdleBody('cinder', resolveVessel(id), 'front');
+  return makeIdleBody('cinder', resolveVessel(id));
 }
 export function bossKey(id: 'cinder-heart' | 'frost-sovereign'): string {
   return `px-boss-${id}`;
@@ -196,16 +164,7 @@ export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   const biomes: BiomeId[] = ['cinder', 'rime'];
   for (const biome of biomes) {
     for (const vessel of VESSELS) {
-      put(out, playerIdleKey(biome, vessel, 'front'), makeIdleBody(biome, vessel, 'front'));
-      put(out, playerIdleKey(biome, vessel, 'right'), makeIdleBody(biome, vessel, 'side'));
-      put(out, playerIdleKey(biome, vessel, 'up'), makeIdleBody(biome, vessel, 'back'));
-      put(out, playerBodyKey(biome, vessel, 'side', 0), makeStrideBody(biome, vessel, 0));
-      put(out, playerBodyKey(biome, vessel, 'side', 1), makeStrideBody(biome, vessel, 1));
-      for (const dir of PLAYER_WALK_DIRS) {
-        for (const frame of [0, 1, 2] as WalkFrame[]) {
-          put(out, playerWalkKey(biome, vessel, dir, frame), makeWalkBody(biome, vessel, dir, frame));
-        }
-      }
+      put(out, playerIdleKey(biome, vessel), makeIdleBody(biome, vessel));
       put(out, playerEyesKey(biome, vessel), makePlayerEyes(biome, vessel));
       put(out, playerCatalystKey(biome, vessel), makePlayerCatalyst(biome, vessel));
     }
@@ -261,62 +220,11 @@ function put(out: Map<string, HTMLCanvasElement>, key: string, canvas: HTMLCanva
   out.set(key, canvas);
 }
 
-function makeIdleBody(
-  biome: BiomeId,
-  vessel: VesselId,
-  view: 'front' | 'side' | 'back',
-): HTMLCanvasElement {
-  const facing: PlayerFacing = view === 'side' ? 'right' : view === 'back' ? 'up' : 'front';
-  return cachedPixel(playerIdleKey(biome, vessel, facing), 32, biome, (px) => {
-    if (view === 'side') {
-      if (vessel === 'penitent') drawPenitentSide(px, biome, 'idle');
-      else drawHomunculusSide(px, biome, 'idle');
-      return;
-    }
-    if (view === 'back') {
-      if (vessel === 'penitent') drawPenitentBack(px, biome, 0);
-      else drawHomunculusBack(px, biome, 0);
-      return;
-    }
-    if (vessel === 'penitent') drawPenitentBody(px, biome, 0);
-    else drawHomunculusBody(px, biome, 0);
+function makeIdleBody(biome: BiomeId, vessel: VesselId): HTMLCanvasElement {
+  return cachedPixel(playerIdleKey(biome, vessel), 32, biome, (px) => {
+    if (vessel === 'penitent') drawPenitentBody(px, biome);
+    else drawHomunculusBody(px, biome);
   });
-}
-
-function makeStrideBody(biome: BiomeId, vessel: VesselId, frame: 0 | 1): HTMLCanvasElement {
-  return cachedPixel(playerBodyKey(biome, vessel, 'side', frame), 32, biome, (px) => {
-    if (vessel === 'penitent') drawPenitentSide(px, biome, frame);
-    else drawHomunculusSide(px, biome, frame);
-  });
-}
-
-function makeWalkBody(
-  biome: BiomeId,
-  vessel: VesselId,
-  facing: PlayerFacing,
-  frame: WalkFrame,
-): HTMLCanvasElement {
-  const step = walkStep(frame);
-  return cachedPixel(playerWalkKey(biome, vessel, facing, frame), 32, biome, (px) => {
-    if (facing === 'left' || facing === 'right') {
-      if (vessel === 'penitent') drawPenitentSide(px, biome, frame);
-      else drawHomunculusSide(px, biome, frame);
-      return;
-    }
-    if (facing === 'up') {
-      if (vessel === 'penitent') drawPenitentBack(px, biome, step);
-      else drawHomunculusBack(px, biome, step);
-      return;
-    }
-    if (vessel === 'penitent') drawPenitentBody(px, biome, step);
-    else drawHomunculusBody(px, biome, step);
-  });
-}
-
-function walkStep(frame: WalkFrame): number {
-  if (frame === 0) return -1;
-  if (frame === 2) return 1;
-  return 0;
 }
 
 function makePlayerEyes(biome: BiomeId, vessel: VesselId): HTMLCanvasElement {
@@ -359,37 +267,6 @@ function drawHomunculusBody(px: PixelBuf, biome: BiomeId, step = 0): void {
   px.fill(12, 3, 8, 3, '#1c1822');
 }
 
-function drawHomunculusBack(px: PixelBuf, biome: BiomeId, step = 0): void {
-  const trim = biome === 'cinder' ? '#c94a4a' : '#5ad4ff';
-  px.fill(11, 4, 10, 6, '#1c1822');
-  px.fill(10, 6, 12, 4, '#3a3244');
-  px.fill(8, 8, 16, 5, '#52465c');
-  px.fill(7, 12, 18, 14, '#2a2430');
-  px.fill(8, 12, 16, 2, trim);
-  px.fill(8, 24, 16, 3, '#2a2430');
-  px.fill(9 + step, 26, 5, 4, '#2a2430');
-  px.fill(18 - step, 26, 5, 4, '#2a2430');
-}
-
-function drawHomunculusSide(px: PixelBuf, biome: BiomeId, frame: 0 | 1 | 2 | 'idle'): void {
-  const trim = biome === 'cinder' ? '#c94a4a' : '#5ad4ff';
-  px.fill(14, 3, 7, 6, '#1c1822');
-  px.fill(13, 9, 8, 11, '#2a2430');
-  px.fill(13, 11, 8, 2, trim);
-  if (frame === 'idle' || frame === 1) {
-    px.fill(12, 12, 3, 8, '#3a3244');
-    px.fill(18, 13, 3, 7, '#3a3244');
-    px.fill(13, 21, 4, 9, '#2a2430');
-    px.fill(16, 22, 4, 8, '#2a2430');
-    return;
-  }
-  const stride = frame === 0;
-  px.fill(stride ? 10 : 19, 12, 3, 8, '#3a3244');
-  px.fill(stride ? 20 : 9, 13, 3, 7, '#3a3244');
-  px.fill(stride ? 11 : 18, 21, 4, 9, '#2a2430');
-  px.fill(stride ? 18 : 10, 22, 4, 8, '#2a2430');
-}
-
 function drawPenitentBody(px: PixelBuf, biome: BiomeId, step = 0): void {
   const sash = biome === 'cinder' ? '#c4783a' : '#88d0e8';
   const robe = biome === 'cinder' ? '#3a2418' : '#243040';
@@ -403,41 +280,6 @@ function drawPenitentBody(px: PixelBuf, biome: BiomeId, step = 0): void {
   px.fill(14, 18, 4, 6, biome === 'cinder' ? '#5c4520' : '#3a5060');
   px.fill(9 + step, 26, 5, 4, hood);
   px.fill(18 - step, 26, 5, 4, hood);
-}
-
-function drawPenitentBack(px: PixelBuf, biome: BiomeId, step = 0): void {
-  const sash = biome === 'cinder' ? '#c4783a' : '#88d0e8';
-  const robe = biome === 'cinder' ? '#3a2418' : '#243040';
-  const hood = biome === 'cinder' ? '#2a1810' : '#1a2430';
-  px.fill(8, 4, 16, 7, hood);
-  px.fill(6, 10, 20, 16, robe);
-  px.fill(7, 8, 18, 3, biome === 'cinder' ? '#8a6a32' : '#6a8898');
-  px.fill(10, 12, 12, 3, sash);
-  px.fill(8, 24, 16, 6, hood);
-  px.fill(9 + step, 26, 5, 4, hood);
-  px.fill(18 - step, 26, 5, 4, hood);
-}
-
-function drawPenitentSide(px: PixelBuf, biome: BiomeId, frame: 0 | 1 | 2 | 'idle'): void {
-  const sash = biome === 'cinder' ? '#c4783a' : '#88d0e8';
-  const robe = biome === 'cinder' ? '#3a2418' : '#243040';
-  const hood = biome === 'cinder' ? '#2a1810' : '#1a2430';
-  px.fill(13, 2, 8, 8, hood);
-  px.fill(14, 5, 5, 5, '#1a100c');
-  px.fill(12, 10, 9, 14, robe);
-  px.fill(12, 13, 9, 2, sash);
-  if (frame === 'idle' || frame === 1) {
-    px.fill(12, 12, 3, 8, robe);
-    px.fill(18, 13, 3, 7, robe);
-    px.fill(13, 24, 4, 7, hood);
-    px.fill(16, 25, 4, 6, hood);
-    return;
-  }
-  const stride = frame === 0;
-  px.fill(stride ? 9 : 20, 12, 3, 8, robe);
-  px.fill(stride ? 21 : 8, 13, 3, 7, robe);
-  px.fill(stride ? 11 : 18, 24, 4, 7, hood);
-  px.fill(stride ? 18 : 10, 25, 4, 6, hood);
 }
 
 function makeMite(biome: BiomeId, frame: 0 | 1): HTMLCanvasElement {

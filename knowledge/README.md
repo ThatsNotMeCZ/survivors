@@ -22,7 +22,7 @@ Canonical notes for humans and agents. Update these when a design decision lands
 | [tech/smoke-test.md](tech/smoke-test.md) | What "pass" means |
 | [tech/catalog.md](tech/catalog.md) | Items, skills, entities JSON |
 | [tech/comfy.md](tech/comfy.md) | ComfyUI pixel sprites + API |
-| [tech/audio.md](tech/audio.md) | SFX folders, per-map beds, pause overlay |
+| [tech/audio.md](tech/audio.md) | Playlists, SFX, pause overlay |
 
 ## Phaser
 

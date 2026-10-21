@@ -4,6 +4,9 @@
   "checkpoint": "juggernautXL_ragnarok.safetensors",
   "lora": "pixel-art-xl.safetensors",
   "loraStrength": 1,
+  "controlnet": "controlnet-openpose-sdxl.safetensors",
+  "controlnetStrength": 0.72,
+  "walkDenoise": 0.55,
   "files": [
     {
       "role": "lora",
@@ -13,6 +16,13 @@
       "fallbackUrl": "https://civitai.com/api/download/models/135931",
       "civitaiFallback": true,
       "minBytes": 1000000
+    },
+    {
+      "role": "controlnet",
+      "filename": "controlnet-openpose-sdxl.safetensors",
+      "dir": "models/controlnet",
+      "url": "https://huggingface.co/xinsir/controlnet-openpose-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors",
+      "minBytes": 2000000000
     }
   ]
 }

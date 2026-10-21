@@ -6,6 +6,7 @@ import {
   CATALOG_VERSION,
   type EntityDef,
   type ItemDef,
+  type ItemHook,
   type LoopDef,
   type ObstacleCatalog,
   type ObstacleKind,
@@ -28,6 +29,8 @@ const IMPLEMENTED_EFFECTS = new Set<SkillEffect['type']>([
   'slow-line',
   'tether',
 ]);
+
+const IMPLEMENTED_HOOK_OPS = new Set<ItemHook['op']>(['add', 'pct', 'on-kill']);
 
 export type Catalog = {
   world: WorldDef;
@@ -58,6 +61,17 @@ function loadCatalog(): Catalog {
     asList<EntityDef>(entitiesRaw as VersionedList<EntityDef>, 'entities.json'),
   );
   const items = indexById('items.json', asList<ItemDef>(itemsRaw as VersionedList<ItemDef>, 'items.json'));
+
+  for (const item of items.values()) {
+    for (const hook of item.hooks) {
+      if (!IMPLEMENTED_HOOK_OPS.has(hook.op)) {
+        throw new Error(`Item "${item.id}" uses unimplemented hook "${hook.op}"`);
+      }
+      if (hook.op === 'on-kill' && hook.stat !== 'hp') {
+        throw new Error(`Item "${item.id}" on-kill stat must be hp`);
+      }
+    }
+  }
 
   for (const skill of skills.values()) {
     for (const effect of skill.effects) {

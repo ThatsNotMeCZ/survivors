@@ -1,5 +1,6 @@
 import { SMOKE_DOTS, SMOKE_PASS_FPS } from '../config';
 import { ITEM_CHIP_PX, makeItemChip } from './item-art';
+import { SKILL_SLOT_PX, makeSkillIcon } from './skill-art';
 import { hasQueryFlag } from './settings';
 
 export type HudStatus = 'boot' | 'warmup' | 'pass' | 'fail' | 'arena';
@@ -13,6 +14,7 @@ export type HudItem = {
 
 export type HudSkill = {
   slot: string;
+  id: string;
   name: string;
   glyph: string;
   cd: number;
@@ -45,6 +47,7 @@ let keysBound = false;
 let playMode = false;
 let lastItemKey = '';
 let lastItems: HudItem[] = [];
+let lastSkillBind = '';
 
 export function getHudItems(): HudItem[] {
   return lastItems;
@@ -54,6 +57,7 @@ export function hideHud(): void {
   playMode = false;
   lastItemKey = '';
   lastItems = [];
+  lastSkillBind = '';
   syncPlayAttr();
   hudEl()?.classList.add('hidden');
   document.getElementById('hud-play')?.classList.add('hidden');
@@ -174,12 +178,16 @@ export function formatTime(seconds: number): string {
 }
 
 function renderSkills(skills: HudSkill[]): void {
+  const bind = skills.map((skill) => `${skill.slot}:${skill.id}`).join('|');
+  const rebind = bind !== lastSkillBind;
+  if (rebind) lastSkillBind = bind;
   for (const skill of skills) {
     const slot = document.querySelector<HTMLElement>(`.skill-slot[data-slot="${skill.slot}"]`);
     if (!slot) continue;
     const glyph = slot.querySelector('.skill-glyph');
     const cd = slot.querySelector('.skill-cd');
     if (glyph) glyph.textContent = skill.empty ? '—' : skill.glyph;
+    if (rebind) bindSkillIcon(slot, skill);
     const ready = !skill.empty && skill.cd <= 0;
     const cdPct = skill.empty || skill.max <= 0 || skill.cd <= 0 ? 0 : Math.min(1, skill.cd / skill.max);
     slot.style.setProperty('--cd', String(cdPct));
@@ -189,6 +197,23 @@ function renderSkills(skills: HudSkill[]): void {
     slot.title = skill.empty ? '' : skill.name;
     if (cd) cd.textContent = !skill.empty && skill.cd > 0.05 ? skill.cd.toFixed(1) : '';
   }
+}
+
+function bindSkillIcon(slot: HTMLElement, skill: HudSkill): void {
+  slot.querySelector('.skill-icon')?.remove();
+  delete slot.dataset.skillId;
+  slot.dataset.hasIcon = '0';
+  if (skill.empty || !skill.id) return;
+  const img = makeSkillIcon(skill.id, skill.name, 'skill-icon', SKILL_SLOT_PX);
+  img.addEventListener('error', () => {
+    img.remove();
+    slot.dataset.hasIcon = '0';
+  });
+  img.addEventListener('load', () => {
+    slot.dataset.hasIcon = '1';
+  });
+  slot.dataset.skillId = skill.id;
+  slot.appendChild(img);
 }
 
 function renderItems(items: HudItem[]): void {

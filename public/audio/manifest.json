@@ -1,0 +1,86 @@
+{
+  "music": {
+    "menu": [
+      "audio/music/menu/Karl Casey - Into the void.ogg",
+      "audio/music/menu/Karl Casey - The Body.ogg"
+    ],
+    "maps": {
+      "cinder-yard": [
+        "audio/music/maps/cinder-yard/Karl Casey - Radiation Sickness.ogg"
+      ],
+      "rime-dock": [
+        "audio/music/maps/rime-dock/Karl Casey - Identity.ogg"
+      ]
+    },
+    "overlay": [
+      "audio/music/overlay/Karl Casey - White Bat 37 - 01 Disorder.ogg",
+      "audio/music/overlay/Karl Casey - White Bat 37 - 02 Calling You.ogg",
+      "audio/music/overlay/Karl Casey - White Bat 37 - 03 Waking into a Nightmare.ogg",
+      "audio/music/overlay/Karl Casey - White Bat 37 - 04 The Last Phoenix.ogg",
+      "audio/music/overlay/Karl Casey - White Bat 37 - 05 Killing Them Softly.ogg",
+      "audio/music/overlay/Karl Casey - White Bat 37 - 06 Vessel.ogg"
+    ]
+  },
+  "sfx": {
+    "click": {
+      "src": "audio/sfx/ui/click.ogg",
+      "volume": 1
+    },
+    "close": {
+      "src": "audio/sfx/ui/close.ogg",
+      "volume": 1
+    },
+    "confirm": {
+      "src": "audio/sfx/ui/confirm.ogg",
+      "volume": 1
+    },
+    "defeat": {
+      "src": "audio/sfx/ui/defeat.ogg",
+      "volume": 1
+    },
+    "error": {
+      "src": "audio/sfx/ui/error.ogg",
+      "volume": 1
+    },
+    "open": {
+      "src": "audio/sfx/ui/open.ogg",
+      "volume": 1
+    },
+    "victory": {
+      "src": "audio/sfx/ui/victory.ogg",
+      "volume": 1
+    },
+    "dash": {
+      "src": "audio/sfx/combat/dash.ogg",
+      "volume": 1
+    },
+    "death": {
+      "src": "audio/sfx/combat/death.ogg",
+      "volume": 1
+    },
+    "hit": {
+      "src": "audio/sfx/combat/hit.ogg",
+      "volume": 1
+    },
+    "hurt": {
+      "src": "audio/sfx/combat/hurt.ogg",
+      "volume": 1
+    },
+    "muzzle": {
+      "src": "audio/sfx/combat/muzzle.ogg",
+      "volume": 1
+    },
+    "strike": {
+      "src": "audio/sfx/combat/strike.ogg",
+      "volume": 1
+    },
+    "break": {
+      "src": "audio/sfx/world/break.ogg",
+      "volume": 1
+    },
+    "gem": {
+      "src": "audio/sfx/world/gem.ogg",
+      "volume": 1
+    }
+  }
+}

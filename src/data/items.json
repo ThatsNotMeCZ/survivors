@@ -133,6 +133,17 @@
         { "op": "pct", "stat": "radius", "value": 0.18 }
       ],
       "lore": "Heresy against the Order. Your bolts burn with pale astral fire, your frame bloats with cold light, and a single mistake is fatal."
+    },
+    {
+      "id": "cinnabar-leech",
+      "name": "Cinnabar Leech",
+      "rarity": "common",
+      "stack": "linear",
+      "hooks": [
+        { "op": "on-kill", "stat": "hp", "value": 0.2 },
+        { "op": "pct", "stat": "radius", "value": 0.08 }
+      ],
+      "lore": "A fat vermilion leech sealed in cracked glass. It drinks the last humor from anything you unmake, and your frame swells with the stolen vitae."
     }
   ]
 }

@@ -1,4 +1,6 @@
+import { FX_GEM } from '../config';
 import type { World } from './world';
+import { emitFx } from './fx';
 import { grantXp } from './level';
 
 export type GemPool = {
@@ -45,6 +47,7 @@ export function stepGems(world: World, dt: number): void {
     const dist = Math.hypot(dx, dy);
     if (dist <= gemPickup) {
       gems.alive[i] = 0;
+      emitFx(world.fx, FX_GEM, gems.x[i], gems.y[i], 0x88ddff);
       grantXp(world, gems.xp[i]);
       continue;
     }

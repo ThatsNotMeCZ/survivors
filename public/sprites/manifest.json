@@ -13,11 +13,9 @@
     "px-item-salt-ward",
     "px-item-wax-wings",
     "px-player-body-penitent-cinder-front",
-    "px-player-body-runner-cinder-back",
-    "px-player-body-runner-cinder-front",
-    "px-player-body-runner-cinder-front copy",
     "px-player-body-runner-cinder-side",
-    "px-portrait-penitent",
-    "px-portrait-runner"
+    "px-player-body-runner-cinder-walk-side-0",
+    "px-player-body-runner-cinder-walk-side-1",
+    "px-player-body-runner-cinder-walk-side-2"
   ]
 }

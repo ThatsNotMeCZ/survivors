@@ -1,4 +1,4 @@
-import { FX_HIT } from '../config';
+import { FX_HIT, FX_HURT } from '../config';
 import { catalog, type Catalog } from '../data/catalog';
 import type {
   ItemDef,
@@ -361,7 +361,7 @@ function hitPlayer(world: World): void {
     ) {
       continue;
     }
-    emitFx(world.fx, FX_HIT, projectiles.x[i], projectiles.y[i], 0xff7a3a);
+    emitFx(world.fx, FX_HURT, projectiles.x[i], projectiles.y[i], 0xff7a3a);
     player.hp -= projectiles.damage[i];
     killProjectile(projectiles, i);
   }
