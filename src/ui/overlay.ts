@@ -1,7 +1,8 @@
 import { catalog } from '../data/catalog';
 import type { ItemDef, ItemHook, SkillDef, SkillSlot, StatId, SurvivorDef } from '../data/schema';
-import { survivorPortrait } from '../view/procedural-pixel-art';
-import { formatTime } from './hud';
+import { formatTime, getHudItems, type HudItem } from './hud';
+import { ITEM_CHOICE_PX, makeItemChip, makeItemIcon } from './item-art';
+import { mountVesselArt } from './vessel-art';
 import { applySettingsToDom, getSettings, patchSettings, skipShell, type GameSettings } from './settings';
 
 export type OverlayMode =
@@ -165,6 +166,7 @@ export function showPause(): void {
     kicker: 'The working stills',
     title: 'Simulation Paused',
     sub: 'Esc or Enter to resume. The horde waits.',
+    body: inventoryStrip(getHudItems()),
     actions: [
       { label: 'Resume Sequence', onClick: () => handlers.onResume(), primary: true },
       { label: 'Settings', onClick: () => showSettings('pause') },
@@ -190,14 +192,10 @@ export function showAbandon(): void {
 
 export function showLevelUp(items: ItemDef[]): void {
   runPaused = true;
-  const choices = document.createElement('div');
-  items.forEach((item, index) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `choice rarity-${item.rarity}`;
-    const key = document.createElement('span');
-    key.className = 'choice-key';
-    key.textContent = String(index + 1);
+  const detail = document.createElement('div');
+  detail.className = 'choice-detail';
+  detail.id = 'choice-detail';
+  const fillDetail = (item: ItemDef): void => {
     const name = document.createElement('span');
     name.className = 'choice-name';
     name.textContent = item.name;
@@ -207,15 +205,34 @@ export function showLevelUp(items: ItemDef[]): void {
     const lore = document.createElement('span');
     lore.className = 'choice-lore';
     lore.textContent = item.lore;
-    btn.append(key, name, hooks, lore);
+    detail.replaceChildren(name, hooks, lore);
+  };
+  const choices = document.createElement('div');
+  items.forEach((item, index) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `choice rarity-${item.rarity}`;
+    btn.setAttribute('aria-describedby', 'choice-detail');
+    const icon = makeItemIcon(item.id, item.name, 'choice-icon', ITEM_CHOICE_PX);
+    const key = document.createElement('span');
+    key.className = 'choice-key';
+    key.textContent = String(index + 1);
+    btn.append(icon, key);
     btn.addEventListener('click', () => handlers.onPick(index));
+    btn.addEventListener('mouseenter', () => btn.focus({ preventScroll: true }));
+    btn.addEventListener('focus', () => fillDetail(item));
     choices.appendChild(btn);
   });
+  if (items[0]) fillDetail(items[0]);
+  const body = document.createElement('div');
+  body.className = 'levelup-body';
+  body.append(detail, inventoryStrip(getHudItems()));
   renderScreen({
     screen: 'levelup',
     kicker: 'A tablet unseals',
     title: 'Level up',
-    sub: 'Pick 1 of 3. Keys 1 / 2 / 3.',
+    sub: 'Pick 1 of 3. Keys 1 / 2 / 3. Arrows move focus.',
+    body,
     choices,
   });
 }
@@ -297,6 +314,40 @@ export function describeHooks(item: ItemDef): string {
   return item.hooks.map((hook) => formatHook(hook).text).join(' · ');
 }
 
+function focusLevelUpChoice(delta: number): void {
+  const root = choicesEl();
+  if (!root) return;
+  const buttons = [...root.querySelectorAll<HTMLButtonElement>('button.choice')];
+  if (buttons.length === 0) return;
+  const active = document.activeElement;
+  const index = buttons.findIndex((btn) => btn === active);
+  const from = index < 0 ? (delta > 0 ? -1 : 0) : index;
+  const next = (from + delta + buttons.length) % buttons.length;
+  buttons[next]?.focus();
+}
+
+function inventoryStrip(items: HudItem[]): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'inv-strip';
+  const label = document.createElement('p');
+  label.className = 'inv-strip-label';
+  label.textContent = 'Tablets';
+  if (items.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'inv-strip-empty';
+    empty.textContent = 'No tablets yet.';
+    wrap.append(label, empty);
+    return wrap;
+  }
+  const list = document.createElement('div');
+  list.className = 'inv-strip-list';
+  for (const item of items) {
+    list.appendChild(makeItemChip(item));
+  }
+  wrap.append(label, list);
+  return wrap;
+}
+
 function hookLines(item: ItemDef): HTMLElement[] {
   return item.hooks.map((hook) => {
     const line = document.createElement('span');
@@ -362,6 +413,11 @@ function onOverlayKey(event: KeyboardEvent): void {
   if (event.key === '1' || event.key === '2' || event.key === '3') {
     event.preventDefault();
     handlers.onPick(Number(event.key) - 1);
+    return;
+  }
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault();
+    focusLevelUpChoice(event.key === 'ArrowRight' ? 1 : -1);
   }
 }
 
@@ -536,6 +592,7 @@ function dashEffectLine(skill: SkillDef | null): string {
 function dossierCard(survivor: SurvivorDef, compact: boolean): HTMLElement {
   const card = document.createElement('div');
   card.className = 'dossier';
+  mountVesselArt(card, survivor.id, 'dossier-art', survivor.name);
   const name = document.createElement('p');
   name.className = 'dossier-name';
   name.textContent = survivor.name;
@@ -627,7 +684,10 @@ function fillHallNav(): void {
     btn.type = 'button';
     btn.className = 'vessel-pick';
     btn.dataset.active = survivor.id === current ? '1' : '0';
-    btn.textContent = survivor.name;
+    mountVesselArt(btn, survivor.id, 'vessel-art', survivor.name);
+    const label = document.createElement('span');
+    label.textContent = survivor.name;
+    btn.appendChild(label);
     btn.addEventListener('click', () => {
       patchSettings({ survivorId: survivor.id });
       renderHall();
@@ -650,19 +710,10 @@ function fillHallPreview(): void {
   const root = document.getElementById('hall-preview');
   if (!root) return;
   const survivor = selectedSurvivor();
-  const src = survivorPortrait(survivor.id);
-  const canvas = document.createElement('canvas');
-  canvas.width = src.width;
-  canvas.height = src.height;
-  canvas.setAttribute('role', 'img');
-  canvas.setAttribute('aria-label', survivor.name);
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('2d context missing');
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(src, 0, 0);
   const ash = document.createElement('div');
   ash.className = 'hall-particles';
-  root.replaceChildren(ash, canvas);
+  root.replaceChildren(ash);
+  mountVesselArt(root, survivor.id, 'hall-vessel', survivor.name);
 }
 
 function fillHallDossier(): void {

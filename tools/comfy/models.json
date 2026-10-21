@@ -1,0 +1,18 @@
+{
+  "url": "http://127.0.0.1:8188",
+  "home": "~/ComfyUI",
+  "checkpoint": "juggernautXL_ragnarok.safetensors",
+  "lora": "pixel-art-xl.safetensors",
+  "loraStrength": 1,
+  "files": [
+    {
+      "role": "lora",
+      "filename": "pixel-art-xl.safetensors",
+      "dir": "models/loras",
+      "url": "https://huggingface.co/nerijs/pixel-art-xl/resolve/main/pixel-art-xl.safetensors",
+      "fallbackUrl": "https://civitai.com/api/download/models/135931",
+      "civitaiFallback": true,
+      "minBytes": 1000000
+    }
+  ]
+}

@@ -8,7 +8,13 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "smoke:loop": "bun scripts/loop-smoke.ts"
+    "smoke:loop": "bun scripts/loop-smoke.ts",
+    "art:comfy": "bun scripts/comfy-start.ts",
+    "art:download": "bun scripts/comfy-download-models.ts",
+    "art:generate": "bun scripts/comfy-generate.ts",
+    "art:list": "bun scripts/comfy-generate.ts --list",
+    "art:item": "bun scripts/comfy-generate.ts --item",
+    "art:ref": "bun scripts/comfy-generate.ts --ref-front --vessel"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.3.0",
@@ -16,6 +22,8 @@
     "phaser": "4.2.1"
   },
   "devDependencies": {
+    "@types/pngjs": "^6.0.5",
+    "pngjs": "^7.0.0",
     "typescript": "~5.7.2",
     "vite": "^6.3.1"
   }

@@ -26,8 +26,13 @@ GPU smoke **passed**. Combat verb **A locked**. Homunculus kit complete (Bolt / 
 
 ```bash
 bun install
-bun run dev         # http://127.0.0.1:8080
-bun run smoke:loop  # 2 stages + boss, no browser
+bun run dev           # http://127.0.0.1:8080
+bun run smoke:loop    # 2 stages + boss, no browser
+bun run art:comfy     # start ComfyUI (127.0.0.1:8188)
+bun run art:download  # Pixel Art XL LoRA into ~/ComfyUI
+bun run art:ref -- runner            # 512px character ref → public/sprites/_ref/
+bun run art:item -- glass-cannon
+bun run art:generate                 # missing refs + icons
 bun run build
 ```
 

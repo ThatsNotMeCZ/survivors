@@ -10,9 +10,9 @@ HTML overlays in `src/ui/` (not Phaser text). Phaser starts after **Start run**.
 
 - Main menu (the hall): title **Hermetic Rifts** across the top. 3-column Dark Hermetic lobby — left nav (Vessel Selection / Archives / Alchemist's Desk), center 32px vessel preview, right dossier + 4 skill tooltips, **Commence Transmutation**. Enter starts.
 - Vessel dossier: display name, title, lore, skill icons with hover hooks. No raw ids.
-- Pause: Esc during `phase === 'play'` while the overlay is hidden. Copy: **Simulation Paused** · Resume Sequence · Settings · Abandon Vessel. HTML `window` capture keydown owns Escape (`key`/`code` `Escape`); Phaser does not bind it (a second edge-toggle was closing pause on the same press). `preventDefault` so the browser does not consume Esc. Nested pause screens (settings dialog, how-to, abandon confirm) back out first. Level-up and recaps swallow Esc. Resume with Esc or Resume Sequence. Sim does not step, including nested pause screens.
+- Pause: Esc during `phase === 'play'` while the overlay is hidden. Copy: **Simulation Paused** · Resume Sequence · Settings · Abandon Vessel. Body shows the current inventory strip (32px icons + stack counts; empty copy **No tablets yet.**). HTML `window` capture keydown owns Escape (`key`/`code` `Escape`); Phaser does not bind it (a second edge-toggle was closing pause on the same press). `preventDefault` so the browser does not consume Esc. Nested pause screens (settings dialog, how-to, abandon confirm) back out first. Level-up and recaps swallow Esc. Resume with Esc or Resume Sequence. Sim does not step, including nested pause screens. Music: map bed keeps playing (ducked) plus the shared chill overlay — `knowledge/tech/audio.md`.
 - Cursor: OS pointer is `cursor: none` during an unpaused run (`data-play=1` + overlay hidden). Shown again on hall, pause, settings, how-to, vessel, level-up, abandon, and recaps. Aim still uses mouse position; the world crosshair stays. No pointer lock.
-- Level-up: 3 hermetic tablets (rust/copper/silver/cyan rarity). Green/red hook text. Keys 1–3. Backdrop `blur(4px) brightness(30%)`. Same pick pipeline.
+- Level-up: 3 hermetic tablets (rust/copper/silver/cyan rarity) as **96px** pixel icons + key 1–3. Name, green/red hooks, and lore live in a **shared detail panel** under the cards (hover / focus / arrows). Keys 1–3 still pick. Inventory strip under the panel. Backdrop `blur(4px) brightness(30%)`. Same pick pipeline.
 - Boss intro sting + stage interstitial: HTML title cards, do **not** pause combat. Skipped when `smoke` or `dev` is set.
 - Death: **Vessel Shattered**. Victory: **Transmutation Complete**. Recap: total time, level reached, bosses defeated, final inventory. Run again or Return to Hall.
 
@@ -52,7 +52,7 @@ Keep-out:
 
 ## HUD
 
-HTML overlay, not Phaser text. Top center gold objective banner (Hold fills with pulsing gold). Top right biome + run clock. Bottom left alchemical flask HP + numeric + thin XP line and level. Bottom center 4 skill slots (ready / cooldown sweep / i-frame flash). Bottom right 24×24 item grid. Biome tint is subtle (Cinder warmer, Rime colder). FPS stays behind `?debug=1` or F3. Palette tokens live in `src/ui/theme.css`.
+HTML overlay, not Phaser text. Top center gold objective banner (Hold fills with pulsing gold). Top right biome + run clock. Bottom left alchemical flask HP + numeric + thin XP line and level. Bottom center 4 skill slots (ready / cooldown sweep / i-frame flash). Bottom right **32×32** item grid (6 columns, stack count on every chip). Biome tint is subtle (Cinder warmer, Rime colder). FPS stays behind `?debug=1` or F3. Palette tokens live in `src/ui/theme.css`.
 
 ## Director (RoR2, not VS)
 

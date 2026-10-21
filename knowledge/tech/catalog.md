@@ -79,7 +79,7 @@ Unknown `ai.type` is a catalog/schema miss; add the JSON shape then a case in `s
 
 ## View
 
-`src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor). `pixel-textures.ts` uploads any key Phaser does not already have (so a destroyed Game can boot again). Player / elites / bosses / obstacles = sprites. Fodder / gems / sparks = `SpriteGPULayer`. Player keys are vessel+biome; other keys are biome+frame so a PNG swap later does not touch combat. Hall portraits seal interior holes (no hall-circle showing through the vessel).
+`src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor). Player idle keys are `px-player-body-{vessel}-{biome}-{front|side|back}`. Walk keys are `-walk-{front|left|right|down|up}-{0|1|2}`. `ArenaScene.preload` loads `public/sprites/manifest.json` PNGs under the same `px-*` keys and draws the vessel at 40px. `pixel-textures.ts` uploads any key Phaser does not already have. Hall vessel picker / preview use idle body art (`src/ui/vessel-art.ts`). Comfy writes vessel fronts to `public/sprites/_ref/` (512px identity for the external generator) and icons at game size (`knowledge/tech/comfy.md`).
 
 ## UI (HTML overlay)
 
@@ -88,11 +88,11 @@ Menus and HUD are `src/ui/`, not Phaser text. One overlay stack: HUD < prompts <
 | Module | Role |
 |---|---|
 | `theme.css` | Dark Hermetic tokens (brass, ember, mercury, parchment) |
-| `hud.css` / `hud.ts` | Objective banner, biome clock, flask HP, 4 skill slots, 24px item grid |
-| `overlay.ts` | 3-column hall, how-to, pause, hermetic tablets, recap, stings, hold prompt |
+| `hud.css` / `hud.ts` | Objective banner, biome clock, flask HP, 4 skill slots, 32px item grid (`sprites/px-item-{id}.png`, stack counts) |
+| `overlay.ts` | 3-column hall, how-to, pause (inventory strip), level-up (96px icons + shared detail + inventory), recap, stings, hold prompt |
 | `settings.ts` | `<dialog>`: master/SFX/music, mute, screenshake, reduce-VFX, selected vessel |
 
-Display strings come from catalog `name` / `lore`. Settings persist even though audio is `noAudio` for now.
+Display strings come from catalog `name` / `lore`. Settings persist even though audio is `noAudio` for now. Asset folders: `knowledge/tech/audio.md`.
 
 ## Do
 

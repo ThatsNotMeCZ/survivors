@@ -6,6 +6,7 @@ import {
   type BiomeId,
 } from './procedural-pixel-art';
 
+/** Uploads procedural canvases for any `px-*` key not already loaded (PNG preload wins). */
 export function uploadPixelTextures(scene: Phaser.Scene): void {
   const canvases = generateAllEntityCanvases();
   canvases.forEach((canvas, key) => addCanvasTexture(scene, key, canvas));

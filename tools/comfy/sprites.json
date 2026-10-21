@@ -1,0 +1,142 @@
+{
+  "styleSuffix": "tiny game sprite, isolated, plain white background, chunky pixels, dark outline, full body, fills the frame",
+  "refStyleSuffix": "character reference, isolated, plain white background, chunky pixel art, dark outline, full body, fills the frame, high detail, readable silhouette, consistent design",
+  "identities": {
+    "runner-cinder": "clay homunculus vessel, squat alchemical golem, dark clay body, brass trim, ember-red sash, mercury glow in the chest"
+  },
+  "entries": [
+    {
+      "key": "px-player-body-runner-cinder-front",
+      "kind": "front",
+      "size": 40,
+      "biome": "cinder",
+      "vessel": "runner",
+      "identity": "runner-cinder",
+      "prompt": "front view idle, facing camera, standing still, feet together, arms at sides, orthographic turnaround front",
+      "negative": "side view, profile, walking, running, back view, three-quarter view"
+    },
+    {
+      "key": "px-player-body-penitent-cinder-front",
+      "kind": "front",
+      "size": 40,
+      "biome": "cinder",
+      "vessel": "penitent",
+      "prompt": "front view idle, facing camera, standing still, feet together, tiny hooded monk in a tattered dark robe, brass sash, hidden face in a deep hood, hermetic penitent, ember trim",
+      "negative": "side view, profile, walking, running"
+    },
+    {
+      "key": "px-portrait-runner",
+      "kind": "icon",
+      "size": 40,
+      "biome": "cinder",
+      "vessel": "runner",
+      "prompt": "tiny clay homunculus vessel bust, mercury-cyan eyes, dark clay body, hall portrait, facing camera, sealed silhouette, no holes",
+      "negative": "full body, side view, walking"
+    },
+    {
+      "key": "px-portrait-penitent",
+      "kind": "icon",
+      "size": 40,
+      "biome": "cinder",
+      "vessel": "penitent",
+      "prompt": "tiny hooded penitent bust, brass-gold eyes in a dark hood, tattered robe, hall portrait, facing camera, sealed silhouette, no holes",
+      "negative": "full body, side view, walking"
+    },
+    {
+      "key": "px-item-glass-cannon",
+      "kind": "icon",
+      "size": 24,
+      "item": "glass-cannon",
+      "prompt": "tiny hermetic relic icon, Vitriol Veins, Distilled volatile acid replaces your blood, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-goat-hoof",
+      "kind": "icon",
+      "size": 24,
+      "item": "goat-hoof",
+      "prompt": "tiny hermetic relic icon, Cloven Sinew, Grafted tendon from a sacrificial beast, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-brittle-plate",
+      "kind": "icon",
+      "size": 24,
+      "item": "brittle-plate",
+      "prompt": "tiny hermetic relic icon, Slag Carapace, Cooled furnace dross fused directly to the ribs, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-hair-trigger",
+      "kind": "icon",
+      "size": 24,
+      "item": "hair-trigger",
+      "prompt": "tiny hermetic relic icon, Spasmodic Nerve, Quicksilver injected into the spine makes your fingers twitch uncontrollably, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-overclock",
+      "kind": "icon",
+      "size": 24,
+      "item": "overclock",
+      "prompt": "tiny hermetic relic icon, Bellows Heart, Draws twice the aether into each cast, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-wax-wings",
+      "kind": "icon",
+      "size": 24,
+      "item": "wax-wings",
+      "prompt": "tiny hermetic relic icon, Waxen Pinions, Feathers bound in boiling tallow, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-hungry-clip",
+      "kind": "icon",
+      "size": 24,
+      "item": "hungry-clip",
+      "prompt": "tiny hermetic relic icon, Parasitic Alembic, A living glass vessel that feeds on your flesh to engorge your projectiles, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-lead-core",
+      "kind": "icon",
+      "size": 24,
+      "item": "lead-core",
+      "prompt": "tiny hermetic relic icon, Lead Plumbum, Swallowing a two-pound sphere of base lead anchors the soul to the body, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-mercury-vial",
+      "kind": "icon",
+      "size": 24,
+      "item": "mercury-vial",
+      "prompt": "tiny hermetic relic icon, Quicksilver Draught, Liquid metal thins the humors, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-calcined-lens",
+      "kind": "icon",
+      "size": 24,
+      "item": "calcined-lens",
+      "prompt": "tiny hermetic relic icon, Astrologer's Ocular, A heavy brass reticle bolted to the brow, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-salt-ward",
+      "kind": "icon",
+      "size": 24,
+      "item": "salt-ward",
+      "prompt": "tiny hermetic relic icon, Salt Effigy, Desiccates the body into a shrunken, harder-to-hit husk, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    },
+    {
+      "key": "px-item-lunar-tithe",
+      "kind": "icon",
+      "size": 24,
+      "item": "lunar-tithe",
+      "prompt": "tiny hermetic relic icon, Pale Moon Covenant, Heresy against the Order, dark alchemical item pickup, centered",
+      "negative": "photo, 3d render, text, watermark, character, full body, busy background"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
 # Style
 
-Chunky **32px** pixel art. Silhouette over detail. Arena camera `viewZoom` in `world.json` (2.5) so 32px reads on 1080p.
+Chunky **32px** pixel art, vessel body **40px** so it reads larger than fodder (mite 24 / spitter 28). Silhouette over detail. Arena camera `viewZoom` in `world.json` (2.5) so that scale reads on 1080p.
 
 HUD, pause, level-up, and menus are HTML in `src/ui/` using Dark Hermetic tokens (`theme.css`): brass, ember, mercury, parchment. Not Phaser text.
 
-Procedural canvases live in `src/view/procedural-pixel-art.ts` (`SpriteCache` by entity+biome+frame, player by vessel+biome). Offscreen integer draw → 4-neighbor outline (`#120a0d` Cinder / `#08101a` Rime) → Phaser canvas textures. Homunculus and The Penitent are distinct meshes (clay runner vs hooded robe). Hall portraits reuse that mesh with interior holes sealed so the transmutation-circle grid does not show through. Swap a key for a ComfyUI PNG later without changing render code. Do not draw high-res vectors in the entity update loop.
+Procedural canvases live in `src/view/procedural-pixel-art.ts` (`SpriteCache` by entity+biome+frame, player by vessel+biome). Offscreen integer draw → 4-neighbor outline (`#120a0d` Cinder / `#08101a` Rime) → Phaser canvas textures. Homunculus and The Penitent are distinct meshes (clay runner vs hooded robe). Hall portraits reuse that mesh with interior holes sealed so the transmutation-circle grid does not show through. A ComfyUI PNG in `public/sprites/{key}.png` (see `knowledge/tech/comfy.md`) replaces that key without changing render code. Do not draw high-res vectors in the entity update loop.
 
 Arena floor is a cached 2560×2560 stamp of 4× 64px tiles per biome (hash `tileX * 73856093 ^ tileY * 19349663`). Transmutation Circle is two pixelated rings + hexagram; charge fills the outer arc. Ambient ash/snow cap 45; vignette is CSS; additive glow only on player / circle / primed urns.
 
@@ -22,9 +22,9 @@ Hit spark, dash afterimage, death burst, ranged muzzle. GPU `SpriteGPULayer` spa
 
 ## Production path
 
-1. One hand-drawn hero + 3 enemy silhouettes (64×64, white bg).
-2. Optional Comfy img2img / pixel LoRA for extra poses.
-3. Aseprite: shared palette (8–16 colors), shared pivot.
-4. Code hue-shift for fodder variants.
+1. `bun run art:comfy` then `bun run art:ref -- runner` — Homunculus front identity, 512px into `public/sprites/_ref/` for the external sprite generator.
+2. Item icons: drop a sheet in `public/sprites/_in/` then write `public/sprites/px-item-{id}.png` at 24px, or `bun run art:item -- glass-cannon`. Portraits ride `art:generate`.
+3. Game-size vessel / side / back / walk / enemies are not Comfy. Drop PNGs into `public/sprites/` (external generator using `_ref/`) or keep the procedural mesh.
+4. Code hue-shift for fodder variants. Eyes / VFX / floor stay procedural.
 
-Do not generate cinematic HD characters. They fail at 32px.
+Game sprites stay catalog size (player 40). High-detail character art lives only in `_ref/`.

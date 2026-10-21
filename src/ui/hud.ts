@@ -1,9 +1,11 @@
 import { SMOKE_DOTS, SMOKE_PASS_FPS } from '../config';
+import { ITEM_CHIP_PX, makeItemChip } from './item-art';
 import { hasQueryFlag } from './settings';
 
 export type HudStatus = 'boot' | 'warmup' | 'pass' | 'fail' | 'arena';
 
 export type HudItem = {
+  id: string;
   name: string;
   stacks: number;
   rarity: string;
@@ -41,9 +43,17 @@ const itemsRootEl = () => document.getElementById('hud-items');
 let debugOn = hasQueryFlag('debug');
 let keysBound = false;
 let playMode = false;
+let lastItemKey = '';
+let lastItems: HudItem[] = [];
+
+export function getHudItems(): HudItem[] {
+  return lastItems;
+}
 
 export function hideHud(): void {
   playMode = false;
+  lastItemKey = '';
+  lastItems = [];
   syncPlayAttr();
   hudEl()?.classList.add('hidden');
   document.getElementById('hud-play')?.classList.add('hidden');
@@ -182,18 +192,17 @@ function renderSkills(skills: HudSkill[]): void {
 }
 
 function renderItems(items: HudItem[]): void {
+  lastItems = items;
   const list = itemListEl();
   const root = itemsRootEl();
   if (!list || !root) return;
   root.classList.toggle('hidden', items.length === 0);
+  const key = items.map((item) => `${item.id}:${item.stacks}:${item.rarity}`).join('|');
+  if (key === lastItemKey && list.childElementCount === items.length) return;
+  lastItemKey = key;
   list.replaceChildren();
   for (const item of items) {
-    const chip = document.createElement('span');
-    chip.className = 'hud-item';
-    chip.dataset.rarity = item.rarity;
-    chip.title = item.stacks > 1 ? `${item.name} ×${item.stacks}` : item.name;
-    chip.textContent = item.name.slice(0, 1).toUpperCase();
-    list.appendChild(chip);
+    list.appendChild(makeItemChip(item, 'item-chip', ITEM_CHIP_PX));
   }
 }
 

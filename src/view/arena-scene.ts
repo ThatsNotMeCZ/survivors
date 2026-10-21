@@ -32,7 +32,11 @@ import {
   hazardKey,
   miteKey,
   pillarKey,
-  playerBodyKey,
+  playerIdleKey,
+  pickPlayerSprite,
+  moveFacing,
+  type PlayerFacing,
+  type WalkFrame,
   playerCatalystKey,
   playerEyesKey,
   spitterKey,
@@ -67,6 +71,8 @@ const WAYPOINT_DIST = 80;
 const WAYPOINT_PAD = 52;
 const AMBIENT_CAP = 45;
 const ORBIT_CAP = 4;
+/** Display size > mite 24 / spitter 28 so the vessel reads as the hero. */
+const PLAYER_DISPLAY = 40;
 
 /**
  * Aimed-primary run. Combat rules live in `src/sim/`. Content in `src/data/`.
@@ -134,9 +140,22 @@ export class ArenaScene extends Phaser.Scene {
   private lastPrimaryCd = 0;
   private circleSparkCd = 0;
   private lastCircleKey = '';
+  private pngKeys = new Set<string>();
+  private lastFacing: PlayerFacing = 'front';
 
   constructor() {
     super({ key: 'arena' });
+  }
+
+  preload(): void {
+    this.load.json('sprite-manifest', 'sprites/manifest.json');
+    this.load.once('filecomplete-json-sprite-manifest', (_key: string, _type: string, data: unknown) => {
+      const keys = spriteManifestKeys(data);
+      this.pngKeys = new Set(keys);
+      for (const key of keys) {
+        this.load.image(key, `sprites/${key}.png`);
+      }
+    });
   }
 
   create(): void {
@@ -184,9 +203,11 @@ export class ArenaScene extends Phaser.Scene {
     this.playerGlow = this.add.image(0, 0, 'px-glow').setDepth(4).setAlpha(0.18).setScale(2.4);
     this.playerGlow.setBlendMode(Phaser.BlendModes.ADD);
     this.playerSprite = this.add.image(this.world.player.x, this.world.player.y, this.bodyKey(biome)).setDepth(5);
+    this.fitBody(this.playerSprite);
     this.playerEyes = this.add.image(0, 0, this.eyesKey(biome)).setDepth(6);
     this.playerCatalyst = this.add.image(0, 0, this.catalystKey(biome)).setDepth(6);
     this.decoySprite = this.add.image(0, 0, this.bodyKey(biome)).setVisible(false).setDepth(4).setAlpha(0.45).setTint(0xc4a05a);
+    this.fitBody(this.decoySprite);
     this.eliteSprites = [];
     this.eliteGlyphs = [];
     for (let i = 0; i < loop.maxElites; i += 1) {
@@ -219,7 +240,9 @@ export class ArenaScene extends Phaser.Scene {
     this.ghosts = [];
     this.ghostLife = new Float32Array(GHOST_CAP);
     for (let i = 0; i < GHOST_CAP; i += 1) {
-      this.ghosts.push(this.add.image(0, 0, this.bodyKey(biome)).setVisible(false).setDepth(4).setAlpha(0).setTint(0xb8fff8));
+      const ghost = this.add.image(0, 0, this.bodyKey(biome)).setVisible(false).setDepth(4).setAlpha(0).setTint(0xb8fff8);
+      this.fitBody(ghost);
+      this.ghosts.push(ghost);
     }
 
     this.ambientSprites = [];
@@ -276,10 +299,14 @@ export class ArenaScene extends Phaser.Scene {
       stepWorld(this.world, this.inputFrame, dt);
     }
     this.syncView(dt);
+    this.syncHud();
     this.syncOverlay();
     this.syncStings();
     this.syncHoldPrompt();
     setHudFps(this.game.loop.actualFps);
+  }
+
+  private syncHud(): void {
     const stage = currentStage(this.world);
     const objective = currentObjective(this.world);
     const tel = this.world.teleporter;
@@ -306,7 +333,7 @@ export class ArenaScene extends Phaser.Scene {
       skills: hudSkills(this.world),
       items: this.world.inventory.map((inst) => {
         const def = this.world.catalog.item(inst.id);
-        return { name: def.name, stacks: inst.stacks, rarity: def.rarity };
+        return { id: inst.id, name: def.name, stacks: inst.stacks, rarity: def.rarity };
       }),
     });
   }
@@ -320,7 +347,11 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private bodyKey(biome: BiomeId): string {
-    return playerBodyKey(biome, this.vesselId());
+    return playerIdleKey(biome, this.vesselId(), this.lastFacing);
+  }
+
+  private fitBody(image: Phaser.GameObjects.Image): void {
+    image.setDisplaySize(PLAYER_DISPLAY, PLAYER_DISPLAY);
   }
 
   private eyesKey(biome: BiomeId): string {
@@ -383,6 +414,7 @@ export class ArenaScene extends Phaser.Scene {
       this.lastStageGen = this.world.stageGen;
       this.floor.setTexture(`px-floor-${biome}`);
       this.playerSprite.setTexture(this.bodyKey(biome));
+      this.fitBody(this.playerSprite);
       this.playerEyes.setTexture(this.eyesKey(biome));
       this.playerCatalyst.setTexture(this.catalystKey(biome));
       this.lastCircleKey = '';
@@ -398,7 +430,7 @@ export class ArenaScene extends Phaser.Scene {
     this.syncWaypoint();
     this.consumeFx();
     this.stepSparks(dt);
-    this.stepGhosts(dt, biome);
+    this.stepGhosts(dt);
     this.stepAmbient(dt, biome);
 
     const enemyBolt = biome === 'cinder' ? 'px-bolt-enemy-cinder' : 'px-bolt-enemy-rime';
@@ -433,8 +465,23 @@ export class ArenaScene extends Phaser.Scene {
   private syncPlayer(dt: number, biome: BiomeId): void {
     const { player } = this.world;
     const moving = this.inputFrame.moveX !== 0 || this.inputFrame.moveY !== 0;
-    if (moving && player.dashRemain <= 0) this.walkPhase += dt * 10;
+    if (moving && player.dashRemain <= 0) this.walkPhase += dt * 8;
     const bob = Math.round(Math.sin(this.walkPhase) * 1.5);
+    const facing = moveFacing(this.inputFrame.moveX, this.inputFrame.moveY) ?? this.lastFacing;
+    if (moving) this.lastFacing = facing;
+    const frame = (Math.floor(this.walkPhase) % 3) as WalkFrame;
+    const { key: body, flipX } = pickPlayerSprite(
+      this.pngKeys,
+      biome,
+      this.vesselId(),
+      facing,
+      moving,
+      frame,
+    );
+    if (this.playerSprite.texture.key !== body) this.playerSprite.setTexture(body);
+    this.fitBody(this.playerSprite);
+    this.playerSprite.setFlipX(flipX);
+    this.playerEyes.setVisible(!this.pngKeys.has(playerIdleKey(biome, this.vesselId(), 'front')));
     if (player.skillCd.primary > this.lastPrimaryCd + 0.02) this.catalystRecoil = 1;
     this.lastPrimaryCd = player.skillCd.primary;
     this.catalystRecoil = Math.max(0, this.catalystRecoil - dt * 8);
@@ -444,7 +491,9 @@ export class ArenaScene extends Phaser.Scene {
     this.playerSprite.setPosition(x, y);
     this.playerSprite.setAlpha(player.iframeRemain > 0 ? 0.45 : 1);
     if (this.world.decoy.active) {
-      this.decoySprite.setTexture(this.bodyKey(biome));
+      this.decoySprite.setTexture(body);
+      this.fitBody(this.decoySprite);
+      this.decoySprite.setFlipX(flipX);
       this.decoySprite.setVisible(true);
       this.decoySprite.setPosition(Math.round(this.world.decoy.x), Math.round(this.world.decoy.y));
       this.decoySprite.setAlpha(0.3 + 0.2 * Math.sin(this.world.runTime * 8));
@@ -453,8 +502,8 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.playerGlow.setPosition(x, y);
     this.playerGlow.setAlpha(biome === 'cinder' ? 0.16 : 0.12);
-    this.playerEyes.setPosition(x + Math.round(Math.cos(ang) * 2), y - 4 + Math.round(Math.sin(ang) * 1));
-    const hand = 10 - this.catalystRecoil * 3;
+    this.playerEyes.setPosition(x + Math.round(Math.cos(ang) * 2), y - 6 + Math.round(Math.sin(ang) * 1));
+    const hand = 14 - this.catalystRecoil * 3;
     this.playerCatalyst.setPosition(x + Math.round(Math.cos(ang) * hand), y + Math.round(Math.sin(ang) * hand));
     this.playerCatalyst.setRotation(ang);
   }
@@ -924,7 +973,7 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  private stepGhosts(dt: number, biome: BiomeId): void {
+  private stepGhosts(dt: number): void {
     const { player } = this.world;
     this.ghostCd = Math.max(0, this.ghostCd - dt);
     if (player.dashRemain > 0 && this.ghostCd <= 0) {
@@ -933,7 +982,9 @@ export class ArenaScene extends Phaser.Scene {
       if (slot >= 0) {
         this.ghostLife[slot] = 0.18;
         const ghost = this.ghosts[slot];
-        ghost.setTexture(this.bodyKey(biome));
+        ghost.setTexture(this.playerSprite.texture.key);
+        this.fitBody(ghost);
+        ghost.setFlipX(this.playerSprite.flipX);
         ghost.setPosition(Math.round(player.x), Math.round(player.y));
         ghost.setVisible(true);
         ghost.setAlpha(0.5);
@@ -1177,4 +1228,11 @@ function objectiveCopy(objective: Objective): { label: string; detail: string } 
     return { label: `Slay the ${who}`, detail: `${Math.round(objective.pct * 100)}% HP` };
   }
   return { label: 'Descend the Rift', detail: `${Math.round(objective.pct * 100)}%` };
+}
+
+function spriteManifestKeys(data: unknown): string[] {
+  if (!data || typeof data !== 'object' || !('keys' in data)) return [];
+  const keys = data.keys;
+  if (!Array.isArray(keys)) return [];
+  return keys.filter((key): key is string => typeof key === 'string' && key.length > 0);
 }
