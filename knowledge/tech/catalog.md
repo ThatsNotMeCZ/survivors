@@ -80,7 +80,7 @@ Unknown `ai.type` is a catalog/schema miss; add the JSON shape then a case in `s
 
 ## View
 
-`src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor). Homunculus idle key is `px-player-body-runner-{biome}-side`; The Penitent stays `-front`. Walk keys are `-walk-side-{0|1|2}` (sliced from `_in/` sheets, or Comfy ControlNet). Until walk PNGs exist in `public/sprites/`, moving reuses idle. Arena `flipX` for left. `ArenaScene.preload` loads `public/sprites/manifest.json` PNGs under the same `px-*` keys and draws the vessel at 40px. `pixel-textures.ts` uploads any key Phaser does not already have. Hall vessel picker prefers side, then front (`src/ui/vessel-art.ts`). Comfy still writes a front idle ref to `public/sprites/_ref/` at 1024px (not loaded by the game). Item refs go to `_ref/items/` then 24px HUD icons, skill refs to `_ref/skills/` then 24px HUD/hall icons (`knowledge/tech/comfy.md`).
+`src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor) for anything without a PNG. Entity art is a spritesheet per catalog id (`public/sprites/entities/{id}.png`), not per biome. `ArenaScene.preload` loads `sprites/manifest.json` sheets as `entity-{id}` and plays `idle` / `walk`. Arena `flipX` for left. Fodder uses one GPU layer per entity id. Hall crops the idle frame (`src/ui/vessel-art.ts`). HUD icons: `sprites/items/{id}.png`, `sprites/skills/{id}.png`. See `knowledge/tech/sprites.md`.
 
 ## UI (HTML overlay)
 
@@ -89,7 +89,7 @@ Menus and HUD are `src/ui/`, not Phaser text. One overlay stack: HUD < prompts <
 | Module | Role |
 |---|---|
 | `theme.css` | Dark Hermetic tokens (brass, ember, mercury, parchment) |
-| `hud.css` / `hud.ts` | Objective banner, biome clock, flask HP, 4 skill slots (`sprites/px-skill-{id}.png`), 32px item grid (`sprites/px-item-{id}.png`, stack counts) |
+| `hud.css` / `hud.ts` | Objective banner, biome clock, flask HP, 4 skill slots (`sprites/skills/{id}.png`), 32px item grid (`sprites/items/{id}.png`, stack counts) |
 | `overlay.ts` | 3-column hall, how-to, pause (inventory strip), level-up (96px icons + shared detail + inventory), recap, stings, hold prompt |
 | `settings.ts` | `<dialog>`: master/SFX/music, mute, screenshake, reduce-VFX, selected vessel |
 

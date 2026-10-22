@@ -10,7 +10,7 @@ export type ItemChipDef = {
 };
 
 export function itemSpriteSrc(id: string): string {
-  return `sprites/px-item-${id}.png`;
+  return `sprites/items/${id}.png`;
 }
 
 export function makeItemIcon(

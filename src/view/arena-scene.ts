@@ -29,23 +29,25 @@ import { getSettings } from '../ui/settings';
 import { uploadPixelTextures } from './pixel-textures';
 import {
   eliteGlyphKey,
-  eliteKey,
   hazardKey,
-  miteKey,
   pillarKey,
-  playerIdleKey,
-  pickPlayerSprite,
   moveFacing,
   spriteFacing,
   type HorizontalFacing,
-  type WalkFrame,
   playerCatalystKey,
   playerEyesKey,
-  spitterKey,
   stageBiome,
   volatileKey,
   type BiomeId,
 } from './procedural-pixel-art';
+import {
+  authoredEntity,
+  createEntityAnims,
+  entityTextureKey,
+  fodderGpuAnimation,
+  playEntity,
+  preloadSprites,
+} from './sprites';
 
 type GpuMember = Partial<Phaser.Types.GameObjects.SpriteGPULayer.Member>;
 
@@ -82,13 +84,13 @@ const PLAYER_DISPLAY = 40;
 export class ArenaScene extends Phaser.Scene {
   private world!: World;
   private inputFrame: InputFrame = emptyInput();
-  private playerSprite!: Phaser.GameObjects.Image;
+  private playerSprite!: Phaser.GameObjects.Sprite;
   private playerEyes!: Phaser.GameObjects.Image;
   private playerCatalyst!: Phaser.GameObjects.Image;
   private playerGlow!: Phaser.GameObjects.Image;
-  private eliteSprites: Phaser.GameObjects.Image[] = [];
+  private eliteSprites: Phaser.GameObjects.Sprite[] = [];
   private eliteGlyphs: Phaser.GameObjects.Image[] = [];
-  private bossSprite!: Phaser.GameObjects.Image;
+  private bossSprite!: Phaser.GameObjects.Sprite;
   private bossOrbits: Phaser.GameObjects.Image[] = [];
   private obstacleSprites: Phaser.GameObjects.Image[] = [];
   private volatileGlows: Phaser.GameObjects.Image[] = [];
@@ -102,8 +104,7 @@ export class ArenaScene extends Phaser.Scene {
   private ghostCd = 0;
   private ambientSprites: Phaser.GameObjects.Image[] = [];
   private ambient: Ambient[] = [];
-  private miteLayers!: Record<BiomeId, [Phaser.GameObjects.SpriteGPULayer, Phaser.GameObjects.SpriteGPULayer]>;
-  private spitterLayers!: Record<BiomeId, Phaser.GameObjects.SpriteGPULayer>;
+  private fodderLayers = new Map<string, Phaser.GameObjects.SpriteGPULayer>();
   private gemLayer!: Phaser.GameObjects.SpriteGPULayer;
   private sparkLayer!: Phaser.GameObjects.SpriteGPULayer;
   private sparks: Spark[] = [];
@@ -128,7 +129,7 @@ export class ArenaScene extends Phaser.Scene {
   private shift!: Phaser.Input.Keyboard.Key;
   private space!: Phaser.Input.Keyboard.Key;
   private qKey!: Phaser.Input.Keyboard.Key;
-  private decoySprite!: Phaser.GameObjects.Image;
+  private decoySprite!: Phaser.GameObjects.Sprite;
   private utilityWasDown = false;
   private secondaryWasDown = false;
   private specialWasDown = false;
@@ -142,7 +143,6 @@ export class ArenaScene extends Phaser.Scene {
   private lastPrimaryCd = 0;
   private circleSparkCd = 0;
   private lastCircleKey = '';
-  private pngKeys = new Set<string>();
   private lastFacing: HorizontalFacing = 'right';
 
   constructor() {
@@ -150,14 +150,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.json('sprite-manifest', 'sprites/manifest.json');
-    this.load.once('filecomplete-json-sprite-manifest', (_key: string, _type: string, data: unknown) => {
-      const keys = spriteManifestKeys(data);
-      this.pngKeys = new Set(keys);
-      for (const key of keys) {
-        this.load.image(key, `sprites/${key}.png`);
-      }
-    });
+    preloadSprites(this);
   }
 
   create(): void {
@@ -165,32 +158,28 @@ export class ArenaScene extends Phaser.Scene {
     const { width, height, maxProjectiles } = catalog.world;
     const loop = catalog.loop;
     uploadPixelTextures(this);
+    createEntityAnims(this);
     const biome = this.biome();
+    const vessel = this.vesselId();
 
     this.floor = this.add.image(width / 2, height / 2, `px-floor-${biome}`).setDepth(0);
     this.zoneGfx = this.add.graphics().setDepth(1);
     this.telegraphGfx = this.add.graphics().setDepth(3);
 
-    this.miteLayers = {
-      cinder: [
-        this.add.spriteGPULayer(miteKey('cinder', 0), this.world.enemies.cap).setDepth(2),
-        this.add.spriteGPULayer(miteKey('cinder', 1), this.world.enemies.cap).setDepth(2),
-      ],
-      rime: [
-        this.add.spriteGPULayer(miteKey('rime', 0), this.world.enemies.cap).setDepth(2),
-        this.add.spriteGPULayer(miteKey('rime', 1), this.world.enemies.cap).setDepth(2),
-      ],
-    };
-    this.spitterLayers = {
-      cinder: this.add.spriteGPULayer(spitterKey('cinder'), this.world.enemies.cap).setDepth(2),
-      rime: this.add.spriteGPULayer(spitterKey('rime'), this.world.enemies.cap).setDepth(2),
-    };
+    this.fodderLayers = new Map();
+    this.fodderShown = {};
+    for (const def of catalog.entities) {
+      if (def.role !== 'fodder') continue;
+      const tex = entityTextureKey(def.id);
+      if (!this.textures.exists(tex)) continue;
+      const layer = this.add.spriteGPULayer(tex, this.world.enemies.cap).setDepth(2);
+      const gpuAnim = fodderGpuAnimation(def.id);
+      if (gpuAnim) layer.setAnimations([gpuAnim]);
+      this.fodderLayers.set(def.id, layer);
+      this.fodderShown[def.id] = new Uint8Array(this.world.enemies.cap);
+    }
     this.gemLayer = this.add.spriteGPULayer('px-gem', loop.maxGems).setDepth(2);
     this.sparkLayer = this.add.spriteGPULayer('px-spark', SPARK_CAP).setDepth(6);
-    this.fodderShown = {};
-    for (const key of fodderLayerKeys()) {
-      this.fodderShown[key] = new Uint8Array(this.world.enemies.cap);
-    }
     this.gemShown = new Uint8Array(loop.maxGems);
     for (const layer of this.allFodderLayers()) {
       seedGpuLayer(layer, this.world.enemies.cap, this.gpuMember);
@@ -204,19 +193,20 @@ export class ArenaScene extends Phaser.Scene {
 
     this.playerGlow = this.add.image(0, 0, 'px-glow').setDepth(4).setAlpha(0.18).setScale(2.4);
     this.playerGlow.setBlendMode(Phaser.BlendModes.ADD);
-    this.playerSprite = this.add.image(this.world.player.x, this.world.player.y, this.bodyKey(biome)).setDepth(5);
+    this.playerSprite = this.add.sprite(this.world.player.x, this.world.player.y, entityTextureKey(vessel)).setDepth(5);
+    playEntity(this.playerSprite, vessel, 'idle');
     this.fitBody(this.playerSprite);
     this.playerEyes = this.add.image(0, 0, this.eyesKey(biome)).setDepth(6);
     this.playerCatalyst = this.add.image(0, 0, this.catalystKey(biome)).setDepth(6);
-    this.decoySprite = this.add.image(0, 0, this.bodyKey(biome)).setVisible(false).setDepth(4).setAlpha(0.45).setTint(0xc4a05a);
+    this.decoySprite = this.add.sprite(0, 0, entityTextureKey(vessel)).setVisible(false).setDepth(4).setAlpha(0.45).setTint(0xc4a05a);
     this.fitBody(this.decoySprite);
     this.eliteSprites = [];
     this.eliteGlyphs = [];
     for (let i = 0; i < loop.maxElites; i += 1) {
       this.eliteGlyphs.push(this.add.image(0, 0, eliteGlyphKey()).setVisible(false).setDepth(2).setAlpha(0.7));
-      this.eliteSprites.push(this.add.image(0, 0, eliteKey(biome)).setVisible(false).setDepth(3));
+      this.eliteSprites.push(this.add.sprite(0, 0, entityTextureKey('ember-chaser')).setVisible(false).setDepth(3));
     }
-    this.bossSprite = this.add.image(0, 0, 'px-boss-cinder-heart').setVisible(false).setDepth(3);
+    this.bossSprite = this.add.sprite(0, 0, entityTextureKey('cinder-heart')).setVisible(false).setDepth(3);
     this.bossOrbits = [];
     for (let i = 0; i < ORBIT_CAP; i += 1) {
       this.bossOrbits.push(this.add.image(0, 0, 'px-orbit-cinder').setVisible(false).setDepth(3));
@@ -242,7 +232,7 @@ export class ArenaScene extends Phaser.Scene {
     this.ghosts = [];
     this.ghostLife = new Float32Array(GHOST_CAP);
     for (let i = 0; i < GHOST_CAP; i += 1) {
-      const ghost = this.add.image(0, 0, this.bodyKey(biome)).setVisible(false).setDepth(4).setAlpha(0).setTint(0xb8fff8);
+      const ghost = this.add.image(0, 0, entityTextureKey(vessel)).setVisible(false).setDepth(4).setAlpha(0).setTint(0xb8fff8);
       this.fitBody(ghost);
       this.ghosts.push(ghost);
     }
@@ -349,11 +339,7 @@ export class ArenaScene extends Phaser.Scene {
     return this.world.survivor.id;
   }
 
-  private bodyKey(biome: BiomeId): string {
-    return playerIdleKey(biome, this.vesselId());
-  }
-
-  private fitBody(image: Phaser.GameObjects.Image): void {
+  private fitBody(image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite): void {
     image.setDisplaySize(PLAYER_DISPLAY, PLAYER_DISPLAY);
   }
 
@@ -416,8 +402,6 @@ export class ArenaScene extends Phaser.Scene {
     if (this.lastStageGen !== this.world.stageGen) {
       this.lastStageGen = this.world.stageGen;
       this.floor.setTexture(`px-floor-${biome}`);
-      this.playerSprite.setTexture(this.bodyKey(biome));
-      this.fitBody(this.playerSprite);
       this.playerEyes.setTexture(this.eyesKey(biome));
       this.playerCatalyst.setTexture(this.catalystKey(biome));
       this.lastCircleKey = '';
@@ -426,7 +410,7 @@ export class ArenaScene extends Phaser.Scene {
     this.crosshair.setPosition(this.world.aimX, this.world.aimY);
     this.cameras.main.centerOn(player.x, player.y);
     this.syncObstacles(biome);
-    this.syncEnemies(biome);
+    this.syncEnemies();
     this.syncGems();
     this.drawZones(dt);
     this.drawTelegraphs(biome);
@@ -467,22 +451,16 @@ export class ArenaScene extends Phaser.Scene {
 
   private syncPlayer(dt: number, biome: BiomeId): void {
     const { player } = this.world;
+    const vessel = this.vesselId();
     const moving = this.inputFrame.moveX !== 0 || this.inputFrame.moveY !== 0;
     if (moving && player.dashRemain <= 0) this.walkPhase += dt * 8;
     const bob = Math.round(Math.sin(this.walkPhase) * 1.5);
     this.lastFacing = spriteFacing(moveFacing(this.inputFrame.moveX, this.inputFrame.moveY), this.lastFacing);
-    const frame = (Math.floor(this.walkPhase) % 3) as WalkFrame;
-    const { key: body, flipX } = pickPlayerSprite(
-      biome,
-      this.vesselId(),
-      this.lastFacing,
-      moving,
-      frame,
-    );
-    if (this.playerSprite.texture.key !== body) this.playerSprite.setTexture(body);
+    const flipX = this.lastFacing === 'left';
+    playEntity(this.playerSprite, vessel, moving && player.dashRemain <= 0 ? 'walk' : 'idle');
     this.fitBody(this.playerSprite);
     this.playerSprite.setFlipX(flipX);
-    this.playerEyes.setVisible(!this.pngKeys.has(playerIdleKey(biome, this.vesselId())));
+    this.playerEyes.setVisible(!authoredEntity(vessel));
     if (player.skillCd.primary > this.lastPrimaryCd + 0.02) this.catalystRecoil = 1;
     this.lastPrimaryCd = player.skillCd.primary;
     this.catalystRecoil = Math.max(0, this.catalystRecoil - dt * 8);
@@ -492,7 +470,7 @@ export class ArenaScene extends Phaser.Scene {
     this.playerSprite.setPosition(x, y);
     this.playerSprite.setAlpha(player.iframeRemain > 0 ? 0.45 : 1);
     if (this.world.decoy.active) {
-      this.decoySprite.setTexture(body);
+      playEntity(this.decoySprite, vessel, 'idle');
       this.fitBody(this.decoySprite);
       this.decoySprite.setFlipX(flipX);
       this.decoySprite.setVisible(true);
@@ -545,42 +523,42 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  private syncEnemies(biome: BiomeId): void {
+  private syncEnemies(): void {
     const { enemies } = this.world;
     let eliteSlot = 0;
     let bossOn = false;
-    const miteFrame: 0 | 1 = Math.floor(this.world.runTime / 0.15) % 2 === 0 ? 0 : 1;
     for (let i = 0; i < enemies.cap; i += 1) {
       const alive = enemies.alive[i] !== 0;
       const fodder = alive && enemies.role[i] === ROLE_FODDER;
       this.hideFodderSlot(i);
       if (fodder) {
         const defId = enemies.defId[i];
-        const aiType = defId ? this.world.catalog.entity(defId).ai.type : 'chase';
-        const ranged = aiType === 'ranged' || aiType === 'sniper';
-        const layer = ranged ? this.spitterLayers[biome] : this.miteLayers[biome][miteFrame];
-        const key = ranged ? `spitter-${biome}` : `mite-${biome}-${miteFrame}`;
-        const tint = aiType === 'sniper' ? 0xb47aff : 0xffffff;
-        this.gpuMember.x = enemies.x[i];
-        this.gpuMember.y = enemies.y[i];
-        this.gpuMember.scaleX = 1;
-        this.gpuMember.scaleY = 1;
-        this.gpuMember.alpha = 1;
-        this.gpuMember.tintBlend = aiType === 'sniper' ? 0.55 : 0;
-        this.gpuMember.tintBottomLeft = tint;
-        this.gpuMember.tintTopLeft = tint;
-        this.gpuMember.tintBottomRight = tint;
-        this.gpuMember.tintTopRight = tint;
-        layer.editMember(i, this.gpuMember);
-        this.fodderShown[key][i] = 1;
+        const layer = defId ? this.fodderLayers.get(defId) : undefined;
+        if (defId && layer) {
+          const tint = defId === 'enemy-astral-sniper' ? 0xb47aff : 0xffffff;
+          const gpuAnim = fodderGpuAnimation(defId);
+          this.gpuMember.x = enemies.x[i];
+          this.gpuMember.y = enemies.y[i];
+          this.gpuMember.scaleX = 1;
+          this.gpuMember.scaleY = 1;
+          this.gpuMember.alpha = 1;
+          this.gpuMember.frame = 0;
+          this.gpuMember.animation = gpuAnim?.name;
+          this.gpuMember.tintBlend = defId === 'enemy-astral-sniper' ? 0.55 : 0;
+          this.gpuMember.tintBottomLeft = tint;
+          this.gpuMember.tintTopLeft = tint;
+          this.gpuMember.tintBottomRight = tint;
+          this.gpuMember.tintTopRight = tint;
+          layer.editMember(i, this.gpuMember);
+          this.fodderShown[defId][i] = 1;
+        }
       }
 
       if (!alive) continue;
       const defId = enemies.defId[i];
       if (!defId) continue;
       if (enemies.role[i] === ROLE_BOSS) {
-        const bossTex = defId === 'frost-sovereign' ? 'px-boss-frost-sovereign' : 'px-boss-cinder-heart';
-        this.bossSprite.setTexture(bossTex);
+        playEntity(this.bossSprite, defId, 'walk');
         this.bossSprite.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i]));
         this.bossSprite.setVisible(true);
         bossOn = true;
@@ -601,7 +579,7 @@ export class ArenaScene extends Phaser.Scene {
       } else if (enemies.role[i] === ROLE_ELITE && eliteSlot < this.eliteSprites.length) {
         const sprite = this.eliteSprites[eliteSlot];
         const glyph = this.eliteGlyphs[eliteSlot];
-        sprite.setTexture(eliteKey(biome));
+        playEntity(sprite, defId, 'walk');
         sprite.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i]));
         sprite.setVisible(true);
         glyph.setVisible(true);
@@ -628,32 +606,15 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private hideFodderSlot(index: number): void {
-    for (const key of fodderLayerKeys()) {
-      if (this.fodderShown[key][index] === 0) continue;
-      const layer = this.layerByKey(key);
+    for (const [id, layer] of this.fodderLayers) {
+      if (this.fodderShown[id][index] === 0) continue;
       hideGpuMember(layer, this.gpuMember, index);
-      this.fodderShown[key][index] = 0;
+      this.fodderShown[id][index] = 0;
     }
   }
 
-  private layerByKey(key: string): Phaser.GameObjects.SpriteGPULayer {
-    if (key === 'mite-cinder-0') return this.miteLayers.cinder[0];
-    if (key === 'mite-cinder-1') return this.miteLayers.cinder[1];
-    if (key === 'mite-rime-0') return this.miteLayers.rime[0];
-    if (key === 'mite-rime-1') return this.miteLayers.rime[1];
-    if (key === 'spitter-cinder') return this.spitterLayers.cinder;
-    return this.spitterLayers.rime;
-  }
-
   private allFodderLayers(): Phaser.GameObjects.SpriteGPULayer[] {
-    return [
-      this.miteLayers.cinder[0],
-      this.miteLayers.cinder[1],
-      this.miteLayers.rime[0],
-      this.miteLayers.rime[1],
-      this.spitterLayers.cinder,
-      this.spitterLayers.rime,
-    ];
+    return [...this.fodderLayers.values()];
   }
 
   private syncGems(): void {
@@ -1000,7 +961,7 @@ export class ArenaScene extends Phaser.Scene {
       if (slot >= 0) {
         this.ghostLife[slot] = 0.18;
         const ghost = this.ghosts[slot];
-        ghost.setTexture(this.playerSprite.texture.key);
+        ghost.setTexture(this.playerSprite.texture.key, this.playerSprite.frame.name);
         this.fitBody(ghost);
         ghost.setFlipX(this.playerSprite.flipX);
         ghost.setPosition(Math.round(player.x), Math.round(player.y));
@@ -1037,10 +998,6 @@ export class ArenaScene extends Phaser.Scene {
       sprite.setAlpha(speck.kind === 'mist' ? 0.16 : 0.4);
     }
   }
-}
-
-function fodderLayerKeys(): string[] {
-  return ['mite-cinder-0', 'mite-cinder-1', 'mite-rime-0', 'mite-rime-1', 'spitter-cinder', 'spitter-rime'];
 }
 
 function seedGpuLayer(
@@ -1249,9 +1206,3 @@ function objectiveCopy(objective: Objective): { label: string; detail: string } 
   return { label: 'Descend the Rift', detail: `${Math.round(objective.pct * 100)}%` };
 }
 
-function spriteManifestKeys(data: unknown): string[] {
-  if (!data || typeof data !== 'object' || !('keys' in data)) return [];
-  const keys = data.keys;
-  if (!Array.isArray(keys)) return [];
-  return keys.filter((key): key is string => typeof key === 'string' && key.length > 0);
-}

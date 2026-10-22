@@ -1,21 +1,58 @@
 {
-  "keys": [
-    "px-item-brittle-plate",
-    "px-item-calcined-lens",
-    "px-item-glass-cannon",
-    "px-item-goat-hoof",
-    "px-item-hair-trigger",
-    "px-item-hungry-clip",
-    "px-item-lead-core",
-    "px-item-lunar-tithe",
-    "px-item-mercury-vial",
-    "px-item-overclock",
-    "px-item-salt-ward",
-    "px-item-wax-wings",
-    "px-player-body-penitent-cinder-front",
-    "px-player-body-runner-cinder-side",
-    "px-player-body-runner-cinder-walk-side-0",
-    "px-player-body-runner-cinder-walk-side-1",
-    "px-player-body-runner-cinder-walk-side-2"
-  ]
+  "entities": {
+    "penitent": {
+      "src": "sprites/entities/penitent.png",
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 1,
+          "repeat": -1
+        }
+      }
+    },
+    "runner": {
+      "src": "sprites/entities/runner.png",
+      "frameWidth": 40,
+      "frameHeight": 40,
+      "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 1,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 8,
+          "repeat": -1
+        }
+      }
+    }
+  },
+  "items": [
+    "brittle-plate",
+    "calcined-lens",
+    "glass-cannon",
+    "goat-hoof",
+    "hair-trigger",
+    "hungry-clip",
+    "lead-core",
+    "lunar-tithe",
+    "mercury-vial",
+    "overclock",
+    "salt-ward",
+    "wax-wings"
+  ],
+  "skills": [],
+  "env": [],
+  "fx": []
 }

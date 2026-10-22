@@ -21,7 +21,7 @@ Canonical notes for humans and agents. Update these when a design decision lands
 | [tech/performance-budget.md](tech/performance-budget.md) | Entity caps |
 | [tech/smoke-test.md](tech/smoke-test.md) | What "pass" means |
 | [tech/catalog.md](tech/catalog.md) | Items, skills, entities JSON |
-| [tech/comfy.md](tech/comfy.md) | ComfyUI pixel sprites + API |
+| [tech/sprites.md](tech/sprites.md) | Drop-in spritesheets, icons, env later |
 | [tech/audio.md](tech/audio.md) | Playlists, SFX, pause overlay |
 
 ## Phaser

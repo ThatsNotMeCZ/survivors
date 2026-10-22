@@ -1,0 +1,8 @@
+{
+  "frameWidth": 40,
+  "frameHeight": 40,
+  "anims": {
+    "idle": { "frames": [0], "frameRate": 1, "repeat": -1 },
+    "walk": { "frames": [1, 2, 3], "frameRate": 8, "repeat": -1 }
+  }
+}

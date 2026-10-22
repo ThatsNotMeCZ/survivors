@@ -2,7 +2,7 @@ export const SKILL_ICON_PX = 24;
 export const SKILL_SLOT_PX = 40;
 
 export function skillSpriteSrc(id: string): string {
-  return `sprites/px-skill-${id}.png`;
+  return `sprites/skills/${id}.png`;
 }
 
 export function makeSkillIcon(

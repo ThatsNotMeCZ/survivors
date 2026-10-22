@@ -11,7 +11,7 @@ alwaysApply: false
 - Force `Phaser.WEBGL`. SpriteGPULayer does not run on Canvas.
 - Filters/blend modes on every projectile break batching. Keep them off swarms.
 - Pixel art: power-of-two textures, `pixelArt: true`.
-- `this.add.spriteGPULayer(texture, size)` — one texture, not an atlas.
+- `this.add.spriteGPULayer(texture, size)` — one texture, not an atlas. Spritesheet frames on that texture are fine (`setAnimations` / member `frame`).
 
 ```ts
 // BAD — Phaser 3 habit

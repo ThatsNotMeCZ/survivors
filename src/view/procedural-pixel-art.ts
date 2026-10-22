@@ -48,16 +48,9 @@ export function resolveVessel(id: string): VesselId {
 export const PLAYER_WALK_DIRS = ['front', 'left', 'right', 'down', 'up'] as const;
 export type PlayerFacing = (typeof PLAYER_WALK_DIRS)[number];
 export type HorizontalFacing = 'left' | 'right';
-export type WalkFrame = 0 | 1 | 2;
 
-export function playerIdleKey(biome: BiomeId, vesselId = 'runner'): string {
-  const vessel = resolveVessel(vesselId);
-  const view = vessel === 'runner' ? 'side' : 'front';
-  return `px-player-body-${vessel}-${biome}-${view}`;
-}
-
-export function playerWalkKey(biome: BiomeId, vesselId = 'runner', frame: WalkFrame): string {
-  return `px-player-body-${resolveVessel(vesselId)}-${biome}-walk-side-${frame}`;
+export function playerIdleKey(vesselId = 'runner'): string {
+  return `px-player-${resolveVessel(vesselId)}`;
 }
 
 export function moveFacing(moveX: number, moveY: number): PlayerFacing | null {
@@ -70,33 +63,11 @@ export function spriteFacing(move: PlayerFacing | null, last: HorizontalFacing):
   if (move === 'left' || move === 'right') return move;
   return last;
 }
-
-export function pickPlayerSprite(
-  biome: BiomeId,
-  vesselId: string,
-  facing: HorizontalFacing,
-  moving: boolean,
-  frame: WalkFrame,
-): { key: string; flipX: boolean } {
-  const vessel = resolveVessel(vesselId);
-  const flipX = facing === 'left';
-  if (moving) return { key: playerWalkKey(biome, vessel, frame), flipX };
-  return { key: playerIdleKey(biome, vessel), flipX };
-}
 export function playerEyesKey(biome: BiomeId, vesselId = 'runner'): string {
   return `px-player-eyes-${resolveVessel(vesselId)}-${biome}`;
 }
 export function playerCatalystKey(biome: BiomeId, vesselId = 'runner'): string {
   return `px-player-catalyst-${resolveVessel(vesselId)}-${biome}`;
-}
-export function miteKey(biome: BiomeId, frame: 0 | 1): string {
-  return `px-mite-${biome}-${frame}`;
-}
-export function spitterKey(biome: BiomeId): string {
-  return `px-spitter-${biome}`;
-}
-export function eliteKey(biome: BiomeId): string {
-  return `px-elite-${biome}`;
 }
 export function eliteGlyphKey(): string {
   return 'px-elite-glyph';
@@ -108,9 +79,6 @@ export function survivorPortrait(id: string): HTMLCanvasElement {
 
 export function vesselIdleCanvas(id: string): HTMLCanvasElement {
   return makeIdleBody('cinder', resolveVessel(id));
-}
-export function bossKey(id: 'cinder-heart' | 'frost-sovereign'): string {
-  return `px-boss-${id}`;
 }
 export function pillarKey(biome: BiomeId): string {
   return `px-pillar-${biome}`;
@@ -159,27 +127,43 @@ export function renderPixelArt(
   return canvas;
 }
 
+export type ProceduralSheet = {
+  canvas: HTMLCanvasElement;
+  frameWidth: number;
+  frameHeight: number;
+  anims: Record<string, { frames: number[]; frameRate: number; repeat: number }>;
+};
+
+export function generateProceduralSheets(): Map<string, ProceduralSheet> {
+  const out = new Map<string, ProceduralSheet>();
+  out.set('runner', singleFrame(makeIdleBody('cinder', 'runner')));
+  out.set('penitent', singleFrame(makeIdleBody('cinder', 'penitent')));
+  out.set('ember-mite', walkSheet([makeMite('cinder', 0), makeMite('cinder', 1)], 7));
+  out.set('frost-mite', walkSheet([makeMite('rime', 0), makeMite('rime', 1)], 7));
+  out.set('ember-spitter', singleFrame(makeSpitter('cinder')));
+  out.set('frost-spitter', singleFrame(makeSpitter('rime')));
+  out.set('ember-chaser', singleFrame(makeElite('cinder')));
+  out.set('frost-warden', singleFrame(makeElite('rime')));
+  out.set('cinder-heart', singleFrame(makeCinderHeart()));
+  out.set('frost-sovereign', singleFrame(makeFrostSovereign()));
+  out.set('enemy-astral-sniper', singleFrame(makeSpitter('cinder')));
+  return out;
+}
+
 export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   const out = new Map<string, HTMLCanvasElement>();
   const biomes: BiomeId[] = ['cinder', 'rime'];
   for (const biome of biomes) {
     for (const vessel of VESSELS) {
-      put(out, playerIdleKey(biome, vessel), makeIdleBody(biome, vessel));
       put(out, playerEyesKey(biome, vessel), makePlayerEyes(biome, vessel));
       put(out, playerCatalystKey(biome, vessel), makePlayerCatalyst(biome, vessel));
     }
-    put(out, miteKey(biome, 0), makeMite(biome, 0));
-    put(out, miteKey(biome, 1), makeMite(biome, 1));
-    put(out, spitterKey(biome), makeSpitter(biome));
-    put(out, eliteKey(biome), makeElite(biome));
     put(out, pillarKey(biome), makePillar(biome));
     put(out, hazardKey(biome, 0), makeHazard(biome, 0));
     put(out, hazardKey(biome, 1), makeHazard(biome, 1));
     put(out, volatileKey(biome), makeVolatile(biome));
   }
   put(out, eliteGlyphKey(), makeEliteGlyph());
-  put(out, bossKey('cinder-heart'), makeCinderHeart());
-  put(out, bossKey('frost-sovereign'), makeFrostSovereign());
   put(out, 'px-bolt-player', makeBolt('#fff4c8', '#ffd35a', 'cinder'));
   put(out, 'px-bolt-enemy-cinder', makeBolt('#ffcc88', '#ff5522', 'cinder'));
   put(out, 'px-bolt-enemy-rime', makeBolt('#dff6ff', '#44ddff', 'rime'));
@@ -220,8 +204,40 @@ function put(out: Map<string, HTMLCanvasElement>, key: string, canvas: HTMLCanva
   out.set(key, canvas);
 }
 
+function packRow(frames: HTMLCanvasElement[]): HTMLCanvasElement {
+  const frameWidth = frames[0].width;
+  const frameHeight = frames[0].height;
+  const canvas = makeCanvas(frameWidth * frames.length, frameHeight);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2d context missing');
+  ctx.imageSmoothingEnabled = false;
+  frames.forEach((frame, i) => ctx.drawImage(frame, i * frameWidth, 0));
+  return canvas;
+}
+
+function singleFrame(canvas: HTMLCanvasElement): ProceduralSheet {
+  return {
+    canvas,
+    frameWidth: canvas.width,
+    frameHeight: canvas.height,
+    anims: { idle: { frames: [0], frameRate: 1, repeat: -1 } },
+  };
+}
+
+function walkSheet(frames: HTMLCanvasElement[], frameRate: number): ProceduralSheet {
+  return {
+    canvas: packRow(frames),
+    frameWidth: frames[0].width,
+    frameHeight: frames[0].height,
+    anims: {
+      idle: { frames: [0], frameRate: 1, repeat: -1 },
+      walk: { frames: frames.map((_, i) => i), frameRate, repeat: -1 },
+    },
+  };
+}
+
 function makeIdleBody(biome: BiomeId, vessel: VesselId): HTMLCanvasElement {
-  return cachedPixel(playerIdleKey(biome, vessel), 32, biome, (px) => {
+  return cachedPixel(playerIdleKey(vessel), 32, biome, (px) => {
     if (vessel === 'penitent') drawPenitentBody(px, biome);
     else drawHomunculusBody(px, biome);
   });
@@ -286,7 +302,7 @@ function makeMite(biome: BiomeId, frame: 0 | 1): HTMLCanvasElement {
   const core = biome === 'cinder' ? '#ff5522' : '#44ddff';
   const shell = biome === 'cinder' ? '#5a2018' : '#1a3a52';
   const jag = biome === 'cinder' ? '#3a1410' : '#0e2438';
-  return cachedPixel(miteKey(biome, frame), 24, biome, (px) => {
+  return cachedPixel(`px-mite-${biome}-${frame}`, 24, biome, (px) => {
     px.fill(4, 8, 16, 10, shell);
     px.fill(6, 6, 12, 4, shell);
     px.fill(8, 10, 8, 6, core);
@@ -302,7 +318,7 @@ function makeMite(biome: BiomeId, frame: 0 | 1): HTMLCanvasElement {
 function makeSpitter(biome: BiomeId): HTMLCanvasElement {
   const body = biome === 'cinder' ? '#4a2818' : '#163044';
   const maw = biome === 'cinder' ? '#ff7a3a' : '#7ad4ff';
-  return cachedPixel(spitterKey(biome), 28, biome, (px) => {
+  return cachedPixel(`px-spitter-${biome}`, 28, biome, (px) => {
     px.fill(12, 18, 4, 8, body);
     px.fill(6, 20, 4, 6, body);
     px.fill(18, 20, 4, 6, body);
@@ -316,7 +332,7 @@ function makeSpitter(biome: BiomeId): HTMLCanvasElement {
 function makeElite(biome: BiomeId): HTMLCanvasElement {
   const metal = biome === 'cinder' ? '#6a3a32' : '#2a4a66';
   const crown = biome === 'cinder' ? '#c45a3a' : '#7ad4ff';
-  return cachedPixel(eliteKey(biome), 40, biome, (px) => {
+  return cachedPixel(`px-elite-${biome}`, 40, biome, (px) => {
     px.fill(12, 10, 16, 22, metal);
     px.fill(8, 14, 8, 10, metal);
     px.fill(24, 14, 8, 10, metal);
@@ -376,7 +392,7 @@ function makePenitentPortrait(): HTMLCanvasElement {
 }
 
 function makeCinderHeart(): HTMLCanvasElement {
-  return cachedPixel(bossKey('cinder-heart'), 64, 'cinder', (px) => {
+  return cachedPixel('px-boss-cinder-heart', 64, 'cinder', (px) => {
     px.fill(18, 14, 28, 36, '#2a1814');
     px.fill(16, 18, 32, 28, '#3a2018');
     px.fill(22, 12, 6, 8, '#1a0c0a');
@@ -391,7 +407,7 @@ function makeCinderHeart(): HTMLCanvasElement {
 }
 
 function makeFrostSovereign(): HTMLCanvasElement {
-  return cachedPixel(bossKey('frost-sovereign'), 64, 'rime', (px) => {
+  return cachedPixel('px-boss-frost-sovereign', 64, 'rime', (px) => {
     px.fill(22, 16, 20, 36, '#1a3048');
     px.fill(18, 22, 28, 24, '#163044');
     px.fill(20, 6, 24, 12, '#7ad4ff');

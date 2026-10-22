@@ -6,6 +6,3 @@ dist
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
-public/sprites/_raw/
-public/sprites/_in/*
-!public/sprites/_in/.gitkeep
