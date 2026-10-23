@@ -7,7 +7,7 @@ Drop finished art into `public/sprites/`. Vite rewrites `manifest.json` on `dev`
 | Path | Role |
 |---|---|
 | `entities/{id}.png` | Vessel / enemy spritesheet. Id matches `survivors.json` or `entities.json`. |
-| `entities/{id}.json` | Optional frame size + anims. Skip if frames are square and idle is frame 0. |
+| `entities/{id}.json` | Optional sidecar: compact anims **or** a Pixelorama project / Aseprite JSON export. Skip if frames are square and idle is frame 0. |
 | `items/{id}.png` | HUD / level-up icon (24px). Id matches `items.json`. |
 | `skills/{id}.png` | HUD / hall icon (24px). Id matches `skills.json`. |
 | `env/` | Future authored stage blocks (not random tile stamps). |
@@ -23,22 +23,26 @@ Horizontal strip of equal frames. Phaser loads `entity-{id}` via `load.spriteshe
 - `idle` = frame 0
 - `walk` = every frame at 8 fps, looping (only if there is more than one cell)
 
-Sidecar example (`entities/runner.json`):
+Sidecar can be the compact form, a **Pixelorama project JSON** (`size_x` / `size_y` / `fps` / `tags`), or an Aseprite-style spritesheet JSON (`meta.frameTags`). Pixelorama tags are 1-based; Aseprite tags are 0-based. Tag names map to Phaser anims (`idle`, `walk`). Vite bakes that into `manifest.json`.
+
+Compact example:
 
 ```json
 {
-  "frameWidth": 40,
-  "frameHeight": 40,
+  "frameWidth": 32,
+  "frameHeight": 48,
   "anims": {
-    "idle": { "frames": [0], "frameRate": 1, "repeat": -1 },
-    "walk": { "frames": [1, 2, 3], "frameRate": 8, "repeat": -1 }
+    "idle": { "frames": [3, 4], "frameRate": 6, "repeat": -1 },
+    "walk": { "frames": [0, 1, 2], "frameRate": 6, "repeat": -1 }
   }
 }
 ```
 
-Arena `flipX` for left. Player, elites, and bosses are Phaser Sprites (`play('entity-{id}-walk')`). Fodder uses one `SpriteGPULayer` per entity id; walk frames run on the GPU (`setAnimations`).
+Pixelorama drop-in: export the sheet as `entities/{id}.png` and copy the project JSON next to it as `entities/{id}.json` (tags `idle` / `walk` on the timeline).
 
-Catalog sizes: vessel 40, mite 24, spitter 28, elite 40, boss 64, icons 24.
+Arena `flipX` for left. Player, elites, and bosses are Phaser Sprites (`play('entity-{id}-walk')`). Fodder uses one `SpriteGPULayer` per entity id; walk frames run on the GPU (`setAnimations`). Non-square frames keep their native size; square vessel sheets still display at 40.
+
+Procedural fallback sizes: vessel 40, mite 24, spitter 28, elite 40, boss 64, icons 24.
 
 ## Environment (later)
 

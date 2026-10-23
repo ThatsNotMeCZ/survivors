@@ -16,23 +16,24 @@
     },
     "runner": {
       "src": "sprites/entities/runner.png",
-      "frameWidth": 40,
-      "frameHeight": 40,
+      "frameWidth": 32,
+      "frameHeight": 48,
       "anims": {
         "idle": {
           "frames": [
-            0
+            3,
+            4
           ],
-          "frameRate": 1,
+          "frameRate": 6,
           "repeat": -1
         },
         "walk": {
           "frames": [
+            0,
             1,
-            2,
-            3
+            2
           ],
-          "frameRate": 8,
+          "frameRate": 6,
           "repeat": -1
         }
       }
@@ -41,6 +42,7 @@
   "items": [
     "brittle-plate",
     "calcined-lens",
+    "cinnabar-leech",
     "glass-cannon",
     "goat-hoof",
     "hair-trigger",
@@ -52,7 +54,32 @@
     "salt-ward",
     "wax-wings"
   ],
-  "skills": [],
+  "skills": [
+    "bolt",
+    "dash-ash-step",
+    "dash",
+    "skill-aether-pierce",
+    "skill-brimstone-line",
+    "skill-censer-lob",
+    "skill-condemn-tether",
+    "skill-crucible-cull"
+  ],
   "env": [],
-  "fx": []
+  "fx": [
+    "bolt",
+    "cinder-spit",
+    "dash",
+    "death",
+    "frost-spit",
+    "gem",
+    "hit",
+    "hurt",
+    "muzzle",
+    "noxious-pop",
+    "skill-aether-pierce",
+    "skill-brimstone-line",
+    "skill-censer-lob",
+    "skill-condemn-tether",
+    "skill-crucible-cull"
+  ]
 }

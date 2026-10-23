@@ -124,6 +124,7 @@ export class ArenaScene extends Phaser.Scene {
   };
   private fodderShown!: Record<string, Uint8Array>;
   private gemShown!: Uint8Array;
+  private sparkShown!: Uint8Array;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   private shift!: Phaser.Input.Keyboard.Key;
@@ -181,6 +182,7 @@ export class ArenaScene extends Phaser.Scene {
     this.gemLayer = this.add.spriteGPULayer('px-gem', loop.maxGems).setDepth(2);
     this.sparkLayer = this.add.spriteGPULayer('px-spark', SPARK_CAP).setDepth(6);
     this.gemShown = new Uint8Array(loop.maxGems);
+    this.sparkShown = new Uint8Array(SPARK_CAP);
     for (const layer of this.allFodderLayers()) {
       seedGpuLayer(layer, this.world.enemies.cap, this.gpuMember);
     }
@@ -340,7 +342,13 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private fitBody(image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite): void {
-    image.setDisplaySize(PLAYER_DISPLAY, PLAYER_DISPLAY);
+    const fw = image.frame?.width ?? PLAYER_DISPLAY;
+    const fh = image.frame?.height ?? PLAYER_DISPLAY;
+    if (fw === fh) {
+      image.setDisplaySize(PLAYER_DISPLAY, PLAYER_DISPLAY);
+      return;
+    }
+    image.setDisplaySize(fw, fh);
   }
 
   private eyesKey(biome: BiomeId): string {
@@ -622,6 +630,7 @@ export class ArenaScene extends Phaser.Scene {
     for (let i = 0; i < gems.cap; i += 1) {
       const alive = gems.alive[i] !== 0;
       if (alive) {
+        clearGpuAnim(this.gpuMember);
         this.gpuMember.x = gems.x[i];
         this.gpuMember.y = gems.y[i];
         this.gpuMember.scaleX = 1;
@@ -931,13 +940,17 @@ export class ArenaScene extends Phaser.Scene {
     for (let i = 0; i < this.sparks.length; i += 1) {
       const spark = this.sparks[i];
       if (spark.life <= 0) {
-        hideGpuMember(this.sparkLayer, this.gpuMember, i);
+        if (this.sparkShown[i] !== 0) {
+          hideGpuMember(this.sparkLayer, this.gpuMember, i);
+          this.sparkShown[i] = 0;
+        }
         continue;
       }
       spark.life -= dt;
       spark.x += spark.vx * dt;
       spark.y += spark.vy * dt;
       const t = spark.max > 0 ? Math.max(0, spark.life / spark.max) : 0;
+      clearGpuAnim(this.gpuMember);
       this.gpuMember.x = spark.x;
       this.gpuMember.y = spark.y;
       this.gpuMember.scaleX = spark.size * (0.4 + 0.8 * t);
@@ -949,6 +962,7 @@ export class ArenaScene extends Phaser.Scene {
       this.gpuMember.tintBottomRight = spark.tint;
       this.gpuMember.tintTopRight = spark.tint;
       this.sparkLayer.editMember(i, this.gpuMember);
+      this.sparkShown[i] = 1;
     }
   }
 
@@ -1005,6 +1019,7 @@ function seedGpuLayer(
   count: number,
   member: GpuMember,
 ): void {
+  clearGpuAnim(member);
   member.x = 0;
   member.y = 0;
   member.scaleX = 0;
@@ -1015,11 +1030,18 @@ function seedGpuLayer(
   }
 }
 
+/** Shared `gpuMember` also carries fodder `animation` / `frame`; strip them on layers that have none. */
+function clearGpuAnim(member: GpuMember): void {
+  member.animation = undefined;
+  member.frame = undefined;
+}
+
 function hideGpuMember(
   layer: Phaser.GameObjects.SpriteGPULayer,
   member: GpuMember,
   index: number,
 ): void {
+  clearGpuAnim(member);
   member.x = 0;
   member.y = 0;
   member.scaleX = 0;

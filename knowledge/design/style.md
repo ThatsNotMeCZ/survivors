@@ -1,6 +1,6 @@
 # Style
 
-Chunky **32px** pixel art, vessel body **40px** so it reads larger than fodder (mite 24 / spitter 28). Silhouette over detail. Arena camera `viewZoom` in `world.json` (2.5) so that scale reads on 1080p.
+Chunky **32px** pixel art, vessel taller than fodder (mite 24 / spitter 28). Square fallback sheets display at 40px; authored sheets keep native frame size (Homunculus 32×48). Silhouette over detail. Arena camera `viewZoom` in `world.json` (2.5) so that scale reads on 1080p.
 
 HUD, pause, level-up, and menus are HTML in `src/ui/` using Dark Hermetic tokens (`theme.css`): brass, ember, mercury, parchment. Not Phaser text.
 
@@ -22,7 +22,7 @@ Hit spark, dash afterimage, death burst, ranged muzzle. GPU `SpriteGPULayer` spa
 
 ## Production path
 
-1. Drop `public/sprites/entities/{id}.png` (horizontal frames). Optional `{id}.json` names idle/walk.
+1. Drop `public/sprites/entities/{id}.png` (horizontal frames). Optional `{id}.json` (compact anims or Pixelorama project JSON) names idle/walk.
 2. Drop `public/sprites/items/{id}.png` and `skills/{id}.png` at 24px.
 3. Restart `bun run dev` (manifest watcher). Arena `flipX` for left.
 4. Eyes / VFX / floor stay procedural until those folders have PNGs.

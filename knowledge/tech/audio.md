@@ -43,7 +43,7 @@ Level-up tablets stay on the map bed with overlay off — short pick, not a chil
 
 Crossfade beds on stage wipe (`beginStage`). Fade overlay in/out with pause. Overlay rides the music bus (`musicVolume` + mute). No extra slider.
 
-Browser autoplay: bed starts after the first click or key.
+Browser autoplay: bed starts after the first click or key. Do not `AudioContext.resume()` on boot — Chrome logs a violation unless `navigator.userActivation.isActive` (or the unlock `pointerdown` / `keydown` listeners).
 
 ## SFX
 

@@ -45,7 +45,7 @@ export function applyAudioSettings(mix: AudioMix): void {
     ensureAudioBus();
   }
   if (!bus) return;
-  if (bus.ctx.state === 'suspended') void bus.ctx.resume();
+  resumeIfGestured(bus);
   const now = bus.ctx.currentTime;
   const mute = mix.muted ? 0 : 1;
   snap(bus.master.gain, mix.masterVolume * mute, now);
@@ -67,6 +67,12 @@ export function bindAudioUnlock(onUnlock: () => void): void {
   };
   window.addEventListener('pointerdown', kick);
   window.addEventListener('keydown', kick);
+}
+
+function resumeIfGestured(next: AudioBus): void {
+  if (next.ctx.state !== 'suspended') return;
+  if (!navigator.userActivation?.isActive) return;
+  void next.ctx.resume();
 }
 
 function snap(param: AudioParam, value: number, now: number): void {
