@@ -11,7 +11,7 @@ Drop finished art into `public/sprites/`. Vite rewrites `manifest.json` on `dev`
 | `items/{id}.png` | HUD / level-up icon (24px). Id matches `items.json`. |
 | `skills/{id}.png` | HUD / hall icon (24px). Id matches `skills.json`. |
 | `env/` | Future authored stage blocks (not random tile stamps). |
-| `fx/` | Optional VFX stills. Hit sparks stay GPU procedural until a PNG lands. |
+| `fx/` | Optional VFX stills. Id matches a skill, a biome spit, or a sim FX kind (`hit`, `dash`, …). |
 
 Do not put biome in the filename. The same Homunculus / mite ships in Cinder and Rime. A different look is a new catalog id with its own sheet.
 
@@ -43,6 +43,22 @@ Pixelorama drop-in: export the sheet as `entities/{id}.png` and copy the project
 Arena `flipX` for left. Player, elites, and bosses are Phaser Sprites (`play('entity-{id}-walk')`). Fodder uses one `SpriteGPULayer` per entity id; walk frames run on the GPU (`setAnimations`). Non-square frames keep their native size; square vessel sheets still display at 40.
 
 Procedural fallback sizes: vessel 40, mite 24, spitter 28, elite 40, boss 64, icons 24.
+
+## FX stills
+
+Arena loads `manifest.fx` as `fx-{id}` images. Missing PNG keeps the old procedural path (8px `px-bolt-*`, GPU sparks).
+
+Authored FX is drawn **facing +X**. Projectiles rotate with `atan2(vy, vx)` and display at native pixel size (current sheets 32×29). Do not squash or tint an authored shot — the PNG already tells the skill apart.
+
+| Stem | Used for |
+|---|---|
+| `bolt` / `skill-aether-pierce` / `skill-censer-lob` / `skill-condemn-tether` | Player projectiles (flags pierce / impact / tether) |
+| `cinder-spit` / `frost-spit` | Enemy bolts by biome |
+| `skill-brimstone-line` / `skill-crucible-cull` | Zone overlay (Graphics telegraph stays) |
+| `dash` | `FX_DASH` (Ash Step shares this unless `fx/dash-ash-step.png` exists) |
+| `hit` / `hurt` / `death` / `muzzle` / `gem` / `noxious-pop` | Matching `FX_*` stills; GPU sparks only if the PNG is missing |
+
+`reduceVfx` skips stills and spark bursts. No additive blend on the projectile pool.
 
 ## Environment (later)
 

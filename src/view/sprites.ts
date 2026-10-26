@@ -11,6 +11,7 @@ const emptyManifest = (): SpriteManifest => ({
 
 let manifest: SpriteManifest = emptyManifest();
 const fallbacks = new Map<string, EntitySpriteDef>();
+const fxIds = new Set<string>();
 
 export function entityTextureKey(id: string): string {
   return `entity-${id}`;
@@ -28,8 +29,20 @@ export function skillSpriteSrc(id: string): string {
   return `sprites/skills/${id}.png`;
 }
 
+export function fxSpriteSrc(id: string): string {
+  return `sprites/fx/${id}.png`;
+}
+
+export function fxTextureKey(id: string): string {
+  return `fx-${id}`;
+}
+
 export function authoredEntity(id: string): boolean {
   return id in manifest.entities;
+}
+
+export function authoredFx(id: string): boolean {
+  return fxIds.has(id);
 }
 
 export function entitySheet(id: string): EntitySpriteDef | undefined {
@@ -46,6 +59,8 @@ export function registerFallbackSheet(
 
 export function applySpriteManifest(data: unknown): SpriteManifest {
   manifest = parseManifest(data);
+  fxIds.clear();
+  for (const id of manifest.fx) fxIds.add(id);
   return manifest;
 }
 
@@ -58,6 +73,9 @@ export function preloadSprites(scene: Phaser.Scene): void {
         frameWidth: def.frameWidth,
         frameHeight: def.frameHeight,
       });
+    }
+    for (const id of manifest.fx) {
+      scene.load.image(fxTextureKey(id), fxSpriteSrc(id));
     }
   });
 }

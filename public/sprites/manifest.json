@@ -2,14 +2,24 @@
   "entities": {
     "penitent": {
       "src": "sprites/entities/penitent.png",
-      "frameWidth": 40,
-      "frameHeight": 40,
+      "frameWidth": 48,
+      "frameHeight": 48,
       "anims": {
+        "walk": {
+          "frames": [
+            0,
+            1,
+            2
+          ],
+          "frameRate": 6,
+          "repeat": -1
+        },
         "idle": {
           "frames": [
-            0
+            3,
+            4
           ],
-          "frameRate": 1,
+          "frameRate": 6,
           "repeat": -1
         }
       }

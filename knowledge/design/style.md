@@ -18,11 +18,11 @@ Same mesh as the base enemy until a sheet exists for that elite id. Recolor + 1 
 
 ## VFX do the wow
 
-Hit spark, dash afterimage, death burst, ranged muzzle. GPU `SpriteGPULayer` sparks (pooled, hide with alpha/scale 0). Windup telegraph is a Graphics line, not a sprite. Dash afterimages are faded player copies.
+Hit spark, dash afterimage, death burst, ranged muzzle. Authored `public/sprites/fx/{id}.png` wins when present (projectiles face +X and rotate to velocity at native size). GPU `SpriteGPULayer` sparks stay the fallback (pooled, hide with alpha/scale 0). Windup telegraph is a Graphics line; skill zones may overlay an FX still. Dash afterimages are faded player copies.
 
 ## Production path
 
 1. Drop `public/sprites/entities/{id}.png` (horizontal frames). Optional `{id}.json` (compact anims or Pixelorama project JSON) names idle/walk.
 2. Drop `public/sprites/items/{id}.png` and `skills/{id}.png` at 24px.
 3. Restart `bun run dev` (manifest watcher). Arena `flipX` for left.
-4. Eyes / VFX / floor stay procedural until those folders have PNGs.
+4. Eyes / floor stay procedural until those folders have PNGs. Drop `fx/{id}.png` to replace sparks / bolts for that id.

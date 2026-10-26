@@ -7,7 +7,6 @@ import { ROLE_BOSS, ROLE_ELITE, ROLE_FODDER } from '../sim/enemies';
 import { emptyInput, type InputFrame } from '../sim/input-frame';
 import { applyLevelChoice } from '../sim/level';
 import { currentObjective, currentStage, type Objective } from '../sim/loop';
-import { FLAG_IMPACT, FLAG_PIERCE, FLAG_TETHER, TEAM_ENEMY } from '../sim/projectiles';
 import { ZONE_LINE, ZONE_STRIKE } from '../sim/zones';
 import { aimAngle, createWorld, stepWorld, type World } from '../sim/world';
 import { formatTime, initArenaHud, setHudCombat, setHudFps } from '../ui/hud';
@@ -26,6 +25,15 @@ import {
   stingActive,
 } from '../ui/overlay';
 import { getSettings } from '../ui/settings';
+import {
+  applyShotVisual,
+  createFxStillPool,
+  eventFxId,
+  spawnFxStill,
+  stepFxStills as advanceFxStills,
+  syncZoneFx,
+  type FxStillPool,
+} from './fx-sprites';
 import { uploadPixelTextures } from './pixel-textures';
 import {
   eliteGlyphKey,
@@ -99,6 +107,8 @@ export class ArenaScene extends Phaser.Scene {
   private crosshair!: Phaser.GameObjects.Image;
   private waypoint!: Phaser.GameObjects.Image;
   private shots: Phaser.GameObjects.Image[] = [];
+  private zoneFx: Phaser.GameObjects.Image[] = [];
+  private fxStills!: FxStillPool;
   private ghosts: Phaser.GameObjects.Image[] = [];
   private ghostLife: Float32Array = new Float32Array(GHOST_CAP);
   private ghostCd = 0;
@@ -231,6 +241,11 @@ export class ArenaScene extends Phaser.Scene {
     for (let i = 0; i < maxProjectiles; i += 1) {
       this.shots.push(this.add.image(0, 0, 'px-bolt-player').setVisible(false).setDepth(4));
     }
+    this.zoneFx = [];
+    for (let i = 0; i < this.world.zones.cap; i += 1) {
+      this.zoneFx.push(this.add.image(0, 0, 'px-bolt-player').setVisible(false).setDepth(3));
+    }
+    this.fxStills = createFxStillPool(this);
     this.ghosts = [];
     this.ghostLife = new Float32Array(GHOST_CAP);
     for (let i = 0; i < GHOST_CAP; i += 1) {
@@ -423,37 +438,20 @@ export class ArenaScene extends Phaser.Scene {
     this.drawZones(dt);
     this.drawTelegraphs(biome);
     this.syncWaypoint();
+    syncZoneFx(this, this.zoneFx, this.world.zones);
     this.consumeFx();
+    advanceFxStills(this.fxStills, dt);
     this.stepSparks(dt);
     this.stepGhosts(dt);
     this.stepAmbient(dt, biome);
 
-    const enemyBolt = biome === 'cinder' ? 'px-bolt-enemy-cinder' : 'px-bolt-enemy-rime';
     for (let i = 0; i < this.shots.length; i += 1) {
       const sprite = this.shots[i];
       if (projectiles.alive[i] === 0) {
         sprite.setVisible(false);
         continue;
       }
-      sprite.setTexture(projectiles.team[i] === TEAM_ENEMY ? enemyBolt : 'px-bolt-player');
-      sprite.setVisible(true);
-      sprite.setPosition(Math.round(projectiles.x[i]), Math.round(projectiles.y[i]));
-      if (projectiles.team[i] === TEAM_ENEMY) {
-        sprite.clearTint();
-        sprite.setScale(1);
-      } else if ((projectiles.flags[i] & FLAG_TETHER) !== 0) {
-        sprite.setTint(0xc4a05a);
-        sprite.setScale(1.6);
-      } else if ((projectiles.flags[i] & FLAG_PIERCE) !== 0) {
-        sprite.setTint(0x88ffff);
-        sprite.setScale(1.5, 0.7);
-      } else if ((projectiles.flags[i] & FLAG_IMPACT) !== 0) {
-        sprite.setTint(0xffaa55);
-        sprite.setScale(1.3);
-      } else {
-        sprite.clearTint();
-        sprite.setScale(1);
-      }
+      applyShotVisual(this, sprite, projectiles, i, biome);
     }
   }
 
@@ -905,33 +903,32 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private consumeFx(): void {
-    const { fx } = this.world;
+    const { fx, player } = this.world;
+    const utilityId = this.world.survivor.skills.utility ?? '';
+    const dashRot = Math.atan2(player.dashVy, player.dashVx);
     for (let i = 0; i < fx.count; i += 1) {
       const kind = fx.kind[i];
       const x = fx.x[i];
       const y = fx.y[i];
       const tint = fx.tint[i] || 0xffffff;
-      if (kind === FX_HIT) {
-        spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
-        playSfx('hit');
-      } else if (kind === FX_HURT) {
-        spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
-        playSfx('hurt');
-      } else if (kind === FX_DEATH) {
-        spawnBurst(this.sparks, x, y, tint, 10, 140, 0.28);
-        playSfx(tint === 0xff8844 ? 'break' : 'death');
-      } else if (kind === FX_MUZZLE) {
-        spawnBurst(this.sparks, x, y, tint, 3, 70, 0.14);
-        playSfx('muzzle');
-      } else if (kind === FX_DASH) {
-        spawnBurst(this.sparks, x, y, tint, 6, 110, 0.2);
-        playSfx('dash');
-      } else if (kind === FX_STRIKE) {
-        spawnBurst(this.sparks, x, y, tint, 14, 160, 0.32);
-        playSfx('strike');
-      } else if (kind === FX_GEM) {
-        playSfx('gem');
+      const stillId = eventFxId(kind, tint, utilityId);
+      const rotation = kind === FX_DASH ? dashRot : 0;
+      const shown = stillId ? spawnFxStill(this, this.fxStills, stillId, x, y, rotation) : false;
+      if (!shown) {
+        if (kind === FX_HIT) spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
+        else if (kind === FX_HURT) spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
+        else if (kind === FX_DEATH) spawnBurst(this.sparks, x, y, tint, 10, 140, 0.28);
+        else if (kind === FX_MUZZLE) spawnBurst(this.sparks, x, y, tint, 3, 70, 0.14);
+        else if (kind === FX_DASH) spawnBurst(this.sparks, x, y, tint, 6, 110, 0.2);
+        else if (kind === FX_STRIKE) spawnBurst(this.sparks, x, y, tint, 14, 160, 0.32);
       }
+      if (kind === FX_HIT) playSfx('hit');
+      else if (kind === FX_HURT) playSfx('hurt');
+      else if (kind === FX_DEATH) playSfx(tint === 0xff8844 ? 'break' : 'death');
+      else if (kind === FX_MUZZLE) playSfx('muzzle');
+      else if (kind === FX_DASH) playSfx('dash');
+      else if (kind === FX_STRIKE) playSfx('strike');
+      else if (kind === FX_GEM) playSfx('gem');
     }
     fx.count = 0;
   }
