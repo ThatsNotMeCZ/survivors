@@ -591,7 +591,13 @@ export class ArenaScene extends Phaser.Scene {
         glyph.setVisible(true);
         glyph.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i] + 18));
         glyph.setRotation(this.world.runTime * 1.1);
-        glyph.setTint(0x66ff88);
+
+        if (enemies.shieldHp[i] > 0) {
+          glyph.setTint(0x5ad4ff);
+        } else {
+          glyph.setTint(0x66ff88);
+        }
+
         if (enemies.corpseRemain[i] > 0) {
           const flashCorpse = Math.floor(this.world.runTime * 16) % 2 === 0;
           sprite.setTint(flashCorpse ? 0x88ffaa : 0x226644);

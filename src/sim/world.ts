@@ -16,8 +16,8 @@ import {
   ROLE_ELITE,
   ROLE_FODDER,
   applyNoxiousContact,
+  applyEnemyDamage,
   createEnemyPool,
-  startEnemyDeath,
   stepEnemies,
   type EnemyPool,
 } from './enemies';
@@ -271,8 +271,7 @@ function detonateImpacts(world: World): void {
     for (let e = 0; e < enemies.cap; e += 1) {
       if (enemies.alive[e] === 0 || enemies.corpseRemain[e] > 0) continue;
       if (!circlesOverlap(x, y, radius, enemies.x[e], enemies.y[e], enemies.radius[e])) continue;
-      enemies.hp[e] -= damage;
-      if (enemies.hp[e] <= 0) startEnemyDeath(world, e);
+      applyEnemyDamage(world, e, damage);
     }
     killProjectile(projectiles, i);
   }
@@ -340,8 +339,7 @@ function applyPlayerHit(world: World, proj: number, enemy: number, tether: boole
     }
     return;
   }
-  enemies.hp[enemy] -= projectiles.damage[proj];
-  if (enemies.hp[enemy] <= 0) startEnemyDeath(world, enemy);
+  applyEnemyDamage(world, enemy, projectiles.damage[proj]);
 }
 
 function hitPlayer(world: World): void {

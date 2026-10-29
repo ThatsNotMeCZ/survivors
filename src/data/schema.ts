@@ -268,6 +268,10 @@ export type LoopDef = {
     popRadius: number;
     popDamage: number;
   };
+  shielder: {
+    delay: number;
+    percentHp: number;
+  };
   difficulty: {
     perSecond: number;
     stageBonus: number;

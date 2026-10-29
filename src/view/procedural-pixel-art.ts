@@ -349,7 +349,7 @@ function makeElite(biome: BiomeId): HTMLCanvasElement {
 
 function makeEliteGlyph(): HTMLCanvasElement {
   return cachedPixel(eliteGlyphKey(), 48, 'cinder', (px) => {
-    const c = '#66ff88';
+    const c = '#ffffff'; // White so tinting works properly
     for (let i = 8; i < 40; i += 2) {
       px.dot(i, 8, c);
       px.dot(i, 39, c);

@@ -104,6 +104,17 @@
       "view": { "kind": "dot", "size": 80, "inner": "#f4fbff", "mid": "#7ad4ff" }
     },
     {
+      "id": "frost-emperor",
+      "name": "Frost Emperor",
+      "role": "boss",
+      "tags": ["boss", "chaser"],
+      "stats": { "speed": 85, "maxHp": 950, "radius": 45 },
+      "contact": { "dps": 55 },
+      "rewards": { "xp": 100, "credits": 0 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 90, "inner": "#ffffff", "mid": "#3d8ad4" }
+    },
+    {
       "id": "enemy-astral-sniper",
       "name": "Astral Watcher",
       "role": "fodder",

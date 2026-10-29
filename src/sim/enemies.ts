@@ -43,6 +43,8 @@ export type EnemyPool = {
   corpseRemain: Float32Array;
   rootRemain: Float32Array;
   tetherDps: Float32Array;
+  shieldHp: Float32Array;
+  shieldDelayRemain: Float32Array;
   defId: (string | null)[];
 };
 
@@ -70,6 +72,8 @@ export function createEnemyPool(cap: number): EnemyPool {
     corpseRemain: new Float32Array(cap),
     rootRemain: new Float32Array(cap),
     tetherDps: new Float32Array(cap),
+    shieldHp: new Float32Array(cap),
+    shieldDelayRemain: new Float32Array(cap),
     defId: new Array<string | null>(cap).fill(null),
   };
 }
@@ -114,6 +118,15 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
     enemies.corpseRemain[i] = 0;
     enemies.rootRemain[i] = 0;
     enemies.tetherDps[i] = 0;
+
+    if (role === ROLE_ELITE) {
+      enemies.shieldHp[i] = hp * world.catalog.loop.shielder.percentHp;
+      enemies.shieldDelayRemain[i] = 0;
+    } else {
+      enemies.shieldHp[i] = 0;
+      enemies.shieldDelayRemain[i] = 0;
+    }
+
     enemies.defId[i] = def.id;
     if (role === ROLE_FODDER) world.counts.fodder += 1;
     else if (role === ROLE_ELITE) world.counts.elite += 1;
@@ -185,9 +198,20 @@ export function countSnipers(world: World): number {
 export function stepEnemies(world: World, dt: number): void {
   const { enemies } = world;
   const bounds = world.catalog.world;
+  const shielderCfg = world.catalog.loop.shielder;
   for (let i = 0; i < enemies.cap; i += 1) {
     if (enemies.alive[i] === 0) continue;
     tickEnemySlow(enemies, i, dt);
+
+    if (enemies.role[i] === ROLE_ELITE) {
+      if (enemies.shieldDelayRemain[i] > 0) {
+        enemies.shieldDelayRemain[i] -= dt;
+        if (enemies.shieldDelayRemain[i] <= 0) {
+          enemies.shieldHp[i] = enemies.maxHp[i] * shielderCfg.percentHp;
+        }
+      }
+    }
+
     if (enemies.rootRemain[i] > 0) {
       enemies.rootRemain[i] = Math.max(0, enemies.rootRemain[i] - dt);
       if (enemies.rootRemain[i] <= 0) enemies.tetherDps[i] = 0;
@@ -373,10 +397,28 @@ function tickTetherBurn(world: World, dt: number): void {
       ) {
         continue;
       }
-      enemies.hp[f] -= enemies.tetherDps[i] * dt;
-      if (enemies.hp[f] <= 0) startEnemyDeath(world, f);
+      applyEnemyDamage(world, f, enemies.tetherDps[i] * dt);
     }
   }
+}
+
+export function applyEnemyDamage(world: World, index: number, damage: number): void {
+  const { enemies } = world;
+  if (enemies.alive[index] === 0) return;
+  if (enemies.role[index] === ROLE_ELITE) {
+    enemies.shieldDelayRemain[index] = world.catalog.loop.shielder.delay;
+    if (enemies.shieldHp[index] > 0) {
+      if (damage <= enemies.shieldHp[index]) {
+        enemies.shieldHp[index] -= damage;
+        return;
+      } else {
+        damage -= enemies.shieldHp[index];
+        enemies.shieldHp[index] = 0;
+      }
+    }
+  }
+  enemies.hp[index] -= damage;
+  if (enemies.hp[index] <= 0) startEnemyDeath(world, index);
 }
 
 function localEnemySpeedMul(world: World, index: number): number {

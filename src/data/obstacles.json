@@ -41,6 +41,11 @@
       "pillar": "Frozen Bollard",
       "hazard": "Brine Pool",
       "volatile": "Pressurized Rime Cask"
+    },
+    "glacial-tomb": {
+      "pillar": "Glacial Monolith",
+      "hazard": "Permafrost Crevasse",
+      "volatile": "Volatile Ice Chunk"
     }
   }
 }
