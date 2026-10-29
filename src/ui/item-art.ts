@@ -17,13 +17,15 @@ export function makeItemIcon(
   id: string,
   name: string,
   className: string,
-  displayPx = ITEM_ICON_PX,
+  displayPx?: number,
 ): HTMLImageElement {
   const img = document.createElement('img');
   img.className = className;
   img.alt = name;
-  img.width = displayPx;
-  img.height = displayPx;
+  if (displayPx !== undefined) {
+    img.width = displayPx;
+    img.height = displayPx;
+  }
   img.src = itemSpriteSrc(id);
   img.decoding = 'async';
   img.draggable = false;
@@ -33,7 +35,7 @@ export function makeItemIcon(
 export function makeItemChip(
   item: ItemChipDef,
   className = 'item-chip',
-  displayPx = ITEM_CHIP_PX,
+  displayPx?: number,
 ): HTMLElement {
   const chip = document.createElement('span');
   chip.className = className;

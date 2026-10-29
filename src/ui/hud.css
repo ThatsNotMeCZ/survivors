@@ -361,11 +361,13 @@ select:focus-visible,
   position: fixed;
   bottom: 18px;
   right: 16px;
+  max-width: 450px;
 }
 
 #hud-item-list {
-  display: grid;
-  grid-template-columns: repeat(6, 32px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 4px;
 }
 
@@ -375,14 +377,12 @@ select:focus-visible,
   height: 32px;
   display: grid;
   place-items: center;
-  overflow: hidden;
   font-size: 9px;
   font-family: var(--font-display);
   color: var(--parchment);
-  background: #161014;
+  background: transparent;
   border: none;
-  outline: 1px solid #6a5030;
-  outline-offset: -1px;
+  outline: none;
 }
 
 .item-chip-icon {
@@ -397,29 +397,14 @@ select:focus-visible,
   right: 0;
   bottom: 0;
   padding: 0 2px;
-  font-size: 9px;
-  line-height: 1.1;
-  color: var(--parchment);
-  background: rgba(12, 10, 13, 0.86);
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 0 1px 2px #000;
+  background: transparent;
   font-variant-numeric: tabular-nums;
-}
-
-.item-chip[data-rarity='common'] {
-  outline-color: #8a4a32;
-}
-
-.item-chip[data-rarity='uncommon'] {
-  outline-color: #c4783a;
-  color: #e8c090;
-}
-
-.item-chip[data-rarity='rare'] {
-  outline-color: #c8d0d8;
-}
-
-.item-chip[data-rarity='lunar'] {
-  outline-color: #5ec8d4;
-  color: var(--lunar);
+  z-index: 2;
 }
 
 /* --- in-run prompts / stings (below overlay, above HUD) --- */
