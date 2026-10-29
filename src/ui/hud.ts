@@ -153,7 +153,7 @@ export function setHudCombat(state: {
   }
   if (hpFill) {
     const pct = state.playerMax > 0 ? Math.min(1, Math.max(0, state.playerHp) / state.playerMax) : 0;
-    hpFill.style.height = `${Math.round(pct * 100)}%`;
+    hpFill.style.width = `${Math.round(pct * 100)}%`; // Using width for classic horizontal bar fill
   }
   if (coeff) coeff.textContent = `×${state.coefficient.toFixed(2)}`;
   renderSkills(state.skills);

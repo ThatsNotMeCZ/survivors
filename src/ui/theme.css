@@ -33,7 +33,7 @@
   --danger: var(--alizarin);
   --font-display: 'Cinzel', 'Palatino Linotype', Palatino, Georgia, serif;
   --font-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
-  --ease: 180ms ease-out;
+  --ease: 0s; /* Disabled easing for a snappier, retro feel */
   --z-hud: 10;
   --z-prompt: 16;
   --z-sting: 18;
@@ -46,6 +46,7 @@
 *::before,
 *::after {
   box-sizing: inherit;
+  image-rendering: pixelated; /* Globally force pixelated rendering for low-res aesthetics */
 }
 
 html[data-biome='cinder'] {
