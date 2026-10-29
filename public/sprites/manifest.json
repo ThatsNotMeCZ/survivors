@@ -31,17 +31,8 @@
       "anims": {
         "idle": {
           "frames": [
-            3,
-            4
-          ],
-          "frameRate": 6,
-          "repeat": -1
-        },
-        "walk": {
-          "frames": [
-            0,
-            1,
-            2
+            2,
+            3
           ],
           "frameRate": 6,
           "repeat": -1
