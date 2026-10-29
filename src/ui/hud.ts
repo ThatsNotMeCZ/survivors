@@ -1,5 +1,5 @@
 import { SMOKE_DOTS, SMOKE_PASS_FPS } from '../config';
-import { ITEM_CHIP_PX, makeItemChip } from './item-art';
+import { makeItemChip } from './item-art';
 import { SKILL_SLOT_PX, makeSkillIcon } from './skill-art';
 import { hasQueryFlag } from './settings';
 
@@ -227,7 +227,7 @@ function renderItems(items: HudItem[]): void {
   lastItemKey = key;
   list.replaceChildren();
   for (const item of items) {
-    list.appendChild(makeItemChip(item, 'item-chip', ITEM_CHIP_PX));
+    list.appendChild(makeItemChip(item, 'item-chip'));
   }
 }
 
