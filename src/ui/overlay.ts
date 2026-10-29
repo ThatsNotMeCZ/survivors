@@ -118,7 +118,7 @@ export function showSurvivorSelect(): void {
     list.forEach((survivor) => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = survivor.id === current ? 'choice action-primary' : 'choice';
+      btn.className = survivor.id === current ? 'choice action-primary sprite-button' : 'choice sprite-button';
       btn.appendChild(dossierCard(survivor, false));
       btn.addEventListener('click', () => {
         patchSettings({ survivorId: survivor.id });
@@ -220,7 +220,7 @@ export function showLevelUp(items: ItemDef[]): void {
   items.forEach((item, index) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `choice rarity-${item.rarity}`;
+    btn.className = `choice rarity-${item.rarity} sprite-button`;
     btn.setAttribute('aria-describedby', 'choice-detail');
     const icon = makeItemIcon(item.id, item.name, 'choice-icon', ITEM_CHOICE_PX);
     const key = document.createElement('span');
@@ -837,7 +837,7 @@ function actionButton(
 ): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = primary ? 'seal-btn action-primary' : 'seal-btn';
+  btn.className = primary ? 'seal-btn action-primary sprite-button' : 'seal-btn sprite-button';
   btn.textContent = label;
   btn.addEventListener('click', () => {
     if (sfx) playSfx(sfx);
