@@ -17,4 +17,5 @@ export type SpriteManifest = {
   skills: string[];
   env: string[];
   fx: string[];
+  ui?: string[];
 };

@@ -4,7 +4,7 @@ import type { EntitySpriteDef, SpriteAnimDef, SpriteManifest } from '../src/view
 
 export type { EntitySpriteDef, SpriteAnimDef, SpriteManifest };
 
-const FOLDERS = ['entities', 'items', 'skills', 'env', 'fx'] as const;
+const FOLDERS = ['entities', 'items', 'skills', 'env', 'fx', 'ui'] as const;
 
 export function writeSpriteManifest(root = process.cwd()): string {
   const spritesDir = join(root, 'public', 'sprites');
@@ -36,6 +36,7 @@ export function writeSpriteManifest(root = process.cwd()): string {
     skills: listPng(join(spritesDir, 'skills')).map(stem),
     env: listPng(join(spritesDir, 'env')).map(stem),
     fx: listPng(join(spritesDir, 'fx')).map(stem),
+    ui: listPng(join(spritesDir, 'ui')).map(stem),
   };
 
   const out = join(spritesDir, 'manifest.json');

@@ -26,15 +26,24 @@
     },
     "runner": {
       "src": "sprites/entities/runner.png",
-      "frameWidth": 32,
+      "frameWidth": 48,
       "frameHeight": 48,
       "anims": {
+        "walk": {
+          "frames": [
+            0,
+            1,
+            2
+          ],
+          "frameRate": 2.5,
+          "repeat": -1
+        },
         "idle": {
           "frames": [
-            2,
-            3
+            3,
+            4
           ],
-          "frameRate": 6,
+          "frameRate": 2.5,
           "repeat": -1
         }
       }
@@ -82,5 +91,6 @@
     "skill-censer-lob",
     "skill-condemn-tether",
     "skill-crucible-cull"
-  ]
+  ],
+  "ui": []
 }

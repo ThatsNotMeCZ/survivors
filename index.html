@@ -19,51 +19,85 @@
         <p><span class="k">renderer</span> <span id="hud-renderer">--</span></p>
       </div>
       <div id="hud-play" class="hidden">
-        <div id="hud-objective">
+        <div class="hud-corner-tl" aria-hidden="true"></div>
+        <div id="hud-objective" data-ui-sprite="hud-objective">
+          <p id="hud-objective-kicker" class="objective-kicker">Transmutation</p>
           <p id="hud-objective-label">Survive</p>
-          <p id="hud-objective-detail"></p>
-          <div id="hud-objective-bar" aria-hidden="true"><div id="hud-objective-fill"></div></div>
+          <div id="hud-objective-bar" aria-hidden="true">
+            <div id="hud-objective-fill"></div>
+            <span id="hud-objective-detail"></span>
+          </div>
         </div>
-        <div id="hud-meta">
-          <p id="hud-stage">--</p>
-          <p id="hud-time">0:00</p>
+        <div id="hud-meta" data-ui-sprite="hud-timer">
+          <div class="meta-clock" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="clock-svg">
+              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+              <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="meta-rows">
+            <p class="meta-timer-row">
+              <span class="meta-timer-label">Rift Timer</span>
+              <span id="hud-time">0:00</span>
+            </p>
+            <p id="hud-stage">--</p>
+          </div>
         </div>
         <div id="hud-vitals">
-          <div class="flask" aria-hidden="true">
+          <div class="flask" data-ui-sprite="hud-flask" aria-hidden="true">
+            <div class="flask-lip"></div>
             <div class="flask-neck"></div>
+            <div class="flask-chains"></div>
             <div class="flask-body">
               <div id="hp-fill"></div>
+              <div class="flask-shine"></div>
+              <span id="hud-hp">100 / 100</span>
             </div>
           </div>
           <div class="vital-copy">
-            <span id="hud-hp">100 / 100</span>
-            <div class="xp-line" aria-hidden="true"><div id="xp-fill"></div></div>
             <span id="hud-lv">Lv 1</span>
+            <div class="xp-line" aria-hidden="true"><div id="xp-fill"></div></div>
           </div>
         </div>
-        <div id="hud-skills">
-          <div class="skill-slot" data-slot="primary" data-key="LMB">
-            <div class="skill-sweep"></div>
-            <span class="skill-glyph">I</span>
-            <span class="skill-cd"></span>
+        <div id="hud-skills" data-ui-sprite="hud-skill-dock">
+          <div class="skill-unit">
+            <span class="skill-name" data-slot-name="primary"></span>
+            <div class="skill-slot" data-slot="primary" data-key="LMB">
+              <div class="skill-sweep"></div>
+              <span class="skill-glyph">I</span>
+              <span class="skill-cd"></span>
+              <span class="skill-key-badge">LMB</span>
+            </div>
           </div>
-          <div class="skill-slot" data-slot="secondary" data-key="RMB">
-            <div class="skill-sweep"></div>
-            <span class="skill-glyph">II</span>
-            <span class="skill-cd"></span>
+          <div class="skill-unit">
+            <span class="skill-name" data-slot-name="secondary"></span>
+            <div class="skill-slot" data-slot="secondary" data-key="RMB">
+              <div class="skill-sweep"></div>
+              <span class="skill-glyph">II</span>
+              <span class="skill-cd"></span>
+              <span class="skill-key-badge">RMB</span>
+            </div>
           </div>
-          <div class="skill-slot" data-slot="utility" data-key="⇧">
-            <div class="skill-sweep"></div>
-            <span class="skill-glyph">III</span>
-            <span class="skill-cd"></span>
+          <div class="skill-unit">
+            <span class="skill-name" data-slot-name="utility"></span>
+            <div class="skill-slot" data-slot="utility" data-key="Shift">
+              <div class="skill-sweep"></div>
+              <span class="skill-glyph">III</span>
+              <span class="skill-cd"></span>
+              <span class="skill-key-badge">Shift</span>
+            </div>
           </div>
-          <div class="skill-slot" data-slot="special" data-key="Q">
-            <div class="skill-sweep"></div>
-            <span class="skill-glyph">IV</span>
-            <span class="skill-cd"></span>
+          <div class="skill-unit">
+            <span class="skill-name" data-slot-name="special"></span>
+            <div class="skill-slot" data-slot="special" data-key="Q">
+              <div class="skill-sweep"></div>
+              <span class="skill-glyph">IV</span>
+              <span class="skill-cd"></span>
+              <span class="skill-key-badge">Q</span>
+            </div>
           </div>
         </div>
-        <div id="hud-items" class="hidden">
+        <div id="hud-items" data-ui-sprite="hud-inventory">
           <div id="hud-item-list"></div>
         </div>
       </div>
@@ -79,14 +113,141 @@
       <p id="sting-sub"></p>
     </div>
     <div id="overlay" class="hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="overlay-title">
-      <div id="hall" class="hidden">
-        <div class="hall-circle" aria-hidden="true"></div>
-        <h1 id="hall-brand" class="hall-brand">Hermetic Rifts</h1>
-        <nav id="hall-nav" class="hall-nav"></nav>
-        <div id="hall-preview" class="hall-preview"></div>
-        <div id="hall-dossier" class="hall-dossier"></div>
-        <button type="button" id="hall-commence" class="hall-commence">Commence Transmutation</button>
+      <div class="screen-frame" aria-hidden="true">
+        <span class="corner corner-tl"></span>
+        <span class="corner corner-tr"></span>
+        <span class="corner corner-bl"></span>
+        <span class="corner corner-br"></span>
       </div>
+
+      <!-- 1. MAIN MENU -->
+      <div id="main-menu" class="hidden">
+        <div class="menu-pillar">
+          <div class="menu-logo-crest" data-ui-sprite="logo">
+            <span class="logo-rune logo-rune-top" aria-hidden="true">ᛟ 🜂</span>
+            <h1 id="menu-brand" class="menu-brand">
+              <span>HERMETIC</span>
+              <span>RIFTS</span>
+            </h1>
+            <span class="logo-rune logo-rune-bottom" aria-hidden="true">🜍 ☿</span>
+          </div>
+          <nav id="menu-nav" class="menu-nav" aria-label="Main Menu">
+            <button type="button" id="menu-archives" class="plaque-btn" data-ui-sprite="btn-plaque">
+              <span class="plaque-label">THE ARCHIVES</span>
+            </button>
+            <button type="button" id="menu-desk" class="plaque-btn" data-ui-sprite="btn-plaque">
+              <span class="plaque-label">ALCHEMIST'S DESK</span>
+            </button>
+          </nav>
+          <div class="menu-pillar-foot" aria-hidden="true">
+            <svg viewBox="0 0 120 80" class="pillar-ornament">
+              <path d="M60 8 L78 26 L60 44 L42 26 Z" fill="none" stroke="currentColor" stroke-width="2" />
+              <path d="M20 68 Q60 32 100 68" fill="none" stroke="currentColor" stroke-width="1.5" />
+              <circle cx="60" cy="26" r="5" fill="none" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+          </div>
+        </div>
+        <div class="menu-stage">
+          <div class="transmutation-seal" aria-hidden="true">
+            <svg viewBox="0 0 400 400" class="seal-svg">
+              <circle cx="200" cy="200" r="185" fill="none" stroke="currentColor" stroke-width="3" />
+              <circle cx="200" cy="200" r="154" fill="none" stroke="currentColor" stroke-width="2" />
+              <polygon points="200,48 332,276 68,276" fill="none" stroke="currentColor" stroke-width="3" />
+              <polygon points="200,352 332,124 68,124" fill="none" stroke="currentColor" stroke-width="3" />
+              <circle cx="200" cy="200" r="88" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 6" />
+            </svg>
+            <div class="seal-runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
+          </div>
+          <div id="menu-preview" class="menu-preview"></div>
+        </div>
+        <button type="button" id="menu-commence" class="magma-cta" data-ui-sprite="btn-cta">
+          <span>COMMENCE</span>
+          <span>TRANSMUTATION</span>
+        </button>
+      </div>
+
+      <!-- 2. LOBBY / THE HALL -->
+      <div id="hall" class="hidden">
+        <header class="hall-header" data-ui-sprite="hall-banner">
+          <button type="button" id="hall-back" class="hall-medallion" aria-label="Back to Main Menu" title="Back to Main Menu">
+            <span aria-hidden="true">◁</span>
+          </button>
+          <h1 id="hall-brand" class="hall-brand">THE HALL</h1>
+        </header>
+        <aside class="hall-sidebar">
+          <nav id="hall-nav" class="hall-nav" aria-label="Vessel Selection"></nav>
+          <div class="hall-nav-arrow" aria-hidden="true">▼</div>
+        </aside>
+        <div id="hall-preview" class="hall-preview"></div>
+        <div id="hall-dossier" class="hall-dossier" data-ui-sprite="parchment-panel"></div>
+        <button type="button" id="hall-commence" class="magma-cta" data-ui-sprite="btn-cta">
+          <span>START</span>
+          <span>TRANSMUTATION</span>
+        </button>
+      </div>
+
+      <!-- 3. LEVEL UP / SELECT AUGMENTATION -->
+      <div id="levelup-view" class="hidden">
+        <header class="aug-header">
+          <div class="aug-rune-halo" aria-hidden="true"></div>
+          <div class="aug-banner" data-ui-sprite="levelup-banner">
+            <h2 id="levelup-title">SELECT AUGMENTATION</h2>
+          </div>
+        </header>
+        <div id="levelup-choices" class="aug-choices"></div>
+      </div>
+
+      <!-- 4. PAUSE / SIMULATION PAUSED -->
+      <div id="pause-view" class="hidden">
+        <div class="pause-left">
+          <h2 id="pause-title" class="pause-title">
+            <span>SIMULATION</span>
+            <span>PAUSED</span>
+          </h2>
+          <div class="pause-tablet-stage">
+            <div class="pause-tablet" data-ui-sprite="pause-tablet" aria-hidden="true">
+              <svg viewBox="0 0 320 320" class="tablet-seal-svg">
+                <circle cx="160" cy="160" r="126" fill="none" stroke="currentColor" stroke-width="2" />
+                <circle cx="160" cy="160" r="98" fill="none" stroke="currentColor" stroke-width="2" />
+                <polygon points="160,62 245,209 75,209" fill="none" stroke="currentColor" stroke-width="2.5" />
+                <polygon points="160,258 245,111 75,111" fill="none" stroke="currentColor" stroke-width="2.5" />
+                <circle cx="160" cy="160" r="44" fill="none" stroke="currentColor" stroke-width="1.8" />
+                <text x="160" y="54" text-anchor="middle" font-size="14" fill="currentColor">☉ ☽ ☿ ♀ ♂ ♃ ♄</text>
+                <text x="160" y="278" text-anchor="middle" font-size="14" fill="currentColor">🜂 🜄 🜁 🜃 🜍 🜔</text>
+              </svg>
+            </div>
+            <div class="pause-actions">
+              <button type="button" id="pause-resume" class="plaque-btn plaque-glyph-btn action-primary" data-ui-sprite="btn-plaque">
+                <span class="plaque-label">RESUME SEQUENCE</span>
+                <span class="plaque-glyph" aria-hidden="true">⚶</span>
+              </button>
+              <button type="button" id="pause-settings" class="plaque-btn plaque-glyph-btn" data-ui-sprite="btn-plaque">
+                <span class="plaque-label">SETTINGS</span>
+                <span class="plaque-glyph" aria-hidden="true">⟁</span>
+              </button>
+              <button type="button" id="pause-abandon" class="plaque-btn plaque-glyph-btn" data-ui-sprite="btn-plaque">
+                <span class="plaque-label">ABANDON VESSEL</span>
+                <span class="plaque-glyph" aria-hidden="true">☿</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="pause-right">
+          <section class="pause-summary parchment-box" data-ui-sprite="parchment-panel" aria-label="Run Summary">
+            <h3 class="parchment-heading">RUN SUMMARY</h3>
+            <div id="pause-summary-rows" class="summary-rows"></div>
+          </section>
+          <section class="pause-inv-section" aria-label="Inventory">
+            <h3 class="pause-inv-heading">INVENTORY</h3>
+            <div id="pause-inventory" class="pause-inv-box" data-ui-sprite="pause-inventory">
+              <div id="pause-inv-list" class="pause-inv-list"></div>
+            </div>
+            <div id="pause-item-tooltip" class="pause-item-tooltip parchment-box hidden" data-ui-sprite="parchment-panel"></div>
+          </section>
+        </div>
+      </div>
+
+      <!-- 5. GENERIC MODAL CARD (HowTo, Abandon confirm, Run End) -->
       <div class="overlay-card">
         <p class="overlay-kicker" id="overlay-kicker"></p>
         <h2 id="overlay-title"></h2>

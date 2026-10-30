@@ -62,6 +62,16 @@ export function mountVesselArt(
   parent.appendChild(canvas);
   const vessel = resolveVessel(survivorId);
   void loadManifest().then(async (data) => {
+    if (!canvas.isConnected) return;
+    if (className.includes('portrait') && data?.ui?.includes(`portrait-${survivorId}`)) {
+      const portraitImg = await loadPng(`sprites/ui/portrait-${survivorId}.png`);
+      if (portraitImg && canvas.isConnected) {
+        canvas.width = portraitImg.naturalWidth;
+        canvas.height = portraitImg.naturalHeight;
+        paintCanvas(canvas, portraitImg);
+        return;
+      }
+    }
     const def = data?.entities[vessel];
     if (!def || !canvas.isConnected) return;
     const img = await loadPng(def.src);

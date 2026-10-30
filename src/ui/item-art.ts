@@ -40,6 +40,7 @@ export function makeItemChip(
   const chip = document.createElement('span');
   chip.className = className;
   chip.dataset.rarity = item.rarity;
+  chip.dataset.itemId = item.id;
   chip.title = item.stacks > 1 ? `${item.name} ×${item.stacks}` : item.name;
   const icon = makeItemIcon(item.id, item.name, `${className}-icon`, displayPx);
   icon.addEventListener('error', () => {
@@ -51,9 +52,12 @@ export function makeItemChip(
       chip.prepend(fallback);
     }
   });
-  const stacks = document.createElement('span');
-  stacks.className = `${className}-stacks`;
-  stacks.textContent = String(item.stacks);
-  chip.append(icon, stacks);
+  chip.appendChild(icon);
+  if (item.stacks > 1) {
+    const stacks = document.createElement('span');
+    stacks.className = `${className}-stacks`;
+    stacks.textContent = `x${item.stacks}`;
+    chip.appendChild(stacks);
+  }
   return chip;
 }

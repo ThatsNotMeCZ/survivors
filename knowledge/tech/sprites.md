@@ -10,6 +10,7 @@ Drop finished art into `public/sprites/`. Vite rewrites `manifest.json` on `dev`
 | `entities/{id}.json` | Optional sidecar: compact anims **or** a Pixelorama project / Aseprite JSON export. Skip if frames are square and idle is frame 0. |
 | `items/{id}.png` | HUD / level-up icon (24px). Id matches `items.json`. |
 | `skills/{id}.png` | HUD / hall icon (24px). Id matches `skills.json`. |
+| `ui/{id}.png` | Optional HUD / menu frame sprites (`logo`, `btn-plaque`, `btn-cta`, `hall-banner`, `parchment-panel`, `pause-tablet`, `pause-inventory`, `hud-objective`, `hud-timer`, `hud-flask`, `hud-skill-dock`, `hud-inventory`, `card-{rarity}`, `portrait-{id}`). CSS/SVG fallback renders when missing. |
 | `env/` | Future authored stage blocks (not random tile stamps). |
 | `fx/` | Optional VFX stills. Id matches a skill, a biome spit, or a sim FX kind (`hit`, `dash`, …). |
 

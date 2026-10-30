@@ -2,6 +2,7 @@ import { SMOKE_DOTS, SMOKE_PASS_FPS } from '../config';
 import { makeItemChip } from './item-art';
 import { SKILL_SLOT_PX, makeSkillIcon } from './skill-art';
 import { hasQueryFlag } from './settings';
+import { hydrateUiSprites } from './ui-art';
 
 export type HudStatus = 'boot' | 'warmup' | 'pass' | 'fail' | 'arena';
 
@@ -23,6 +24,15 @@ export type HudSkill = {
   iframe: boolean;
 };
 
+export type HudSummary = {
+  stage: string;
+  runTime: number;
+  level: number;
+  bosses: number;
+  coefficient: number;
+  totalItems: number;
+};
+
 const statusEl = () => document.getElementById('hud-status');
 const fpsEl = () => document.getElementById('hud-fps');
 const dotsEl = () => document.getElementById('hud-dots');
@@ -36,6 +46,7 @@ const stageEl = () => document.getElementById('hud-stage');
 const xpFillEl = () => document.getElementById('xp-fill');
 const hpFillEl = () => document.getElementById('hp-fill');
 const coeffEl = () => document.getElementById('hud-coeff');
+const objectiveKickerEl = () => document.getElementById('hud-objective-kicker');
 const objectiveLabelEl = () => document.getElementById('hud-objective-label');
 const objectiveDetailEl = () => document.getElementById('hud-objective-detail');
 const objectiveFillEl = () => document.getElementById('hud-objective-fill');
@@ -48,9 +59,21 @@ let playMode = false;
 let lastItemKey = '';
 let lastItems: HudItem[] = [];
 let lastSkillBind = '';
+let lastSummary: HudSummary = {
+  stage: '--',
+  runTime: 0,
+  level: 1,
+  bosses: 0,
+  coefficient: 1,
+  totalItems: 0,
+};
 
 export function getHudItems(): HudItem[] {
   return lastItems;
+}
+
+export function getHudSummary(): HudSummary {
+  return lastSummary;
 }
 
 export function hideHud(): void {
@@ -85,7 +108,9 @@ export function initArenaHud(rendererName: string): void {
   syncPlayAttr();
   bindDebugToggle();
   showHud();
-  document.getElementById('hud-play')?.classList.remove('hidden');
+  const playEl = document.getElementById('hud-play');
+  playEl?.classList.remove('hidden');
+  if (playEl) hydrateUiSprites(playEl);
   document.getElementById('row-dots')?.classList.add('hidden');
   document.getElementById('row-coeff')?.classList.remove('hidden');
   const renderer = rendererEl();
@@ -116,7 +141,9 @@ export function setHudCombat(state: {
   xpNeed: number;
   runTime: number;
   coefficient: number;
+  bosses?: number;
   iframe: boolean;
+  objectiveKicker?: string;
   objective: string;
   objectiveDetail: string;
   objectivePct: number;
@@ -132,13 +159,26 @@ export function setHudCombat(state: {
   const fill = xpFillEl();
   const hpFill = hpFillEl();
   const coeff = coeffEl();
+  const kicker = objectiveKickerEl();
   const objective = objectiveLabelEl();
   const detail = objectiveDetailEl();
   const objFill = objectiveFillEl();
+
+  const totalItems = state.items.reduce((acc, item) => acc + item.stacks, 0);
+  lastSummary = {
+    stage: state.stage,
+    runTime: state.runTime,
+    level: state.level,
+    bosses: state.bosses ?? 0,
+    coefficient: state.coefficient,
+    totalItems,
+  };
+
   if (stage) stage.textContent = state.stage;
   if (hp) hp.textContent = `${Math.max(0, state.playerHp).toFixed(0)} / ${state.playerMax.toFixed(0)}`;
   if (lv) lv.textContent = `Lv ${state.level}`;
   if (time) time.textContent = formatTime(state.runTime);
+  if (kicker) kicker.textContent = state.objectiveKicker ?? state.stage;
   if (objective) objective.textContent = state.objective;
   if (detail) {
     detail.textContent = state.objectiveDetail;
@@ -183,6 +223,8 @@ function renderSkills(skills: HudSkill[]): void {
   if (rebind) lastSkillBind = bind;
   for (const skill of skills) {
     const slot = document.querySelector<HTMLElement>(`.skill-slot[data-slot="${skill.slot}"]`);
+    const nameEl = document.querySelector<HTMLElement>(`.skill-name[data-slot-name="${skill.slot}"]`);
+    if (nameEl) nameEl.textContent = skill.empty ? '' : skill.name;
     if (!slot) continue;
     const glyph = slot.querySelector('.skill-glyph');
     const cd = slot.querySelector('.skill-cd');
@@ -195,7 +237,13 @@ function renderSkills(skills: HudSkill[]): void {
     slot.dataset.empty = skill.empty ? '1' : '0';
     slot.dataset.iframe = skill.iframe ? '1' : '0';
     slot.title = skill.empty ? '' : skill.name;
-    if (cd) cd.textContent = !skill.empty && skill.cd > 0.05 ? skill.cd.toFixed(1) : '';
+    if (cd) {
+      if (!skill.empty && skill.cd > 0.05) {
+        cd.textContent = skill.cd >= 1 ? `${Math.ceil(skill.cd)}s` : `${skill.cd.toFixed(1)}s`;
+      } else {
+        cd.textContent = '';
+      }
+    }
   }
 }
 
@@ -221,8 +269,9 @@ function renderItems(items: HudItem[]): void {
   const list = itemListEl();
   const root = itemsRootEl();
   if (!list || !root) return;
-  root.classList.toggle('hidden', items.length === 0);
-  const key = items.map((item) => `${item.id}:${item.stacks}:${item.rarity}`).join('|');
+  const cols = Math.max(3, Math.ceil(Math.sqrt(Math.max(1, items.length))));
+  list.style.setProperty('--inv-cols', String(cols));
+  const key = `${cols}|${items.map((item) => `${item.id}:${item.stacks}:${item.rarity}`).join('|')}`;
   if (key === lastItemKey && list.childElementCount === items.length) return;
   lastItemKey = key;
   list.replaceChildren();

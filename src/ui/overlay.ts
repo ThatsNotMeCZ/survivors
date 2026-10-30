@@ -1,15 +1,17 @@
 import { playSfx, setMusicOverlay, setMusicScene, type SfxId } from '../audio';
 import { catalog } from '../data/catalog';
 import type { ItemDef, ItemHook, SkillDef, SkillSlot, StatId, SurvivorDef } from '../data/schema';
-import { formatTime, getHudItems, type HudItem } from './hud';
+import { formatTime, getHudItems, getHudSummary, type HudItem } from './hud';
 import { ITEM_CHOICE_PX, makeItemChip, makeItemIcon } from './item-art';
 import { SKILL_SLOT_PX, makeSkillIcon } from './skill-art';
+import { hydrateUiSprites } from './ui-art';
 import { mountVesselArt } from './vessel-art';
 import { applySettingsToDom, getSettings, patchSettings, skipShell, type GameSettings } from './settings';
 
 export type OverlayMode =
   | 'hidden'
   | 'menu'
+  | 'lobby'
   | 'survivor'
   | 'howto'
   | 'settings'
@@ -38,11 +40,11 @@ export type RunRecap = {
 };
 
 const STAT_LABEL: Record<StatId, string> = {
-  speed: 'speed',
-  maxHp: 'max HP',
-  radius: 'hurtbox',
-  damage: 'damage',
-  cooldown: 'cooldown',
+  speed: 'Speed',
+  maxHp: 'Max HP',
+  radius: 'Hurtbox',
+  damage: 'Damage',
+  cooldown: 'Cooldown',
 };
 
 let handlers: OverlayHandlers = {
@@ -54,9 +56,11 @@ let handlers: OverlayHandlers = {
   onRestart: () => undefined,
 };
 let keysBound = false;
+let menuBound = false;
 let hallBound = false;
+let pauseBound = false;
 let mode: OverlayMode = 'hidden';
-let origin: 'menu' | 'pause' = 'menu';
+let origin: 'menu' | 'lobby' | 'pause' = 'menu';
 let runPaused = false;
 let stingTimer = 0;
 let stingUntil = 0;
@@ -69,6 +73,7 @@ export function bindOverlay(next: Partial<OverlayHandlers>): void {
     window.addEventListener('keydown', onOverlayKey, true);
     document.getElementById('settings-close')?.addEventListener('click', () => settingsDialog()?.close());
     applySettingsToDom();
+    hydrateUiSprites(document);
   }
   syncOverlayAttr();
 }
@@ -105,57 +110,32 @@ export function hideOverlay(): void {
 export function showMainMenu(): void {
   runPaused = false;
   origin = 'menu';
+  renderMainMenu();
+}
+
+export function showLobby(): void {
+  runPaused = false;
+  origin = 'lobby';
   renderHall();
 }
 
 export function showSurvivorSelect(): void {
-  const list = catalog.survivors;
-  const current = getSettings().survivorId;
-  const body = document.createElement('div');
-  if (list.length <= 1) {
-    body.appendChild(dossierCard(selectedSurvivor(), false));
-  } else {
-    list.forEach((survivor) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = survivor.id === current ? 'choice action-primary' : 'choice';
-      btn.appendChild(dossierCard(survivor, false));
-      btn.addEventListener('click', () => {
-        patchSettings({ survivorId: survivor.id });
-        showSurvivorSelect();
-      });
-      body.appendChild(btn);
-    });
-  }
-  renderScreen({
-    screen: 'survivor',
-    kicker: 'The Vessel',
-    title: 'The Vessel',
-    sub:
-      list.length <= 1
-        ? 'One Homunculus is bound to this working.'
-        : 'Choose who walks the yard.',
-    body,
-    actions: [
-      { label: 'Confirm', onClick: () => showMainMenu(), primary: true, sfx: 'confirm' },
-      { label: 'Back', onClick: () => showMainMenu(), sfx: 'close' },
-    ],
-  });
+  showLobby();
 }
 
-export function showHowTo(from: 'menu' | 'pause' = origin): void {
+export function showHowTo(from: 'menu' | 'lobby' | 'pause' = origin): void {
   origin = from;
   renderScreen({
     screen: 'howto',
     kicker: 'Rites of motion',
-    title: 'How to play',
+    title: 'The Archives',
     sub: 'Kite the dross. Aim the bolt. Hold the seal. Do not stand still.',
     body: controlsTable(),
     actions: [{ label: 'Back', onClick: goBack, primary: true, sfx: 'close' }],
   });
 }
 
-export function showSettings(from: 'menu' | 'pause' = origin): void {
+export function showSettings(from: 'menu' | 'lobby' | 'pause' = origin): void {
   origin = from;
   const dialog = settingsDialog();
   const body = document.getElementById('settings-body');
@@ -169,18 +149,7 @@ export function showPause(): void {
   runPaused = true;
   origin = 'pause';
   if (!alreadyChill) playSfx('open');
-  renderScreen({
-    screen: 'pause',
-    kicker: 'The working stills',
-    title: 'Simulation Paused',
-    sub: 'Esc or Enter to resume. The horde waits.',
-    body: inventoryStrip(getHudItems()),
-    actions: [
-      { label: 'Resume Sequence', onClick: () => handlers.onResume(), primary: true, sfx: null },
-      { label: 'Settings', onClick: () => showSettings('pause') },
-      { label: 'Abandon Vessel', onClick: showAbandon },
-    ],
-  });
+  renderPauseScreen();
 }
 
 export function showAbandon(): void {
@@ -201,52 +170,77 @@ export function showAbandon(): void {
 export function showLevelUp(items: ItemDef[]): void {
   runPaused = true;
   playSfx('open');
-  const detail = document.createElement('div');
-  detail.className = 'choice-detail';
-  detail.id = 'choice-detail';
-  const fillDetail = (item: ItemDef): void => {
-    const name = document.createElement('span');
-    name.className = 'choice-name';
-    name.textContent = item.name;
-    const hooks = document.createElement('span');
-    hooks.className = 'choice-hooks';
-    hooks.append(...hookLines(item));
-    const lore = document.createElement('span');
-    lore.className = 'choice-lore';
-    lore.textContent = item.lore;
-    detail.replaceChildren(name, hooks, lore);
-  };
-  const choices = document.createElement('div');
+  const root = overlayEl();
+  const levelupView = levelupViewEl();
+  const choicesRoot = document.getElementById('levelup-choices');
+  if (!root || !levelupView || !choicesRoot) return;
+
+  mode = 'levelup';
+  syncOverlayAttr();
+  root.dataset.screen = 'levelup';
+  root.setAttribute('aria-labelledby', 'levelup-title');
+  hideAllViews();
+  levelupView.classList.remove('hidden');
+
+  choicesRoot.replaceChildren();
   items.forEach((item, index) => {
+    const col = document.createElement('div');
+    col.className = 'aug-card-col';
+
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `choice rarity-${item.rarity}`;
-    btn.setAttribute('aria-describedby', 'choice-detail');
+    btn.className = `choice aug-card rarity-${item.rarity}`;
+    btn.dataset.uiSprite = `card-${item.rarity}`;
+
+    const name = document.createElement('span');
+    name.className = 'aug-card-name';
+    name.textContent = item.name;
+
+    const artWrap = document.createElement('div');
+    artWrap.className = 'aug-card-art';
     const icon = makeItemIcon(item.id, item.name, 'choice-icon', ITEM_CHOICE_PX);
-    const key = document.createElement('span');
-    key.className = 'choice-key';
-    key.textContent = String(index + 1);
-    btn.append(icon, key);
+    icon.addEventListener('error', () => {
+      icon.remove();
+      const fb = document.createElement('span');
+      fb.className = 'aug-card-fallback';
+      fb.textContent = item.name.slice(0, 1).toUpperCase();
+      artWrap.appendChild(fb);
+    });
+    artWrap.appendChild(icon);
+
+    const rarity = document.createElement('span');
+    rarity.className = `aug-card-rarity rarity-text-${item.rarity}`;
+    rarity.textContent = capitalize(item.rarity);
+
+    const hooks = document.createElement('div');
+    hooks.className = 'aug-card-hooks';
+    hooks.append(...hookLines(item, true));
+
+    const divider = document.createElement('hr');
+    divider.className = 'aug-card-divider';
+
+    const lore = document.createElement('p');
+    lore.className = 'aug-card-lore';
+    lore.textContent = item.lore;
+
+    btn.append(name, artWrap, rarity, hooks, divider, lore);
     btn.addEventListener('click', () => {
       playSfx('confirm');
       handlers.onPick(index);
     });
     btn.addEventListener('mouseenter', () => btn.focus({ preventScroll: true }));
-    btn.addEventListener('focus', () => fillDetail(item));
-    choices.appendChild(btn);
+
+    const key = document.createElement('span');
+    key.className = 'aug-card-key';
+    key.textContent = `[${index + 1}]`;
+
+    col.append(btn, key);
+    choicesRoot.appendChild(col);
   });
-  if (items[0]) fillDetail(items[0]);
-  const body = document.createElement('div');
-  body.className = 'levelup-body';
-  body.append(detail, inventoryStrip(getHudItems()));
-  renderScreen({
-    screen: 'levelup',
-    kicker: 'A tablet unseals',
-    title: 'Level up',
-    sub: 'Pick 1 of 3. Keys 1 / 2 / 3. Arrows move focus.',
-    body,
-    choices,
-  });
+
+  hydrateUiSprites(levelupView);
+  showRoot(root);
+  syncChill();
 }
 
 export function showRunEnd(kind: 'victory' | 'defeat', detail: string, recap?: RunRecap): void {
@@ -328,7 +322,7 @@ export function describeHooks(item: ItemDef): string {
 }
 
 function focusLevelUpChoice(delta: number): void {
-  const root = choicesEl();
+  const root = document.getElementById('levelup-choices');
   if (!root) return;
   const buttons = [...root.querySelectorAll<HTMLButtonElement>('button.choice')];
   if (buttons.length === 0) return;
@@ -339,34 +333,12 @@ function focusLevelUpChoice(delta: number): void {
   buttons[next]?.focus();
 }
 
-function inventoryStrip(items: HudItem[]): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'inv-strip';
-  const label = document.createElement('p');
-  label.className = 'inv-strip-label';
-  label.textContent = 'Tablets';
-  if (items.length === 0) {
-    const empty = document.createElement('p');
-    empty.className = 'inv-strip-empty';
-    empty.textContent = 'No tablets yet.';
-    wrap.append(label, empty);
-    return wrap;
-  }
-  const list = document.createElement('div');
-  list.className = 'inv-strip-list';
-  for (const item of items) {
-    list.appendChild(makeItemChip(item));
-  }
-  wrap.append(label, list);
-  return wrap;
-}
-
-function hookLines(item: ItemDef): HTMLElement[] {
+function hookLines(item: ItemDef, uppercase = false): HTMLElement[] {
   return item.hooks.map((hook) => {
     const line = document.createElement('span');
     const formatted = formatHook(hook);
     line.className = formatted.up ? 'hook-up' : 'hook-down';
-    line.textContent = formatted.text;
+    line.textContent = uppercase ? formatted.text.toUpperCase() : formatted.text;
     return line;
   });
 }
@@ -381,6 +353,10 @@ function formatHook(hook: ItemHook): { text: string; up: boolean } {
   const hurt = hook.stat === 'radius' || hook.stat === 'cooldown';
   const up = hook.value === 0 ? true : hurt ? hook.value < 0 : hook.value > 0;
   return { text: `${amount} ${STAT_LABEL[hook.stat]}`, up };
+}
+
+function capitalize(str: string): string {
+  return str.length > 0 ? str[0].toUpperCase() + str.slice(1) : str;
 }
 
 function isEscape(event: KeyboardEvent): boolean {
@@ -398,6 +374,9 @@ function onOverlayKey(event: KeyboardEvent): void {
     }
     if (mode === 'pause') {
       handlers.onResume();
+    } else if (mode === 'lobby') {
+      playSfx('close');
+      showMainMenu();
     } else if (mode === 'howto' || mode === 'survivor' || mode === 'abandon') {
       goBack();
     } else if (mode === 'hidden') {
@@ -408,6 +387,10 @@ function onOverlayKey(event: KeyboardEvent): void {
   if (event.key === 'Enter') {
     if (settingsDialog()?.open) return;
     if (mode === 'menu') {
+      event.preventDefault();
+      playSfx('confirm');
+      showLobby();
+    } else if (mode === 'lobby') {
       event.preventDefault();
       playSfx('confirm');
       handlers.onStart();
@@ -442,10 +425,19 @@ function onOverlayKey(event: KeyboardEvent): void {
 
 function goBack(): void {
   if (origin === 'pause' || mode === 'abandon') showPause();
+  else if (origin === 'lobby') showLobby();
   else showMainMenu();
 }
 
 type ActionSpec = { label: string; onClick: () => void; primary?: boolean; sfx?: SfxId | null };
+
+function hideAllViews(): void {
+  mainMenuEl()?.classList.add('hidden');
+  hallEl()?.classList.add('hidden');
+  levelupViewEl()?.classList.add('hidden');
+  pauseViewEl()?.classList.add('hidden');
+  cardEl()?.classList.add('hidden');
+}
 
 function renderScreen(spec: {
   screen: OverlayMode;
@@ -457,18 +449,20 @@ function renderScreen(spec: {
   actions?: ActionSpec[];
 }): void {
   const root = overlayEl();
+  const card = cardEl();
   const kicker = kickerEl();
   const title = titleEl();
   const sub = subEl();
   const body = bodyEl();
   const choices = choicesEl();
   const actions = actionsEl();
-  if (!root || !kicker || !title || !sub || !body || !choices || !actions) return;
+  if (!root || !card || !kicker || !title || !sub || !body || !choices || !actions) return;
   mode = spec.screen;
   syncOverlayAttr();
   root.dataset.screen = spec.screen;
   root.setAttribute('aria-labelledby', 'overlay-title');
-  hallEl()?.classList.add('hidden');
+  hideAllViews();
+  card.classList.remove('hidden');
   kicker.textContent = spec.kicker;
   title.textContent = spec.title;
   sub.textContent = spec.sub;
@@ -485,6 +479,351 @@ function renderScreen(spec: {
   showRoot(root);
   syncChill();
 }
+
+/* --- 1. MAIN MENU --- */
+
+function renderMainMenu(): void {
+  const root = overlayEl();
+  const menu = mainMenuEl();
+  if (!root || !menu) return;
+  mode = 'menu';
+  syncOverlayAttr();
+  root.dataset.screen = 'menu';
+  root.setAttribute('aria-labelledby', 'menu-brand');
+  hideAllViews();
+  menu.classList.remove('hidden');
+  bindMainMenu();
+  fillMenuPreview();
+  hydrateUiSprites(menu);
+  showRoot(root);
+  setMusicScene({ kind: 'menu' });
+  syncChill();
+}
+
+function bindMainMenu(): void {
+  if (menuBound) return;
+  menuBound = true;
+  document.getElementById('menu-archives')?.addEventListener('click', () => {
+    playSfx('click');
+    showHowTo('menu');
+  });
+  document.getElementById('menu-desk')?.addEventListener('click', () => {
+    playSfx('click');
+    showSettings('menu');
+  });
+  document.getElementById('menu-commence')?.addEventListener('click', () => {
+    playSfx('confirm');
+    showLobby();
+  });
+}
+
+function fillMenuPreview(): void {
+  const root = document.getElementById('menu-preview');
+  if (!root) return;
+  const survivor = selectedSurvivor();
+  const ash = document.createElement('div');
+  ash.className = 'hall-particles';
+  root.replaceChildren(ash);
+  mountVesselArt(root, survivor.id, 'menu-vessel', survivor.name);
+}
+
+/* --- 2. LOBBY / THE HALL --- */
+
+function renderHall(): void {
+  const root = overlayEl();
+  const hall = hallEl();
+  if (!root || !hall) return;
+  mode = 'lobby';
+  syncOverlayAttr();
+  root.dataset.screen = 'lobby';
+  root.setAttribute('aria-labelledby', 'hall-brand');
+  hideAllViews();
+  hall.classList.remove('hidden');
+  bindHall();
+  fillHallNav();
+  fillHallPreview();
+  fillHallDossier();
+  hydrateUiSprites(hall);
+  showRoot(root);
+  setMusicScene({ kind: 'menu' });
+  syncChill();
+}
+
+function bindHall(): void {
+  if (hallBound) return;
+  hallBound = true;
+  document.getElementById('hall-back')?.addEventListener('click', () => {
+    playSfx('close');
+    showMainMenu();
+  });
+  document.getElementById('hall-commence')?.addEventListener('click', () => {
+    playSfx('confirm');
+    handlers.onStart();
+  });
+}
+
+function fillHallNav(): void {
+  const nav = document.getElementById('hall-nav');
+  if (!nav) return;
+  nav.replaceChildren();
+  const current = selectedSurvivor().id;
+  for (const survivor of catalog.survivors) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'vessel-pick';
+    btn.dataset.active = survivor.id === current ? '1' : '0';
+    btn.dataset.uiSprite = `portrait-${survivor.id}`;
+
+    const portraitBox = document.createElement('div');
+    portraitBox.className = 'vessel-portrait-box';
+    mountVesselArt(portraitBox, survivor.id, 'vessel-art portrait-art', survivor.name);
+
+    const nameplate = document.createElement('span');
+    nameplate.className = 'vessel-nameplate';
+    nameplate.textContent = survivor.name.toUpperCase();
+
+    const arrow = document.createElement('span');
+    arrow.className = 'vessel-active-arrow';
+    arrow.setAttribute('aria-hidden', 'true');
+
+    btn.append(portraitBox, nameplate, arrow);
+    btn.addEventListener('click', () => {
+      playSfx('click');
+      patchSettings({ survivorId: survivor.id });
+      renderHall();
+    });
+    nav.appendChild(btn);
+  }
+}
+
+function fillHallPreview(): void {
+  const root = document.getElementById('hall-preview');
+  if (!root) return;
+  const survivor = selectedSurvivor();
+  const circle = document.createElement('div');
+  circle.className = 'hall-stage-circle';
+  circle.setAttribute('aria-hidden', 'true');
+  const ash = document.createElement('div');
+  ash.className = 'hall-particles';
+  circle.setAttribute('aria-hidden', 'true');
+  const pedestal = document.createElement('div');
+  pedestal.className = 'hall-pedestal';
+  pedestal.setAttribute('aria-hidden', 'true');
+  root.replaceChildren(circle, ash, pedestal);
+  mountVesselArt(root, survivor.id, 'hall-vessel', survivor.name);
+}
+
+function fillHallDossier(): void {
+  const root = document.getElementById('hall-dossier');
+  if (!root) return;
+  const survivor = selectedSurvivor();
+
+  const header = document.createElement('p');
+  header.className = 'dossier-header';
+  header.textContent = 'VESSEL DOSSIER';
+
+  const name = document.createElement('h2');
+  name.className = 'hall-name';
+  name.textContent = survivor.name.toUpperCase();
+
+  const lore = document.createElement('p');
+  lore.className = 'hall-lore';
+  lore.textContent = survivor.lore ?? '';
+
+  const statsGrid = document.createElement('div');
+  statsGrid.className = 'hall-stats-grid';
+  const statItems: { icon: string; text: string }[] = [
+    { icon: '⚔', text: `HP: ${survivor.stats.maxHp}` },
+    { icon: '♥', text: survivor.title ?? 'The Vessel' },
+    { icon: '🥾', text: `SPEED: ${survivor.stats.speed}` },
+    { icon: '🛡', text: `HURTBOX: ${survivor.stats.radius}` },
+  ];
+  for (const st of statItems) {
+    const cell = document.createElement('div');
+    cell.className = 'hall-stat-cell';
+    const ic = document.createElement('span');
+    ic.className = 'hall-stat-icon';
+    ic.textContent = st.icon;
+    const tx = document.createElement('span');
+    tx.className = 'hall-stat-text';
+    tx.textContent = st.text;
+    cell.append(ic, tx);
+    statsGrid.appendChild(cell);
+  }
+
+  const skills = document.createElement('div');
+  skills.className = 'hall-skills';
+  const slots: SkillSlot[] = ['primary', 'secondary', 'utility', 'special'];
+  const glyphs = ['I', 'II', 'III', 'IV'];
+  slots.forEach((slot, index) => {
+    const skill = skillFor(survivor, slot);
+    const unit = document.createElement('div');
+    unit.className = 'hall-skill-unit';
+
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'hall-skill';
+    if (!skill) {
+      cell.textContent = '—';
+      unit.appendChild(cell);
+      skills.appendChild(unit);
+      return;
+    }
+    const glyph = document.createElement('span');
+    glyph.className = 'hall-skill-glyph';
+    glyph.textContent = glyphs[index];
+    const icon = makeSkillIcon(skill.id, skill.name, 'hall-skill-icon', SKILL_SLOT_PX);
+    icon.addEventListener('error', () => {
+      icon.remove();
+      cell.dataset.hasIcon = '0';
+    });
+    icon.addEventListener('load', () => {
+      cell.dataset.hasIcon = '1';
+    });
+    const tip = document.createElement('span');
+    tip.className = 'tip';
+    const strong = document.createElement('strong');
+    strong.textContent = skill.name;
+    const hook = document.createElement('span');
+    hook.textContent = skill.hook ?? skill.slot;
+    const flavor = document.createElement('em');
+    flavor.textContent = skill.lore ?? '';
+    tip.append(strong, hook, flavor);
+    cell.append(glyph, icon, tip);
+
+    const skillLabel = document.createElement('span');
+    skillLabel.className = 'hall-skill-label';
+    skillLabel.textContent = skill.name;
+
+    unit.append(cell, skillLabel);
+    skills.appendChild(unit);
+  });
+
+  root.replaceChildren(header, name, lore, statsGrid, skills);
+}
+
+/* --- 4. PAUSE SCREEN --- */
+
+function renderPauseScreen(): void {
+  const root = overlayEl();
+  const pauseView = pauseViewEl();
+  if (!root || !pauseView) return;
+
+  mode = 'pause';
+  syncOverlayAttr();
+  root.dataset.screen = 'pause';
+  root.setAttribute('aria-labelledby', 'pause-title');
+  hideAllViews();
+  pauseView.classList.remove('hidden');
+
+  bindPauseActions();
+  fillPauseSummary();
+  fillPauseInventory(getHudItems());
+  hydrateUiSprites(pauseView);
+  showRoot(root);
+  syncChill();
+}
+
+function bindPauseActions(): void {
+  if (pauseBound) return;
+  pauseBound = true;
+  document.getElementById('pause-resume')?.addEventListener('click', () => {
+    handlers.onResume();
+  });
+  document.getElementById('pause-settings')?.addEventListener('click', () => {
+    playSfx('click');
+    showSettings('pause');
+  });
+  document.getElementById('pause-abandon')?.addEventListener('click', () => {
+    playSfx('click');
+    showAbandon();
+  });
+}
+
+function fillPauseSummary(): void {
+  const rowsEl = document.getElementById('pause-summary-rows');
+  if (!rowsEl) return;
+  const summary = getHudSummary();
+  const rows: [string, string][] = [
+    ['Run Time:', formatTime(summary.runTime)],
+    ['Level:', String(summary.level)],
+    ['Bosses Slain:', String(summary.bosses)],
+    ['Total Augmentations:', `${summary.totalItems} (×${summary.coefficient.toFixed(2)})`],
+  ];
+  rowsEl.replaceChildren();
+  for (const [label, val] of rows) {
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+    const k = document.createElement('span');
+    k.className = 'summary-k';
+    k.textContent = label;
+    const v = document.createElement('span');
+    v.className = 'summary-v';
+    v.textContent = val;
+    row.append(k, v);
+    rowsEl.appendChild(row);
+  }
+}
+
+function fillPauseInventory(items: HudItem[]): void {
+  const listEl = document.getElementById('pause-inv-list');
+  const tooltipEl = document.getElementById('pause-item-tooltip');
+  if (!listEl || !tooltipEl) return;
+
+  const cols = Math.max(4, Math.ceil(Math.sqrt(Math.max(1, items.length))));
+  listEl.style.setProperty('--inv-cols', String(cols));
+  listEl.replaceChildren();
+
+  if (items.length === 0) {
+    tooltipEl.classList.add('hidden');
+    const empty = document.createElement('p');
+    empty.className = 'pause-inv-empty';
+    empty.textContent = 'No augmentations bound yet.';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  const showItemTooltip = (hudItem: HudItem): void => {
+    let def: ItemDef;
+    try {
+      def = catalog.item(hudItem.id);
+    } catch {
+      return;
+    }
+    tooltipEl.classList.remove('hidden');
+    const artWrap = document.createElement('div');
+    artWrap.className = 'tooltip-art-wrap';
+    const icon = makeItemIcon(def.id, def.name, 'tooltip-item-icon', 64);
+    icon.addEventListener('error', () => icon.remove());
+    artWrap.appendChild(icon);
+
+    const name = document.createElement('h4');
+    name.className = 'tooltip-item-name';
+    name.textContent = hudItem.stacks > 1 ? `${def.name.toUpperCase()} ×${hudItem.stacks}` : def.name.toUpperCase();
+
+    const hooks = document.createElement('div');
+    hooks.className = 'tooltip-item-hooks';
+    hooks.append(...hookLines(def, false));
+
+    const lore = document.createElement('p');
+    lore.className = 'tooltip-item-lore';
+    lore.textContent = def.lore;
+
+    tooltipEl.replaceChildren(artWrap, name, hooks, lore);
+  };
+
+  for (const item of items) {
+    const chip = makeItemChip(item, 'item-chip pause-chip');
+    chip.tabIndex = 0;
+    chip.addEventListener('mouseenter', () => showItemTooltip(item));
+    chip.addEventListener('focus', () => showItemTooltip(item));
+    listEl.appendChild(chip);
+  }
+
+  showItemTooltip(items[0]);
+}
+
+/* --- SETTINGS, CONTROLS, RECAP --- */
 
 function settingsForm(settings: GameSettings): HTMLElement {
   const wrap = document.createElement('div');
@@ -606,7 +945,7 @@ function controlsTable(): HTMLElement {
     ['RMB', 'Secondary. Aimed press.'],
     ['Shift / Space', dashLine],
     ['Q', 'Ultimate. Aimed press.'],
-    ['1 / 2 / 3', 'Choose a tablet when you level.'],
+    ['1 / 2 / 3', 'Choose an augmentation when you level.'],
     ['Hold in the circle', 'Channel the Transmutation Circle. Step out and the seal cools.'],
     ['Esc', 'Pause the working.'],
   ];
@@ -628,30 +967,6 @@ function dashEffectLine(skill: SkillDef | null): string {
   const dash = skill.effects.find((effect) => effect.type === 'dash');
   if (!dash || dash.type !== 'dash') return skill.name;
   return `${skill.name} — ${dash.distance} pace, ${dash.duration}s glide, ${dash.iframe}s between-worlds.`;
-}
-
-function dossierCard(survivor: SurvivorDef, compact: boolean): HTMLElement {
-  const card = document.createElement('div');
-  card.className = 'dossier';
-  mountVesselArt(card, survivor.id, 'dossier-art', survivor.name);
-  const name = document.createElement('p');
-  name.className = 'dossier-name';
-  name.textContent = survivor.name;
-  const role = document.createElement('p');
-  role.className = 'dossier-role';
-  role.textContent = 'The Vessel';
-  const lore = document.createElement('p');
-  lore.className = 'dossier-lore';
-  lore.textContent = survivor.lore ?? 'A stolen vessel of clay and quicksilver.';
-  const skills = document.createElement('p');
-  skills.className = 'dossier-skills';
-  const primary = skillFor(survivor, 'primary');
-  const utility = skillFor(survivor, 'utility');
-  skills.textContent = compact
-    ? `${primary?.name ?? 'Ignis Bolt'} · ${utility?.name ?? 'Phase Step'}`
-    : `Primary ${primary?.name ?? 'Ignis Bolt'} · Utility ${utility?.name ?? 'Phase Step'}`;
-  card.append(name, role, lore, skills);
-  return card;
 }
 
 function recapBody(recap: RunRecap): HTMLElement {
@@ -693,142 +1008,6 @@ function skillFor(survivor: SurvivorDef, slot: SkillSlot): SkillDef | null {
   return id ? catalog.skill(id) : null;
 }
 
-function renderHall(): void {
-  const root = overlayEl();
-  const hall = hallEl();
-  if (!root || !hall) return;
-  mode = 'menu';
-  syncOverlayAttr();
-  root.dataset.screen = 'menu';
-  root.setAttribute('aria-labelledby', 'hall-brand');
-  bindHall();
-  fillHallNav();
-  fillHallPreview();
-  fillHallDossier();
-  showRoot(root);
-  setMusicScene({ kind: 'menu' });
-  syncChill();
-}
-
-function bindHall(): void {
-  if (hallBound) return;
-  hallBound = true;
-  document.getElementById('hall-commence')?.addEventListener('click', () => {
-    playSfx('confirm');
-    handlers.onStart();
-  });
-}
-
-function fillHallNav(): void {
-  const nav = document.getElementById('hall-nav');
-  if (!nav) return;
-  nav.replaceChildren();
-  const current = getSettings().survivorId;
-  nav.appendChild(navLabel('Vessel Selection'));
-  for (const survivor of catalog.survivors) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'vessel-pick';
-    btn.dataset.active = survivor.id === current ? '1' : '0';
-    mountVesselArt(btn, survivor.id, 'vessel-art', survivor.name);
-    const label = document.createElement('span');
-    label.textContent = survivor.name;
-    btn.appendChild(label);
-    btn.addEventListener('click', () => {
-      playSfx('click');
-      patchSettings({ survivorId: survivor.id });
-      renderHall();
-    });
-    nav.appendChild(btn);
-  }
-  const archives = document.createElement('button');
-  archives.type = 'button';
-  archives.textContent = 'Archives';
-  archives.addEventListener('click', () => {
-    playSfx('click');
-    showHowTo('menu');
-  });
-  nav.appendChild(archives);
-  const desk = document.createElement('button');
-  desk.type = 'button';
-  desk.textContent = "Alchemist's Desk";
-  desk.addEventListener('click', () => {
-    playSfx('click');
-    showSettings('menu');
-  });
-  nav.appendChild(desk);
-}
-
-function fillHallPreview(): void {
-  const root = document.getElementById('hall-preview');
-  if (!root) return;
-  const survivor = selectedSurvivor();
-  const ash = document.createElement('div');
-  ash.className = 'hall-particles';
-  root.replaceChildren(ash);
-  mountVesselArt(root, survivor.id, 'hall-vessel', survivor.name);
-}
-
-function fillHallDossier(): void {
-  const root = document.getElementById('hall-dossier');
-  if (!root) return;
-  const survivor = selectedSurvivor();
-  const name = document.createElement('h2');
-  name.className = 'hall-name';
-  name.textContent = survivor.name;
-  const title = document.createElement('p');
-  title.className = 'hall-title';
-  title.textContent = survivor.title ?? 'The Vessel';
-  const lore = document.createElement('p');
-  lore.className = 'hall-lore';
-  lore.textContent = survivor.lore ?? '';
-  const skills = document.createElement('div');
-  skills.className = 'hall-skills';
-  const slots: SkillSlot[] = ['primary', 'secondary', 'utility', 'special'];
-  const glyphs = ['I', 'II', 'III', 'IV'];
-  slots.forEach((slot, index) => {
-    const skill = skillFor(survivor, slot);
-    const cell = document.createElement('button');
-    cell.type = 'button';
-    cell.className = 'hall-skill';
-    if (!skill) {
-      cell.textContent = '—';
-      skills.appendChild(cell);
-      return;
-    }
-    const glyph = document.createElement('span');
-    glyph.className = 'hall-skill-glyph';
-    glyph.textContent = glyphs[index];
-    const icon = makeSkillIcon(skill.id, skill.name, 'hall-skill-icon', SKILL_SLOT_PX);
-    icon.addEventListener('error', () => {
-      icon.remove();
-      cell.dataset.hasIcon = '0';
-    });
-    icon.addEventListener('load', () => {
-      cell.dataset.hasIcon = '1';
-    });
-    const tip = document.createElement('span');
-    tip.className = 'tip';
-    const strong = document.createElement('strong');
-    strong.textContent = skill.name;
-    const hook = document.createElement('span');
-    hook.textContent = skill.hook ?? skill.slot;
-    const flavor = document.createElement('em');
-    flavor.textContent = skill.lore ?? '';
-    tip.append(strong, hook, flavor);
-    cell.append(glyph, icon, tip);
-    skills.appendChild(cell);
-  });
-  root.replaceChildren(name, title, lore, skills);
-}
-
-function navLabel(text: string): HTMLElement {
-  const el = document.createElement('p');
-  el.className = 'dossier-role';
-  el.textContent = text;
-  return el;
-}
-
 function actionButton(
   label: string,
   onClick: () => void,
@@ -855,16 +1034,34 @@ function syncChill(): void {
 function showRoot(root: HTMLElement): void {
   root.classList.remove('hidden');
   root.setAttribute('aria-hidden', 'false');
-  const focusable = root.querySelector<HTMLButtonElement>('button, input');
-  focusable?.focus();
+  const focusable = root.querySelector<HTMLButtonElement>(
+    '#overlay > :not(.hidden) button, #overlay > :not(.hidden) input',
+  );
+  focusable?.focus({ preventScroll: true });
 }
 
 function overlayEl(): HTMLElement | null {
   return document.getElementById('overlay');
 }
 
+function mainMenuEl(): HTMLElement | null {
+  return document.getElementById('main-menu');
+}
+
 function hallEl(): HTMLElement | null {
   return document.getElementById('hall');
+}
+
+function levelupViewEl(): HTMLElement | null {
+  return document.getElementById('levelup-view');
+}
+
+function pauseViewEl(): HTMLElement | null {
+  return document.getElementById('pause-view');
+}
+
+function cardEl(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('#overlay .overlay-card');
 }
 
 function settingsDialog(): HTMLDialogElement | null {

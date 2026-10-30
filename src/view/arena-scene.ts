@@ -323,7 +323,7 @@ export class ArenaScene extends Phaser.Scene {
     const holding =
       tel.state === 'charging' &&
       Math.hypot(this.world.player.x - tel.x, this.world.player.y - tel.y) <= tel.radius;
-    const copy = objectiveCopy(objective);
+    const copy = objectiveCopy(objective, stage.name);
     setHudCombat({
       stage: stage.name,
       biome: this.biome(),
@@ -334,7 +334,9 @@ export class ArenaScene extends Phaser.Scene {
       xpNeed: this.world.xpNeed,
       runTime: this.world.runTime,
       coefficient: this.world.coefficient,
+      bosses: this.world.bossesDefeated,
       iframe: this.world.player.iframeRemain > 0,
+      objectiveKicker: copy.kicker,
       objective: copy.label,
       objectiveDetail: copy.detail,
       objectivePct: objective.pct,
@@ -719,11 +721,11 @@ export class ArenaScene extends Phaser.Scene {
       const holding = Math.hypot(player.x - tel.x, player.y - tel.y) <= tel.radius;
       const pct = tel.hold > 0 ? Math.min(1, tel.charge / tel.hold) : 0;
       setHoldPrompt({
-        visible: true,
-        title: holding ? 'Channel the Transmutation Circle' : 'The seal cools',
-        detail: holding ? `${Math.round(pct * 100)}% — stay inside the ring` : 'Return to the circle',
+        visible: !holding,
+        title: 'The seal cools',
+        detail: 'Return to the Transmutation Circle',
         pct,
-        outside: !holding,
+        outside: true,
       });
       return;
     }
@@ -733,11 +735,11 @@ export class ArenaScene extends Phaser.Scene {
       const need = this.world.catalog.loop.portalHold;
       const pct = need > 0 ? Math.min(1, portal.hold / need) : 0;
       setHoldPrompt({
-        visible: true,
+        visible: !inside,
         title: 'Descend the Rift',
-        detail: inside ? 'The gate drinks your step' : 'Stand in the gate',
+        detail: 'Stand in the gate to descend',
         pct,
-        outside: !inside,
+        outside: true,
       });
       return;
     }
@@ -1217,17 +1219,17 @@ function resolveSurvivorId(): string {
   return catalog.survivors.some((entry) => entry.id === id) ? id : catalog.world.defaultSurvivor;
 }
 
-function objectiveCopy(objective: Objective): { label: string; detail: string } {
+function objectiveCopy(objective: Objective, stageName: string): { kicker: string; label: string; detail: string } {
   if (objective.kind === 'wait') {
-    return { label: `Seal manifests in ${formatTime(objective.remaining)}`, detail: '' };
+    return { kicker: stageName, label: `Seal manifests in ${formatTime(objective.remaining)}`, detail: '' };
   }
   if (objective.kind === 'hold') {
-    return { label: 'Channel the Transmutation Circle', detail: `${Math.round(objective.pct * 100)}%` };
+    return { kicker: stageName, label: 'Channel the Transmutation Circle', detail: `${Math.round(objective.pct * 100)}%` };
   }
   if (objective.kind === 'boss') {
-    const who = objective.name || 'boss';
-    return { label: `Slay the ${who}`, detail: `${Math.round(objective.pct * 100)}% HP` };
+    const who = objective.name || 'Boss';
+    return { kicker: 'Seal Guardian', label: `Slay the ${who}`, detail: `${Math.round(objective.pct * 100)}%` };
   }
-  return { label: 'Descend the Rift', detail: `${Math.round(objective.pct * 100)}%` };
+  return { kicker: stageName, label: 'Descend the Rift', detail: `${Math.round(objective.pct * 100)}%` };
 }
 
