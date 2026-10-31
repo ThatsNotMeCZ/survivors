@@ -40,23 +40,23 @@ Unknown `type` throws at boot. To add one: variant in `schema.ts` → case in `s
 
 ## Items
 
-Hooks only. Every draft item has a tradeoff (no pure screen-clear). Equip via `startingItems` or level-up overlay. Slice: **13 items** in `items.json`. Ids stay kebab-case; `name` / `lore` are player-facing Dark Hermetic copy. `on-kill` heals current HP on `killEnemy` (clamped to max); it is not a stat in `resolveStats`.
+Hooks only. Common and Uncommon items are purely positive building blocks. Rare and Lunar items are powerful double-edged trade-offs. Equip via `startingItems` or level-up overlay. Slice: **13 items** in `items.json`. Ids stay kebab-case; `name` / `lore` are player-facing Dark Hermetic copy. `on-kill` heals current HP on `killEnemy` (clamped to max); it is not a stat in `resolveStats`.
 
 | id | Display | Rarity | Hook |
 |---|---|---|---|
-| `glass-cannon` | Vitriol Veins | uncommon | +40% damage, −15% max HP |
-| `goat-hoof` | Cloven Sinew | common | +14% speed, −6% max HP |
-| `brittle-plate` | Slag Carapace | common | +28% max HP, −12% speed |
-| `hair-trigger` | Spasmodic Nerve | uncommon | −15% cooldown, +12% hurtbox |
-| `overclock` | Bellows Heart | uncommon | +22% damage, +12% cooldown |
-| `wax-wings` | Waxen Pinions | common | +16% speed, −8% max HP |
-| `hungry-clip` | Parasitic Alembic | rare | +28% damage, +14% hurtbox |
-| `lead-core` | Lead Plumbum | common | +18 max HP, −8% damage |
-| `mercury-vial` | Quicksilver Draught | uncommon | −18% cooldown, −12% max HP |
-| `calcined-lens` | Astrologer's Ocular | rare | +32% damage, −10% speed |
-| `salt-ward` | Salt Effigy | common | −15% hurtbox, −10% damage |
-| `lunar-tithe` | Pale Moon Covenant | lunar (weight 0.08) | +75% damage, −35% max HP, +18% hurtbox |
-| `cinnabar-leech` | Cinnabar Leech | common | +0.2 HP on kill, +8% hurtbox |
+| `glass-cannon` | Vitriol Veins | rare | +60% damage, −25% max HP |
+| `goat-hoof` | Cloven Sinew | common | +14% speed |
+| `brittle-plate` | Slag Carapace | common | +25% max HP |
+| `hair-trigger` | Spasmodic Nerve | uncommon | −15% cooldown |
+| `overclock` | Bellows Heart | uncommon | +16% damage, +35% crit damage |
+| `wax-wings` | Waxen Pinions | common | +12% speed |
+| `hungry-clip` | Parasitic Alembic | rare | −30% cooldown, +25% hurtbox |
+| `lead-core` | Lead Plumbum | common | +25 max HP |
+| `mercury-vial` | Quicksilver Draught | uncommon | −12% cooldown, +6% speed |
+| `calcined-lens` | Astrologer's Ocular | rare | +30% crit chance, +50% crit damage, −18% speed |
+| `salt-ward` | Salt Effigy | common | −12% hurtbox |
+| `lunar-tithe` | Pale Moon Covenant | lunar (weight 0.08) | +75% damage, +50% crit damage, −40% max HP, +20% hurtbox |
+| `cinnabar-leech` | Cinnabar Leech | common | +0.25 HP on kill |
 
 Display names elsewhere: survivor `runner` → **Homunculus**; `penitent` → **The Penitent**; skill `bolt` → **Ignis Bolt**; skill `dash` → **Phase Step**; XP gems → **Mercury Drops** / Essence.
 

@@ -1,6 +1,6 @@
 import { FX_HIT, FX_STRIKE } from '../config';
 import { circlesOverlap } from './collision';
-import { ROLE_FODDER, startEnemyDeath } from './enemies';
+import { applyEnemyDamage, ROLE_FODDER, startEnemyDeath } from './enemies';
 import { emitFx } from './fx';
 import { applyEnemySlow } from './status';
 import type { World } from './world';
@@ -169,14 +169,14 @@ function detonateStrike(world: World, index: number): void {
   const x = zones.x[index];
   const y = zones.y[index];
   const radius = zones.radius[index];
-  const damage = zones.damage[index];
-  emitFx(world.fx, FX_STRIKE, x, y, 0xffc070);
+  const isCrit = Math.random() < world.stats.critChance;
+  const damage = isCrit ? zones.damage[index] * world.stats.critMul : zones.damage[index];
+  emitFx(world.fx, FX_STRIKE, x, y, isCrit ? 0xff4422 : 0xffc070);
   for (let e = 0; e < enemies.cap; e += 1) {
     if (enemies.alive[e] === 0) continue;
     if (!circlesOverlap(x, y, radius, enemies.x[e], enemies.y[e], enemies.radius[e])) continue;
-    emitFx(world.fx, FX_HIT, enemies.x[e], enemies.y[e], 0xfff4c8);
-    enemies.hp[e] -= damage;
-    if (enemies.hp[e] <= 0) startEnemyDeath(world, e);
+    emitFx(world.fx, FX_HIT, enemies.x[e], enemies.y[e], isCrit ? 0xff4422 : 0xfff4c8);
+    applyEnemyDamage(world, e, damage);
   }
 }
 

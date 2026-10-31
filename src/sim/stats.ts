@@ -6,6 +6,8 @@ const ZERO: Record<StatId, number> = {
   radius: 0,
   damage: 0,
   cooldown: 0,
+  critChance: 0,
+  critDamage: 0,
 };
 
 export function resolveStats(
@@ -33,6 +35,8 @@ export function resolveStats(
     radius: (base.radius + add.radius) * (1 + pct.radius),
     damageMul: (1 + add.damage) * (1 + pct.damage),
     cooldownMul: (1 + add.cooldown) * (1 + pct.cooldown),
+    critChance: Math.max(0, Math.min(1, (base.critChance ?? 0.05) + add.critChance + pct.critChance)),
+    critMul: Math.max(1, (base.critDamage ?? 2.0) + add.critDamage + pct.critDamage),
   };
 }
 

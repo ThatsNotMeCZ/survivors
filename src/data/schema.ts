@@ -7,7 +7,7 @@ export type EntityRole = 'fodder' | 'elite' | 'boss';
 export type RunPhase = 'play' | 'levelup' | 'portal' | 'victory' | 'defeat';
 export type TeleporterState = 'hidden' | 'charging' | 'done';
 
-export type StatId = 'speed' | 'maxHp' | 'radius' | 'damage' | 'cooldown';
+export type StatId = 'speed' | 'maxHp' | 'radius' | 'damage' | 'cooldown' | 'critChance' | 'critDamage';
 
 export type ItemHook =
   | { op: 'add'; stat: StatId; value: number }
@@ -90,6 +90,8 @@ export type SurvivorStats = {
   speed: number;
   maxHp: number;
   radius: number;
+  critChance?: number;
+  critDamage?: number;
 };
 
 export type ViewDot = {
@@ -108,6 +110,7 @@ export type SurvivorDef = {
   skills: Record<SkillSlot, string | null>;
   startingItems: string[];
   view: ViewDot;
+  crosshair?: string;
 };
 
 export type ChaseAi = { type: 'chase' };
@@ -297,4 +300,6 @@ export type ResolvedStats = {
   radius: number;
   damageMul: number;
   cooldownMul: number;
+  critChance: number;
+  critMul: number;
 };

@@ -45,6 +45,8 @@ const STAT_LABEL: Record<StatId, string> = {
   radius: 'Hurtbox',
   damage: 'Damage',
   cooldown: 'Cooldown',
+  critChance: 'Crit Chance',
+  critDamage: 'Crit Damage',
 };
 
 let handlers: OverlayHandlers = {

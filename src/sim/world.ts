@@ -266,8 +266,9 @@ function detonateImpacts(world: World): void {
     const x = projectiles.x[i];
     const y = projectiles.y[i];
     const radius = projectiles.impactRadius[i];
-    const damage = projectiles.damage[i];
-    emitFx(world.fx, FX_HIT, x, y, 0xffaa55);
+    const isCrit = Math.random() < world.stats.critChance;
+    const damage = isCrit ? projectiles.damage[i] * world.stats.critMul : projectiles.damage[i];
+    emitFx(world.fx, FX_HIT, x, y, isCrit ? 0xff4422 : 0xffaa55);
     for (let e = 0; e < enemies.cap; e += 1) {
       if (enemies.alive[e] === 0 || enemies.corpseRemain[e] > 0) continue;
       if (!circlesOverlap(x, y, radius, enemies.x[e], enemies.y[e], enemies.radius[e])) continue;
@@ -330,7 +331,6 @@ function hitEnemies(world: World): void {
 
 function applyPlayerHit(world: World, proj: number, enemy: number, tether: boolean): void {
   const { projectiles, enemies } = world;
-  emitFx(world.fx, FX_HIT, projectiles.x[proj], projectiles.y[proj], 0xfff4c8);
   markProjectileHit(projectiles, proj, enemy);
   if (tether) {
     if (enemies.role[enemy] === ROLE_ELITE || enemies.role[enemy] === ROLE_BOSS) {
@@ -339,7 +339,10 @@ function applyPlayerHit(world: World, proj: number, enemy: number, tether: boole
     }
     return;
   }
-  applyEnemyDamage(world, enemy, projectiles.damage[proj]);
+  const isCrit = Math.random() < world.stats.critChance;
+  const damage = isCrit ? projectiles.damage[proj] * world.stats.critMul : projectiles.damage[proj];
+  emitFx(world.fx, FX_HIT, projectiles.x[proj], projectiles.y[proj], isCrit ? 0xff4422 : 0xfff4c8);
+  applyEnemyDamage(world, enemy, damage);
 }
 
 function hitPlayer(world: World): void {

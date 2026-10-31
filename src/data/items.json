@@ -4,13 +4,13 @@
     {
       "id": "glass-cannon",
       "name": "Vitriol Veins",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "damage", "value": 0.4 },
-        { "op": "pct", "stat": "maxHp", "value": -0.15 }
+        { "op": "pct", "stat": "damage", "value": 0.6 },
+        { "op": "pct", "stat": "maxHp", "value": -0.25 }
       ],
-      "lore": "Distilled volatile acid replaces your blood. Your strikes shatter stone; a stiff breeze shatters you."
+      "lore": "Distilled volatile acid replaces your vital humors. Your strikes shatter stone with ferocious power, though your brittle shell can endure little punishment."
     },
     {
       "id": "goat-hoof",
@@ -18,10 +18,9 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "speed", "value": 0.14 },
-        { "op": "pct", "stat": "maxHp", "value": -0.06 }
+        { "op": "pct", "stat": "speed", "value": 0.14 }
       ],
-      "lore": "Grafted tendon from a sacrificial beast. It never stops running, mostly because it is eating your vitality."
+      "lore": "Grafted tendon from a swift sacrificial beast, woven into the vessel's stride to grant tireless speed across the arena."
     },
     {
       "id": "brittle-plate",
@@ -29,10 +28,9 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "maxHp", "value": 0.28 },
-        { "op": "pct", "stat": "speed", "value": -0.12 }
+        { "op": "pct", "stat": "maxHp", "value": 0.25 }
       ],
-      "lore": "Cooled furnace dross fused directly to the ribs. Heavy, crude, and deeply unpleasant to walk in."
+      "lore": "Cooled furnace dross fused directly to the ribs, encasing the vessel's vital core in a hardened protective shell."
     },
     {
       "id": "hair-trigger",
@@ -40,10 +38,9 @@
       "rarity": "uncommon",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "cooldown", "value": -0.15 },
-        { "op": "pct", "stat": "radius", "value": 0.12 }
+        { "op": "pct", "stat": "cooldown", "value": -0.15 }
       ],
-      "lore": "Quicksilver injected into the spine makes your fingers twitch uncontrollably. Unfortunately, it also causes severe bodily swelling."
+      "lore": "Refined quicksilver infused along the spinal conduit, sharpening synaptic reflexes so your arts can be invoked in rapid succession."
     },
     {
       "id": "overclock",
@@ -51,10 +48,10 @@
       "rarity": "uncommon",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "damage", "value": 0.22 },
-        { "op": "pct", "stat": "cooldown", "value": 0.12 }
+        { "op": "pct", "stat": "damage", "value": 0.16 },
+        { "op": "pct", "stat": "critDamage", "value": 0.35 }
       ],
-      "lore": "Draws twice the aether into each cast. The resulting blast is magnificent, provided you survive the pause to vent the ash."
+      "lore": "Alchemical bellows fitted to the core, stoking the inner flame to fuel destructive potency and amplify critical detonations."
     },
     {
       "id": "wax-wings",
@@ -62,10 +59,9 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "speed", "value": 0.16 },
-        { "op": "pct", "stat": "maxHp", "value": -0.08 }
+        { "op": "pct", "stat": "speed", "value": 0.12 }
       ],
-      "lore": "Feathers bound in boiling tallow. They carry you swiftly across the yard, dripping scalding wax down your neck."
+      "lore": "Feathers bound in consecrated tallow that lighten the vessel's frame and quicken its steps across the ash."
     },
     {
       "id": "hungry-clip",
@@ -73,10 +69,10 @@
       "rarity": "rare",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "damage", "value": 0.28 },
-        { "op": "pct", "stat": "radius", "value": 0.14 }
+        { "op": "pct", "stat": "cooldown", "value": -0.3 },
+        { "op": "pct", "stat": "radius", "value": 0.25 }
       ],
-      "lore": "A living glass vessel that feeds on your flesh to engorge your projectiles. You become a much larger target."
+      "lore": "A living glass vessel engorged on distilled vitae. Channels rapid, furious distillation into your arts, but swells your frame into an easier target."
     },
     {
       "id": "lead-core",
@@ -84,10 +80,9 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "add", "stat": "maxHp", "value": 18 },
-        { "op": "pct", "stat": "damage", "value": -0.08 }
+        { "op": "add", "stat": "maxHp", "value": 25 }
       ],
-      "lore": "Swallowing a two-pound sphere of base lead anchors the soul to the body, though it dulls the spark of your casts."
+      "lore": "A dense sphere of alchemical lead settled in the vessel, firmly anchoring the animating humors against collapse."
     },
     {
       "id": "mercury-vial",
@@ -95,10 +90,10 @@
       "rarity": "uncommon",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "cooldown", "value": -0.18 },
-        { "op": "pct", "stat": "maxHp", "value": -0.12 }
+        { "op": "pct", "stat": "cooldown", "value": -0.12 },
+        { "op": "pct", "stat": "speed", "value": 0.06 }
       ],
-      "lore": "Liquid metal thins the humors. Your hands blur with haste, though your organs are slowly dissolving."
+      "lore": "Purified liquid argent thins the humors, allowing aether to circulate freely and renewing your casts with swift grace."
     },
     {
       "id": "calcined-lens",
@@ -106,10 +101,11 @@
       "rarity": "rare",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "damage", "value": 0.32 },
-        { "op": "pct", "stat": "speed", "value": -0.1 }
+        { "op": "pct", "stat": "critChance", "value": 0.3 },
+        { "op": "pct", "stat": "critDamage", "value": 0.5 },
+        { "op": "pct", "stat": "speed", "value": -0.18 }
       ],
-      "lore": "A heavy brass reticle bolted to the brow. Reveals every fracture in the enemy's shell, at the cost of your peripheral vision and stride."
+      "lore": "A heavy brass ocular bolted to the brow. Reveals fatal celestial alignments and structural fractures, drastically sharpening critical strikes at the heavy cost of your stride."
     },
     {
       "id": "salt-ward",
@@ -117,10 +113,9 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "radius", "value": -0.15 },
-        { "op": "pct", "stat": "damage", "value": -0.1 }
+        { "op": "pct", "stat": "radius", "value": -0.12 }
       ],
-      "lore": "Desiccates the body into a shrunken, harder-to-hit husk. Your strikes lose some weight along with your flesh."
+      "lore": "Desiccates the vessel's silhouette into a compact, elusive form that slips cleanly between striking claws and projectiles."
     },
     {
       "id": "lunar-tithe",
@@ -129,10 +124,11 @@
       "stack": "linear",
       "hooks": [
         { "op": "pct", "stat": "damage", "value": 0.75 },
-        { "op": "pct", "stat": "maxHp", "value": -0.35 },
-        { "op": "pct", "stat": "radius", "value": 0.18 }
+        { "op": "pct", "stat": "critDamage", "value": 0.5 },
+        { "op": "pct", "stat": "maxHp", "value": -0.4 },
+        { "op": "pct", "stat": "radius", "value": 0.2 }
       ],
-      "lore": "Heresy against the Order. Your bolts burn with pale astral fire, your frame bloats with cold light, and a single mistake is fatal."
+      "lore": "An unforgiven heresy against the Great Work. Ignites your arts with devastating pale lunar fire and catastrophic critical blasts, demanding a terrible toll upon your corporeal vessel."
     },
     {
       "id": "cinnabar-leech",
@@ -140,10 +136,9 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "on-kill", "stat": "hp", "value": 0.2 },
-        { "op": "pct", "stat": "radius", "value": 0.08 }
+        { "op": "on-kill", "stat": "hp", "value": 0.25 }
       ],
-      "lore": "A fat vermilion leech sealed in cracked glass. It drinks the last humor from anything you unmake, and your frame swells with the stolen vitae."
+      "lore": "A vermilion leech sealed in amber glass. It drinks the lingering humors from slain enemies and siphons their vital essence into your vessel."
     }
   ]
 }

@@ -42,7 +42,7 @@ export function cachedRaw(key: string, build: () => HTMLCanvasElement): HTMLCanv
 }
 
 export function resolveVessel(id: string): VesselId {
-  return id === 'penitent' ? 'penitent' : 'runner';
+  return id === 'penitent' || id === 'consecrated' ? 'penitent' : 'runner';
 }
 
 export const PLAYER_WALK_DIRS = ['front', 'left', 'right', 'down', 'up'] as const;
@@ -66,9 +66,10 @@ export function spriteFacing(move: PlayerFacing | null, last: HorizontalFacing):
 export function playerEyesKey(biome: BiomeId, vesselId = 'runner'): string {
   return `px-player-eyes-${resolveVessel(vesselId)}-${biome}`;
 }
-export function playerCatalystKey(biome: BiomeId, vesselId = 'runner'): string {
-  return `px-player-catalyst-${resolveVessel(vesselId)}-${biome}`;
+export function crosshairKey(vesselId = 'runner'): string {
+  return `px-crosshair-${resolveVessel(vesselId)}`;
 }
+export const playerCrosshairKey = crosshairKey;
 export function eliteGlyphKey(): string {
   return 'px-elite-glyph';
 }
@@ -156,7 +157,6 @@ export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   for (const biome of biomes) {
     for (const vessel of VESSELS) {
       put(out, playerEyesKey(biome, vessel), makePlayerEyes(biome, vessel));
-      put(out, playerCatalystKey(biome, vessel), makePlayerCatalyst(biome, vessel));
     }
     put(out, pillarKey(biome), makePillar(biome));
     put(out, hazardKey(biome, 0), makeHazard(biome, 0));
@@ -169,7 +169,10 @@ export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   put(out, 'px-bolt-enemy-rime', makeBolt('#dff6ff', '#44ddff', 'rime'));
   put(out, 'px-gem', makeGem());
   put(out, 'px-spark', makeSpark());
-  put(out, 'px-crosshair', makeCrosshair());
+  for (const vessel of VESSELS) {
+    put(out, crosshairKey(vessel), makePlayerCrosshair(vessel));
+  }
+  put(out, 'px-crosshair', makePlayerCrosshair('runner'));
   put(out, 'px-waypoint', makeWaypoint());
   put(out, 'px-glow', makeGlow());
   put(out, 'px-orbit-cinder', makeOrbitShard('cinder'));
@@ -248,25 +251,6 @@ function makePlayerEyes(biome: BiomeId, vessel: VesselId): HTMLCanvasElement {
   return cachedPixel(playerEyesKey(biome, vessel), 8, biome, (px) => {
     px.fill(1, 3, 2, 1, glow);
     px.fill(5, 3, 2, 1, glow);
-  });
-}
-
-function makePlayerCatalyst(biome: BiomeId, vessel: VesselId): HTMLCanvasElement {
-  const core = biome === 'cinder' ? '#ffaa33' : '#55ffff';
-  return cachedPixel(playerCatalystKey(biome, vessel), 16, biome, (px) => {
-    if (vessel === 'penitent') {
-      px.fill(7, 1, 2, 5, '#6a5030');
-      px.fill(4, 6, 8, 8, '#8a6a3a');
-      px.fill(5, 7, 6, 6, '#c4a05a');
-      px.fill(6, 8, 4, 4, core);
-      px.fill(7, 9, 2, 2, '#fff4c8');
-      return;
-    }
-    px.fill(4, 5, 8, 7, '#8a6a3a');
-    px.fill(5, 6, 6, 5, '#c4a05a');
-    px.fill(6, 7, 4, 3, core);
-    px.fill(7, 8, 2, 1, '#fff4c8');
-    px.fill(3, 8, 2, 2, '#6a5030');
   });
 }
 
@@ -489,13 +473,54 @@ function makeSpark(): HTMLCanvasElement {
   });
 }
 
-function makeCrosshair(): HTMLCanvasElement {
-  return cachedPixel('px-crosshair', 16, 'cinder', (px) => {
-    px.fill(7, 1, 2, 4, '#ffffff');
-    px.fill(7, 11, 2, 4, '#ffffff');
-    px.fill(1, 7, 4, 2, '#9ad4ff');
-    px.fill(11, 7, 4, 2, '#9ad4ff');
+function makeHomunculusCrosshair(): HTMLCanvasElement {
+  return cachedPixel('px-crosshair-runner', 16, 'cinder', (px) => {
+    // Top tine
+    px.fill(7, 1, 2, 3, '#5ad4ff');
+    px.fill(7, 4, 2, 1, '#ffffff');
+    // Bottom tine
+    px.fill(7, 11, 2, 1, '#ffffff');
+    px.fill(7, 12, 2, 3, '#5ad4ff');
+    // Left tine
+    px.fill(1, 7, 3, 2, '#5ad4ff');
+    px.fill(4, 7, 1, 2, '#ffffff');
+    // Right tine
+    px.fill(11, 7, 1, 2, '#ffffff');
+    px.fill(12, 7, 3, 2, '#5ad4ff');
+    // Precision corner ticks
+    px.dot(3, 3, '#dff6ff');
+    px.dot(12, 3, '#dff6ff');
+    px.dot(3, 12, '#dff6ff');
+    px.dot(12, 12, '#dff6ff');
   });
+}
+
+function makePenitentCrosshair(): HTMLCanvasElement {
+  return cachedPixel('px-crosshair-penitent', 16, 'cinder', (px) => {
+    // Cardinal flame tips
+    px.fill(7, 1, 2, 2, '#ffe8a0');
+    px.fill(7, 13, 2, 2, '#ffe8a0');
+    px.fill(1, 7, 2, 2, '#ffe8a0');
+    px.fill(13, 7, 2, 2, '#ffe8a0');
+    // Consecrated ring
+    px.fill(6, 3, 4, 1, '#c4783a');
+    px.fill(6, 12, 4, 1, '#c4783a');
+    px.fill(3, 6, 1, 4, '#c4783a');
+    px.fill(12, 6, 1, 4, '#c4783a');
+    // Diagonal ring corners
+    px.dot(4, 4, '#c4783a');
+    px.dot(11, 4, '#c4783a');
+    px.dot(4, 11, '#c4783a');
+    px.dot(11, 11, '#c4783a');
+    // Center consecrated ember
+    px.fill(7, 7, 2, 2, '#fff4c8');
+  });
+}
+
+function makePlayerCrosshair(vessel: string): HTMLCanvasElement {
+  const resolved = resolveVessel(vessel);
+  if (resolved === 'penitent') return makePenitentCrosshair();
+  return makeHomunculusCrosshair();
 }
 
 function makeWaypoint(): HTMLCanvasElement {

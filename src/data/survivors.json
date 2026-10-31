@@ -23,7 +23,8 @@
         "size": 32,
         "inner": "#dff6ff",
         "mid": "#5ad4ff"
-      }
+      },
+      "crosshair": "runner"
     },
     {
       "id": "penitent",
@@ -47,7 +48,8 @@
         "size": 32,
         "inner": "#f0e0c8",
         "mid": "#c4783a"
-      }
+      },
+      "crosshair": "penitent"
     }
   ]
 }

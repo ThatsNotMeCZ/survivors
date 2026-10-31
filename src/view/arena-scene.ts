@@ -42,7 +42,7 @@ import {
   moveFacing,
   spriteFacing,
   type HorizontalFacing,
-  playerCatalystKey,
+  crosshairKey,
   playerEyesKey,
   stageBiome,
   volatileKey,
@@ -94,7 +94,6 @@ export class ArenaScene extends Phaser.Scene {
   private inputFrame: InputFrame = emptyInput();
   private playerSprite!: Phaser.GameObjects.Sprite;
   private playerEyes!: Phaser.GameObjects.Image;
-  private playerCatalyst!: Phaser.GameObjects.Image;
   private playerGlow!: Phaser.GameObjects.Image;
   private eliteSprites: Phaser.GameObjects.Sprite[] = [];
   private eliteGlyphs: Phaser.GameObjects.Image[] = [];
@@ -150,8 +149,6 @@ export class ArenaScene extends Phaser.Scene {
   private lastBossSpawned = false;
   private shownOffer: ItemDef[] | null = null;
   private walkPhase = 0;
-  private catalystRecoil = 0;
-  private lastPrimaryCd = 0;
   private circleSparkCd = 0;
   private lastCircleKey = '';
   private lastFacing: HorizontalFacing = 'right';
@@ -209,7 +206,6 @@ export class ArenaScene extends Phaser.Scene {
     playEntity(this.playerSprite, vessel, 'idle');
     this.fitBody(this.playerSprite);
     this.playerEyes = this.add.image(0, 0, this.eyesKey(biome)).setDepth(6);
-    this.playerCatalyst = this.add.image(0, 0, this.catalystKey(biome)).setDepth(6);
     this.decoySprite = this.add.sprite(0, 0, entityTextureKey(vessel)).setVisible(false).setDepth(4).setAlpha(0.45).setTint(0xc4a05a);
     this.fitBody(this.decoySprite);
     this.eliteSprites = [];
@@ -234,7 +230,7 @@ export class ArenaScene extends Phaser.Scene {
     }
     this.telGlow = this.add.image(0, 0, 'px-glow').setDepth(1).setAlpha(0).setScale(6);
     this.telGlow.setBlendMode(Phaser.BlendModes.ADD);
-    this.crosshair = this.add.image(this.world.aimX, this.world.aimY, 'px-crosshair').setDepth(10);
+    this.crosshair = this.add.image(this.world.aimX, this.world.aimY, this.crosshairKey()).setDepth(10);
     this.waypoint = this.add.image(0, 0, 'px-waypoint').setVisible(false).setDepth(11).setScale(1.2);
 
     this.shots = [];
@@ -372,8 +368,10 @@ export class ArenaScene extends Phaser.Scene {
     return playerEyesKey(biome, this.vesselId());
   }
 
-  private catalystKey(biome: BiomeId): string {
-    return playerCatalystKey(biome, this.vesselId());
+  private crosshairKey(): string {
+    const vessel = this.vesselId();
+    const survivor = catalog.survivors.find((s) => s.id === vessel);
+    return crosshairKey(survivor?.crosshair || vessel);
   }
 
   private readInput(): void {
@@ -428,7 +426,7 @@ export class ArenaScene extends Phaser.Scene {
       this.lastStageGen = this.world.stageGen;
       this.floor.setTexture(`px-floor-${biome}`);
       this.playerEyes.setTexture(this.eyesKey(biome));
-      this.playerCatalyst.setTexture(this.catalystKey(biome));
+      this.crosshair.setTexture(this.crosshairKey());
       this.lastCircleKey = '';
     }
     this.syncPlayer(dt, biome);
@@ -469,9 +467,6 @@ export class ArenaScene extends Phaser.Scene {
     this.fitBody(this.playerSprite);
     this.playerSprite.setFlipX(flipX);
     this.playerEyes.setVisible(!authoredEntity(vessel));
-    if (player.skillCd.primary > this.lastPrimaryCd + 0.02) this.catalystRecoil = 1;
-    this.lastPrimaryCd = player.skillCd.primary;
-    this.catalystRecoil = Math.max(0, this.catalystRecoil - dt * 8);
     const ang = aimAngle(this.world);
     const x = Math.round(player.x);
     const y = Math.round(player.y + bob);
@@ -490,9 +485,6 @@ export class ArenaScene extends Phaser.Scene {
     this.playerGlow.setPosition(x, y);
     this.playerGlow.setAlpha(biome === 'cinder' ? 0.16 : 0.12);
     this.playerEyes.setPosition(x + Math.round(Math.cos(ang) * 2), y - 6 + Math.round(Math.sin(ang) * 1));
-    const hand = 14 - this.catalystRecoil * 3;
-    this.playerCatalyst.setPosition(x + Math.round(Math.cos(ang) * hand), y + Math.round(Math.sin(ang) * hand));
-    this.playerCatalyst.setRotation(ang);
   }
 
   private syncObstacles(biome: BiomeId): void {
