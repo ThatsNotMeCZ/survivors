@@ -66,12 +66,47 @@ select:focus-visible,
   display: none !important;
 }
 
-/* Drop-in UI Sprite Hook */
-[data-has-ui-sprite='1'] {
+/* Drop-in UI Sprite & 9-Slice Atlas Hooks */
+[data-has-ui-sprite='1']:not([data-has-ui-slice='1']) {
+  background-color: transparent !important;
   background-image: var(--ui-sprite) !important;
-  background-size: 100% 100% !important;
+  background-size: var(--ui-bg-size, 100% 100%) !important;
+  background-position: var(--ui-bg-pos, 0% 0%) !important;
   background-repeat: no-repeat !important;
   image-rendering: pixelated;
+}
+
+[data-has-ui-sprite='1'][data-has-ui-states='1']:not([data-has-ui-slice='1']):hover,
+[data-has-ui-sprite='1'][data-has-ui-states='1']:not([data-has-ui-slice='1']):focus-visible {
+  background-size: var(--ui-bg-size-hover, var(--ui-bg-size, 100% 100%)) !important;
+  background-position: var(--ui-bg-pos-hover, var(--ui-bg-pos, 0% 0%)) !important;
+}
+
+[data-has-ui-sprite='1'][data-has-ui-states='1']:not([data-has-ui-slice='1']):active {
+  background-size: var(--ui-bg-size-active, var(--ui-bg-size, 100% 100%)) !important;
+  background-position: var(--ui-bg-pos-active, var(--ui-bg-pos, 0% 0%)) !important;
+}
+
+[data-has-ui-slice='1'] {
+  background: transparent !important;
+  border-style: solid !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+  border-image-source: var(--ui-slice-idle) !important;
+  border-image-slice: var(--ui-slice-insets) fill !important;
+  border-image-width: var(--ui-slice-widths) !important;
+  border-image-repeat: var(--ui-slice-repeat, stretch) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7) !important;
+  image-rendering: pixelated;
+}
+
+[data-has-ui-slice='1'][data-has-ui-states='1']:hover,
+[data-has-ui-slice='1'][data-has-ui-states='1']:focus-visible {
+  border-image-source: var(--ui-slice-hover, var(--ui-slice-idle)) !important;
+}
+
+[data-has-ui-slice='1'][data-has-ui-states='1']:active {
+  border-image-source: var(--ui-slice-active, var(--ui-slice-idle)) !important;
 }
 
 /* ==========================================================================
@@ -852,6 +887,11 @@ select:focus-visible,
   right: 10px;
 }
 
+.plaque-btn[data-has-ui-sprite='1']::before,
+.plaque-btn[data-has-ui-sprite='1']::after {
+  display: none;
+}
+
 .plaque-btn:hover,
 .plaque-btn:focus-visible {
   border-color: var(--brass-bright);
@@ -860,6 +900,10 @@ select:focus-visible,
     inset 0 0 12px rgba(212, 84, 42, 0.35),
     0 0 18px rgba(196, 163, 90, 0.45);
   transform: translateY(-1px);
+}
+
+.plaque-btn[data-has-ui-sprite='1']:active {
+  transform: translateY(1px);
 }
 
 /* Shared Molten Magma CTA Button (Main Menu & Lobby) */
@@ -954,6 +998,21 @@ select:focus-visible,
     inset 0 0 0 2px #0c0a0d,
     0 10px 28px rgba(0, 0, 0, 0.85);
   clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0 50%);
+}
+
+.menu-logo-crest[data-has-ui-sprite='1'] {
+  aspect-ratio: var(--ui-aspect, 420 / 160);
+  display: grid;
+  place-items: center;
+  padding: 12px 20px;
+  border: none;
+  box-shadow: none;
+  clip-path: none;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.85));
+}
+
+.menu-logo-crest[data-has-ui-sprite='1'] .logo-rune {
+  display: none;
 }
 
 .logo-rune {

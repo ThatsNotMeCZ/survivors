@@ -13,12 +13,26 @@ let manifest: SpriteManifest = emptyManifest();
 const fallbacks = new Map<string, EntitySpriteDef>();
 const fxIds = new Set<string>();
 
+export function resolveEntitySheetId(id: string): string {
+  if (id in manifest.entities || fallbacks.has(id)) return id;
+  if ((id === 'ember-mite' || id === 'frost-mite') && ('mite' in manifest.entities || fallbacks.has('mite'))) {
+    return 'mite';
+  }
+  if (
+    (id === 'ember-spitter' || id === 'frost-spitter') &&
+    ('spitter' in manifest.entities || fallbacks.has('spitter'))
+  ) {
+    return 'spitter';
+  }
+  return id;
+}
+
 export function entityTextureKey(id: string): string {
-  return `entity-${id}`;
+  return `entity-${resolveEntitySheetId(id)}`;
 }
 
 export function entityAnimKey(id: string, anim: string): string {
-  return `entity-${id}-${anim}`;
+  return `entity-${resolveEntitySheetId(id)}-${anim}`;
 }
 
 export function itemSpriteSrc(id: string): string {
@@ -38,7 +52,8 @@ export function fxTextureKey(id: string): string {
 }
 
 export function authoredEntity(id: string): boolean {
-  return id in manifest.entities;
+  const resolved = resolveEntitySheetId(id);
+  return resolved in manifest.entities;
 }
 
 export function authoredFx(id: string): boolean {
@@ -46,7 +61,8 @@ export function authoredFx(id: string): boolean {
 }
 
 export function entitySheet(id: string): EntitySpriteDef | undefined {
-  return manifest.entities[id] ?? fallbacks.get(id);
+  const resolved = resolveEntitySheetId(id);
+  return manifest.entities[resolved] ?? fallbacks.get(resolved);
 }
 
 export function registerFallbackSheet(
@@ -102,7 +118,8 @@ export function createEntityAnims(scene: Phaser.Scene): void {
 export function playEntity(
   sprite: Phaser.GameObjects.Sprite,
   id: string,
-  anim: 'idle' | 'walk',
+  anim: 'idle' | 'walk' | 'attack',
+  timeScale: number = 1,
 ): void {
   const tex = entityTextureKey(id);
   if (!sprite.scene.textures.exists(tex)) return;
@@ -114,20 +131,50 @@ export function playEntity(
     : sprite.anims.animationManager.exists(idle)
       ? idle
       : '';
-  if (key) sprite.play(key, true);
+  if (key) {
+    sprite.play(key, true);
+    if (sprite.anims) {
+      sprite.anims.timeScale = anim === 'walk' ? Math.max(0.1, timeScale) : 1;
+    }
+  }
+}
+
+export type GpuAnimSpec = {
+  name: string;
+  frames: string[];
+  duration: number;
+};
+
+export function fodderGpuAnimations(id: string): GpuAnimSpec[] {
+  const def = entitySheet(id);
+  if (!def) return [];
+  const list: GpuAnimSpec[] = [];
+  for (const [name, spec] of Object.entries(def.anims)) {
+    if (!spec.frames || spec.frames.length === 0) continue;
+    list.push({
+      name,
+      frames: spec.frames.map(String),
+      duration: (spec.frames.length / Math.max(1, spec.frameRate)) * 1000,
+    });
+  }
+  return list;
+}
+
+export function fodderAnimSpec(id: string, animName: string): GpuAnimSpec | null {
+  const def = entitySheet(id);
+  const spec = def?.anims[animName];
+  if (!spec || !spec.frames || spec.frames.length === 0) return null;
+  return {
+    name: animName,
+    frames: spec.frames.map(String),
+    duration: (spec.frames.length / Math.max(1, spec.frameRate)) * 1000,
+  };
 }
 
 export function fodderGpuAnimation(
   id: string,
-): { name: string; frames: string[]; duration: number } | null {
-  const def = entitySheet(id);
-  const walk = def?.anims.walk ?? def?.anims.idle;
-  if (!walk || walk.frames.length < 2) return null;
-  return {
-    name: 'walk',
-    frames: walk.frames.map(String),
-    duration: (walk.frames.length / Math.max(1, walk.frameRate)) * 1000,
-  };
+): GpuAnimSpec | null {
+  return fodderAnimSpec(id, 'walk') ?? fodderAnimSpec(id, 'idle');
 }
 
 function parseManifest(data: unknown): SpriteManifest {

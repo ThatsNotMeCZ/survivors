@@ -1,8 +1,26 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
-import type { EntitySpriteDef, SpriteAnimDef, SpriteManifest } from '../src/view/sprite-types';
+import type {
+  EntitySpriteDef,
+  SpriteAnimDef,
+  SpriteManifest,
+  UiAtlasDef,
+  UiNineSliceDef,
+  UiNineSliceMargins,
+  UiRect,
+  UiSpriteEntry,
+} from '../src/view/sprite-types';
 
-export type { EntitySpriteDef, SpriteAnimDef, SpriteManifest };
+export type {
+  EntitySpriteDef,
+  SpriteAnimDef,
+  SpriteManifest,
+  UiAtlasDef,
+  UiNineSliceDef,
+  UiNineSliceMargins,
+  UiRect,
+  UiSpriteEntry,
+};
 
 const FOLDERS = ['entities', 'items', 'skills', 'env', 'fx', 'ui'] as const;
 
@@ -30,18 +48,163 @@ export function writeSpriteManifest(root = process.cwd()): string {
     };
   }
 
+  // Alias base stems (e.g. 'mite' -> 'ember-mite', 'frost-mite') if specific biome sheet is missing
+  if (entities.mite) {
+    if (!entities['ember-mite']) entities['ember-mite'] = { ...entities.mite };
+    if (!entities['frost-mite']) entities['frost-mite'] = { ...entities.mite };
+  }
+  if (entities.spitter) {
+    if (!entities['ember-spitter']) entities['ember-spitter'] = { ...entities.spitter };
+    if (!entities['frost-spitter']) entities['frost-spitter'] = { ...entities.spitter };
+  }
+
+  const uiDir = join(spritesDir, 'ui');
+  const uiAtlas = readUiAtlas(uiDir);
+  const uiPngs = listPng(uiDir)
+    .map(stem)
+    .filter((id) => id !== 'atlas');
+  const uiIds = Array.from(new Set([...uiPngs, ...Object.keys(uiAtlas?.frames ?? {})])).sort((a, b) =>
+    a.localeCompare(b),
+  );
+
   const manifest: SpriteManifest = {
     entities,
     items: listPng(join(spritesDir, 'items')).map(stem),
     skills: listPng(join(spritesDir, 'skills')).map(stem),
     env: listPng(join(spritesDir, 'env')).map(stem),
     fx: listPng(join(spritesDir, 'fx')).map(stem),
-    ui: listPng(join(spritesDir, 'ui')).map(stem),
+    ui: uiIds,
+    ...(uiAtlas ? { uiAtlas } : {}),
   };
 
   const out = join(spritesDir, 'manifest.json');
   writeFileSync(out, `${JSON.stringify(manifest, null, 2)}\n`);
   return out;
+}
+
+function readUiAtlas(uiDir: string): UiAtlasDef | undefined {
+  const pngPath = join(uiDir, 'atlas.png');
+  const jsonPath = join(uiDir, 'atlas.json');
+  if (!existsSync(pngPath) || !existsSync(jsonPath)) return undefined;
+  const size = pngSize(pngPath);
+  if (!size) return undefined;
+  try {
+    const raw: unknown = JSON.parse(readFileSync(jsonPath, 'utf8'));
+    if (!raw || typeof raw !== 'object') return undefined;
+    const rec = raw as Record<string, unknown>;
+    const framesSource =
+      rec.frames && typeof rec.frames === 'object' && !Array.isArray(rec.frames)
+        ? (rec.frames as Record<string, unknown>)
+        : rec;
+    const frames: Record<string, UiSpriteEntry> = {};
+    for (const [id, entryRaw] of Object.entries(framesSource)) {
+      if (id === 'src' || id === 'width' || id === 'height' || id === 'meta') continue;
+      const parsed = parseUiSpriteEntry(entryRaw);
+      if (parsed) frames[id] = parsed;
+    }
+    return {
+      src: 'sprites/ui/atlas.png',
+      width: size.width,
+      height: size.height,
+      frames,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+function parseUiSpriteEntry(raw: unknown): UiSpriteEntry | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const rec = raw as Record<string, unknown>;
+  const baseRect = parseUiRect(rec) ?? parseUiRect(rec.idle) ?? parseUiRect(rec.frame);
+  if (!baseRect) return null;
+
+  let idle = baseRect;
+  let hover = baseRect;
+  let active = baseRect;
+
+  if (rec.states === 'strip-h' || rec.states === 'horizontal') {
+    hover = { x: baseRect.x + baseRect.w, y: baseRect.y, w: baseRect.w, h: baseRect.h };
+    active = { x: baseRect.x + baseRect.w * 2, y: baseRect.y, w: baseRect.w, h: baseRect.h };
+  } else if (rec.states === 'strip-v' || rec.states === 'vertical') {
+    hover = { x: baseRect.x, y: baseRect.y + baseRect.h, w: baseRect.w, h: baseRect.h };
+    active = { x: baseRect.x, y: baseRect.y + baseRect.h * 2, w: baseRect.w, h: baseRect.h };
+  } else if (rec.states && typeof rec.states === 'object') {
+    const statesRec = rec.states as Record<string, unknown>;
+    idle = parseUiRect(statesRec.idle) ?? baseRect;
+    hover = parseUiRect(statesRec.hover) ?? idle;
+    active = parseUiRect(statesRec.active) ?? hover;
+  } else {
+    hover = parseUiRect(rec.hover) ?? idle;
+    active = parseUiRect(rec.active) ?? hover;
+  }
+
+  const nineSlice = parseUiNineSlice(rec.nineSlice ?? rec.slice, idle.w, idle.h);
+  return {
+    idle,
+    hover,
+    active,
+    ...(nineSlice ? { nineSlice } : {}),
+  };
+}
+
+function parseUiRect(raw: unknown): UiRect | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const rec = raw as Record<string, unknown>;
+  const x = nonNegativeInt(rec.x);
+  const y = nonNegativeInt(rec.y);
+  const w = positiveInt(rec.w ?? rec.width);
+  const h = positiveInt(rec.h ?? rec.height);
+  if (x === undefined || y === undefined || w === undefined || h === undefined) return null;
+  return { x, y, w, h };
+}
+
+function parseUiNineSlice(raw: unknown, frameW: number, frameH: number): UiNineSliceDef | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const rec = raw as Record<string, unknown>;
+
+  const rawMargins =
+    rec.margins && typeof rec.margins === 'object' ? (rec.margins as Record<string, unknown>) : rec;
+  const rawExpandable = parseUiRect(rec.expandable ?? rec.center);
+
+  const mTop = nonNegativeInt(rawMargins.top);
+  const mRight = nonNegativeInt(rawMargins.right);
+  const mBottom = nonNegativeInt(rawMargins.bottom);
+  const mLeft = nonNegativeInt(rawMargins.left);
+
+  let margins: UiNineSliceMargins | null = null;
+  let expandable: UiRect | null = null;
+
+  if (mTop !== undefined && mRight !== undefined && mBottom !== undefined && mLeft !== undefined) {
+    margins = { top: mTop, right: mRight, bottom: mBottom, left: mLeft };
+    expandable = rawExpandable ?? {
+      x: mLeft,
+      y: mTop,
+      w: Math.max(1, frameW - mLeft - mRight),
+      h: Math.max(1, frameH - mTop - mBottom),
+    };
+  } else if (rawExpandable) {
+    expandable = rawExpandable;
+    margins = {
+      left: rawExpandable.x,
+      top: rawExpandable.y,
+      right: Math.max(0, frameW - (rawExpandable.x + rawExpandable.w)),
+      bottom: Math.max(0, frameH - (rawExpandable.y + rawExpandable.h)),
+    };
+  }
+
+  if (!margins || !expandable) return undefined;
+
+  const repeat =
+    rec.repeat === 'repeat' || rec.repeat === 'round' || rec.repeat === 'stretch' ? rec.repeat : 'stretch';
+  const scale = positiveNumber(rec.scale) ?? 1;
+
+  return {
+    margins,
+    expandable,
+    repeat,
+    scale,
+  };
 }
 
 function defaultAnims(width: number, frameWidth: number): Record<string, SpriteAnimDef> {
@@ -148,7 +311,9 @@ function parseTags(
 }
 
 function tagFrameRate(frames: number[], fps: number, durations: number[]): number {
-  const used = frames.map((index) => durations[index]).filter((value): value is number => value !== undefined && value > 0);
+  const used = frames
+    .map((index) => durations[index])
+    .filter((value): value is number => value !== undefined && value > 0);
   if (used.length === 0) return fps;
   const avg = used.reduce((sum, value) => sum + value, 0) / used.length;
   return fps / avg;
@@ -229,6 +394,11 @@ function frameRange(from: number, to: number): number[] {
 
 function integerValue(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isInteger(value) ? value : undefined;
+}
+
+function nonNegativeInt(value: unknown): number | undefined {
+  const n = integerValue(value);
+  return n !== undefined && n >= 0 ? n : undefined;
 }
 
 function positiveInt(value: unknown): number | undefined {

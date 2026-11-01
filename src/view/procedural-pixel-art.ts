@@ -139,8 +139,14 @@ export function generateProceduralSheets(): Map<string, ProceduralSheet> {
   const out = new Map<string, ProceduralSheet>();
   out.set('runner', singleFrame(makeIdleBody('cinder', 'runner')));
   out.set('penitent', singleFrame(makeIdleBody('cinder', 'penitent')));
-  out.set('ember-mite', walkSheet([makeMite('cinder', 0), makeMite('cinder', 1)], 7));
-  out.set('frost-mite', walkSheet([makeMite('rime', 0), makeMite('rime', 1)], 7));
+  out.set(
+    'ember-mite',
+    miteSheet([makeMite('cinder', 0), makeMite('cinder', 1)], [makeMiteAttack('cinder')], 7),
+  );
+  out.set(
+    'frost-mite',
+    miteSheet([makeMite('rime', 0), makeMite('rime', 1)], [makeMiteAttack('rime')], 7),
+  );
   out.set('ember-spitter', singleFrame(makeSpitter('cinder')));
   out.set('frost-spitter', singleFrame(makeSpitter('rime')));
   out.set('ember-chaser', singleFrame(makeElite('cinder')));
@@ -227,7 +233,7 @@ function singleFrame(canvas: HTMLCanvasElement): ProceduralSheet {
   };
 }
 
-function walkSheet(frames: HTMLCanvasElement[], frameRate: number): ProceduralSheet {
+export function walkSheet(frames: HTMLCanvasElement[], frameRate: number): ProceduralSheet {
   return {
     canvas: packRow(frames),
     frameWidth: frames[0].width,
@@ -235,6 +241,26 @@ function walkSheet(frames: HTMLCanvasElement[], frameRate: number): ProceduralSh
     anims: {
       idle: { frames: [0], frameRate: 1, repeat: -1 },
       walk: { frames: frames.map((_, i) => i), frameRate, repeat: -1 },
+    },
+  };
+}
+
+function miteSheet(
+  walkFrames: HTMLCanvasElement[],
+  attackFrames: HTMLCanvasElement[],
+  frameRate: number,
+): ProceduralSheet {
+  const all = [...walkFrames, ...attackFrames];
+  const walkIdx = walkFrames.map((_, i) => i);
+  const atkIdx = attackFrames.map((_, i) => walkFrames.length + i);
+  return {
+    canvas: packRow(all),
+    frameWidth: all[0].width,
+    frameHeight: all[0].height,
+    anims: {
+      idle: { frames: [0], frameRate: 1, repeat: -1 },
+      walk: { frames: walkIdx, frameRate, repeat: -1 },
+      attack: { frames: atkIdx, frameRate: frameRate * 1.5, repeat: -1 },
     },
   };
 }
@@ -296,6 +322,22 @@ function makeMite(biome: BiomeId, frame: 0 | 1): HTMLCanvasElement {
     px.fill(17, frame === 0 ? 17 : 18, 4, 3, jag);
     px.fill(2, 10, 3, 3, jag);
     px.fill(19, 10, 3, 3, jag);
+  });
+}
+
+function makeMiteAttack(biome: BiomeId): HTMLCanvasElement {
+  const core = biome === 'cinder' ? '#ffffff' : '#e0ffff';
+  const shell = biome === 'cinder' ? '#7a2b20' : '#225070';
+  const jag = biome === 'cinder' ? '#ff3311' : '#00ffff';
+  return cachedPixel(`px-mite-atk-${biome}`, 24, biome, (px) => {
+    px.fill(3, 7, 18, 11, shell);
+    px.fill(5, 5, 14, 5, shell);
+    px.fill(7, 9, 10, 8, core);
+    px.fill(9, 11, 6, 4, '#fff8e0');
+    px.fill(1, 6, 5, 4, jag);
+    px.fill(18, 6, 5, 4, jag);
+    px.fill(2, 16, 4, 4, jag);
+    px.fill(18, 16, 4, 4, jag);
   });
 }
 

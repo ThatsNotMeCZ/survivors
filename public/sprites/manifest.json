@@ -1,5 +1,36 @@
 {
   "entities": {
+    "ember-mite": {
+      "src": "sprites/entities/ember-mite.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 6,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 6,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 6,
+          "repeat": -1
+        }
+      }
+    },
     "penitent": {
       "src": "sprites/entities/penitent.png",
       "frameWidth": 48,
@@ -92,5 +123,72 @@
     "skill-condemn-tether",
     "skill-crucible-cull"
   ],
-  "ui": []
+  "ui": [
+    "atlas-2",
+    "btn-plaque",
+    "logo"
+  ],
+  "uiAtlas": {
+    "src": "sprites/ui/atlas.png",
+    "width": 453,
+    "height": 320,
+    "frames": {
+      "logo": {
+        "idle": {
+          "x": 0,
+          "y": 0,
+          "w": 260,
+          "h": 160
+        },
+        "hover": {
+          "x": 0,
+          "y": 0,
+          "w": 260,
+          "h": 160
+        },
+        "active": {
+          "x": 0,
+          "y": 0,
+          "w": 260,
+          "h": 160
+        }
+      },
+      "btn-plaque": {
+        "idle": {
+          "x": 4,
+          "y": 170,
+          "w": 146,
+          "h": 52
+        },
+        "hover": {
+          "x": 160,
+          "y": 170,
+          "w": 146,
+          "h": 52
+        },
+        "active": {
+          "x": 315,
+          "y": 170,
+          "w": 146,
+          "h": 52
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 21,
+            "right": 39,
+            "bottom": 21,
+            "left": 49
+          },
+          "expandable": {
+            "x": 49,
+            "y": 21,
+            "w": 54,
+            "h": 32
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      }
+    }
+  }
 }

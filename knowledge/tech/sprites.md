@@ -10,7 +10,7 @@ Drop finished art into `public/sprites/`. Vite rewrites `manifest.json` on `dev`
 | `entities/{id}.json` | Optional sidecar: compact anims **or** a Pixelorama project / Aseprite JSON export. Skip if frames are square and idle is frame 0. |
 | `items/{id}.png` | HUD / level-up icon (24px). Id matches `items.json`. |
 | `skills/{id}.png` | HUD / hall icon (24px). Id matches `skills.json`. |
-| `ui/{id}.png` | Optional HUD / menu frame sprites (`logo`, `btn-plaque`, `btn-cta`, `hall-banner`, `parchment-panel`, `pause-tablet`, `pause-inventory`, `hud-objective`, `hud-timer`, `hud-flask`, `hud-skill-dock`, `hud-inventory`, `card-{rarity}`, `portrait-{id}`). CSS/SVG fallback renders when missing. |
+| `ui/atlas.png` + `ui/atlas.json` | Shared HUD / menu texture atlas (`logo`, `btn-plaque`, `btn-cta`, `hall-banner`, `parchment-panel`, `pause-tablet`, `pause-inventory`, `hud-objective`, `hud-timer`, `hud-flask`, `hud-skill-dock`, `hud-inventory`, `card-{rarity}`, `portrait-{id}`). Supports 3-state buttons (`idle`, `hover`, `active`) and 9-slice (`nineSlice.margins` + `nineSlice.expandable`). CSS/SVG fallback renders when missing. |
 | `env/` | Future authored stage blocks (not random tile stamps). |
 | `fx/` | Optional VFX stills. Id matches a skill, a biome spit, or a sim FX kind (`hit`, `dash`, …). |
 
@@ -41,9 +41,21 @@ Compact example:
 
 Pixelorama drop-in: export the sheet as `entities/{id}.png` and copy the project JSON next to it as `entities/{id}.json` (tags `idle` / `walk` on the timeline).
 
-Arena `flipX` for left. Player, elites, and bosses are Phaser Sprites (`play('entity-{id}-walk')`). Fodder uses one `SpriteGPULayer` per entity id; walk frames run on the GPU (`setAnimations`). Non-square frames keep their native size; square vessel sheets still display at 40.
+Arena `flipX` for left. Player, elites, and bosses are Phaser Sprites (`playEntity`). Fodder uses one `SpriteGPULayer` per entity id; walk frames run on the GPU (`setAnimations`). Non-square frames keep their native size; square vessel sheets still display at 40.
+
+Walk animation playback speed is dynamically linked to real movement speed (`speedRatio = currentSpeed / baseSpeed`):
+- Player walk animation and vertical step bobbing scale proportionally with `speedRatio` (reflecting buffs, items like Goat Hoof, or hazard/slow debuffs).
+- Elites and bosses scale `sprite.anims.timeScale = speedRatio` when moving and transition to `idle` when stationary, rooted, or dying.
+- Fodder on `SpriteGPULayer` scales GPU member cycle `duration = baseDuration / speedRatio`; stationary/rooted/corpse members set `animation = undefined` and show static frame 0.
 
 Procedural fallback sizes: vessel 40, mite 24, spitter 28, elite 40, boss 64, icons 24.
+
+## UI Atlas (`public/sprites/ui/atlas.png` + `atlas.json`)
+
+UI elements are loaded from a single texture atlas (`public/sprites/ui/atlas.png` + `public/sprites/ui/atlas.json`) into `manifest.uiAtlas`.
+- **Static elements** (`logo`, `hud-flask`, etc.) define `{ "x", "y", "w", "h" }`.
+- **Buttons** (`btn-plaque`, `btn-cta`, etc.) define 3 states (`idle`, `hover`, `active`) either via `states: { idle, hover, active }` or `states: "strip-v"` / `"strip-h"`.
+- **9-slice elements** include `nineSlice` with both `margins` (`{ top, right, bottom, left }`) and `expandable` (`{ x, y, w, h }` inner stretch region), rendered via CSS `border-image` so corners stay pixel-sharp at any element size.
 
 ## FX stills
 

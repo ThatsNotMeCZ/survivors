@@ -31,7 +31,7 @@ function spriteManifestPlugin(): Plugin {
       run();
       server.watcher.add('public/sprites');
       server.watcher.on('all', (_event, file) => {
-        if (!file.includes('public/sprites') || file.endsWith('manifest.json')) return;
+        if (!file.includes('public/sprites') || file.endsWith('public/sprites/manifest.json')) return;
         run();
       });
     },

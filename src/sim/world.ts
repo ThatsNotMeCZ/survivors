@@ -381,6 +381,7 @@ function contactDamage(world: World, dt: number): void {
       continue;
     }
     if (enemies.corpseRemain[idx] > 0) continue;
+    enemies.attackRemain[idx] = 0.35;
     if (enemies.role[idx] === ROLE_FODDER) {
       if (fodderHits >= cap) continue;
       fodderHits += 1;

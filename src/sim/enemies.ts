@@ -43,6 +43,7 @@ export type EnemyPool = {
   corpseRemain: Float32Array;
   rootRemain: Float32Array;
   tetherDps: Float32Array;
+  attackRemain: Float32Array;
   shieldHp: Float32Array;
   shieldDelayRemain: Float32Array;
   defId: (string | null)[];
@@ -72,6 +73,7 @@ export function createEnemyPool(cap: number): EnemyPool {
     corpseRemain: new Float32Array(cap),
     rootRemain: new Float32Array(cap),
     tetherDps: new Float32Array(cap),
+    attackRemain: new Float32Array(cap),
     shieldHp: new Float32Array(cap),
     shieldDelayRemain: new Float32Array(cap),
     defId: new Array<string | null>(cap).fill(null),
@@ -118,6 +120,7 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
     enemies.corpseRemain[i] = 0;
     enemies.rootRemain[i] = 0;
     enemies.tetherDps[i] = 0;
+    enemies.attackRemain[i] = 0;
 
     if (role === ROLE_ELITE) {
       enemies.shieldHp[i] = hp * world.catalog.loop.shielder.percentHp;
@@ -221,6 +224,9 @@ export function stepEnemies(world: World, dt: number): void {
       if (enemies.corpseRemain[i] <= 0) explodeNoxious(world, i);
       continue;
     }
+    if (enemies.attackRemain[i] > 0) {
+      enemies.attackRemain[i] = Math.max(0, enemies.attackRemain[i] - dt);
+    }
     const defId = enemies.defId[i];
     const ai = defId ? world.catalog.entity(defId).ai : { type: 'chase' as const };
     const target = chaseTarget(world, i);
@@ -233,9 +239,15 @@ export function stepEnemies(world: World, dt: number): void {
       stepRanged(world, i, ai, dx, dy, len, dt, speed);
     } else if (ai.type === 'sniper') {
       stepSniper(world, i, ai, dx, dy, len, dt, speed);
-    } else if (len > 0.001) {
-      enemies.x[i] += (dx / len) * speed * dt;
-      enemies.y[i] += (dy / len) * speed * dt;
+    } else {
+      if (len > 0.001) {
+        enemies.x[i] += (dx / len) * speed * dt;
+        enemies.y[i] += (dy / len) * speed * dt;
+      }
+      const targetRadius = world.decoy.active && enemies.role[i] === ROLE_FODDER ? 14 : world.player.radius;
+      if (len <= enemies.radius[i] + targetRadius + 6) {
+        enemies.attackRemain[i] = 0.35;
+      }
     }
     const pad = enemies.radius[i] + 8;
     enemies.x[i] = clamp(enemies.x[i], pad, bounds.width - pad);
@@ -437,6 +449,29 @@ function localEnemySpeedMul(world: World, index: number): number {
   return mul;
 }
 
+export function currentEnemySpeed(world: World, index: number): number {
+  const { enemies } = world;
+  if (enemies.alive[index] === 0 || enemies.corpseRemain[index] > 0 || enemies.rootRemain[index] > 0) {
+    return 0;
+  }
+  const baseEffective = enemies.speed[index] * localEnemySpeedMul(world, index);
+  const defId = enemies.defId[index];
+  if (!defId) return baseEffective;
+
+  const ai = world.catalog.entity(defId).ai;
+  if (ai.type === 'ranged' || ai.type === 'sniper') {
+    const target = chaseTarget(world, index);
+    const len = Math.hypot(target.x - enemies.x[index], target.y - enemies.y[index]);
+    if (ai.type === 'ranged' && len <= ai.range && len >= ai.keep) {
+      return baseEffective * 0.45;
+    }
+    if (ai.type === 'sniper' && len >= ai.keep) {
+      return baseEffective * 0.25;
+    }
+  }
+  return baseEffective;
+}
+
 function fireEnemyBolt(world: World, i: number, ai: RangedAi): void {
   const { enemies, player } = world;
   const dx = player.x - enemies.x[i];
@@ -519,4 +554,9 @@ export function applyNoxiousContact(world: World, index: number): void {
   if (world.enemies.noxious[index] === 0) return;
   const cfg = world.catalog.loop.noxious;
   applySlow(world.player, cfg.contactSlowMul, cfg.contactSlowDuration);
+}
+
+export function isEnemyAttacking(world: World, index: number): boolean {
+  const { enemies } = world;
+  return enemies.attackRemain[index] > 0 || enemies.windup[index] > 0;
 }

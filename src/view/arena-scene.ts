@@ -3,10 +3,11 @@ import { playSfx, setMusicScene } from '../audio';
 import { FX_DASH, FX_DEATH, FX_GEM, FX_HIT, FX_HURT, FX_MUZZLE, FX_STRIKE, SPARK_CAP } from '../config';
 import { catalog } from '../data/catalog';
 import type { ItemDef, SkillSlot } from '../data/schema';
-import { ROLE_BOSS, ROLE_ELITE, ROLE_FODDER } from '../sim/enemies';
+import { ROLE_BOSS, ROLE_ELITE, ROLE_FODDER, currentEnemySpeed, isEnemyAttacking } from '../sim/enemies';
 import { emptyInput, type InputFrame } from '../sim/input-frame';
 import { applyLevelChoice } from '../sim/level';
 import { currentObjective, currentStage, type Objective } from '../sim/loop';
+import { playerSpeedMul } from '../sim/obstacles';
 import { ZONE_LINE, ZONE_STRIKE } from '../sim/zones';
 import { aimAngle, createWorld, stepWorld, type World } from '../sim/world';
 import { formatTime, initArenaHud, setHudCombat, setHudFps } from '../ui/hud';
@@ -52,12 +53,15 @@ import {
   authoredEntity,
   createEntityAnims,
   entityTextureKey,
-  fodderGpuAnimation,
+  fodderAnimSpec,
+  fodderGpuAnimations,
   playEntity,
   preloadSprites,
 } from './sprites';
 
-type GpuMember = Partial<Phaser.Types.GameObjects.SpriteGPULayer.Member>;
+type GpuMember = Omit<Partial<Phaser.Types.GameObjects.SpriteGPULayer.Member>, 'animation'> & {
+  animation?: string | number | { base?: string | number; duration?: number; delay?: number; yoyo?: boolean };
+};
 
 type Spark = {
   life: number;
@@ -132,6 +136,8 @@ export class ArenaScene extends Phaser.Scene {
     tintTopRight: 0xffffff,
   };
   private fodderShown!: Record<string, Uint8Array>;
+  private fodderAnimName = new Map<string, string[]>();
+  private fodderAnimStart = new Map<string, Float64Array>();
   private gemShown!: Uint8Array;
   private sparkShown!: Uint8Array;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -181,10 +187,13 @@ export class ArenaScene extends Phaser.Scene {
       const tex = entityTextureKey(def.id);
       if (!this.textures.exists(tex)) continue;
       const layer = this.add.spriteGPULayer(tex, this.world.enemies.cap).setDepth(2);
-      const gpuAnim = fodderGpuAnimation(def.id);
-      if (gpuAnim) layer.setAnimations([gpuAnim]);
+      layer.setAnimationEnabled('Linear', true);
+      const gpuAnims = fodderGpuAnimations(def.id);
+      if (gpuAnims.length > 0) layer.setAnimations(gpuAnims);
       this.fodderLayers.set(def.id, layer);
       this.fodderShown[def.id] = new Uint8Array(this.world.enemies.cap);
+      this.fodderAnimName.set(def.id, new Array(this.world.enemies.cap).fill(''));
+      this.fodderAnimStart.set(def.id, new Float64Array(this.world.enemies.cap));
     }
     this.gemLayer = this.add.spriteGPULayer('px-gem', loop.maxGems).setDepth(2);
     this.sparkLayer = this.add.spriteGPULayer('px-spark', SPARK_CAP).setDepth(6);
@@ -459,11 +468,17 @@ export class ArenaScene extends Phaser.Scene {
     const { player } = this.world;
     const vessel = this.vesselId();
     const moving = this.inputFrame.moveX !== 0 || this.inputFrame.moveY !== 0;
-    if (moving && player.dashRemain <= 0) this.walkPhase += dt * 8;
+    const baseSpeed = this.world.survivor.stats.speed;
+    const inputMag = Math.min(1, Math.hypot(this.inputFrame.moveX, this.inputFrame.moveY));
+    const currentSpeed = (moving && player.dashRemain <= 0)
+      ? this.world.stats.speed * playerSpeedMul(this.world) * inputMag
+      : 0;
+    const speedRatio = baseSpeed > 0 ? currentSpeed / baseSpeed : 1;
+    if (moving && player.dashRemain <= 0) this.walkPhase += dt * 8 * speedRatio;
     const bob = Math.round(Math.sin(this.walkPhase) * 1.5);
     this.lastFacing = spriteFacing(moveFacing(this.inputFrame.moveX, this.inputFrame.moveY), this.lastFacing);
     const flipX = this.lastFacing === 'left';
-    playEntity(this.playerSprite, vessel, moving && player.dashRemain <= 0 ? 'walk' : 'idle');
+    playEntity(this.playerSprite, vessel, moving && player.dashRemain <= 0 ? 'walk' : 'idle', speedRatio);
     this.fitBody(this.playerSprite);
     this.playerSprite.setFlipX(flipX);
     this.playerEyes.setVisible(!authoredEntity(vessel));
@@ -530,20 +545,63 @@ export class ArenaScene extends Phaser.Scene {
     for (let i = 0; i < enemies.cap; i += 1) {
       const alive = enemies.alive[i] !== 0;
       const fodder = alive && enemies.role[i] === ROLE_FODDER;
-      this.hideFodderSlot(i);
-      if (fodder) {
-        const defId = enemies.defId[i];
-        const layer = defId ? this.fodderLayers.get(defId) : undefined;
-        if (defId && layer) {
+      const defId = enemies.defId[i];
+      this.hideFodderSlot(i, fodder ? defId : null);
+      if (fodder && defId) {
+        const layer = this.fodderLayers.get(defId);
+        if (layer) {
           const tint = defId === 'enemy-astral-sniper' ? 0xb47aff : 0xffffff;
-          const gpuAnim = fodderGpuAnimation(defId);
+          const curSpeed = currentEnemySpeed(this.world, i);
+          const baseSpeed = this.world.catalog.entity(defId).stats.speed;
+          const speedRatio = baseSpeed > 0 ? curSpeed / baseSpeed : 1;
           this.gpuMember.x = enemies.x[i];
           this.gpuMember.y = enemies.y[i];
           this.gpuMember.scaleX = 1;
           this.gpuMember.scaleY = 1;
           this.gpuMember.alpha = 1;
           this.gpuMember.frame = 0;
-          this.gpuMember.animation = gpuAnim?.name;
+
+          const attacking = isEnemyAttacking(this.world, i);
+          const attackAnim = fodderAnimSpec(defId, 'attack');
+          const walkAnim = fodderAnimSpec(defId, 'walk');
+          const idleAnim = fodderAnimSpec(defId, 'idle');
+
+          let wantedAnim = '';
+          let animDuration = 0;
+          if (attacking && attackAnim) {
+            wantedAnim = attackAnim.name;
+            animDuration = attackAnim.duration;
+          } else if (walkAnim && curSpeed > 0) {
+            wantedAnim = walkAnim.name;
+            animDuration = walkAnim.duration / Math.max(0.1, speedRatio);
+          } else if (idleAnim && idleAnim.frames.length > 1) {
+            wantedAnim = idleAnim.name;
+            animDuration = idleAnim.duration;
+          }
+
+          const animNames = this.fodderAnimName.get(defId);
+          const animStarts = this.fodderAnimStart.get(defId);
+          if (wantedAnim) {
+            if (animNames && animStarts) {
+              if (animNames[i] !== wantedAnim) {
+                animNames[i] = wantedAnim;
+                animStarts[i] = layer.timeElapsed;
+              }
+              this.gpuMember.creationTime = animStarts[i];
+            } else {
+              this.gpuMember.creationTime = layer.timeElapsed;
+            }
+            this.gpuMember.animation = {
+              base: wantedAnim,
+              duration: animDuration,
+            };
+          } else {
+            if (animNames) animNames[i] = '';
+            this.gpuMember.animation = undefined;
+            this.gpuMember.creationTime = layer.timeElapsed;
+            this.gpuMember.frame = idleAnim ? Number(idleAnim.frames[0]) || 0 : 0;
+          }
+
           this.gpuMember.tintBlend = defId === 'enemy-astral-sniper' ? 0.55 : 0;
           this.gpuMember.tintBottomLeft = tint;
           this.gpuMember.tintTopLeft = tint;
@@ -554,11 +612,13 @@ export class ArenaScene extends Phaser.Scene {
         }
       }
 
-      if (!alive) continue;
-      const defId = enemies.defId[i];
-      if (!defId) continue;
+      if (!alive || !defId) continue;
       if (enemies.role[i] === ROLE_BOSS) {
-        playEntity(this.bossSprite, defId, 'walk');
+        const curSpeed = currentEnemySpeed(this.world, i);
+        const baseSpeed = this.world.catalog.entity(defId).stats.speed;
+        const speedRatio = baseSpeed > 0 ? curSpeed / baseSpeed : 1;
+        const attacking = isEnemyAttacking(this.world, i);
+        playEntity(this.bossSprite, defId, attacking ? 'attack' : curSpeed > 0 ? 'walk' : 'idle', speedRatio);
         this.bossSprite.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i]));
         this.bossSprite.setVisible(true);
         bossOn = true;
@@ -579,7 +639,11 @@ export class ArenaScene extends Phaser.Scene {
       } else if (enemies.role[i] === ROLE_ELITE && eliteSlot < this.eliteSprites.length) {
         const sprite = this.eliteSprites[eliteSlot];
         const glyph = this.eliteGlyphs[eliteSlot];
-        playEntity(sprite, defId, 'walk');
+        const curSpeed = currentEnemySpeed(this.world, i);
+        const baseSpeed = this.world.catalog.entity(defId).stats.speed;
+        const speedRatio = baseSpeed > 0 ? curSpeed / baseSpeed : 1;
+        const attacking = isEnemyAttacking(this.world, i);
+        playEntity(sprite, defId, attacking ? 'attack' : curSpeed > 0 ? 'walk' : 'idle', speedRatio);
         sprite.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i]));
         sprite.setVisible(true);
         glyph.setVisible(true);
@@ -611,11 +675,14 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
-  private hideFodderSlot(index: number): void {
+  private hideFodderSlot(index: number, keepDefId?: string | null): void {
     for (const [id, layer] of this.fodderLayers) {
+      if (id === keepDefId) continue;
       if (this.fodderShown[id][index] === 0) continue;
       hideGpuMember(layer, this.gpuMember, index);
       this.fodderShown[id][index] = 0;
+      const animNames = this.fodderAnimName.get(id);
+      if (animNames) animNames[index] = '';
     }
   }
 
@@ -1027,10 +1094,11 @@ function seedGpuLayer(
   }
 }
 
-/** Shared `gpuMember` also carries fodder `animation` / `frame`; strip them on layers that have none. */
+/** Shared `gpuMember` also carries fodder `animation` / `frame` / `creationTime`; strip them on layers that have none. */
 function clearGpuAnim(member: GpuMember): void {
   member.animation = undefined;
   member.frame = undefined;
+  member.creationTime = undefined;
 }
 
 function hideGpuMember(

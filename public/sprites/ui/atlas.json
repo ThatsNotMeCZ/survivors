@@ -1,0 +1,27 @@
+{
+  "frames": {
+    "logo": {
+      "x": 0,
+      "y": 0,
+      "w": 260,
+      "h": 160
+    },
+    "btn-plaque": {
+      "x": 0,
+      "y": 170,
+      "w": 146,
+      "h": 52,
+      "states": {
+        "idle": { "x": 4, "y": 170, "w": 146, "h": 52 },
+        "hover": { "x": 160, "y": 170, "w": 146, "h": 52 },
+        "active": { "x": 315, "y": 170, "w": 146, "h": 52 }
+      },
+      "nineSlice": {
+        "margins": { "top": 21, "right": 39, "bottom": 21, "left": 49 },
+        "expandable": { "x": 49, "y": 21, "w": 54, "h": 32 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    }
+  }
+}
