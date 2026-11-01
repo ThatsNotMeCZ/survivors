@@ -1,4 +1,4 @@
-import { resolveVessel, vesselIdleCanvas } from '../view/procedural-pixel-art';
+import { resolveVessel, survivorPortrait, vesselIdleCanvas } from '../view/procedural-pixel-art';
 import type { SpriteManifest } from '../view/sprite-types';
 
 let manifest: SpriteManifest | null = null;
@@ -44,14 +44,15 @@ function loadPng(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
-/** Procedural idle, then swap in the entity sheet's idle frame if present. */
+/** Procedural idle/portrait, then swap in authored art or entity sheet if present. */
 export function mountVesselArt(
   parent: HTMLElement,
   survivorId: string,
   className: string,
   label: string,
 ): HTMLCanvasElement {
-  const src = vesselIdleCanvas(survivorId);
+  const isPortrait = className.includes('portrait');
+  const src = isPortrait ? survivorPortrait(survivorId) : vesselIdleCanvas(survivorId);
   const canvas = document.createElement('canvas');
   canvas.width = src.width;
   canvas.height = src.height;
@@ -63,14 +64,29 @@ export function mountVesselArt(
   const vessel = resolveVessel(survivorId);
   void loadManifest().then(async (data) => {
     if (!canvas.isConnected) return;
-    if (className.includes('portrait') && data?.ui?.includes(`portrait-${survivorId}`)) {
-      const portraitImg = await loadPng(`sprites/ui/portrait-${survivorId}.png`);
-      if (portraitImg && canvas.isConnected) {
-        canvas.width = portraitImg.naturalWidth;
-        canvas.height = portraitImg.naturalHeight;
-        paintCanvas(canvas, portraitImg);
-        return;
+    if (isPortrait) {
+      const atlasEntry = data?.uiAtlas?.frames[`portrait-${survivorId}`];
+      if (atlasEntry) {
+        const atlasSrc = data?.uiAtlas?.src ?? 'sprites/ui/atlas.png';
+        const atlasImg = await loadPng(atlasSrc);
+        if (atlasImg && canvas.isConnected) {
+          const rect = atlasEntry.idle;
+          canvas.width = rect.w;
+          canvas.height = rect.h;
+          paintCanvas(canvas, atlasImg, rect.x, rect.y, rect.w, rect.h);
+          return;
+        }
       }
+      if (data?.ui?.includes(`portrait-${survivorId}`)) {
+        const portraitImg = await loadPng(`sprites/ui/portrait-${survivorId}.png`);
+        if (portraitImg && canvas.isConnected) {
+          canvas.width = portraitImg.naturalWidth;
+          canvas.height = portraitImg.naturalHeight;
+          paintCanvas(canvas, portraitImg);
+          return;
+        }
+      }
+      return;
     }
     const def = data?.entities[vessel];
     if (!def || !canvas.isConnected) return;

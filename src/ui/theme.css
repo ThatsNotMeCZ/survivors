@@ -3,6 +3,17 @@
 @import '@fontsource/source-sans-3/latin-400.css';
 @import '@fontsource/source-sans-3/latin-600.css';
 
+@font-face {
+  font-family: 'BillJilly';
+  src:
+    url('./fonts/BillJilly.woff2') format('woff2'),
+    url('./fonts/BillJilly.woff') format('woff'),
+    url('./fonts/BillJilly.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
   --ink: #0c0a0d;
@@ -41,8 +52,8 @@
   --xp: var(--gold-molten);
   --hp: var(--alizarin-hot);
   --danger: var(--alizarin);
-  --font-display: 'Cinzel', 'Palatino Linotype', Palatino, Georgia, serif;
-  --font-body: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'BillJilly', 'Cinzel', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-body: 'BillJilly', 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
   --ease: 180ms ease-out;
   --z-hud: 10;
   --z-prompt: 16;

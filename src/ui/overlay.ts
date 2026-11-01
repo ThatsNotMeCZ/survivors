@@ -225,7 +225,11 @@ export function showLevelUp(items: ItemDef[]): void {
     lore.className = 'aug-card-lore';
     lore.textContent = item.lore;
 
-    btn.append(name, artWrap, rarity, hooks, divider, lore);
+    const desc = document.createElement('div');
+    desc.className = 'aug-card-desc';
+    desc.append(hooks, divider, lore);
+
+    btn.append(name, artWrap, rarity, desc);
     btn.addEventListener('click', () => {
       playSfx('confirm');
       handlers.onPick(index);
@@ -574,7 +578,6 @@ function fillHallNav(): void {
     btn.type = 'button';
     btn.className = 'vessel-pick';
     btn.dataset.active = survivor.id === current ? '1' : '0';
-    btn.dataset.uiSprite = `portrait-${survivor.id}`;
 
     const portraitBox = document.createElement('div');
     portraitBox.className = 'vessel-portrait-box';

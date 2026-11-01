@@ -486,6 +486,11 @@ select:focus-visible,
     0 6px 20px rgba(0, 0, 0, 0.75);
 }
 
+#hud-skills[data-has-ui-sprite='1'] {
+  border: none;
+  box-shadow: none;
+}
+
 .skill-unit {
   display: flex;
   flex-direction: column;
@@ -511,18 +516,16 @@ select:focus-visible,
   position: relative;
   width: 54px;
   height: 54px;
-  border: 2px solid var(--brass);
-  background: #161014;
-  box-shadow:
-    inset 0 0 0 1px #0c0a0d,
-    0 2px 8px rgba(0, 0, 0, 0.6);
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .skill-icon {
   position: absolute;
-  inset: 5px;
-  width: calc(100% - 10px);
-  height: calc(100% - 10px);
+  inset: 2px;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
   object-fit: contain;
   image-rendering: pixelated;
   pointer-events: none;
@@ -580,15 +583,6 @@ select:focus-visible,
   z-index: 1;
   pointer-events: none;
   background: conic-gradient(from 0deg, rgba(10, 8, 12, 0.78) calc(var(--cd, 0) * 360deg), transparent 0);
-}
-
-.skill-slot[data-ready='1'] {
-  border-color: var(--brass);
-  background: #1c1412;
-}
-
-.skill-slot[data-ready='0'] {
-  border-color: var(--brass-deep);
 }
 
 .skill-slot[data-ready='0'] .skill-glyph {
@@ -862,11 +856,6 @@ select:focus-visible,
     inset 0 0 0 2px #120e12,
     0 6px 16px rgba(0, 0, 0, 0.7);
   cursor: pointer;
-  transition:
-    transform var(--ease),
-    border-color var(--ease),
-    box-shadow var(--ease),
-    background var(--ease);
 }
 
 .plaque-btn::before,
@@ -892,20 +881,6 @@ select:focus-visible,
   display: none;
 }
 
-.plaque-btn:hover,
-.plaque-btn:focus-visible {
-  border-color: var(--brass-bright);
-  background: linear-gradient(180deg, #4e342e 0%, #2e1d1c 55%, #1d1212 100%);
-  box-shadow:
-    inset 0 0 12px rgba(212, 84, 42, 0.35),
-    0 0 18px rgba(196, 163, 90, 0.45);
-  transform: translateY(-1px);
-}
-
-.plaque-btn[data-has-ui-sprite='1']:active {
-  transform: translateY(1px);
-}
-
 /* Shared Molten Magma CTA Button (Main Menu & Lobby) */
 .magma-cta {
   position: fixed;
@@ -917,8 +892,8 @@ select:focus-visible,
   align-items: center;
   justify-content: center;
   min-width: 286px;
-  min-height: 92px;
-  padding: 14px 28px;
+  min-height: 122px;
+  padding: 44px 12px 28px 12px;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 21px;
@@ -937,20 +912,6 @@ select:focus-visible,
     0 0 24px rgba(255, 85, 20, 0.5),
     0 8px 24px rgba(0, 0, 0, 0.85);
   cursor: pointer;
-  transition:
-    transform var(--ease),
-    box-shadow var(--ease),
-    filter var(--ease);
-}
-
-.magma-cta:hover,
-.magma-cta:focus-visible {
-  transform: translateY(-2px) scale(1.02);
-  filter: brightness(1.12);
-  box-shadow:
-    inset 0 0 0 3px #3c2a2e,
-    inset 0 0 26px rgba(255, 140, 40, 0.8),
-    0 0 36px rgba(255, 100, 20, 0.8);
 }
 
 /* ==========================================================================
@@ -1711,7 +1672,30 @@ select:focus-visible,
   color: var(--gold-molten);
 }
 
+.aug-card-desc {
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 12px 12px;
+  background: rgba(10, 8, 14, 0.68);
+  border: 1px solid rgba(196, 163, 90, 0.22);
+  border-radius: 4px;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.aug-card:not(:has(.aug-card-desc)) .aug-card-hooks {
+  background: rgba(10, 8, 14, 0.68);
+  border: 1px solid rgba(196, 163, 90, 0.22);
+  border-radius: 4px;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.5);
+  padding: 8px 10px;
+}
+
 .aug-card-hooks {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1719,7 +1703,7 @@ select:focus-visible,
   font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .hook-up {
@@ -1736,7 +1720,7 @@ select:focus-visible,
   width: 86%;
   border: 0;
   border-top: 1px solid rgba(196, 163, 90, 0.28);
-  margin: auto 0 10px;
+  margin: 0 0 8px;
 }
 
 .aug-card-lore {

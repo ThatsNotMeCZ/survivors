@@ -12,13 +12,126 @@
       "w": 146,
       "h": 52,
       "states": {
-        "idle": { "x": 4, "y": 170, "w": 146, "h": 52 },
+        "idle": { "x": 0, "y": 170, "w": 146, "h": 52 },
         "hover": { "x": 160, "y": 170, "w": 146, "h": 52 },
         "active": { "x": 315, "y": 170, "w": 146, "h": 52 }
       },
       "nineSlice": {
-        "margins": { "top": 21, "right": 39, "bottom": 21, "left": 49 },
-        "expandable": { "x": 49, "y": 21, "w": 54, "h": 32 },
+        "margins": { "top": 21, "right": 48, "bottom": 21, "left": 52 },
+        "expandable": { "x": 52, "y": 22, "w": 48, "h": 32 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "btn-cta": {
+      "x": 0,
+      "y": 230,
+      "w": 141,
+      "h": 92,
+      "states": {
+        "idle": { "x": 0, "y": 230, "w": 141, "h": 92 },
+        "hover": { "x": 160, "y": 230, "w": 141, "h": 92 },
+        "active": { "x": 315, "y": 230, "w": 140, "h": 92 }
+      },
+      "nineSlice": {
+        "margins": { "top": 45, "right": 58, "bottom": 27, "left": 52 },
+        "expandable": { "x": 53, "y": 46, "w": 36, "h": 23 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "hall-banner": {
+      "x": 0, 
+      "y": 330,
+      "w": 224,
+      "h": 64,
+      "nineSlice": {
+        "margins": { "top": 16, "right": 84, "bottom": 25, "left": 111 },
+        "expandable": { "x": 111, "y": 17, "w": 22, "h": 25 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "portrait-runner": {
+      "x": 5,
+      "y": 400,
+      "w": 96,
+      "h": 96
+    },
+    "portrait-penitent": {
+      "x": 110,
+      "y": 400,
+      "w": 96,
+      "h": 96
+    },
+    "parchment-panel": {
+      "x": 5,
+      "y": 500,
+      "w": 336,
+      "h": 440,
+      "nineSlice": {
+        "margins": { "top": 68, "right": 68, "bottom": 68, "left": 68 },
+        "expandable": { "x": 68, "y": 68, "w": 200, "h": 304 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "hud-skill-dock": {
+      "x": 360,
+      "y": 500,
+      "w": 315,
+      "h": 96
+    },
+    "hud-inventory": {
+      "x": 360,
+      "y": 620,
+      "w": 132,
+      "h": 132,
+      "nineSlice": {
+        "margins": { "top": 42, "right": 42, "bottom": 42, "left": 42 },
+        "expandable": { "x": 42, "y": 42, "w": 40, "h": 40 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "card-common":{
+      "x": 5,
+      "y": 950,
+      "w": 273,
+      "h": 390
+    },
+    "card-uncommon":{
+      "x": 300,
+      "y": 950,
+      "w": 273,
+      "h": 390
+    },
+    "card-rare":{
+      "x": 600,
+      "y": 950,
+      "w": 273,
+      "h": 390
+    },
+    "card-lunar": {
+      "x": 900,
+      "y": 950,
+      "w": 273,
+      "h": 390
+    },
+    "pause-tablet": {
+      "x": 5,
+      "y": 1350,
+      "w": 370,
+      "h": 390
+    },
+    "pause-inventory": {
+      "x": 400,
+      "y": 1350,
+      "w": 268,
+      "h": 268,
+      "nineSlice": {
+        "margins": { "top": 70, "right": 70, "bottom": 70, "left": 70 },
+        "expandable": { "x": 70, "y": 70, "w": 144, "h": 144 },
         "repeat": "stretch",
         "scale": 1
       }
