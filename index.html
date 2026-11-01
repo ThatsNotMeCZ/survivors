@@ -61,7 +61,6 @@
         </div>
         <div id="hud-skills" data-ui-sprite="hud-skill-dock">
           <div class="skill-unit">
-            <span class="skill-name" data-slot-name="primary"></span>
             <div class="skill-slot" data-slot="primary" data-key="LMB">
               <div class="skill-sweep"></div>
               <span class="skill-glyph">I</span>
@@ -70,7 +69,6 @@
             </div>
           </div>
           <div class="skill-unit">
-            <span class="skill-name" data-slot-name="secondary"></span>
             <div class="skill-slot" data-slot="secondary" data-key="RMB">
               <div class="skill-sweep"></div>
               <span class="skill-glyph">II</span>
@@ -79,7 +77,6 @@
             </div>
           </div>
           <div class="skill-unit">
-            <span class="skill-name" data-slot-name="utility"></span>
             <div class="skill-slot" data-slot="utility" data-key="Shift">
               <div class="skill-sweep"></div>
               <span class="skill-glyph">III</span>
@@ -88,7 +85,6 @@
             </div>
           </div>
           <div class="skill-unit">
-            <span class="skill-name" data-slot-name="special"></span>
             <div class="skill-slot" data-slot="special" data-key="Q">
               <div class="skill-sweep"></div>
               <span class="skill-glyph">IV</span>
@@ -190,7 +186,7 @@
       <div id="levelup-view" class="hidden">
         <header class="aug-header">
           <div class="aug-rune-halo" aria-hidden="true"></div>
-          <div class="aug-banner" data-ui-sprite="levelup-banner">
+          <div class="aug-banner" data-ui-sprite="btn-plaque">
             <h2 id="levelup-title">SELECT AUGMENTATION</h2>
           </div>
         </header>
@@ -248,7 +244,7 @@
       </div>
 
       <!-- 5. GENERIC MODAL CARD (HowTo, Abandon confirm, Run End) -->
-      <div class="overlay-card">
+      <div class="overlay-card parchment-box" data-ui-sprite="parchment-panel">
         <p class="overlay-kicker" id="overlay-kicker"></p>
         <h2 id="overlay-title"></h2>
         <p id="overlay-sub"></p>
@@ -257,12 +253,14 @@
         <div id="overlay-actions"></div>
       </div>
     </div>
-    <dialog id="settings-dialog" aria-labelledby="settings-title">
-      <p class="overlay-kicker">The choir</p>
+    <dialog id="settings-dialog" class="parchment-box" data-ui-sprite="parchment-panel" aria-labelledby="settings-title">
+      <p class="overlay-kicker">Alchemist's Desk</p>
       <h2 id="settings-title">Settings</h2>
-      <p class="settings-lead">Master, SFX, and music. Mute silences the whole working.</p>
+      <p class="settings-lead">Attune the chamber's resonance and visual clarity.</p>
       <div id="settings-body"></div>
-      <button type="button" id="settings-close" class="seal-btn action-primary">Close</button>
+      <button type="button" id="settings-close" class="plaque-btn action-primary" data-ui-sprite="btn-plaque">
+        <span class="plaque-label">Close</span>
+      </button>
     </dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>

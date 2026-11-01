@@ -223,8 +223,6 @@ function renderSkills(skills: HudSkill[]): void {
   if (rebind) lastSkillBind = bind;
   for (const skill of skills) {
     const slot = document.querySelector<HTMLElement>(`.skill-slot[data-slot="${skill.slot}"]`);
-    const nameEl = document.querySelector<HTMLElement>(`.skill-name[data-slot-name="${skill.slot}"]`);
-    if (nameEl) nameEl.textContent = skill.empty ? '' : skill.name;
     if (!slot) continue;
     const glyph = slot.querySelector('.skill-glyph');
     const cd = slot.querySelector('.skill-cd');

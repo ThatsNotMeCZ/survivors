@@ -42,7 +42,7 @@ export type RunRecap = {
 const STAT_LABEL: Record<StatId, string> = {
   speed: 'Speed',
   maxHp: 'Max HP',
-  radius: 'Hurtbox',
+  radius: 'Vessel Size',
   damage: 'Damage',
   cooldown: 'Cooldown',
   critChance: 'Crit Chance',
@@ -143,6 +143,7 @@ export function showSettings(from: 'menu' | 'lobby' | 'pause' = origin): void {
   const body = document.getElementById('settings-body');
   if (!dialog || !body) return;
   body.replaceChildren(settingsForm(getSettings()));
+  hydrateUiSprites(dialog);
   if (!dialog.open) dialog.showModal();
 }
 
@@ -482,6 +483,7 @@ function renderScreen(spec: {
   for (const action of spec.actions ?? []) {
     actions.appendChild(actionButton(action.label, action.onClick, action.primary, action.sfx));
   }
+  hydrateUiSprites(card);
   showRoot(root);
   syncChill();
 }
@@ -638,10 +640,10 @@ function fillHallDossier(): void {
   const statsGrid = document.createElement('div');
   statsGrid.className = 'hall-stats-grid';
   const statItems: { icon: string; text: string }[] = [
-    { icon: '⚔', text: `HP: ${survivor.stats.maxHp}` },
-    { icon: '♥', text: survivor.title ?? 'The Vessel' },
-    { icon: '🥾', text: `SPEED: ${survivor.stats.speed}` },
-    { icon: '🛡', text: `HURTBOX: ${survivor.stats.radius}` },
+    { icon: '♥', text: `VITALITY: ${survivor.stats.maxHp}` },
+    { icon: '⚔', text: (survivor.title ?? 'The Vessel').toUpperCase() },
+    { icon: '🥾', text: `STRIDE: ${survivor.stats.speed >= 260 ? 'SWIFT' : 'MEASURED'}` },
+    { icon: '🛡', text: 'FRAME: COMPACT' },
   ];
   for (const st of statItems) {
     const cell = document.createElement('div');
@@ -753,7 +755,7 @@ function fillPauseSummary(): void {
     ['Run Time:', formatTime(summary.runTime)],
     ['Level:', String(summary.level)],
     ['Bosses Slain:', String(summary.bosses)],
-    ['Total Augmentations:', `${summary.totalItems} (×${summary.coefficient.toFixed(2)})`],
+    ['Total Augmentations:', String(summary.totalItems)],
   ];
   rowsEl.replaceChildren();
   for (const [label, val] of rows) {
@@ -833,12 +835,12 @@ function fillPauseInventory(items: HudItem[]): void {
 function settingsForm(settings: GameSettings): HTMLElement {
   const wrap = document.createElement('div');
   wrap.appendChild(
-    rangeRow('Master volume', 'Chamber, choir, and the working’s drone.', settings.masterVolume, (value) => {
+    rangeRow('Master Volume', 'Overall resonance of the chamber.', settings.masterVolume, (value) => {
       patchSettings({ masterVolume: value });
     }),
   );
   wrap.appendChild(
-    rangeRow('SFX', 'Hits, dashes, and the choir of brass.', settings.sfxVolume, (value) => {
+    rangeRow('Sound Effects', 'Strikes, footsteps, and the chime of brass.', settings.sfxVolume, (value) => {
       patchSettings({ sfxVolume: value });
       const now = performance.now();
       if (now - lastSfxPreview < 120) return;
@@ -847,23 +849,23 @@ function settingsForm(settings: GameSettings): HTMLElement {
     }),
   );
   wrap.appendChild(
-    rangeRow('Music', 'The working’s drone, when it learns to sing.', settings.musicVolume, (value) => {
+    rangeRow('Music', 'Ritual hymns and the chamber’s drone.', settings.musicVolume, (value) => {
       patchSettings({ musicVolume: value });
     }),
   );
   wrap.appendChild(
-    checkRow('Mute', 'Keeps the choir dark.', settings.muted, (value) => {
+    checkRow('Mute All', 'Silences the entire working.', settings.muted, (value) => {
       patchSettings({ muted: value });
       if (!value) playSfx('click');
     }),
   );
   wrap.appendChild(
-    checkRow('Screenshake', 'Camera tremor when the chamber learns it.', settings.screenshake, (value) => {
+    checkRow('Screenshake', 'Tremor of the chamber upon heavy impacts.', settings.screenshake, (value) => {
       patchSettings({ screenshake: value });
     }),
   );
   wrap.appendChild(
-    checkRow('Reduce VFX', 'Fewer sparks. The working stays readable.', settings.reduceVfx, (value) => {
+    checkRow('Reduce Effects', 'Dims sparks and flashes for clearer sight.', settings.reduceVfx, (value) => {
       patchSettings({ reduceVfx: value });
     }),
   );
@@ -929,9 +931,10 @@ function pct(value: number): string {
 
 function controlsTable(): HTMLElement {
   const survivor = selectedSurvivor();
-  const dash = skillFor(survivor, 'utility');
   const primary = skillFor(survivor, 'primary');
-  const dashLine = dashEffectLine(dash);
+  const secondary = skillFor(survivor, 'secondary');
+  const utility = skillFor(survivor, 'utility');
+  const special = skillFor(survivor, 'special');
   const table = document.createElement('table');
   table.className = 'controls-table';
   const head = document.createElement('thead');
@@ -944,14 +947,14 @@ function controlsTable(): HTMLElement {
   head.appendChild(hr);
   const body = document.createElement('tbody');
   const rows: [string, string][] = [
-    ['WASD', 'Walk the vessel.'],
-    ['Mouse', `Aim ${primary?.name ?? 'Ignis Bolt'}.`],
-    ['Hold LMB', 'Cast along the aim. Never auto-fires.'],
-    ['RMB', 'Secondary. Aimed press.'],
-    ['Shift / Space', dashLine],
-    ['Q', 'Ultimate. Aimed press.'],
-    ['1 / 2 / 3', 'Choose an augmentation when you level.'],
-    ['Hold in the circle', 'Channel the Transmutation Circle. Step out and the seal cools.'],
+    ['WASD', 'Move the vessel through the chamber.'],
+    ['Mouse', 'Guide your aim across the arena.'],
+    ['Hold LMB', `${primary?.name ?? 'Primary Art'} — channel your primary art toward the cursor.`],
+    ['RMB', `${secondary?.name ?? 'Secondary Art'} — unleash your secondary art.`],
+    ['Shift / Space', `${utility?.name ?? 'Phase Step'} — slip through foes and projectiles unscathed.`],
+    ['Q', `${special?.name ?? 'Ultimate Rite'} — invoke your ultimate rite.`],
+    ['1 / 2 / 3', 'Bind an augmentation when the vessel ascends.'],
+    ['Hold in the circle', 'Stand within the Transmutation Circle until the seal is charged.'],
     ['Esc', 'Pause the working.'],
   ];
   for (const [key, value] of rows) {
@@ -965,13 +968,6 @@ function controlsTable(): HTMLElement {
   }
   table.append(head, body);
   return table;
-}
-
-function dashEffectLine(skill: SkillDef | null): string {
-  if (!skill) return 'Phase Step.';
-  const dash = skill.effects.find((effect) => effect.type === 'dash');
-  if (!dash || dash.type !== 'dash') return skill.name;
-  return `${skill.name} — ${dash.distance} pace, ${dash.duration}s glide, ${dash.iframe}s between-worlds.`;
 }
 
 function recapBody(recap: RunRecap): HTMLElement {
@@ -1021,8 +1017,12 @@ function actionButton(
 ): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = primary ? 'seal-btn action-primary' : 'seal-btn';
-  btn.textContent = label;
+  btn.className = primary ? 'plaque-btn action-primary' : 'plaque-btn';
+  btn.dataset.uiSprite = 'btn-plaque';
+  const span = document.createElement('span');
+  span.className = 'plaque-label';
+  span.textContent = label;
+  btn.appendChild(span);
   btn.addEventListener('click', () => {
     if (sfx) playSfx(sfx);
     onClick();

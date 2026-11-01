@@ -554,9 +554,10 @@ export class ArenaScene extends Phaser.Scene {
           const curSpeed = currentEnemySpeed(this.world, i);
           const baseSpeed = this.world.catalog.entity(defId).stats.speed;
           const speedRatio = baseSpeed > 0 ? curSpeed / baseSpeed : 1;
+          const flipX = enemies.facing[i] < 0;
           this.gpuMember.x = enemies.x[i];
           this.gpuMember.y = enemies.y[i];
-          this.gpuMember.scaleX = 1;
+          this.gpuMember.scaleX = flipX ? -1 : 1;
           this.gpuMember.scaleY = 1;
           this.gpuMember.alpha = 1;
           this.gpuMember.frame = 0;
@@ -620,6 +621,7 @@ export class ArenaScene extends Phaser.Scene {
         const attacking = isEnemyAttacking(this.world, i);
         playEntity(this.bossSprite, defId, attacking ? 'attack' : curSpeed > 0 ? 'walk' : 'idle', speedRatio);
         this.bossSprite.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i]));
+        this.bossSprite.setFlipX(enemies.facing[i] < 0);
         this.bossSprite.setVisible(true);
         bossOn = true;
         const cinder = defId === 'cinder-heart';
@@ -645,6 +647,7 @@ export class ArenaScene extends Phaser.Scene {
         const attacking = isEnemyAttacking(this.world, i);
         playEntity(sprite, defId, attacking ? 'attack' : curSpeed > 0 ? 'walk' : 'idle', speedRatio);
         sprite.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i]));
+        sprite.setFlipX(enemies.facing[i] < 0);
         sprite.setVisible(true);
         glyph.setVisible(true);
         glyph.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i] + 18));

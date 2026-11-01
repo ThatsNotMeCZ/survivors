@@ -8,7 +8,7 @@
       "input": "hold",
       "cooldown": 0.28,
       "lore": "A needle of fire. It only flies where you point.",
-      "hook": "Aimed bolt. Never auto-fires.",
+      "hook": "Fires searing bolts of flame toward your cursor.",
       "effects": [
         {
           "type": "projectile",
@@ -26,7 +26,7 @@
       "input": "press",
       "cooldown": 0.9,
       "lore": "The vessel slips between worlds for a breath.",
-      "hook": "I-frames through contact and bolts.",
+      "hook": "Dash swiftly forward, phasing harmlessly through foes and projectiles.",
       "effects": [
         {
           "type": "dash",
@@ -43,7 +43,7 @@
       "input": "press",
       "cooldown": 4,
       "lore": "A thin ray of stolen sky. Line them up or waste the breath.",
-      "hook": "Pierces all in a line. 50% self-slow for 0.25s.",
+      "hook": "Lances through every foe in a line, briefly steadying your stride.",
       "effects": [
         {
           "type": "projectile",
@@ -67,7 +67,7 @@
       "input": "press",
       "cooldown": 12,
       "lore": "A hammer of the Great Work, dropped where you will it.",
-      "hook": "45px strike after 0.7s. Precision, not a nuke.",
+      "hook": "Calls down a concentrated alchemical strike at the cursor after a brief delay.",
       "effects": [
         {
           "type": "delayed-strike",
@@ -84,7 +84,7 @@
       "input": "hold",
       "cooldown": 0.42,
       "lore": "Heavy glass, thrown in an arc. The air between you and the stain is empty.",
-      "hook": "Mortar splash on impact only. Flies over foes.",
+      "hook": "Lobs a heavy censer over the horde that shatters on impact, scorching nearby foes.",
       "effects": [
         {
           "type": "projectile",
@@ -104,7 +104,7 @@
       "input": "press",
       "cooldown": 5,
       "lore": "A seam of sulfur drawn across the yard. The small ones fear it.",
-      "hook": "80% fodder slow. Elites and bosses ignore it.",
+      "hook": "Draws a burning seam of sulfur that slows lesser foes crossing it.",
       "effects": [
         {
           "type": "slow-line",
@@ -125,7 +125,7 @@
       "input": "press",
       "cooldown": 1.1,
       "lore": "Leave a husk of ash. The mites chase the ghost.",
-      "hook": "Dash plus 1.5s fodder decoy. Elites ignore it.",
+      "hook": "Dash to safety while leaving an ash effigy that lures lesser foes.",
       "effects": [
         {
           "type": "dash",
@@ -143,7 +143,7 @@
       "input": "press",
       "cooldown": 15,
       "lore": "A chain for the proud. Miss, and the working waits.",
-      "hook": "Roots first elite or boss 2.5s. Fodder burn on contact. Miss wastes it.",
+      "hook": "Hurls a binding chain that roots the first elite or boss struck and sears lesser foes.",
       "effects": [
         {
           "type": "tether",

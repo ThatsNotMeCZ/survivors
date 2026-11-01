@@ -26,6 +26,7 @@ export type EnemyPool = {
   role: Uint8Array;
   x: Float32Array;
   y: Float32Array;
+  facing: Int8Array;
   radius: Float32Array;
   hp: Float32Array;
   maxHp: Float32Array;
@@ -56,6 +57,7 @@ export function createEnemyPool(cap: number): EnemyPool {
     role: new Uint8Array(cap),
     x: new Float32Array(cap),
     y: new Float32Array(cap),
+    facing: new Int8Array(cap).fill(1),
     radius: new Float32Array(cap),
     hp: new Float32Array(cap),
     maxHp: new Float32Array(cap),
@@ -82,6 +84,7 @@ export function createEnemyPool(cap: number): EnemyPool {
 
 export function clearEnemies(world: World): void {
   world.enemies.alive.fill(0);
+  world.enemies.facing.fill(1);
   world.counts.fodder = 0;
   world.counts.elite = 0;
   world.counts.boss = 0;
@@ -103,6 +106,7 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
     enemies.role[i] = role;
     enemies.x[i] = x;
     enemies.y[i] = y;
+    enemies.facing[i] = world.player.x < x ? -1 : 1;
     enemies.radius[i] = def.stats.radius;
     enemies.hp[i] = hp;
     enemies.maxHp[i] = hp;
@@ -235,6 +239,7 @@ export function stepEnemies(world: World, dt: number): void {
     const len = Math.hypot(dx, dy);
     const rooted = enemies.rootRemain[i] > 0;
     const speed = rooted ? 0 : enemies.speed[i] * localEnemySpeedMul(world, i);
+    const startX = enemies.x[i];
     if (ai.type === 'ranged') {
       stepRanged(world, i, ai, dx, dy, len, dt, speed);
     } else if (ai.type === 'sniper') {
@@ -252,6 +257,21 @@ export function stepEnemies(world: World, dt: number): void {
     const pad = enemies.radius[i] + 8;
     enemies.x[i] = clamp(enemies.x[i], pad, bounds.width - pad);
     enemies.y[i] = clamp(enemies.y[i], pad, bounds.height - pad);
+
+    const moveX = enemies.x[i] - startX;
+    if (enemies.windup[i] > 0) {
+      const aimDx = enemies.aimX[i] - enemies.x[i];
+      if (aimDx < -0.001) enemies.facing[i] = -1;
+      else if (aimDx > 0.001) enemies.facing[i] = 1;
+    } else if (moveX < -0.001) {
+      enemies.facing[i] = -1;
+    } else if (moveX > 0.001) {
+      enemies.facing[i] = 1;
+    } else if (enemies.attackRemain[i] > 0) {
+      const targetDx = target.x - enemies.x[i];
+      if (targetDx < -0.001) enemies.facing[i] = -1;
+      else if (targetDx > 0.001) enemies.facing[i] = 1;
+    }
   }
   tickTetherBurn(world, dt);
 }
