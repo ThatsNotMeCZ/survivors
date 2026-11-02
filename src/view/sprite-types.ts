@@ -46,6 +46,13 @@ export type UiAtlasDef = {
   frames: Record<string, UiSpriteEntry>;
 };
 
+export type EnvAtlasDef = {
+  src: string;
+  width: number;
+  height: number;
+  frames: Record<string, UiRect>;
+};
+
 export type SpriteManifest = {
   entities: Record<string, EntitySpriteDef>;
   items: string[];
@@ -54,4 +61,5 @@ export type SpriteManifest = {
   fx: string[];
   ui?: string[];
   uiAtlas?: UiAtlasDef;
+  envAtlas?: EnvAtlasDef;
 };

@@ -73,9 +73,22 @@ Authored FX is drawn **facing +X**. Projectiles rotate with `atan2(vy, vx)` and 
 
 `reduceVfx` skips stills and spark bursts. No additive blend on the projectile pool.
 
-## Environment (later)
+## Environment Atlas (`public/sprites/env/atlas.png` + `atlas.json`)
 
-Stages still stamp a procedural floor and scatter pillars / hazards / volatiles. Next step is authored **blocks** in `env/` placed as layout chunks, not a new biome recolor of the same mesh.
+Environment art can be authored either via a shared texture atlas (`public/sprites/env/atlas.png` + `public/sprites/env/atlas.json`) or standalone files in `public/sprites/env/{id}.png`.
+
+If a frame has `{ "w": 0, "h": 0 }` or is omitted, the game automatically uses the procedural fallback in `src/view/procedural-pixel-art.ts`.
+
+Themes map per stage: `cinder` (`cinder-yard`), `rime` (`rime-dock`), `glacial` (`glacial-tomb`). Glacial automatically falls back to `rime` if a `glacial-*` prop is missing from the atlas before falling back to procedural.
+
+### Frame keys & recommended dimensions:
+- **Floor tiles** (`64×64 px`): `{theme}-tile-0`, `{theme}-tile-1`, `{theme}-tile-2`, `{theme}-tile-3` (variant 0 serves as fallback).
+- **Arena borders**: `{theme}-border-edge` (`64×16 px` or `64×32 px`), `{theme}-border-corner` (`16×16 px` or `32×32 px`).
+- **Pillars** (`radius: 52` -> `64×64 px` or `104×104 px`): `{theme}-pillar` (`cinder-pillar`, `rime-pillar`, `glacial-pillar`).
+- **Hazards** (`radius: 68` -> `64×64 px` or `128×128 px`): `{theme}-hazard-0`, `{theme}-hazard-1` (frame 1 falls back to frame 0).
+- **Volatiles** (`radius: 22` -> `32×32 px` or `24×24 px`): `{theme}-volatile` (`cinder-volatile`, `rime-volatile`, `glacial-volatile`).
+- **Objectives**: `{theme}-circle` (Transmutation Circle, `160×160 px` or `320×320 px`), `{theme}-portal` (The Rift, `96×96 px` or `140×140 px`).
+- **Ambient specks** (`8×8 px` / `16×16 px`): `ambient-ash`, `ambient-ember`, `ambient-snow`, `ambient-mist`.
 
 ## Do
 

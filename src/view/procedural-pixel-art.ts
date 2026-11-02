@@ -1,4 +1,7 @@
+import type { UiRect } from './sprite-types';
+
 export type BiomeId = 'cinder' | 'rime';
+export type EnvThemeId = 'cinder' | 'rime' | 'glacial';
 export type VesselId = 'runner' | 'penitent';
 
 const cache = new Map<string, HTMLCanvasElement>();
@@ -16,7 +19,13 @@ type PixelArtOpts = {
 };
 
 export function stageBiome(stageId: string): BiomeId {
-  return stageId === 'rime-dock' ? 'rime' : 'cinder';
+  return stageId === 'rime-dock' || stageId === 'glacial-tomb' ? 'rime' : 'cinder';
+}
+
+export function stageEnvTheme(stageId: string): EnvThemeId {
+  if (stageId === 'glacial-tomb') return 'glacial';
+  if (stageId === 'rime-dock') return 'rime';
+  return 'cinder';
 }
 
 export function cachedPixel(
@@ -90,8 +99,8 @@ export function hazardKey(biome: BiomeId, frame: 0 | 1): string {
 export function volatileKey(biome: BiomeId): string {
   return `px-volatile-${biome}`;
 }
-export function floorKey(biome: BiomeId): string {
-  return `px-floor-${biome}`;
+export function floorKey(theme: EnvThemeId | BiomeId): string {
+  return `px-floor-${theme}`;
 }
 
 export type PixelBuf = {
@@ -189,23 +198,89 @@ export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   return out;
 }
 
-export function generateFloor(biome: BiomeId, width: number, height: number): HTMLCanvasElement {
-  return cachedRaw(floorKey(biome), () => {
+export function generateFloor(
+  theme: EnvThemeId | BiomeId,
+  width: number,
+  height: number,
+  atlasSource?: HTMLImageElement | HTMLCanvasElement | null,
+  atlasFrames?: Record<string, UiRect>,
+): HTMLCanvasElement {
+  const biome: BiomeId = theme === 'cinder' ? 'cinder' : 'rime';
+  return cachedRaw(floorKey(theme), () => {
     const canvas = makeCanvas(width, height);
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('2d context missing');
     ctx.imageSmoothingEnabled = false;
+
+    const tileRects: (UiRect | null)[] = [0, 1, 2, 3].map((v) => {
+      if (!atlasFrames) return null;
+      let frame = atlasFrames[`${theme}-tile-${v}`];
+      if (!frame && theme === 'glacial') frame = atlasFrames[`rime-tile-${v}`];
+      if (!frame) frame = atlasFrames[`${theme}-tile-0`];
+      if (!frame && theme === 'glacial') frame = atlasFrames['rime-tile-0'];
+      return frame && frame.w > 0 && frame.h > 0 ? frame : null;
+    });
+
+    const hasAtlasTiles = !!atlasSource && tileRects.some((r) => r !== null);
     const tiles = [0, 1, 2, 3].map((v) => makeFloorTile(biome, v));
     const tile = 64;
+
     for (let ty = 0; ty < height / tile; ty += 1) {
       for (let tx = 0; tx < width / tile; tx += 1) {
         const variant = tileVariant(tx, ty);
-        ctx.drawImage(tiles[variant], tx * tile, ty * tile);
+        const rect = tileRects[variant] ?? tileRects[0];
+        if (hasAtlasTiles && atlasSource && rect) {
+          ctx.drawImage(atlasSource, rect.x, rect.y, rect.w, rect.h, tx * tile, ty * tile, tile, tile);
+        } else {
+          ctx.drawImage(tiles[variant], tx * tile, ty * tile);
+        }
       }
     }
-    drawBoundary(ctx, width, height, biome);
+
+    const edgeRect = atlasFrames
+      ? (atlasFrames[`${theme}-border-edge`] ?? (theme === 'glacial' ? atlasFrames['rime-border-edge'] : undefined))
+      : undefined;
+    const cornerRect = atlasFrames
+      ? (atlasFrames[`${theme}-border-corner`] ?? (theme === 'glacial' ? atlasFrames['rime-border-corner'] : undefined))
+      : undefined;
+
+    if (atlasSource && edgeRect && edgeRect.w > 0 && edgeRect.h > 0) {
+      drawAtlasBoundary(ctx, width, height, atlasSource, edgeRect, cornerRect);
+    } else {
+      drawBoundary(ctx, width, height, biome);
+    }
     return canvas;
   });
+}
+
+function drawAtlasBoundary(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  source: HTMLImageElement | HTMLCanvasElement,
+  edge: UiRect,
+  corner?: UiRect,
+): void {
+  const edgeW = edge.w;
+  const edgeH = edge.h;
+  for (let x = 0; x < width; x += edgeW) {
+    const drawW = Math.min(edgeW, width - x);
+    ctx.drawImage(source, edge.x, edge.y, drawW, edgeH, x, 0, drawW, edgeH);
+    ctx.drawImage(source, edge.x, edge.y, drawW, edgeH, x, height - edgeH, drawW, edgeH);
+  }
+  for (let y = edgeH; y < height - edgeH; y += edgeH) {
+    const drawH = Math.min(edgeH, height - edgeH - y);
+    ctx.drawImage(source, edge.x, edge.y, edgeW, drawH, 0, y, edgeW, drawH);
+    ctx.drawImage(source, edge.x, edge.y, edgeW, drawH, width - edgeW, y, edgeW, drawH);
+  }
+  if (corner && corner.w > 0 && corner.h > 0) {
+    const cw = corner.w;
+    const ch = corner.h;
+    ctx.drawImage(source, corner.x, corner.y, cw, ch, 0, 0, cw, ch);
+    ctx.drawImage(source, corner.x, corner.y, cw, ch, width - cw, 0, cw, ch);
+    ctx.drawImage(source, corner.x, corner.y, cw, ch, 0, height - ch, cw, ch);
+    ctx.drawImage(source, corner.x, corner.y, cw, ch, width - cw, height - ch, cw, ch);
+  }
 }
 
 function put(out: Map<string, HTMLCanvasElement>, key: string, canvas: HTMLCanvasElement): void {

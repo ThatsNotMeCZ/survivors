@@ -1,22 +1,36 @@
 import Phaser from 'phaser';
 import { catalog } from '../data/catalog';
 import {
+  floorKey,
   generateAllEntityCanvases,
   generateFloor,
   generateProceduralSheets,
-  type BiomeId,
+  type EnvThemeId,
 } from './procedural-pixel-art';
-import { entityTextureKey, registerFallbackSheet } from './sprites';
+import {
+  createEnvFrames,
+  entityTextureKey,
+  getEnvAtlasDef,
+  getEnvAtlasSource,
+  registerFallbackSheet,
+} from './sprites';
 
-const BIOMES: BiomeId[] = ['cinder', 'rime'];
+const THEMES: EnvThemeId[] = ['cinder', 'rime', 'glacial'];
 
 /** Uploads procedural canvases for any `px-*` / entity key not already loaded (PNG sheets win). */
 export function uploadPixelTextures(scene: Phaser.Scene): void {
+  createEnvFrames(scene);
   const canvases = generateAllEntityCanvases();
   canvases.forEach((canvas, key) => addCanvasTexture(scene, key, canvas));
   const { width, height } = catalog.world;
-  for (const biome of BIOMES) {
-    addCanvasTexture(scene, `px-floor-${biome}`, generateFloor(biome, width, height));
+  const atlasSource = getEnvAtlasSource(scene);
+  const atlasDef = getEnvAtlasDef();
+  for (const theme of THEMES) {
+    addCanvasTexture(
+      scene,
+      floorKey(theme),
+      generateFloor(theme, width, height, atlasSource, atlasDef?.frames),
+    );
   }
   uploadEntitySheets(scene);
 }

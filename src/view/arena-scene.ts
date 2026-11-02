@@ -38,6 +38,7 @@ import {
 import { uploadPixelTextures } from './pixel-textures';
 import {
   eliteGlyphKey,
+  floorKey,
   hazardKey,
   pillarKey,
   moveFacing,
@@ -46,18 +47,23 @@ import {
   crosshairKey,
   playerEyesKey,
   stageBiome,
+  stageEnvTheme,
   volatileKey,
   type BiomeId,
+  type EnvThemeId,
 } from './procedural-pixel-art';
 import {
+  applyEnvTexture,
   authoredEntity,
   createEntityAnims,
   entityTextureKey,
   fodderAnimSpec,
   fodderGpuAnimations,
   fxTextureKey,
+  hasEnvTexture,
   playEntity,
   preloadSprites,
+  resolveEnvThemeProp,
 } from './sprites';
 
 type GpuMember = Omit<Partial<Phaser.Types.GameObjects.SpriteGPULayer.Member>, 'animation'> & {
@@ -107,6 +113,8 @@ export class ArenaScene extends Phaser.Scene {
   private obstacleSprites: Phaser.GameObjects.Image[] = [];
   private volatileGlows: Phaser.GameObjects.Image[] = [];
   private floor!: Phaser.GameObjects.Image;
+  private circleSprite!: Phaser.GameObjects.Image;
+  private portalSprite!: Phaser.GameObjects.Image;
   private telGlow!: Phaser.GameObjects.Image;
   private crosshair!: Phaser.GameObjects.Image;
   private waypoint!: Phaser.GameObjects.Image;
@@ -176,9 +184,12 @@ export class ArenaScene extends Phaser.Scene {
     uploadPixelTextures(this);
     createEntityAnims(this);
     const biome = this.biome();
+    const theme = this.envTheme();
     const vessel = this.vesselId();
 
-    this.floor = this.add.image(width / 2, height / 2, `px-floor-${biome}`).setDepth(0);
+    this.floor = this.add.image(width / 2, height / 2, floorKey(theme)).setDepth(0);
+    this.circleSprite = this.add.image(0, 0, '').setVisible(false).setDepth(1);
+    this.portalSprite = this.add.image(0, 0, '').setVisible(false).setDepth(1);
     this.zoneGfx = this.add.graphics().setDepth(1);
     this.telegraphGfx = this.add.graphics().setDepth(3);
 
@@ -363,6 +374,10 @@ export class ArenaScene extends Phaser.Scene {
     return stageBiome(currentStage(this.world).id);
   }
 
+  private envTheme(): EnvThemeId {
+    return stageEnvTheme(currentStage(this.world).id);
+  }
+
   private vesselId(): string {
     return this.world.survivor.id;
   }
@@ -435,9 +450,10 @@ export class ArenaScene extends Phaser.Scene {
   private syncView(dt: number): void {
     const { player, projectiles } = this.world;
     const biome = this.biome();
+    const theme = this.envTheme();
     if (this.lastStageGen !== this.world.stageGen) {
       this.lastStageGen = this.world.stageGen;
-      this.floor.setTexture(`px-floor-${biome}`);
+      this.floor.setTexture(floorKey(theme));
       this.playerEyes.setTexture(this.eyesKey(biome));
       this.crosshair.setTexture(this.crosshairKey());
       this.lastCircleKey = '';
@@ -445,7 +461,7 @@ export class ArenaScene extends Phaser.Scene {
     this.syncPlayer(dt, biome);
     this.crosshair.setPosition(this.world.aimX, this.world.aimY);
     this.cameras.main.centerOn(player.x, player.y);
-    this.syncObstacles(biome);
+    this.syncObstacles(biome, theme);
     this.syncEnemies();
     this.syncGems();
     this.drawZones(dt);
@@ -506,7 +522,7 @@ export class ArenaScene extends Phaser.Scene {
     this.playerEyes.setPosition(x + Math.round(Math.cos(ang) * 2), y - 6 + Math.round(Math.sin(ang) * 1));
   }
 
-  private syncObstacles(biome: BiomeId): void {
+  private syncObstacles(biome: BiomeId, theme: EnvThemeId): void {
     const { obstacles, player } = this.world;
     const hazardFrame: 0 | 1 = Math.floor(this.world.runTime / 0.25) % 2 === 0 ? 0 : 1;
     const flash = Math.floor(this.world.runTime * 16) % 2 === 0;
@@ -519,10 +535,30 @@ export class ArenaScene extends Phaser.Scene {
         continue;
       }
       const obs = obstacles.items[i];
-      let key = pillarKey(biome);
-      if (obs.type === 'hazard') key = hazardKey(biome, hazardFrame);
-      else if (obs.type === 'volatile') key = volatileKey(biome);
-      sprite.setTexture(key);
+      let fallback = pillarKey(biome);
+      let propSuffix = 'pillar';
+      if (obs.type === 'hazard') {
+        fallback = hazardKey(biome, hazardFrame);
+        propSuffix = `hazard-${hazardFrame}`;
+      } else if (obs.type === 'volatile') {
+        fallback = volatileKey(biome);
+        propSuffix = 'volatile';
+      }
+
+      const envId = resolveEnvThemeProp(theme, propSuffix, this);
+      if (envId) {
+        applyEnvTexture(sprite, envId, fallback);
+      } else if (obs.type === 'hazard' && hazardFrame === 1) {
+        const frame0 = resolveEnvThemeProp(theme, 'hazard-0', this);
+        if (frame0 && applyEnvTexture(sprite, frame0, fallback)) {
+          // hazard-0 fallback for frame 1
+        } else {
+          sprite.setTexture(fallback);
+        }
+      } else {
+        sprite.setTexture(fallback);
+      }
+
       sprite.setVisible(true);
       sprite.setPosition(Math.round(obs.x), Math.round(obs.y));
       const display = (obs.radius * 2) / sprite.width;
@@ -840,6 +876,7 @@ export class ArenaScene extends Phaser.Scene {
     const g = this.zoneGfx;
     const tel = this.world.teleporter;
     const biome = this.biome();
+    const theme = this.envTheme();
     const inZone =
       tel.state !== 'hidden' && Math.hypot(this.world.player.x - tel.x, this.world.player.y - tel.y) <= tel.radius;
     const t = tel.hold > 0 ? Math.min(1, tel.charge / tel.hold) : 0;
@@ -850,6 +887,36 @@ export class ArenaScene extends Phaser.Scene {
         spawnBurst(this.sparks, tel.x, tel.y, biome === 'cinder' ? 0xffaa33 : 0x55ffff, 2, 40, 0.22);
       }
     }
+
+    const circleId = resolveEnvThemeProp(theme, 'circle', this);
+    const hasAuthoredCircle = !!circleId && tel.state !== 'hidden';
+    if (hasAuthoredCircle && circleId) {
+      applyEnvTexture(this.circleSprite, circleId);
+      this.circleSprite
+        .setVisible(true)
+        .setPosition(tel.x, tel.y)
+        .setDisplaySize(tel.radius * 2, tel.radius * 2);
+    } else {
+      this.circleSprite.setVisible(false);
+    }
+
+    const portalId = resolveEnvThemeProp(theme, 'portal', this);
+    const hasAuthoredPortal = !!portalId && this.world.portal.open;
+    if (hasAuthoredPortal && portalId) {
+      applyEnvTexture(this.portalSprite, portalId);
+      const radius = this.world.catalog.loop.portalRadius;
+      const hold = this.world.catalog.loop.portalHold;
+      const pct = hold > 0 ? Math.min(1, this.world.portal.hold / hold) : 0;
+      const pulse = 0.75 + 0.15 * Math.sin(this.world.runTime * 7) + 0.1 * pct;
+      this.portalSprite
+        .setVisible(true)
+        .setPosition(this.world.portal.x, this.world.portal.y)
+        .setDisplaySize(radius * 2, radius * 2)
+        .setAlpha(pulse);
+    } else {
+      this.portalSprite.setVisible(false);
+    }
+
     const pulseTick = this.world.portal.open ? Math.floor(this.world.runTime * 8) : 0;
     const circleKey = `${this.world.stageGen}|${tel.state}|${inZone ? 1 : 0}|${Math.round(t * 50)}|${this.world.portal.open ? 1 : 0}|${Math.round(this.world.portal.hold * 10)}|${pulseTick}`;
     if (circleKey === this.lastCircleKey) {
@@ -859,13 +926,13 @@ export class ArenaScene extends Phaser.Scene {
     this.lastCircleKey = circleKey;
     g.clear();
     if (tel.state !== 'hidden') {
-      drawTransmutationCircle(g, tel.x, tel.y, tel.radius, t, inZone, biome, tel.state === 'charging');
+      drawTransmutationCircle(g, tel.x, tel.y, tel.radius, t, inZone, biome, tel.state === 'charging', hasAuthoredCircle);
       this.telGlow.setPosition(tel.x, tel.y);
       this.telGlow.setAlpha(tel.state === 'charging' ? (inZone ? 0.22 : 0.08) : 0);
     } else {
       this.telGlow.setAlpha(0);
     }
-    if (this.world.portal.open) {
+    if (this.world.portal.open && !hasAuthoredPortal) {
       const color = biome === 'cinder' ? 0xffb347 : 0xdff6ff;
       const radius = this.world.catalog.loop.portalRadius;
       const hold = this.world.catalog.loop.portalHold;
@@ -1087,8 +1154,13 @@ export class ArenaScene extends Phaser.Scene {
         seedAmbient(speck, view, biome);
       }
       const sprite = this.ambientSprites[i];
+      const ambientId = `ambient-${speck.kind}`;
       const tex = speck.kind === 'ash' ? 'px-ash' : speck.kind === 'ember' ? 'px-ember' : speck.kind === 'snow' ? 'px-snow' : 'px-mist';
-      sprite.setTexture(tex);
+      if (hasEnvTexture(this, ambientId)) {
+        applyEnvTexture(sprite, ambientId, tex);
+      } else {
+        sprite.setTexture(tex);
+      }
       sprite.setPosition(Math.round(speck.x), Math.round(speck.y));
       sprite.setAlpha(speck.kind === 'mist' ? 0.16 : 0.4);
     }
@@ -1195,6 +1267,7 @@ function drawTransmutationCircle(
   inZone: boolean,
   biome: BiomeId,
   charging: boolean,
+  hasAuthoredSprite = false,
 ): void {
   const cx = Math.round(x);
   const cy = Math.round(y);
@@ -1202,27 +1275,29 @@ function drawTransmutationCircle(
   const active = biome === 'cinder' ? 0xffaa33 : 0x55ffff;
   const muted = biome === 'cinder' ? 0x5a3030 : 0x2a4058;
   const ring = charging && inZone ? active : muted;
-  g.lineStyle(2, ring, charging ? 0.95 : 0.35);
-  g.strokeCircle(cx, cy, r);
-  g.lineStyle(1, ring, 0.7);
-  g.strokeCircle(cx, cy, Math.round(r * 0.62));
-  const inner = Math.round(r * 0.72);
-  for (let i = 0; i < 6; i += 1) {
-    const a0 = (i * Math.PI) / 3 - Math.PI / 2;
-    const a1 = ((i + 2) * Math.PI) / 3 - Math.PI / 2;
-    g.lineBetween(
-      Math.round(cx + Math.cos(a0) * inner),
-      Math.round(cy + Math.sin(a0) * inner),
-      Math.round(cx + Math.cos(a1) * inner),
-      Math.round(cy + Math.sin(a1) * inner),
-    );
-  }
-  for (let i = 0; i < 6; i += 1) {
-    const a = (i * Math.PI) / 3 - Math.PI / 2;
-    const nx = Math.round(cx + Math.cos(a) * r);
-    const ny = Math.round(cy + Math.sin(a) * r);
-    g.fillStyle(ring, 0.9);
-    g.fillRect(nx - 2, ny - 2, 4, 4);
+  if (!hasAuthoredSprite) {
+    g.lineStyle(2, ring, charging ? 0.95 : 0.35);
+    g.strokeCircle(cx, cy, r);
+    g.lineStyle(1, ring, 0.7);
+    g.strokeCircle(cx, cy, Math.round(r * 0.62));
+    const inner = Math.round(r * 0.72);
+    for (let i = 0; i < 6; i += 1) {
+      const a0 = (i * Math.PI) / 3 - Math.PI / 2;
+      const a1 = ((i + 2) * Math.PI) / 3 - Math.PI / 2;
+      g.lineBetween(
+        Math.round(cx + Math.cos(a0) * inner),
+        Math.round(cy + Math.sin(a0) * inner),
+        Math.round(cx + Math.cos(a1) * inner),
+        Math.round(cy + Math.sin(a1) * inner),
+      );
+    }
+    for (let i = 0; i < 6; i += 1) {
+      const a = (i * Math.PI) / 3 - Math.PI / 2;
+      const nx = Math.round(cx + Math.cos(a) * r);
+      const ny = Math.round(cy + Math.sin(a) * r);
+      g.fillStyle(ring, 0.9);
+      g.fillRect(nx - 2, ny - 2, 4, 4);
+    }
   }
   if (charging && charge > 0) {
     g.lineStyle(3, active, inZone ? 1 : 0.45);

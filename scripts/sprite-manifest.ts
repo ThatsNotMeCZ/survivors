@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { extname, join } from 'node:path';
 import type {
   EntitySpriteDef,
+  EnvAtlasDef,
   SpriteAnimDef,
   SpriteManifest,
   UiAtlasDef,
@@ -13,6 +14,7 @@ import type {
 
 export type {
   EntitySpriteDef,
+  EnvAtlasDef,
   SpriteAnimDef,
   SpriteManifest,
   UiAtlasDef,
@@ -58,6 +60,15 @@ export function writeSpriteManifest(root = process.cwd()): string {
     if (!entities['frost-spitter']) entities['frost-spitter'] = { ...entities.spitter };
   }
 
+  const envDir = join(spritesDir, 'env');
+  const envAtlas = readEnvAtlas(envDir);
+  const envPngs = listPng(envDir)
+    .map(stem)
+    .filter((id) => id !== 'atlas');
+  const envIds = Array.from(new Set([...envPngs, ...Object.keys(envAtlas?.frames ?? {})])).sort((a, b) =>
+    a.localeCompare(b),
+  );
+
   const uiDir = join(spritesDir, 'ui');
   const uiAtlas = readUiAtlas(uiDir);
   const uiPngs = listPng(uiDir)
@@ -71,15 +82,49 @@ export function writeSpriteManifest(root = process.cwd()): string {
     entities,
     items: listPng(join(spritesDir, 'items')).map(stem),
     skills: listPng(join(spritesDir, 'skills')).map(stem),
-    env: listPng(join(spritesDir, 'env')).map(stem),
+    env: envIds,
     fx: listPng(join(spritesDir, 'fx')).map(stem),
     ui: uiIds,
     ...(uiAtlas ? { uiAtlas } : {}),
+    ...(envAtlas ? { envAtlas } : {}),
   };
 
   const out = join(spritesDir, 'manifest.json');
   writeFileSync(out, `${JSON.stringify(manifest, null, 2)}\n`);
   return out;
+}
+
+function readEnvAtlas(envDir: string): EnvAtlasDef | undefined {
+  const pngPath = join(envDir, 'atlas.png');
+  const jsonPath = join(envDir, 'atlas.json');
+  if (!existsSync(pngPath) || !existsSync(jsonPath)) return undefined;
+  const size = pngSize(pngPath);
+  if (!size) return undefined;
+  try {
+    const raw: unknown = JSON.parse(readFileSync(jsonPath, 'utf8'));
+    if (!raw || typeof raw !== 'object') return undefined;
+    const rec = raw as Record<string, unknown>;
+    const framesSource =
+      rec.frames && typeof rec.frames === 'object' && !Array.isArray(rec.frames)
+        ? (rec.frames as Record<string, unknown>)
+        : rec;
+    const frames: Record<string, UiRect> = {};
+    for (const [id, entryRaw] of Object.entries(framesSource)) {
+      if (id === 'src' || id === 'width' || id === 'height' || id === 'meta') continue;
+      const parsed = parseUiRect(entryRaw);
+      if (parsed && parsed.w > 0 && parsed.h > 0) {
+        frames[id] = parsed;
+      }
+    }
+    return {
+      src: 'sprites/env/atlas.png',
+      width: size.width,
+      height: size.height,
+      frames,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 function readUiAtlas(uiDir: string): UiAtlasDef | undefined {

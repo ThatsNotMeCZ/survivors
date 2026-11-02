@@ -1,0 +1,47 @@
+{
+  "frames": {
+    "cinder-tile-0": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-tile-1": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-tile-2": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-tile-3": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-border-edge": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-border-corner": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-pillar": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-hazard-0": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-hazard-1": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-volatile": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-circle": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "cinder-portal": { "x": 0, "y": 0, "w": 0, "h": 0 },
+
+    "rime-tile-0": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-tile-1": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-tile-2": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-tile-3": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-border-edge": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-border-corner": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-pillar": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-hazard-0": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-hazard-1": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-volatile": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-circle": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "rime-portal": { "x": 0, "y": 0, "w": 0, "h": 0 },
+
+    "glacial-tile-0": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-tile-1": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-tile-2": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-tile-3": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-border-edge": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-border-corner": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-pillar": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-hazard-0": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-hazard-1": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-volatile": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-circle": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "glacial-portal": { "x": 0, "y": 0, "w": 0, "h": 0 },
+
+    "ambient-ash": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "ambient-ember": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "ambient-snow": { "x": 0, "y": 0, "w": 0, "h": 0 },
+    "ambient-mist": { "x": 0, "y": 0, "w": 0, "h": 0 }
+  }
+}

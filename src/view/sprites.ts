@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { EntitySpriteDef, SpriteAnimDef, SpriteManifest } from './sprite-types';
+import type { EntitySpriteDef, EnvAtlasDef, SpriteAnimDef, SpriteManifest, UiRect } from './sprite-types';
 
 const emptyManifest = (): SpriteManifest => ({
   entities: {},
@@ -93,7 +93,86 @@ export function preloadSprites(scene: Phaser.Scene): void {
     for (const id of manifest.fx) {
       scene.load.image(fxTextureKey(id), fxSpriteSrc(id));
     }
+    if (manifest.envAtlas && Object.keys(manifest.envAtlas.frames).length > 0) {
+      scene.load.image('env-atlas', manifest.envAtlas.src);
+    }
+    for (const id of manifest.env) {
+      if (!manifest.envAtlas?.frames[id]) {
+        scene.load.image(`env-${id}`, `sprites/env/${id}.png`);
+      }
+    }
   });
+}
+
+export function createEnvFrames(scene: Phaser.Scene): void {
+  if (!manifest.envAtlas || !scene.textures.exists('env-atlas')) return;
+  const texture = scene.textures.get('env-atlas');
+  for (const [frameId, rect] of Object.entries(manifest.envAtlas.frames)) {
+    if (!texture.has(frameId)) {
+      texture.add(frameId, 0, rect.x, rect.y, rect.w, rect.h);
+    }
+  }
+}
+
+export function hasEnvTexture(scene: Phaser.Scene, id: string): boolean {
+  if (manifest.envAtlas?.frames[id] && scene.textures.exists('env-atlas')) {
+    const tex = scene.textures.get('env-atlas');
+    if (tex.has(id)) return true;
+  }
+  return scene.textures.exists(`env-${id}`);
+}
+
+export function applyEnvTexture(
+  image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite,
+  id: string,
+  fallbackKey?: string,
+): boolean {
+  const scene = image.scene;
+  if (manifest.envAtlas?.frames[id] && scene.textures.exists('env-atlas')) {
+    const tex = scene.textures.get('env-atlas');
+    if (tex.has(id)) {
+      image.setTexture('env-atlas', id);
+      return true;
+    }
+  }
+  const standalone = `env-${id}`;
+  if (scene.textures.exists(standalone)) {
+    image.setTexture(standalone);
+    return true;
+  }
+  if (fallbackKey && scene.textures.exists(fallbackKey)) {
+    image.setTexture(fallbackKey);
+  }
+  return false;
+}
+
+export function resolveEnvThemeProp(
+  theme: string,
+  propSuffix: string,
+  scene: Phaser.Scene,
+): string | null {
+  const direct = `${theme}-${propSuffix}`;
+  if (hasEnvTexture(scene, direct)) return direct;
+  if (theme === 'glacial') {
+    const rime = `rime-${propSuffix}`;
+    if (hasEnvTexture(scene, rime)) return rime;
+  }
+  return null;
+}
+
+export function getEnvAtlasDef(): EnvAtlasDef | undefined {
+  return manifest.envAtlas;
+}
+
+export function getEnvFrame(id: string): UiRect | undefined {
+  return manifest.envAtlas?.frames[id];
+}
+
+export function getEnvAtlasSource(scene: Phaser.Scene): HTMLImageElement | HTMLCanvasElement | null {
+  if (!scene.textures.exists('env-atlas')) return null;
+  const tex = scene.textures.get('env-atlas');
+  const source = tex.getSourceImage();
+  return (source as HTMLImageElement | HTMLCanvasElement) || null;
 }
 
 export function createEntityAnims(scene: Phaser.Scene): void {
@@ -188,12 +267,45 @@ function parseManifest(data: unknown): SpriteManifest {
       if (def) entities[id] = def;
     }
   }
+  const envAtlas = parseEnvAtlas(rec.envAtlas);
   return {
     entities,
     items: stringList(rec.items),
     skills: stringList(rec.skills),
     env: stringList(rec.env),
     fx: stringList(rec.fx),
+    ...(envAtlas ? { envAtlas } : {}),
+  };
+}
+
+function parseEnvAtlas(data: unknown): EnvAtlasDef | undefined {
+  if (!data || typeof data !== 'object') return undefined;
+  const rec = data as Record<string, unknown>;
+  if (typeof rec.src !== 'string' || typeof rec.width !== 'number' || typeof rec.height !== 'number') {
+    return undefined;
+  }
+  const frames: Record<string, UiRect> = {};
+  if (rec.frames && typeof rec.frames === 'object') {
+    for (const [id, frameRaw] of Object.entries(rec.frames as Record<string, unknown>)) {
+      if (!frameRaw || typeof frameRaw !== 'object') continue;
+      const f = frameRaw as Record<string, unknown>;
+      if (
+        typeof f.x === 'number' &&
+        typeof f.y === 'number' &&
+        typeof f.w === 'number' &&
+        typeof f.h === 'number' &&
+        f.w > 0 &&
+        f.h > 0
+      ) {
+        frames[id] = { x: f.x, y: f.y, w: f.w, h: f.h };
+      }
+    }
+  }
+  return {
+    src: rec.src,
+    width: rec.width,
+    height: rec.height,
+    frames,
   };
 }
 
