@@ -132,6 +132,7 @@
     "card-uncommon",
     "hall-banner",
     "hall-medailon",
+    "hall-medallion",
     "hud-corner",
     "hud-flask",
     "hud-inventory",
@@ -667,6 +668,26 @@
         }
       },
       "hall-medailon": {
+        "idle": {
+          "x": 840,
+          "y": 620,
+          "w": 48,
+          "h": 48
+        },
+        "hover": {
+          "x": 840,
+          "y": 620,
+          "w": 48,
+          "h": 48
+        },
+        "active": {
+          "x": 840,
+          "y": 620,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "hall-medallion": {
         "idle": {
           "x": 840,
           "y": 620,

@@ -19,7 +19,7 @@
         <p><span class="k">renderer</span> <span id="hud-renderer">--</span></p>
       </div>
       <div id="hud-play" class="hidden">
-        <div class="hud-corner-tl" aria-hidden="true"></div>
+        <div class="hud-corner-tl" aria-hidden="true" data-ui-sprite="hud-corner"></div>
         <div id="hud-objective" data-ui-sprite="hud-objective">
           <p id="hud-objective-kicker" class="objective-kicker">Transmutation</p>
           <p id="hud-objective-label">Survive</p>
@@ -61,7 +61,7 @@
         </div>
         <div id="hud-skills" data-ui-sprite="hud-skill-dock">
           <div class="skill-unit">
-            <div class="skill-slot" data-slot="primary" data-key="LMB">
+            <div class="skill-slot" data-slot="primary" data-key="LMB" data-ui-sprite="skill-slot-frame">
               <div class="skill-sweep"></div>
               <span class="skill-glyph">I</span>
               <span class="skill-cd"></span>
@@ -69,7 +69,7 @@
             </div>
           </div>
           <div class="skill-unit">
-            <div class="skill-slot" data-slot="secondary" data-key="RMB">
+            <div class="skill-slot" data-slot="secondary" data-key="RMB" data-ui-sprite="skill-slot-frame">
               <div class="skill-sweep"></div>
               <span class="skill-glyph">II</span>
               <span class="skill-cd"></span>
@@ -77,7 +77,7 @@
             </div>
           </div>
           <div class="skill-unit">
-            <div class="skill-slot" data-slot="utility" data-key="Shift">
+            <div class="skill-slot" data-slot="utility" data-key="Shift" data-ui-sprite="skill-slot-frame">
               <div class="skill-sweep"></div>
               <span class="skill-glyph">III</span>
               <span class="skill-cd"></span>
@@ -85,7 +85,7 @@
             </div>
           </div>
           <div class="skill-unit">
-            <div class="skill-slot" data-slot="special" data-key="Q">
+            <div class="skill-slot" data-slot="special" data-key="Q" data-ui-sprite="skill-slot-frame">
               <div class="skill-sweep"></div>
               <span class="skill-glyph">IV</span>
               <span class="skill-cd"></span>
@@ -103,17 +103,17 @@
       <p id="prompt-detail"></p>
       <div id="prompt-bar" aria-hidden="true"><div id="prompt-fill"></div></div>
     </div>
-    <div id="sting" class="hidden" aria-live="polite">
+    <div id="sting" class="hidden" aria-live="polite" data-ui-sprite="sting-banner">
       <p id="sting-kicker"></p>
       <h2 id="sting-title"></h2>
       <p id="sting-sub"></p>
     </div>
     <div id="overlay" class="hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="overlay-title">
       <div class="screen-frame" aria-hidden="true">
-        <span class="corner corner-tl"></span>
-        <span class="corner corner-tr"></span>
-        <span class="corner corner-bl"></span>
-        <span class="corner corner-br"></span>
+        <span class="corner corner-tl" data-ui-sprite="screen-corner"></span>
+        <span class="corner corner-tr" data-ui-sprite="screen-corner"></span>
+        <span class="corner corner-bl" data-ui-sprite="screen-corner"></span>
+        <span class="corner corner-br" data-ui-sprite="screen-corner"></span>
       </div>
 
       <!-- 1. MAIN MENU -->
@@ -165,14 +165,14 @@
       <!-- 2. LOBBY / THE HALL -->
       <div id="hall" class="hidden">
         <header class="hall-header" data-ui-sprite="hall-banner">
-          <button type="button" id="hall-back" class="hall-medallion" aria-label="Back to Main Menu" title="Back to Main Menu">
+          <button type="button" id="hall-back" class="hall-medallion" aria-label="Back to Main Menu" title="Back to Main Menu" data-ui-sprite="hall-medailon">
             <span aria-hidden="true">◁</span>
           </button>
           <h1 id="hall-brand" class="hall-brand">THE HALL</h1>
         </header>
         <aside class="hall-sidebar">
           <nav id="hall-nav" class="hall-nav" aria-label="Vessel Selection"></nav>
-          <div class="hall-nav-arrow" aria-hidden="true">▼</div>
+          <div class="hall-nav-arrow" aria-hidden="true" data-ui-sprite="nav-arrow">▼</div>
         </aside>
         <div id="hall-preview" class="hall-preview"></div>
         <div id="hall-dossier" class="hall-dossier" data-ui-sprite="parchment-panel"></div>

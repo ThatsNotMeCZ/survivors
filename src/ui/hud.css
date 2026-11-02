@@ -176,6 +176,18 @@ select:focus-visible,
   opacity: 0.9;
 }
 
+.hud-corner-tl[data-has-ui-sprite='1'] {
+  width: 96px;
+  height: 96px;
+  background-color: transparent !important;
+  border: none !important;
+  border-top: none !important;
+  border-left: none !important;
+  clip-path: none !important;
+  opacity: 0.95;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+}
+
 /* Top-Center Objective Banner */
 #hud-objective {
   position: fixed;
@@ -192,6 +204,15 @@ select:focus-visible,
     inset 0 0 0 1px #0c0a0d,
     0 6px 20px rgba(0, 0, 0, 0.65);
   clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0 50%);
+}
+
+#hud-objective[data-has-ui-sprite='1'] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  clip-path: none !important;
+  padding: 14px 44px 12px;
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.65));
 }
 
 .objective-kicker {
@@ -269,6 +290,26 @@ select:focus-visible,
   box-shadow:
     inset 0 0 0 1px #0c0a0d,
     0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+#hud-meta[data-has-ui-sprite='1'] {
+  width: 220px;
+  height: 72px;
+  box-sizing: border-box;
+  padding: 8px 16px 8px 64px;
+  border: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.6));
+}
+
+#hud-meta[data-has-ui-sprite='1'] .meta-clock {
+  display: none !important;
+}
+
+#hud-meta[data-has-ui-sprite='1'] .meta-rows {
+  height: 100%;
+  justify-content: center;
 }
 
 .meta-clock {
@@ -585,6 +626,13 @@ select:focus-visible,
   font-size: 13px;
 }
 
+.skill-slot[data-has-ui-sprite='1'] {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+}
+
 .skill-unit {
   display: flex;
   flex-direction: column;
@@ -815,6 +863,14 @@ select:focus-visible,
   transition: opacity var(--ease);
 }
 
+#sting[data-has-ui-sprite='1'] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 14px 52px 24px;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.85));
+}
+
 #sting.visible {
   opacity: 1;
 }
@@ -884,6 +940,30 @@ select:focus-visible,
   height: 84px;
   border: 2px solid var(--brass-dim);
   opacity: 0.55;
+}
+
+.screen-frame .corner[data-has-ui-sprite='1'] {
+  width: 96px;
+  height: 96px;
+  border: none !important;
+  opacity: 0.85;
+  background-color: transparent !important;
+}
+
+.screen-frame .corner-tl[data-has-ui-sprite='1'] {
+  transform: none;
+}
+
+.screen-frame .corner-tr[data-has-ui-sprite='1'] {
+  transform: scaleX(-1);
+}
+
+.screen-frame .corner-bl[data-has-ui-sprite='1'] {
+  transform: scaleY(-1);
+}
+
+.screen-frame .corner-br[data-has-ui-sprite='1'] {
+  transform: scale(-1, -1);
 }
 
 .corner-tl {
@@ -1215,6 +1295,26 @@ select:focus-visible,
   opacity: 0;
 }
 
+.hall-medallion[data-has-ui-sprite='1'] {
+  width: 48px;
+  height: 48px;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+}
+
+.hall-medallion[data-has-ui-sprite='1'] span {
+  display: none !important;
+}
+
+.hall-medallion[data-has-ui-sprite='1']:hover,
+.hall-medallion[data-has-ui-sprite='1']:focus-visible {
+  filter: drop-shadow(0 0 10px var(--brass-glow));
+  transform: scale(1.06);
+}
+
 .hall-medallion:hover,
 .hall-medallion:focus-visible {
   border-color: var(--brass-bright);
@@ -1336,6 +1436,18 @@ select:focus-visible,
   color: var(--brass);
   font-size: 16px;
   opacity: 0.75;
+}
+
+.hall-nav-arrow[data-has-ui-sprite='1'] {
+  width: 32px;
+  height: 32px;
+  margin-top: 18px;
+  color: transparent !important;
+  font-size: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
 }
 
 /* Lobby Center Stage */
@@ -2057,7 +2169,7 @@ select:focus-visible,
 .pause-inv-box {
   width: 268px;
   height: 268px;
-  padding: 14px;
+  padding: 32px;
   background: linear-gradient(180deg, rgba(22, 19, 24, 0.96), rgba(12, 10, 14, 0.98));
   border: 3px solid var(--brass);
   box-shadow:
@@ -2110,8 +2222,8 @@ select:focus-visible,
   left: calc(100% - 36px);
   top: 42px;
   z-index: 6;
-  width: 214px;
-  padding: 16px 16px 14px;
+  width: 280px;
+  padding: 24px 42px 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
