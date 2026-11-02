@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import {
   FX_DASH,
   FX_DEATH,
-  FX_GEM,
   FX_HIT,
   FX_HURT,
   FX_MUZZLE,
@@ -52,7 +51,6 @@ export function eventFxId(kind: number, tint: number, utilitySkillId: string): s
   if (kind === FX_MUZZLE) return 'muzzle';
   if (kind === FX_DASH) return authoredFx(utilitySkillId) ? utilitySkillId : 'dash';
   if (kind === FX_STRIKE) return 'skill-crucible-cull';
-  if (kind === FX_GEM) return 'gem';
   return null;
 }
 

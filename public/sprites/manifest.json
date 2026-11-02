@@ -131,6 +131,7 @@
     "card-rare",
     "card-uncommon",
     "hall-banner",
+    "hud-flask",
     "hud-inventory",
     "hud-skill-dock",
     "logo",
@@ -142,8 +143,8 @@
   ],
   "uiAtlas": {
     "src": "sprites/ui/atlas.png",
-    "width": 1173,
-    "height": 1740,
+    "width": 1272,
+    "height": 1836,
     "frames": {
       "logo": {
         "idle": {
@@ -539,6 +540,26 @@
           },
           "repeat": "stretch",
           "scale": 1
+        }
+      },
+      "hud-flask": {
+        "idle": {
+          "x": 700,
+          "y": 1350,
+          "w": 179,
+          "h": 208
+        },
+        "hover": {
+          "x": 700,
+          "y": 1350,
+          "w": 179,
+          "h": 208
+        },
+        "active": {
+          "x": 700,
+          "y": 1350,
+          "w": 179,
+          "h": 208
         }
       }
     }

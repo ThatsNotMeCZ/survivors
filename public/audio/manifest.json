@@ -1,19 +1,36 @@
 {
   "music": {
     "menu": [
-      "audio/music/menu/Karl Casey - Into the void.ogg",
-      "audio/music/menu/Karl Casey - The Body.ogg"
+      "audio/music/menu/MainMenu_01 - Hermetic Alchemist.ogg",
+      "audio/music/menu/MainMenu_02 - Hermetic Codex.ogg"
     ],
     "maps": {
       "cinder-yard": [
-        "audio/music/maps/cinder-yard/Karl Casey - Radiation Sickness.ogg"
+        "audio/music/maps/cinder-yard/CinderYard_01 - Hermetic Protocol.ogg",
+        "audio/music/maps/cinder-yard/CinderYard_02 - Iron Pulse.ogg"
+      ],
+      "glacial-tomb": [
+        "audio/music/maps/glacial-tomb/Tomb_01 - Frozen Necropolis.ogg",
+        "audio/music/maps/glacial-tomb/Tomb_02 - Sacred Descent.ogg"
       ],
       "rime-dock": [
-        "audio/music/maps/rime-dock/Karl Casey - Identity.ogg"
+        "audio/music/maps/rime-dock/Rime_01 - Glacial Pulse.ogg",
+        "audio/music/maps/rime-dock/Rime_02 - Cold Harbor.ogg"
+      ]
+    },
+    "boss": {
+      "cinder-heart": [
+        "audio/music/boss/cinder-heart/BossCinder - Dark Crucible.ogg"
+      ],
+      "frost-emperor": [
+        "audio/music/boss/frost-emperor/BossEmperor - Climactic Dark Gothic.ogg"
+      ],
+      "frost-sovereign": [
+        "audio/music/boss/frost-sovereign/BossSovereign - Freezing and Authoritative.ogg"
       ]
     },
     "overlay": [
-      "audio/music/overlay/Karl Casey - White Bat 37 - 06 Vessel.ogg"
+      "audio/music/overlay/Overlay_01 - Cold Crucible.ogg"
     ]
   },
   "sfx": {

@@ -55,6 +55,7 @@ import {
   entityTextureKey,
   fodderAnimSpec,
   fodderGpuAnimations,
+  fxTextureKey,
   playEntity,
   preloadSprites,
 } from './sprites';
@@ -153,6 +154,7 @@ export class ArenaScene extends Phaser.Scene {
   private lastPhase: World['phase'] = 'play';
   private lastStageIndex = 0;
   private lastBossSpawned = false;
+  private bossMusicActive = false;
   private shownOffer: ItemDef[] | null = null;
   private walkPhase = 0;
   private circleSparkCd = 0;
@@ -195,7 +197,8 @@ export class ArenaScene extends Phaser.Scene {
       this.fodderAnimName.set(def.id, new Array(this.world.enemies.cap).fill(''));
       this.fodderAnimStart.set(def.id, new Float64Array(this.world.enemies.cap));
     }
-    this.gemLayer = this.add.spriteGPULayer('px-gem', loop.maxGems).setDepth(2);
+    const gemTex = this.textures.exists(fxTextureKey('gem')) ? fxTextureKey('gem') : 'px-gem';
+    this.gemLayer = this.add.spriteGPULayer(gemTex, loop.maxGems).setDepth(2);
     this.sparkLayer = this.add.spriteGPULayer('px-spark', SPARK_CAP).setDepth(6);
     this.gemShown = new Uint8Array(loop.maxGems);
     this.sparkShown = new Uint8Array(SPARK_CAP);
@@ -286,6 +289,7 @@ export class ArenaScene extends Phaser.Scene {
     this.lastPhase = 'play';
     this.lastStageIndex = this.world.stageIndex;
     this.lastBossSpawned = this.world.bossSpawned;
+    this.bossMusicActive = this.world.bossSpawned && this.world.counts.boss > 0;
     this.shownOffer = null;
     bindOverlay({
       onPick: (index) => {
@@ -742,6 +746,7 @@ export class ArenaScene extends Phaser.Scene {
     if (this.world.stageIndex !== this.lastStageIndex) {
       this.lastStageIndex = this.world.stageIndex;
       this.lastBossSpawned = false;
+      this.bossMusicActive = false;
       const stage = currentStage(this.world);
       setMusicScene({ kind: 'stage', stageId: stage.id });
       showSting(
@@ -755,6 +760,9 @@ export class ArenaScene extends Phaser.Scene {
     }
     if (this.world.bossSpawned && !this.lastBossSpawned) {
       this.lastBossSpawned = true;
+      this.bossMusicActive = true;
+      const stage = currentStage(this.world);
+      setMusicScene({ kind: 'boss', bossId: stage.boss, stageId: stage.id });
       const name = this.world.focus.name || currentObjective(this.world).name || 'the seal';
       showSting(
         {
@@ -764,6 +772,11 @@ export class ArenaScene extends Phaser.Scene {
         },
         2000,
       );
+    }
+    if (this.bossMusicActive && this.world.counts.boss === 0 && this.world.portal.open) {
+      this.bossMusicActive = false;
+      const stage = currentStage(this.world);
+      setMusicScene({ kind: 'stage', stageId: stage.id });
     }
     if (stingActive()) {
       const moving = Math.abs(this.inputFrame.moveX) + Math.abs(this.inputFrame.moveY) > 0;
@@ -991,6 +1004,7 @@ export class ArenaScene extends Phaser.Scene {
         else if (kind === FX_MUZZLE) spawnBurst(this.sparks, x, y, tint, 3, 70, 0.14);
         else if (kind === FX_DASH) spawnBurst(this.sparks, x, y, tint, 6, 110, 0.2);
         else if (kind === FX_STRIKE) spawnBurst(this.sparks, x, y, tint, 14, 160, 0.32);
+        else if (kind === FX_GEM) spawnBurst(this.sparks, x, y, tint, 3, 70, 0.15);
       }
       if (kind === FX_HIT) playSfx('hit');
       else if (kind === FX_HURT) playSfx('hurt');

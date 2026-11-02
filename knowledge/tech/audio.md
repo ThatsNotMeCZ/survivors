@@ -11,9 +11,10 @@ Files live in `public/audio/`. Phaser stays `audio.noAudio: true` — the hall b
 | `sfx/world/` | Gems, obstacles, death |
 | `music/menu/` | Hall playlist. Stops when a run starts. |
 | `music/maps/{stage-id}/` | Stage playlist. Ids match `loop.json` `stages[].id`. |
+| `music/boss/{boss-id}/` | Boss playlist. Ids match `entities.json` boss id (`cinder-heart`, etc.). Crossfades with stage bed. |
 | `music/overlay/` | Shared chill playlist. Pause (and nested pause screens) only. |
 
-Slice maps: `cinder-yard`, `rime-dock`. A new stage gets a new `music/maps/{id}/` folder with the same id.
+Slice maps: `cinder-yard`, `rime-dock`, `glacial-tomb`. A new stage gets a new `music/maps/{id}/` folder with the same id. Boss tracks live in `music/boss/{boss-id}/`.
 
 ## Playlist
 
@@ -34,6 +35,7 @@ Two music channels: **bed** and **overlay**. Overlay never replaces the bed.
 |---|---|---|
 | Hall (menu) | `music/menu/` | off |
 | Run / HUD | `music/maps/{stage}` | off |
+| Boss fight | `music/boss/{boss-id}` | off |
 | Pause | same map bed, ducked | `music/overlay/` |
 | Level select | selected map bed, ducked | `music/overlay/` |
 | Level-up / recap | map bed | off |
@@ -41,7 +43,7 @@ Two music channels: **bed** and **overlay**. Overlay never replaces the bed.
 
 Level-up tablets stay on the map bed with overlay off — short pick, not a chill screen. Overlay is shared across maps; map identity stays in the ducked bed.
 
-Crossfade beds on stage wipe (`beginStage`). Fade overlay in/out with pause. Overlay rides the music bus (`musicVolume` + mute). No extra slider.
+Crossfade beds on stage wipe (`beginStage`) and when a boss spawns/dies (~1.2s crossfade). Fade overlay in/out with pause. Overlay rides the music bus (`musicVolume` + mute). No extra slider.
 
 Browser autoplay: bed starts after the first click or key. Do not `AudioContext.resume()` on boot — Chrome logs a violation unless `navigator.userActivation.isActive` (or the unlock `pointerdown` / `keydown` listeners).
 

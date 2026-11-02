@@ -8,6 +8,7 @@ export type AudioManifest = {
   music: {
     menu: string[];
     maps: Record<string, string[]>;
+    boss?: Record<string, string[]>;
     overlay: string[];
   };
   sfx: Record<string, SfxClip>;
@@ -23,7 +24,8 @@ export type AudioMix = {
 export type MusicScene =
   | { kind: 'none' }
   | { kind: 'menu' }
-  | { kind: 'stage'; stageId: string };
+  | { kind: 'stage'; stageId: string }
+  | { kind: 'boss'; bossId: string; stageId?: string };
 
 export type SfxId =
   | 'click'

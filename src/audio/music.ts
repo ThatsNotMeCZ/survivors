@@ -55,11 +55,30 @@ export function setMusicScene(next: MusicScene): void {
     stopBed();
     return;
   }
-  const key = next.kind === 'menu' ? 'menu' : `map:${next.stageId}`;
-  const tracks =
-    next.kind === 'menu' ? manifest.music.menu : (manifest.music.maps[next.stageId] ?? []);
+  const key =
+    next.kind === 'menu'
+      ? 'menu'
+      : next.kind === 'boss'
+        ? `boss:${next.bossId}`
+        : `map:${next.stageId}`;
+  let tracks =
+    next.kind === 'menu'
+      ? manifest.music.menu
+      : next.kind === 'boss'
+        ? (manifest.music.boss?.[next.bossId] ?? [])
+        : (manifest.music.maps[next.stageId] ?? []);
+  if (tracks.length === 0 && next.kind === 'boss' && next.stageId) {
+    tracks = manifest.music.maps[next.stageId] ?? [];
+  }
   if (key === bedKey && bedUrl) {
     retryBedPlay();
+    return;
+  }
+  if (tracks.length === 0) {
+    if (next.kind === 'boss') return;
+    bedKey = '';
+    bedPlaylist = [];
+    stopBed();
     return;
   }
   bedKey = key;

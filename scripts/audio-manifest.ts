@@ -11,6 +11,7 @@ export function writeAudioManifest(root = process.cwd()): string {
   mkdirSync(join(audioDir, 'music', 'menu'), { recursive: true });
   mkdirSync(join(audioDir, 'music', 'overlay'), { recursive: true });
   mkdirSync(join(audioDir, 'music', 'maps'), { recursive: true });
+  mkdirSync(join(audioDir, 'music', 'boss'), { recursive: true });
   mkdirSync(join(audioDir, 'sfx', 'ui'), { recursive: true });
   mkdirSync(join(audioDir, 'sfx', 'combat'), { recursive: true });
   mkdirSync(join(audioDir, 'sfx', 'world'), { recursive: true });
@@ -23,6 +24,18 @@ export function writeAudioManifest(root = process.cwd()): string {
     .sort((a, b) => a.localeCompare(b));
   for (const id of mapIds) {
     maps[id] = listAudio(join(mapsDir, id)).map((name) => `audio/music/maps/${id}/${name}`);
+  }
+
+  const boss: Record<string, string[]> = {};
+  const bossDir = join(audioDir, 'music', 'boss');
+  if (existsSync(bossDir)) {
+    const bossIds = readdirSync(bossDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort((a, b) => a.localeCompare(b));
+    for (const id of bossIds) {
+      boss[id] = listAudio(join(bossDir, id)).map((name) => `audio/music/boss/${id}/${name}`);
+    }
   }
 
   const out = join(audioDir, 'manifest.json');
@@ -43,6 +56,7 @@ export function writeAudioManifest(root = process.cwd()): string {
     music: {
       menu: listAudio(join(audioDir, 'music', 'menu')).map((name) => `audio/music/menu/${name}`),
       maps,
+      boss,
       overlay: listAudio(join(audioDir, 'music', 'overlay')).map(
         (name) => `audio/music/overlay/${name}`,
       ),

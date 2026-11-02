@@ -502,9 +502,9 @@ function makeBolt(inner: string, mid: string, biome: BiomeId): HTMLCanvasElement
 
 function makeGem(): HTMLCanvasElement {
   return cachedPixel('px-gem', 16, 'cinder', (px) => {
-    px.fill(6, 2, 4, 12, '#ffd35a');
-    px.fill(4, 4, 8, 8, '#fff4c8');
-    px.fill(7, 6, 2, 4, '#ffe88a');
+    px.fill(6, 2, 4, 12, '#4aa0d4');
+    px.fill(4, 4, 8, 8, '#ffffff');
+    px.fill(7, 6, 2, 4, '#88ddff');
   });
 }
 
