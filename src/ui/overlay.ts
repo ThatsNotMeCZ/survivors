@@ -781,7 +781,9 @@ function fillPauseInventory(items: HudItem[]): void {
   listEl.style.setProperty('--inv-cols', String(cols));
   listEl.replaceChildren();
 
-  if (items.length === 0) {
+  const isEmpty = items.length === 0;
+  listEl.classList.toggle('is-empty', isEmpty);
+  if (isEmpty) {
     tooltipEl.classList.add('hidden');
     const empty = document.createElement('p');
     empty.className = 'pause-inv-empty';

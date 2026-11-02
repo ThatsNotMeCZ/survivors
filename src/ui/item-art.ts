@@ -42,12 +42,12 @@ export function makeItemChip(
   chip.dataset.rarity = item.rarity;
   chip.dataset.itemId = item.id;
   chip.title = item.stacks > 1 ? `${item.name} ×${item.stacks}` : item.name;
-  const icon = makeItemIcon(item.id, item.name, `${className}-icon`, displayPx);
+  const icon = makeItemIcon(item.id, item.name, 'item-chip-icon', displayPx);
   icon.addEventListener('error', () => {
     icon.remove();
-    if (!chip.querySelector(`.${className}-fallback`)) {
+    if (!chip.querySelector('.item-chip-fallback')) {
       const fallback = document.createElement('span');
-      fallback.className = `${className}-fallback`;
+      fallback.className = 'item-chip-fallback';
       fallback.textContent = item.name.slice(0, 1).toUpperCase();
       chip.prepend(fallback);
     }
@@ -55,7 +55,7 @@ export function makeItemChip(
   chip.appendChild(icon);
   if (item.stacks > 1) {
     const stacks = document.createElement('span');
-    stacks.className = `${className}-stacks`;
+    stacks.className = 'item-chip-stacks';
     stacks.textContent = `x${item.stacks}`;
     chip.appendChild(stacks);
   }

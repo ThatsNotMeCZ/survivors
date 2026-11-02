@@ -141,6 +141,66 @@
       "y": 1350,
       "w": 179,
       "h": 208
+    },
+    "hud-timer": {
+      "x": 700,
+      "y": 500,
+      "w": 243,
+      "h": 101
+    },
+    "hud-objective": {
+      "x": 530,
+      "y": 620,
+      "w": 280,
+      "h": 62,
+      "nineSlice": {
+        "margins": { "top": 23, "right": 50, "bottom": 23, "left": 50 },
+        "expandable": { "x": 50, "y": 23, "w": 50, "h": 23 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "hud-corner": {
+      "x": 960,
+      "y": 500,
+      "w": 96,
+      "h": 96
+    },
+    "screen-corner": {
+      "x": 960,
+      "y": 500,
+      "w": 96,
+      "h": 96
+    },
+    "hall-medailon": {
+      "x": 840,
+      "y": 620,
+      "w": 48,
+      "h": 48
+    },
+    "skill-slot-frame": {
+      "x": 1080,
+      "y": 500,
+      "w": 54,
+      "h": 54
+    },
+    "sting-banner": {
+      "x": 350,
+      "y": 780,
+      "w": 320,
+      "h": 63,
+      "nineSlice": {
+        "margins": { "top": 10, "right": 94, "bottom": 28, "left": 94 },
+        "expandable": { "x": 94, "y": 10, "w": 42, "h": 28 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "nav-arrow": {
+      "x": 900,
+      "y": 620,
+      "w": 32,
+      "h": 32
     }
   }
 }

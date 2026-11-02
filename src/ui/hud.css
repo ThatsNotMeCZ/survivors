@@ -429,6 +429,55 @@ select:focus-visible,
   font-variant-numeric: tabular-nums;
 }
 
+/* Authored Sprite Variant for Flask */
+.flask[data-has-ui-sprite='1'] {
+  width: 90px;
+  height: 104px;
+  background-image: none !important;
+}
+
+.flask[data-has-ui-sprite='1'] .flask-lip,
+.flask[data-has-ui-sprite='1'] .flask-neck,
+.flask[data-has-ui-sprite='1'] .flask-chains,
+.flask[data-has-ui-sprite='1'] .flask-shine {
+  display: none !important;
+}
+
+.flask[data-has-ui-sprite='1'] .flask-body {
+  position: absolute;
+  left: 6px;
+  top: 35px;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  border-radius: 50%;
+  border: none !important;
+  background: radial-gradient(circle at 35% 30%, #201014, #0d0709 75%) !important;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8) !important;
+}
+
+.flask[data-has-ui-sprite='1'] #hp-fill {
+  z-index: 1;
+}
+
+.flask[data-has-ui-sprite='1']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--ui-sprite) !important;
+  background-size: var(--ui-bg-size, 100% 100%) !important;
+  background-position: var(--ui-bg-pos, 0% 0%) !important;
+  background-repeat: no-repeat !important;
+  image-rendering: pixelated;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.flask[data-has-ui-sprite='1'] #hud-hp {
+  position: relative;
+  z-index: 3;
+}
+
 .vital-copy {
   display: flex;
   align-items: center;
@@ -654,7 +703,7 @@ select:focus-visible,
   height: 100%;
   display: grid;
   grid-template-columns: repeat(var(--inv-cols, 3), minmax(0, 1fr));
-  grid-auto-rows: minmax(0, 1fr);
+  align-content: start;
   gap: 4px;
   align-items: center;
   justify-items: center;
@@ -663,7 +712,6 @@ select:focus-visible,
 .item-chip {
   position: relative;
   width: 100%;
-  height: 100%;
   aspect-ratio: 1;
   min-width: 0;
   min-height: 0;
@@ -2023,10 +2071,15 @@ select:focus-visible,
   height: 100%;
   display: grid;
   grid-template-columns: repeat(var(--inv-cols, 4), minmax(0, 1fr));
-  grid-auto-rows: minmax(0, 1fr);
+  align-content: start;
   gap: 6px;
   align-items: center;
   justify-items: center;
+}
+
+.pause-inv-list:has(.pause-inv-empty),
+.pause-inv-list.is-empty {
+  align-content: center;
 }
 
 .pause-inv-empty {
@@ -2038,6 +2091,8 @@ select:focus-visible,
 }
 
 .pause-chip {
+  width: 100%;
+  aspect-ratio: 1;
   cursor: pointer;
   border-radius: 4px;
   transition: transform 120ms ease-out, background 120ms ease-out;
