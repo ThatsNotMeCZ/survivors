@@ -27,7 +27,7 @@
             5
           ],
           "frameRate": 6,
-          "repeat": -1
+          "repeat": 0
         }
       }
     },
@@ -125,7 +125,25 @@
     "cinder-tile-rune-1",
     "cinder-tile-rune-2",
     "cinder-tile-rune-3",
-    "cinder-volatile"
+    "cinder-volatile",
+    "glacial-tile-0",
+    "glacial-tile-1",
+    "glacial-tile-2",
+    "glacial-tile-rune-0",
+    "glacial-tile-rune-1",
+    "glacial-tile-rune-2",
+    "glacial-tile-rune-3",
+    "rime-circle",
+    "rime-hazard-0",
+    "rime-portal",
+    "rime-tile-0",
+    "rime-tile-1",
+    "rime-tile-2",
+    "rime-tile-rune-0",
+    "rime-tile-rune-1",
+    "rime-tile-rune-2",
+    "rime-tile-rune-3",
+    "rime-volatile"
   ],
   "fx": [
     "bolt",
@@ -808,8 +826,8 @@
   },
   "envAtlas": {
     "src": "sprites/env/atlas.png",
-    "width": 574,
-    "height": 1653,
+    "width": 538,
+    "height": 1603,
     "frames": {
       "cinder-tile-0": {
         "x": 5,
@@ -918,6 +936,114 @@
         "y": 1430,
         "w": 140,
         "h": 137
+      },
+      "rime-tile-0": {
+        "x": 5,
+        "y": 145,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-1": {
+        "x": 75,
+        "y": 145,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-2": {
+        "x": 145,
+        "y": 145,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-rune-0": {
+        "x": 5,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-rune-1": {
+        "x": 75,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-rune-2": {
+        "x": 145,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-rune-3": {
+        "x": 145,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "rime-hazard-0": {
+        "x": 5,
+        "y": 520,
+        "w": 128,
+        "h": 128
+      },
+      "rime-volatile": {
+        "x": 50,
+        "y": 670,
+        "w": 32,
+        "h": 32
+      },
+      "rime-circle": {
+        "x": 5,
+        "y": 1050,
+        "w": 320,
+        "h": 314
+      },
+      "rime-portal": {
+        "x": 5,
+        "y": 1430,
+        "w": 140,
+        "h": 137
+      },
+      "glacial-tile-0": {
+        "x": 5,
+        "y": 285,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-1": {
+        "x": 75,
+        "y": 285,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-2": {
+        "x": 145,
+        "y": 285,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-rune-0": {
+        "x": 5,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-rune-1": {
+        "x": 75,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-rune-2": {
+        "x": 145,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-rune-3": {
+        "x": 215,
+        "y": 215,
+        "w": 64,
+        "h": 64
       },
       "ambient-ash": {
         "x": 5,

@@ -2,6 +2,7 @@ import { countSnipers, spawnAround } from './enemies';
 import type { World } from './world';
 
 export function stepDirector(world: World, dt: number): void {
+  if (world.bossDefeated || (world.bossSpawned && world.counts.boss === 0)) return;
   const { loop } = world.catalog;
   const stage = loop.stages[world.stageIndex];
   world.credits += loop.director.creditRate * world.coefficient * dt;

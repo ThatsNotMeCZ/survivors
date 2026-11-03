@@ -12,6 +12,8 @@ import type {
 import { aabbOverlap, circlesOverlap, clamp } from './collision';
 import { stepDirector } from './director';
 import {
+  CHASE_ATTACK_COOLDOWN,
+  CHASE_ATTACK_DURATION,
   ROLE_BOSS,
   ROLE_ELITE,
   ROLE_FODDER,
@@ -22,7 +24,15 @@ import {
   type EnemyPool,
 } from './enemies';
 import { clearFx, createFxPool, emitFx, type FxPool } from './fx';
-import { createGemPool, stepGems, type GemPool } from './gems';
+import {
+  MAX_LORE_DROPS,
+  createGemPool,
+  createLorePool,
+  stepGems,
+  stepLores,
+  type GemPool,
+  type LorePool,
+} from './gems';
 import type { InputFrame } from './input-frame';
 import { emptyCds } from './input-frame';
 import { xpForLevel } from './level';
@@ -99,6 +109,10 @@ export type World = {
   projectiles: ProjectilePool;
   enemies: EnemyPool;
   gems: GemPool;
+  lores: LorePool;
+  collectedLores: Set<string>;
+  newlyCollectedLores: string[];
+  unlockedItems: Set<string>;
   obstacles: ObstaclePool;
   hash: SpatialHash;
   scratch: number[];
@@ -119,6 +133,7 @@ export type World = {
   offer: ItemDef[] | null;
   won: boolean;
   bossSpawned: boolean;
+  bossDefeated: boolean;
   teleporter: {
     state: TeleporterState;
     x: number;
@@ -134,15 +149,35 @@ export type World = {
   decoy: DecoyState;
   bossesDefeated: number;
   lastSniperAt: number;
+  kills: { fodder: number; elite: number; boss: number; total: number };
+  killsByEntity: Record<string, number>;
+  encountersByEntity: Record<string, number>;
+  damageDealt: number;
+  damageTaken: number;
+  healingDone: number;
+  gemsCollected: number;
+  stagesCleared: number;
 };
 
-export function createWorld(survivorId = catalog.world.defaultSurvivor): World {
+export type WorldOptions = {
+  unlockedItems?: Iterable<string>;
+  collectedLores?: Iterable<string>;
+};
+
+export function createWorld(
+  survivorId = catalog.world.defaultSurvivor,
+  options?: WorldOptions,
+): World {
   const survivor = catalog.survivor(survivorId);
   const inventory: ItemInstance[] = survivor.startingItems.map((id) => ({ id, stacks: 1 }));
   const stats = resolveStats(survivor.stats, inventory, catalog.item);
   const loop = catalog.loop;
   const enemyCap = loop.maxFodder + loop.maxElites + 1;
   const player = makePlayer(survivor.id, stats, catalog.world.width, catalog.world.height);
+  const unlockedItems = options?.unlockedItems
+    ? new Set(options.unlockedItems)
+    : new Set(catalog.items.map((item) => item.id));
+  const collectedLores = new Set(options?.collectedLores ?? []);
   const world: World = {
     catalog,
     survivor,
@@ -154,6 +189,10 @@ export function createWorld(survivorId = catalog.world.defaultSurvivor): World {
     projectiles: createProjectilePool(catalog.world.maxProjectiles),
     enemies: createEnemyPool(enemyCap),
     gems: createGemPool(loop.maxGems),
+    lores: createLorePool(MAX_LORE_DROPS),
+    collectedLores,
+    newlyCollectedLores: [],
+    unlockedItems,
     obstacles: createObstaclePool(
       obstacleCap(catalog.obstacles.counts, catalog.obstacles.dynamicHazards),
       loop.hashCell,
@@ -177,6 +216,7 @@ export function createWorld(survivorId = catalog.world.defaultSurvivor): World {
     offer: null,
     won: false,
     bossSpawned: false,
+    bossDefeated: false,
     teleporter: { state: 'hidden', x: 0, y: 0, radius: loop.stages[0].teleporterRadius, charge: 0, hold: loop.stages[0].teleporterHold },
     portal: { open: false, x: 0, y: 0, hold: 0 },
     focus: { kind: 'none', hp: 0, maxHp: 0, name: '' },
@@ -185,6 +225,14 @@ export function createWorld(survivorId = catalog.world.defaultSurvivor): World {
     decoy: emptyDecoy(),
     bossesDefeated: 0,
     lastSniperAt: -99,
+    kills: { fodder: 0, elite: 0, boss: 0, total: 0 },
+    killsByEntity: {},
+    encountersByEntity: {},
+    damageDealt: 0,
+    damageTaken: 0,
+    healingDone: 0,
+    gemsCollected: 0,
+    stagesCleared: 0,
   };
   beginStage(world, 0);
   return world;
@@ -216,6 +264,7 @@ export function stepWorld(world: World, input: InputFrame, dt: number): void {
   stepZones(world, dt);
   stepObstacles(world, dt);
   stepGems(world, dt);
+  stepLores(world, dt);
   stepLoop(world, dt);
 }
 
@@ -366,6 +415,7 @@ function hitPlayer(world: World): void {
     }
     emitFx(world.fx, FX_HURT, projectiles.x[i], projectiles.y[i], 0xff7a3a);
     player.hp -= projectiles.damage[i];
+    world.damageTaken += projectiles.damage[i];
     killProjectile(projectiles, i);
   }
 }
@@ -383,12 +433,17 @@ function contactDamage(world: World, dt: number): void {
       continue;
     }
     if (enemies.corpseRemain[idx] > 0) continue;
-    enemies.attackRemain[idx] = 0.35;
+    if (enemies.attackRemain[idx] <= 0 && enemies.attackCd[idx] <= 0) {
+      enemies.attackRemain[idx] = CHASE_ATTACK_DURATION;
+      enemies.attackCd[idx] = CHASE_ATTACK_COOLDOWN;
+    }
     if (enemies.role[idx] === ROLE_FODDER) {
       if (fodderHits >= cap) continue;
       fodderHits += 1;
     }
-    player.hp -= enemies.contactDps[idx] * dt;
+    const dmg = enemies.contactDps[idx] * dt;
+    player.hp -= dmg;
+    world.damageTaken += dmg;
     applyNoxiousContact(world, idx);
   }
 }

@@ -162,8 +162,49 @@ export function generateProceduralSheets(): Map<string, ProceduralSheet> {
   out.set('frost-warden', singleFrame(makeElite('rime')));
   out.set('cinder-heart', singleFrame(makeCinderHeart()));
   out.set('frost-sovereign', singleFrame(makeFrostSovereign()));
-  out.set('enemy-astral-sniper', singleFrame(makeSpitter('cinder')));
+  out.set('frost-emperor', singleFrame(makeFrostEmperor()));
+  out.set('enemy-astral-sniper', singleFrame(makeAstralWatcher()));
   return out;
+}
+
+export function entityIdleCanvas(entityId: string): HTMLCanvasElement {
+  switch (entityId) {
+    case 'runner':
+      return makeIdleBody('cinder', 'runner');
+    case 'penitent':
+      return makeIdleBody('cinder', 'penitent');
+    case 'ember-mite':
+      return makeMite('cinder', 0);
+    case 'frost-mite':
+      return makeMite('rime', 0);
+    case 'ember-spitter':
+      return makeSpitter('cinder');
+    case 'frost-spitter':
+      return makeSpitter('rime');
+    case 'ember-chaser':
+      return makeElite('cinder');
+    case 'frost-warden':
+      return makeElite('rime');
+    case 'cinder-heart':
+      return makeCinderHeart();
+    case 'frost-sovereign':
+      return makeFrostSovereign();
+    case 'frost-emperor':
+      return makeFrostEmperor();
+    case 'enemy-astral-sniper':
+      return makeAstralWatcher();
+    default:
+      return makeMite('cinder', 0);
+  }
+}
+
+export function obstaclePreviewCanvas(
+  kind: 'pillar' | 'hazard' | 'volatile',
+  biome: BiomeId = 'cinder',
+): HTMLCanvasElement {
+  if (kind === 'pillar') return makePillar(biome);
+  if (kind === 'hazard') return makeHazard(biome, 0);
+  return makeVolatile(biome);
 }
 
 export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
@@ -183,6 +224,7 @@ export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   put(out, 'px-bolt-enemy-cinder', makeBolt('#ffcc88', '#ff5522', 'cinder'));
   put(out, 'px-bolt-enemy-rime', makeBolt('#dff6ff', '#44ddff', 'rime'));
   put(out, 'px-gem', makeGem());
+  put(out, 'px-lore', makeLoreScroll());
   put(out, 'px-spark', makeSpark());
   for (const vessel of VESSELS) {
     put(out, crosshairKey(vessel), makePlayerCrosshair(vessel));
@@ -437,7 +479,7 @@ function miteSheet(
     anims: {
       idle: { frames: [0], frameRate: 1, repeat: -1 },
       walk: { frames: walkIdx, frameRate, repeat: -1 },
-      attack: { frames: atkIdx, frameRate: frameRate * 1.5, repeat: -1 },
+      attack: { frames: atkIdx, frameRate: frameRate * 1.5, repeat: 0 },
     },
   };
 }
@@ -623,6 +665,38 @@ function makeFrostSovereign(): HTMLCanvasElement {
   });
 }
 
+function makeFrostEmperor(): HTMLCanvasElement {
+  return cachedPixel('px-boss-frost-emperor', 64, 'rime', (px) => {
+    px.fill(18, 14, 28, 40, '#102238');
+    px.fill(14, 20, 36, 28, '#183654');
+    px.fill(16, 6, 32, 12, '#3d8ad4');
+    px.fill(12, 4, 6, 14, '#dff6ff');
+    px.fill(46, 4, 6, 14, '#dff6ff');
+    px.fill(22, 2, 6, 10, '#ffffff');
+    px.fill(36, 2, 6, 10, '#ffffff');
+    px.fill(29, 1, 6, 12, '#77ffff');
+    px.fill(26, 24, 12, 14, '#77ffff');
+    px.fill(29, 27, 6, 8, '#ffffff');
+    px.fill(10, 26, 8, 4, '#7ad4ff');
+    px.fill(46, 26, 8, 4, '#7ad4ff');
+  });
+}
+
+function makeAstralWatcher(): HTMLCanvasElement {
+  return cachedPixel('px-astral-watcher', 28, 'rime', (px) => {
+    px.fill(8, 8, 12, 12, '#2a1844');
+    px.fill(6, 10, 16, 8, '#4a2878');
+    px.fill(10, 6, 8, 16, '#4a2878');
+    px.fill(10, 10, 8, 8, '#b47aff');
+    px.fill(12, 12, 4, 4, '#f0e8ff');
+    px.fill(13, 13, 2, 2, '#44ddff');
+    px.fill(4, 13, 3, 2, '#c4a35a');
+    px.fill(21, 13, 3, 2, '#c4a35a');
+    px.fill(13, 3, 2, 3, '#c4a35a');
+    px.fill(13, 22, 2, 3, '#c4a35a');
+  });
+}
+
 function makePillar(biome: BiomeId): HTMLCanvasElement {
   const stone = biome === 'cinder' ? '#3a2428' : '#1c3044';
   const rune = biome === 'cinder' ? '#c45a3a' : '#55ffff';
@@ -682,6 +756,23 @@ function makeGem(): HTMLCanvasElement {
     px.fill(6, 2, 4, 12, '#4aa0d4');
     px.fill(4, 4, 8, 8, '#ffffff');
     px.fill(7, 6, 2, 4, '#88ddff');
+  });
+}
+
+function makeLoreScroll(): HTMLCanvasElement {
+  return cachedPixel('px-lore', 16, 'cinder', (px) => {
+    // Wooden/brass scroll rollers top & bottom
+    px.fill(2, 2, 12, 2, '#c49a45');
+    px.fill(2, 12, 12, 2, '#c49a45');
+    // Aged parchment body
+    px.fill(3, 4, 10, 8, '#e8d8b8');
+    px.fill(4, 5, 8, 6, '#f6ebd4');
+    // Dark ink lines
+    px.fill(5, 5, 6, 1, '#4a3423');
+    px.fill(5, 7, 4, 1, '#4a3423');
+    // Crimson wax seal with gold highlight
+    px.fill(6, 8, 4, 3, '#c93b3b');
+    px.fill(7, 9, 2, 1, '#ffd35a');
   });
 }
 
@@ -1056,8 +1147,25 @@ function hexRgb(color: string): [number, number, number] {
 }
 
 function makeCanvas(width: number, height: number): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  return canvas;
+  if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    return canvas;
+  }
+  const mockCtx = new Proxy(
+    {
+      createImageData: () => ({ data: new Uint8ClampedArray(width * height * 4) }),
+      getImageData: () => ({ data: new Uint8ClampedArray(width * height * 4) }),
+    },
+    {
+      get: (target, prop) => (prop in target ? (target as any)[prop] : () => {}),
+      set: () => true,
+    },
+  );
+  return {
+    width,
+    height,
+    getContext: () => mockCtx,
+  } as unknown as HTMLCanvasElement;
 }

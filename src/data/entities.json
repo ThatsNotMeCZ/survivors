@@ -4,6 +4,8 @@
     {
       "id": "ember-mite",
       "name": "Ember Mite",
+      "title": "Scorched Dross",
+      "lore": "Clots of ash and failed calcination that skitter out of cracked retorts. Individually brittle, they swarm any warm vessel to strip its mercury.",
       "role": "fodder",
       "tags": ["fodder", "chaser"],
       "stats": { "speed": 92, "maxHp": 14, "radius": 10 },
@@ -15,6 +17,8 @@
     {
       "id": "ember-spitter",
       "name": "Ember Spitter",
+      "title": "Slag Bile Vessel",
+      "lore": "Distended husks engorged on boiling sulfur. They circle the outer kiln perimeter, hurling globules of molten slag whenever a vessel slows its stride.",
       "role": "fodder",
       "tags": ["fodder", "ranged"],
       "stats": { "speed": 68, "maxHp": 12, "radius": 11 },
@@ -33,6 +37,8 @@
     {
       "id": "ember-chaser",
       "name": "Ember Warden",
+      "title": "Furnace Overseer",
+      "lore": "An amalgam of cast-iron ribs and noxious vitriol bound by a regenerating aether ward. Even in death, its ruptured core floods the stones with corrosive bile.",
       "role": "elite",
       "tags": ["elite", "chaser"],
       "stats": { "speed": 102, "maxHp": 90, "radius": 22 },
@@ -44,6 +50,8 @@
     {
       "id": "cinder-heart",
       "name": "Cinder Heart",
+      "title": "Core of the First Kiln",
+      "lore": "The living furnace heart that consumed its own alchemists. It awakens only when the Transmutation Circle is charged, determined to melt every vessel back into raw clay.",
       "role": "boss",
       "tags": ["boss", "chaser"],
       "stats": { "speed": 78, "maxHp": 520, "radius": 36 },
@@ -55,6 +63,8 @@
     {
       "id": "frost-mite",
       "name": "Frost Mite",
+      "title": "Rime-Bitten Husk",
+      "lore": "Shards of alchemical salt and frozen mercury thatitters across the dockside stone. Quicker and harder than kiln mites, they hunt in tight, unforgiving packs.",
       "role": "fodder",
       "tags": ["fodder", "chaser"],
       "stats": { "speed": 104, "maxHp": 18, "radius": 10 },
@@ -66,6 +76,8 @@
     {
       "id": "frost-spitter",
       "name": "Frost Spitter",
+      "title": "Brine Condenser",
+      "lore": "Hollowed alembic creatures that siphon freezing brine from the dock fissures and spit high-velocity needles of rime across the chamber.",
       "role": "fodder",
       "tags": ["fodder", "ranged"],
       "stats": { "speed": 76, "maxHp": 16, "radius": 11 },
@@ -84,6 +96,8 @@
     {
       "id": "frost-warden",
       "name": "Frost Warden",
+      "title": "Cryo-Bound Sentinel",
+      "lore": "Heavy docksidehulks armored in glacier-thick salt plate and shielded by aether. Their touch numbs the vessel's limbs, and their corpse erupts into a pool of caustic brine.",
       "role": "elite",
       "tags": ["elite", "chaser"],
       "stats": { "speed": 90, "maxHp": 140, "radius": 24 },
@@ -95,6 +109,8 @@
     {
       "id": "frost-sovereign",
       "name": "Frost Sovereign",
+      "title": "Regent of the Frozen Dock",
+      "lore": "An ancient transmutation frozen mid-ascension when the sea-locks broke. Crowned in pale rime, it crushes any vessel that dares open the deeper Rift.",
       "role": "boss",
       "tags": ["boss", "chaser"],
       "stats": { "speed": 80, "maxHp": 620, "radius": 40 },
@@ -106,6 +122,8 @@
     {
       "id": "frost-emperor",
       "name": "Frost Emperor",
+      "title": "Monarch of Absolute Zero",
+      "lore": "Entombed at the bottom of the Great Work where heat and motion cease. It is the final seal-keeper; to shatter its glacial hull is to complete the transmutation.",
       "role": "boss",
       "tags": ["boss", "chaser"],
       "stats": { "speed": 85, "maxHp": 950, "radius": 45 },
@@ -117,6 +135,8 @@
     {
       "id": "enemy-astral-sniper",
       "name": "Astral Watcher",
+      "title": "Ocular of the Void",
+      "lore": "A disembodied brass-and-aether eye that drifts at the edge of sight. It traces a thin celestial sightline before lancing the arena—only solid pillars can break its gaze.",
       "role": "fodder",
       "tags": ["fodder", "sniper"],
       "stats": { "speed": 36, "maxHp": 8, "radius": 10 },

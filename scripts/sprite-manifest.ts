@@ -348,7 +348,7 @@ function parseTags(
     out[name] = {
       frames,
       frameRate: tagFrameRate(frames, opts.fps, opts.durations),
-      repeat: -1,
+      repeat: name === 'attack' ? 0 : -1,
     };
   }
   if (!out.idle) out.idle = { frames: [0], frameRate: 1, repeat: -1 };
@@ -424,7 +424,7 @@ function parseAnims(value: unknown): Record<string, SpriteAnimDef> | undefined {
     out[name] = {
       frames: rec.frames as number[],
       frameRate: typeof rec.frameRate === 'number' && rec.frameRate > 0 ? rec.frameRate : 8,
-      repeat: typeof rec.repeat === 'number' ? rec.repeat : -1,
+      repeat: typeof rec.repeat === 'number' ? rec.repeat : name === 'attack' ? 0 : -1,
     };
   }
   return Object.keys(out).length > 0 ? out : undefined;

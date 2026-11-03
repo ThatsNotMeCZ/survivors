@@ -181,7 +181,9 @@ export function stepObstacles(world: World, dt: number): void {
   tickSlow(player, dt);
 
   if (!playerPhasing(world) && overlappingHazard(world, player.x, player.y, player.radius)) {
-    player.hp -= world.catalog.obstacles.hazard.dps * world.coefficient * dt;
+    const dmg = world.catalog.obstacles.hazard.dps * world.coefficient * dt;
+    player.hp -= dmg;
+    world.damageTaken += dmg;
   }
 
   let detonated = false;
@@ -230,6 +232,7 @@ function detonateVolatile(world: World, index: number): void {
     if (player.iframeRemain <= 0) {
       emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
       player.hp -= cfg.playerDamage;
+      world.damageTaken += cfg.playerDamage;
     }
     if (rime) applySlow(player, cfg.rimeSlowMul, cfg.rimeSlowDuration);
   }

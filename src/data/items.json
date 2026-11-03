@@ -51,7 +51,12 @@
         { "op": "pct", "stat": "damage", "value": 0.16 },
         { "op": "pct", "stat": "critDamage", "value": 0.35 }
       ],
-      "lore": "Alchemical bellows fitted to the core, stoking the inner flame to fuel destructive potency and amplify critical detonations."
+      "lore": "Alchemical bellows fitted to the core, stoking the inner flame to fuel destructive potency and amplify critical detonations.",
+      "unlock": {
+        "type": "boss-kill",
+        "entityId": "cinder-heart",
+        "label": "Slay the Cinder Heart"
+      }
     },
     {
       "id": "wax-wings",
@@ -72,7 +77,12 @@
         { "op": "pct", "stat": "cooldown", "value": -0.3 },
         { "op": "pct", "stat": "radius", "value": 0.25 }
       ],
-      "lore": "A living glass vessel engorged on distilled vitae. Channels rapid, furious distillation into your arts, but swells your frame into an easier target."
+      "lore": "A living glass vessel engorged on distilled vitae. Channels rapid, furious distillation into your arts, but swells your frame into an easier target.",
+      "unlock": {
+        "type": "elite-kills",
+        "count": 10,
+        "label": "Slay 10 Noxious Elites"
+      }
     },
     {
       "id": "lead-core",
@@ -105,7 +115,12 @@
         { "op": "pct", "stat": "critDamage", "value": 0.5 },
         { "op": "pct", "stat": "speed", "value": -0.18 }
       ],
-      "lore": "A heavy brass ocular bolted to the brow. Reveals fatal celestial alignments and structural fractures, drastically sharpening critical strikes at the heavy cost of your stride."
+      "lore": "A heavy brass ocular bolted to the brow. Reveals fatal celestial alignments and structural fractures, drastically sharpening critical strikes at the heavy cost of your stride.",
+      "unlock": {
+        "type": "total-kills",
+        "count": 300,
+        "label": "Slay 300 Dross across workings"
+      }
     },
     {
       "id": "salt-ward",
@@ -115,7 +130,12 @@
       "hooks": [
         { "op": "pct", "stat": "radius", "value": -0.12 }
       ],
-      "lore": "Desiccates the vessel's silhouette into a compact, elusive form that slips cleanly between striking claws and projectiles."
+      "lore": "Desiccates the vessel's silhouette into a compact, elusive form that slips cleanly between striking claws and projectiles.",
+      "unlock": {
+        "type": "stage-clear",
+        "stageId": "cinder-yard",
+        "label": "Clear the Cinder Yard"
+      }
     },
     {
       "id": "lunar-tithe",
@@ -128,7 +148,12 @@
         { "op": "pct", "stat": "maxHp", "value": -0.4 },
         { "op": "pct", "stat": "radius", "value": 0.2 }
       ],
-      "lore": "An unforgiven heresy against the Great Work. Ignites your arts with devastating pale lunar fire and catastrophic critical blasts, demanding a terrible toll upon your corporeal vessel."
+      "lore": "An unforgiven heresy against the Great Work. Ignites your arts with devastating pale lunar fire and catastrophic critical blasts, demanding a terrible toll upon your corporeal vessel.",
+      "unlock": {
+        "type": "stage-clear",
+        "stageId": "rime-dock",
+        "label": "Clear the Rime Dock"
+      }
     },
     {
       "id": "cinnabar-leech",
@@ -138,7 +163,12 @@
       "hooks": [
         { "op": "on-kill", "stat": "hp", "value": 0.25 }
       ],
-      "lore": "A vermilion leech sealed in amber glass. It drinks the lingering humors from slain enemies and siphons their vital essence into your vessel."
+      "lore": "A vermilion leech sealed in amber glass. It drinks the lingering humors from slain enemies and siphons their vital essence into your vessel.",
+      "unlock": {
+        "type": "total-kills",
+        "count": 100,
+        "label": "Slay 100 Dross across workings"
+      }
     }
   ]
 }

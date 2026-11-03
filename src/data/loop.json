@@ -47,10 +47,17 @@
     "rare": 0.22,
     "lunar": 0.08
   },
+  "loreDropChance": {
+    "fodder": 0.025,
+    "elite": 0.25,
+    "boss": 0.6
+  },
   "stages": [
     {
       "id": "cinder-yard",
       "name": "Cinder Yard",
+      "kicker": "First Chamber · Nigredo & Calcination",
+      "lore": "The outer foundry where raw matter was burned to black ash. Obsidian kilns still vent superheated slag, and volatile brimstone urns litter the cracked flagstones.",
       "fodder": "ember-mite",
       "ranged": "ember-spitter",
       "rangedChance": 0.22,
@@ -71,6 +78,8 @@
     {
       "id": "rime-dock",
       "name": "Rime Dock",
+      "kicker": "Second Chamber · Albedo & Fixation",
+      "lore": "A subterranean canal where alchemical salts and quicksilver were quenched in freezing brine. Frozen bollards block stray bolts while pressurized rime casks threaten to shatter in a numbing frost.",
       "fodder": "frost-mite",
       "ranged": "frost-spitter",
       "rangedChance": 0.22,
@@ -91,6 +100,8 @@
     {
       "id": "glacial-tomb",
       "name": "Glacial Tomb",
+      "kicker": "Final Chamber · Rubedo & The Great Seal",
+      "lore": "The deepest vault beneath the canal, sealed in eternal permafrost to contain the Frost Emperor. Here the Transmutation Circle demands the longest vigil before the Great Work is decided.",
       "fodder": "frost-mite",
       "ranged": "frost-spitter",
       "rangedChance": 0.28,

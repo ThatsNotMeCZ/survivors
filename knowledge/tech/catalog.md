@@ -5,11 +5,11 @@ Content lives in `src/data/*.json`. Numbers do not belong in `src/sim/` classes.
 | File | Contains |
 |---|---|
 | `world.json` | map size, camera `viewZoom`, default survivor/enemy, projectile pool |
-| `loop.json` | stages, director, XP curve (`xpBase` 32, `xpGrowth` 1.30), teleporter, caps |
+| `loop.json` | stages (incl. `kicker`, `lore`), director, XP curve (`xpBase` 32, `xpGrowth` 1.30), teleporter, caps |
 | `obstacles.json` | pillar / hazard / volatile counts, radii, keep-outs, biome display names |
 | `survivors.json` | stats, 4 skill slots, starting items, view |
 | `skills.json` | primary / secondary / utility / special |
-| `entities.json` | fodder / elite / boss, tags, AI (`chase` or `ranged`), contact DPS, rewards, view |
+| `entities.json` | fodder / elite / boss, tags, AI (`chase` or `ranged`), contact DPS, rewards, view, `title` + `lore` |
 | `items.json` | stackable hooks (`add` / `pct` on a stat, `on-kill` heal) plus display `name` / `lore` |
 
 Schema: `src/data/schema.ts`. Loader: `src/data/catalog.ts` (version check, unique ids, skill refs, stage entity roles).
@@ -90,7 +90,10 @@ Menus and HUD are `src/ui/`, not Phaser text. One overlay stack: HUD < prompts <
 |---|---|
 | `theme.css` | Dark Hermetic tokens (brass, ember, mercury, parchment) |
 | `hud.css` / `hud.ts` | Objective banner, biome clock, flask HP, 4 skill slots (`sprites/skills/{id}.png`), 32px item grid (`sprites/items/{id}.png`, stack counts) |
-| `overlay.ts` | 3-column hall, how-to, pause (inventory strip), level-up (96px icons + shared detail + inventory), recap, stings, hold prompt |
+| `overlay.ts` | 3-column hall, pause (inventory strip + archives button), level-up, recap, stings, hold prompt |
+| `archives.ts` | Standalone full-screen **The Archives** (`#archives`) with 5 tabs: How to Play, Chronicles (World/Vessels/Chambers), Bestiary, Reliquary, and Persistent Ledger |
+| `records.ts` | Persistent player statistics (`localStorage` key `'survivors.records.v1'`), per-run telemetry commit, personal bests, recent run history |
+| `entity-art.ts` | Crisp idle-frame canvas preview helper for Bestiary entities and arena props |
 | `settings.ts` | `<dialog>`: master/SFX/music, mute, screenshake, reduce-VFX, selected vessel |
 
 Display strings come from catalog `name` / `lore`. Settings drive the Web Audio bus (`knowledge/tech/audio.md`). Phaser stays `noAudio`.

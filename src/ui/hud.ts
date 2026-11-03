@@ -29,6 +29,8 @@ export type HudSummary = {
   runTime: number;
   level: number;
   bosses: number;
+  kills: number;
+  damageDealt: number;
   coefficient: number;
   totalItems: number;
 };
@@ -64,6 +66,8 @@ let lastSummary: HudSummary = {
   runTime: 0,
   level: 1,
   bosses: 0,
+  kills: 0,
+  damageDealt: 0,
   coefficient: 1,
   totalItems: 0,
 };
@@ -142,6 +146,8 @@ export function setHudCombat(state: {
   runTime: number;
   coefficient: number;
   bosses?: number;
+  kills?: number;
+  damageDealt?: number;
   iframe: boolean;
   objectiveKicker?: string;
   objective: string;
@@ -170,6 +176,8 @@ export function setHudCombat(state: {
     runTime: state.runTime,
     level: state.level,
     bosses: state.bosses ?? 0,
+    kills: state.kills ?? 0,
+    damageDealt: state.damageDealt ?? 0,
     coefficient: state.coefficient,
     totalItems,
   };

@@ -1,6 +1,6 @@
 import { clamp } from './collision';
 import { ROLE_BOSS, ROLE_ELITE, clearEnemies, ringPoint, spawnEnemy } from './enemies';
-import { clearGems } from './gems';
+import { clearGems, clearLores } from './gems';
 import { clearObstacles, placeStageObstacles } from './obstacles';
 import { clearProjectiles } from './projectiles';
 import { hashString, mulberry32 } from './rng';
@@ -83,6 +83,7 @@ export function beginStage(world: World, index: number): void {
   world.stageTime = 0;
   world.stageGen += 1;
   world.bossSpawned = false;
+  world.bossDefeated = false;
   world.lastFodderAt = -99;
   world.lastEliteAt = -99;
   world.lastSniperAt = -99;
@@ -97,6 +98,7 @@ export function beginStage(world: World, index: number): void {
   world.portal.y = 0;
   clearEnemies(world);
   clearGems(world.gems);
+  clearLores(world.lores);
   clearProjectiles(world.projectiles);
   clearObstacles(world.obstacles);
   world.player.x = world.catalog.world.width * 0.5;
@@ -155,10 +157,21 @@ function spawnStageBoss(world: World): void {
 }
 
 function stepPortal(world: World, dt: number): void {
-  if (world.bossSpawned && world.counts.boss === 0 && !world.portal.open && !world.won) {
+  if ((world.bossDefeated || (world.bossSpawned && world.counts.boss === 0)) && !world.portal.open && !world.won) {
     const last = world.stageIndex >= world.catalog.loop.stages.length - 1;
     if (last) {
+      for (let i = 0; i < world.lores.cap; i += 1) {
+        if (world.lores.alive[i] === 0) continue;
+        const entityId = world.lores.entityId[i];
+        world.lores.alive[i] = 0;
+        world.lores.entityId[i] = null;
+        if (entityId && !world.collectedLores.has(entityId)) {
+          world.collectedLores.add(entityId);
+          world.newlyCollectedLores.push(entityId);
+        }
+      }
       world.won = true;
+      world.stagesCleared += 1;
       if (world.phase === 'play') world.phase = 'victory';
       return;
     }
@@ -175,6 +188,7 @@ function stepPortal(world: World, dt: number): void {
   if (dist <= portalRadius) {
     world.portal.hold += dt;
     if (world.portal.hold >= portalHold) {
+      world.stagesCleared += 1;
       beginStage(world, world.stageIndex + 1);
     }
   } else {

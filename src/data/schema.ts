@@ -14,6 +14,13 @@ export type ItemHook =
   | { op: 'pct'; stat: StatId; value: number }
   | { op: 'on-kill'; stat: 'hp'; value: number };
 
+export type UnlockCondition =
+  | { type: 'stage-clear'; stageId: string; count?: number; label: string }
+  | { type: 'boss-kill'; entityId: string; count?: number; label: string }
+  | { type: 'total-kills'; count: number; label: string }
+  | { type: 'elite-kills'; count: number; label: string }
+  | { type: 'victories'; count: number; label: string };
+
 export type ProjectileEffect = {
   type: 'projectile';
   speed: number;
@@ -111,6 +118,7 @@ export type SurvivorDef = {
   startingItems: string[];
   view: ViewDot;
   crosshair?: string;
+  unlock?: UnlockCondition;
 };
 
 export type ChaseAi = { type: 'chase' };
@@ -138,6 +146,8 @@ export type EntityAi = ChaseAi | RangedAi | SniperAi;
 export type EntityDef = {
   id: string;
   name: string;
+  title?: string;
+  lore: string;
   role: EntityRole;
   tags: string[];
   stats: { speed: number; maxHp: number; radius: number };
@@ -154,6 +164,7 @@ export type ItemDef = {
   stack: 'linear' | 'none';
   hooks: ItemHook[];
   lore: string;
+  unlock?: UnlockCondition;
 };
 
 export type ObstacleKind = 'pillar' | 'hazard' | 'volatile';
@@ -226,6 +237,8 @@ export type StageView = {
 export type StageDef = {
   id: string;
   name: string;
+  kicker?: string;
+  lore?: string;
   fodder: string;
   ranged?: string;
   rangedChance?: number;
@@ -283,6 +296,7 @@ export type LoopDef = {
     speedPerCoeff: number;
   };
   rarityWeight: Record<ItemRarity, number>;
+  loreDropChance: Record<EntityRole, number>;
   stages: StageDef[];
 };
 

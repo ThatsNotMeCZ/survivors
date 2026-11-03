@@ -4,6 +4,7 @@ import { FX_DASH, FX_DEATH, FX_GEM, FX_HIT, FX_HURT, FX_MUZZLE, FX_STRIKE, SPARK
 import { catalog } from '../data/catalog';
 import type { ItemDef, SkillSlot } from '../data/schema';
 import { ROLE_BOSS, ROLE_ELITE, ROLE_FODDER, currentEnemySpeed, isEnemyAttacking } from '../sim/enemies';
+import { MAX_LORE_DROPS } from '../sim/gems';
 import { emptyInput, type InputFrame } from '../sim/input-frame';
 import { applyLevelChoice } from '../sim/level';
 import { currentObjective, currentStage, type Objective } from '../sim/loop';
@@ -26,6 +27,15 @@ import {
   showSting,
   stingActive,
 } from '../ui/overlay';
+import {
+  commitWorldProgress,
+  getCollectedLoreIds,
+  getUnlockedItemIds,
+  isSurvivorUnlocked,
+  recordItemPick,
+  recordLorePickup,
+  recordRunEnd,
+} from '../ui/records';
 import { getSettings } from '../ui/settings';
 import {
   applyShotVisual,
@@ -130,6 +140,8 @@ export class ArenaScene extends Phaser.Scene {
   private ambient: Ambient[] = [];
   private fodderLayers = new Map<string, Phaser.GameObjects.SpriteGPULayer>();
   private gemLayer!: Phaser.GameObjects.SpriteGPULayer;
+  private loreSprites: Phaser.GameObjects.Image[] = [];
+  private loreGlows: Phaser.GameObjects.Image[] = [];
   private sparkLayer!: Phaser.GameObjects.SpriteGPULayer;
   private sparks: Spark[] = [];
   private zoneGfx!: Phaser.GameObjects.Graphics;
@@ -149,6 +161,7 @@ export class ArenaScene extends Phaser.Scene {
   private fodderShown!: Record<string, Uint8Array>;
   private fodderAnimName = new Map<string, string[]>();
   private fodderAnimStart = new Map<string, Float64Array>();
+  private fodderAttackPlayed = new Map<string, Uint8Array>();
   private gemShown!: Uint8Array;
   private sparkShown!: Uint8Array;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -180,7 +193,11 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.world = createWorld(resolveSurvivorId());
+    this.world = createWorld(resolveSurvivorId(), {
+      unlockedItems: getUnlockedItemIds(),
+      collectedLores: getCollectedLoreIds(),
+    });
+    commitWorldProgress(this.world);
     const { width, height, maxProjectiles } = catalog.world;
     const loop = catalog.loop;
     uploadPixelTextures(this);
@@ -221,6 +238,7 @@ export class ArenaScene extends Phaser.Scene {
       this.fodderShown[def.id] = new Uint8Array(this.world.enemies.cap);
       this.fodderAnimName.set(def.id, new Array(this.world.enemies.cap).fill(''));
       this.fodderAnimStart.set(def.id, new Float64Array(this.world.enemies.cap));
+      this.fodderAttackPlayed.set(def.id, new Uint8Array(this.world.enemies.cap));
     }
     const gemTex = this.textures.exists(fxTextureKey('gem')) ? fxTextureKey('gem') : 'px-gem';
     this.gemLayer = this.add.spriteGPULayer(gemTex, loop.maxGems).setDepth(2);
@@ -232,6 +250,14 @@ export class ArenaScene extends Phaser.Scene {
     }
     seedGpuLayer(this.gemLayer, loop.maxGems, this.gpuMember);
     seedGpuLayer(this.sparkLayer, SPARK_CAP, this.gpuMember);
+    this.loreSprites = [];
+    this.loreGlows = [];
+    for (let i = 0; i < MAX_LORE_DROPS; i += 1) {
+      const glow = this.add.image(0, 0, 'px-glow').setVisible(false).setDepth(2.4).setAlpha(0.32).setScale(1.6).setTint(0xffd35a);
+      glow.setBlendMode(Phaser.BlendModes.ADD);
+      this.loreGlows.push(glow);
+      this.loreSprites.push(this.add.image(0, 0, 'px-lore').setVisible(false).setDepth(2.5).setScale(1.5));
+    }
     this.sparks = [];
     for (let i = 0; i < SPARK_CAP; i += 1) {
       this.sparks.push({ life: 0, max: 0.2, x: 0, y: 0, vx: 0, vy: 0, size: 1, tint: 0xffffff });
@@ -318,14 +344,23 @@ export class ArenaScene extends Phaser.Scene {
     this.shownOffer = null;
     bindOverlay({
       onPick: (index) => {
+        const picked = this.world.offer?.[index];
+        if (picked) recordItemPick(picked.id);
         applyLevelChoice(this.world, index);
       },
       onRestart: () => {
+        if (this.world.phase !== 'victory' && this.world.phase !== 'defeat') {
+          recordRunEnd(this.world, 'abandon');
+        }
         hideOverlay();
         this.scene.restart();
       },
+      onAbandon: () => {
+        recordRunEnd(this.world, 'abandon');
+      },
       onPause: () => {
         if (this.world.phase !== 'play') return;
+        commitWorldProgress(this.world);
         if (getOverlayMode() === 'hidden') showPause();
       },
     });
@@ -369,6 +404,8 @@ export class ArenaScene extends Phaser.Scene {
       runTime: this.world.runTime,
       coefficient: this.world.coefficient,
       bosses: this.world.bossesDefeated,
+      kills: this.world.kills.total,
+      damageDealt: Math.round(this.world.damageDealt),
       iframe: this.world.player.iframeRemain > 0,
       objectiveKicker: copy.kicker,
       objective: copy.label,
@@ -485,6 +522,7 @@ export class ArenaScene extends Phaser.Scene {
     this.syncObstacles(biome, theme);
     this.syncEnemies();
     this.syncGems();
+    this.syncLores();
     this.drawZones(dt);
     this.drawTelegraphs(biome);
     this.syncWaypoint();
@@ -652,22 +690,45 @@ export class ArenaScene extends Phaser.Scene {
           const attackAnim = fodderAnimSpec(defId, 'attack');
           const walkAnim = fodderAnimSpec(defId, 'walk');
           const idleAnim = fodderAnimSpec(defId, 'idle');
+          const attackPlayed = this.fodderAttackPlayed.get(defId);
+          const animNames = this.fodderAnimName.get(defId);
+          const animStarts = this.fodderAnimStart.get(defId);
 
           let wantedAnim = '';
           let animDuration = 0;
           if (attacking && attackAnim) {
-            wantedAnim = attackAnim.name;
-            animDuration = attackAnim.duration;
-          } else if (walkAnim && curSpeed > 0) {
-            wantedAnim = walkAnim.name;
-            animDuration = walkAnim.duration / Math.max(0.1, speedRatio);
-          } else if (idleAnim && idleAnim.frames.length > 1) {
-            wantedAnim = idleAnim.name;
-            animDuration = idleAnim.duration;
+            if (attackPlayed && attackPlayed[i] === 1) {
+              const elapsed = animStarts ? layer.timeElapsed - animStarts[i] : attackAnim.duration;
+              if (elapsed < attackAnim.duration) {
+                wantedAnim = attackAnim.name;
+                animDuration = attackAnim.duration;
+              } else if (walkAnim && curSpeed > 0) {
+                wantedAnim = walkAnim.name;
+                animDuration = walkAnim.duration / Math.max(0.1, speedRatio);
+              } else if (idleAnim && idleAnim.frames.length > 1) {
+                wantedAnim = idleAnim.name;
+                animDuration = idleAnim.duration;
+              }
+            } else {
+              if (attackPlayed) attackPlayed[i] = 1;
+              if (animNames && animStarts) {
+                animNames[i] = attackAnim.name;
+                animStarts[i] = layer.timeElapsed;
+              }
+              wantedAnim = attackAnim.name;
+              animDuration = attackAnim.duration;
+            }
+          } else {
+            if (attackPlayed) attackPlayed[i] = 0;
+            if (walkAnim && curSpeed > 0) {
+              wantedAnim = walkAnim.name;
+              animDuration = walkAnim.duration / Math.max(0.1, speedRatio);
+            } else if (idleAnim && idleAnim.frames.length > 1) {
+              wantedAnim = idleAnim.name;
+              animDuration = idleAnim.duration;
+            }
           }
 
-          const animNames = this.fodderAnimName.get(defId);
-          const animStarts = this.fodderAnimStart.get(defId);
           if (wantedAnim) {
             if (animNames && animStarts) {
               if (animNames[i] !== wantedAnim) {
@@ -757,9 +818,11 @@ export class ArenaScene extends Phaser.Scene {
     for (let i = eliteSlot; i < this.eliteSprites.length; i += 1) {
       this.eliteSprites[i].setVisible(false);
       this.eliteGlyphs[i].setVisible(false);
+      this.eliteSprites[i].setData('attackDone', false);
     }
     if (!bossOn) {
       this.bossSprite.setVisible(false);
+      this.bossSprite.setData('attackDone', false);
       for (const orbit of this.bossOrbits) orbit.setVisible(false);
     }
   }
@@ -772,6 +835,8 @@ export class ArenaScene extends Phaser.Scene {
       this.fodderShown[id][index] = 0;
       const animNames = this.fodderAnimName.get(id);
       if (animNames) animNames[index] = '';
+      const attackPlayed = this.fodderAttackPlayed.get(id);
+      if (attackPlayed) attackPlayed[index] = 0;
     }
   }
 
@@ -804,6 +869,49 @@ export class ArenaScene extends Phaser.Scene {
     }
   }
 
+  private syncLores(): void {
+    const { lores, newlyCollectedLores } = this.world;
+    for (let i = 0; i < this.loreSprites.length; i += 1) {
+      const sprite = this.loreSprites[i];
+      const glow = this.loreGlows[i];
+      if (i >= lores.cap || lores.alive[i] === 0) {
+        sprite.setVisible(false);
+        glow.setVisible(false);
+        continue;
+      }
+      const bob = Math.sin(this.world.runTime * 5 + i) * 2.5;
+      const x = Math.round(lores.x[i]);
+      const y = Math.round(lores.y[i] + bob);
+      sprite.setPosition(x, y).setVisible(true);
+      glow
+        .setPosition(x, y)
+        .setVisible(true)
+        .setAlpha(0.28 + 0.12 * Math.sin(this.world.runTime * 6 + i));
+    }
+
+    if (newlyCollectedLores.length > 0) {
+      while (newlyCollectedLores.length > 0) {
+        const entityId = newlyCollectedLores.shift();
+        if (!entityId) continue;
+        const newlyInscribed = recordLorePickup(entityId);
+        if (newlyInscribed) {
+          playSfx('confirm');
+          if (!stingActive()) {
+            const def = this.world.catalog.entity(entityId);
+            showSting(
+              {
+                kicker: 'Apocrypha Recovered',
+                title: `${def.name} Treatise`,
+                sub: 'Inscribed in The Archives',
+              },
+              1800,
+            );
+          }
+        }
+      }
+    }
+  }
+
   private syncOverlay(): void {
     const { phase, offer } = this.world;
     if (getOverlayMode() === 'pause') {
@@ -811,11 +919,15 @@ export class ArenaScene extends Phaser.Scene {
       return;
     }
     if (phase === 'levelup' && offer && this.shownOffer !== offer) {
+      const rec = commitWorldProgress(this.world);
+      this.world.unlockedItems = getUnlockedItemIds(rec);
       this.shownOffer = offer;
       showLevelUp(offer);
     } else if (phase === 'victory' && this.lastPhase !== 'victory') {
+      recordRunEnd(this.world, 'victory');
       showRunEnd('victory', `The last seal holds · ${formatTime(this.world.runTime)}`, this.runRecap());
     } else if (phase === 'defeat' && this.lastPhase !== 'defeat') {
+      recordRunEnd(this.world, 'defeat');
       showRunEnd('defeat', `${currentStage(this.world).name} · ${formatTime(this.world.runTime)}`, this.runRecap());
     } else if (phase === 'play' && this.lastPhase !== 'play') {
       hideOverlay();
@@ -829,6 +941,8 @@ export class ArenaScene extends Phaser.Scene {
       this.lastStageIndex = this.world.stageIndex;
       this.lastBossSpawned = false;
       this.bossMusicActive = false;
+      const rec = commitWorldProgress(this.world);
+      this.world.unlockedItems = getUnlockedItemIds(rec);
       const stage = currentStage(this.world);
       setMusicScene({ kind: 'stage', stageId: stage.id });
       showSting(
@@ -857,6 +971,8 @@ export class ArenaScene extends Phaser.Scene {
     }
     if (this.bossMusicActive && this.world.counts.boss === 0 && this.world.portal.open) {
       this.bossMusicActive = false;
+      const rec = commitWorldProgress(this.world);
+      this.world.unlockedItems = getUnlockedItemIds(rec);
       const stage = currentStage(this.world);
       setMusicScene({ kind: 'stage', stageId: stage.id });
     }
@@ -911,6 +1027,8 @@ export class ArenaScene extends Phaser.Scene {
       coefficient: this.world.coefficient,
       survivor: this.world.survivor.name,
       bosses: this.world.bossesDefeated,
+      kills: this.world.kills.total,
+      damageDealt: Math.round(this.world.damageDealt),
       items: this.world.inventory.map((inst) => {
         const def = this.world.catalog.item(inst.id);
         return { name: def.name, stacks: inst.stacks };
@@ -1475,7 +1593,9 @@ function hudSkills(world: World) {
 
 function resolveSurvivorId(): string {
   const id = getSettings().survivorId;
-  return catalog.survivors.some((entry) => entry.id === id) ? id : catalog.world.defaultSurvivor;
+  const hit = catalog.survivors.find((entry) => entry.id === id);
+  if (hit && isSurvivorUnlocked(hit)) return hit.id;
+  return catalog.world.defaultSurvivor;
 }
 
 function objectiveCopy(objective: Objective, stageName: string): { kicker: string; label: string; detail: string } {

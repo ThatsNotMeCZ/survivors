@@ -188,7 +188,7 @@ export function createEntityAnims(scene: Phaser.Scene): void {
         key,
         frames: scene.anims.generateFrameNumbers(tex, { frames: spec.frames }),
         frameRate: spec.frameRate,
-        repeat: spec.repeat,
+        repeat: anim === 'attack' ? 0 : spec.repeat,
       });
     }
   }
@@ -205,6 +205,57 @@ export function playEntity(
   if (sprite.texture.key !== tex) sprite.setTexture(tex);
   const preferred = entityAnimKey(id, anim);
   const idle = entityAnimKey(id, 'idle');
+  const walk = entityAnimKey(id, 'walk');
+  const attack = entityAnimKey(id, 'attack');
+
+  const attackExists = sprite.anims.animationManager.exists(attack);
+  const isPlayingAttack = sprite.anims.isPlaying && sprite.anims.currentAnim?.key === attack;
+  const attackDone = sprite.getData('attackDone') === true;
+
+  if (anim === 'attack') {
+    if (attackExists) {
+      if (isPlayingAttack) {
+        // Still playing its single attack pass - keep playing uninterrupted
+        return;
+      }
+      if (attackDone) {
+        // Already played once for this attack - show walk if moving, else idle
+        const fallback = timeScale > 0 && sprite.anims.animationManager.exists(walk)
+          ? walk
+          : sprite.anims.animationManager.exists(idle)
+            ? idle
+            : '';
+        if (fallback) {
+          sprite.play(fallback, true);
+          if (sprite.anims) sprite.anims.timeScale = fallback === walk ? Math.max(0.1, timeScale) : 1;
+        }
+        return;
+      }
+      if (!sprite.anims.isPlaying && sprite.anims.currentAnim?.key === attack) {
+        sprite.setData('attackDone', true);
+        const fallback = timeScale > 0 && sprite.anims.animationManager.exists(walk)
+          ? walk
+          : sprite.anims.animationManager.exists(idle)
+            ? idle
+            : '';
+        if (fallback) {
+          sprite.play(fallback, true);
+          if (sprite.anims) sprite.anims.timeScale = fallback === walk ? Math.max(0.1, timeScale) : 1;
+        }
+        return;
+      }
+      // New attack: start playing attack animation
+      sprite.setData('attackDone', false);
+      sprite.play(attack);
+      return;
+    }
+  } else {
+    sprite.setData('attackDone', false);
+    if (isPlayingAttack) {
+      return;
+    }
+  }
+
   const key = sprite.anims.animationManager.exists(preferred)
     ? preferred
     : sprite.anims.animationManager.exists(idle)

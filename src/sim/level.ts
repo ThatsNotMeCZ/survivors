@@ -27,7 +27,13 @@ export function rollChoices(world: World): ItemDef[] {
   const noneOwned = new Set(
     world.inventory.filter((inst) => world.catalog.item(inst.id).stack === 'none').map((inst) => inst.id),
   );
-  const pool = world.catalog.items.filter((item) => !noneOwned.has(item.id));
+  const unlockedPool = world.catalog.items.filter(
+    (item) => world.unlockedItems.has(item.id) && !noneOwned.has(item.id),
+  );
+  const pool =
+    unlockedPool.length > 0
+      ? unlockedPool
+      : world.catalog.items.filter((item) => !noneOwned.has(item.id));
   const picked: ItemDef[] = [];
   const used = new Set<string>();
   for (let n = 0; n < count; n += 1) {

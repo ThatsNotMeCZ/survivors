@@ -5,6 +5,7 @@ import obstaclesRaw from './obstacles.json';
 import {
   CATALOG_VERSION,
   type EntityDef,
+  type EntityRole,
   type ItemDef,
   type ItemHook,
   type LoopDef,
@@ -14,6 +15,7 @@ import {
   type SkillEffect,
   type StageDef,
   type SurvivorDef,
+  type UnlockCondition,
   type VersionedList,
   type WorldDef,
 } from './schema';
@@ -62,6 +64,12 @@ function loadCatalog(): Catalog {
   );
   const items = indexById('items.json', asList<ItemDef>(itemsRaw as VersionedList<ItemDef>, 'items.json'));
 
+  for (const entity of entities.values()) {
+    if (!entity.lore || typeof entity.lore !== 'string') {
+      throw new Error(`Entity "${entity.id}" missing lore`);
+    }
+  }
+
   for (const item of items.values()) {
     for (const hook of item.hooks) {
       if (!IMPLEMENTED_HOOK_OPS.has(hook.op)) {
@@ -70,6 +78,9 @@ function loadCatalog(): Catalog {
       if (hook.op === 'on-kill' && hook.stat !== 'hp') {
         throw new Error(`Item "${item.id}" on-kill stat must be hp`);
       }
+    }
+    if (item.unlock) {
+      assertUnlock(`Item "${item.id}"`, item.unlock, loop.stages, entities);
     }
   }
 
@@ -91,6 +102,16 @@ function loadCatalog(): Catalog {
       if (!items.has(itemId)) {
         throw new Error(`Survivor "${survivor.id}" starting item missing: "${itemId}"`);
       }
+    }
+    if (survivor.unlock) {
+      assertUnlock(`Survivor "${survivor.id}"`, survivor.unlock, loop.stages, entities);
+    }
+  }
+  const roles: EntityRole[] = ['fodder', 'elite', 'boss'];
+  for (const role of roles) {
+    const chance = loop.loreDropChance?.[role];
+    if (typeof chance !== 'number' || chance < 0 || chance > 1) {
+      throw new Error(`loop.json loreDropChance.${role} must be a number between 0 and 1`);
     }
   }
   if (!survivors.has(world.defaultSurvivor)) {
@@ -162,6 +183,40 @@ function assertStageEntity(
   if (def.role !== key) {
     throw new Error(`Stage "${stage.id}" ${key} "${id}" has role "${def.role}"`);
   }
+}
+
+function assertUnlock(
+  owner: string,
+  unlock: UnlockCondition,
+  stages: StageDef[],
+  entities: Map<string, EntityDef>,
+): void {
+  if (!unlock.label || typeof unlock.label !== 'string') {
+    throw new Error(`${owner} unlock missing label`);
+  }
+  if (unlock.type === 'stage-clear') {
+    if (!stages.some((s) => s.id === unlock.stageId)) {
+      throw new Error(`${owner} unlock references unknown stage "${unlock.stageId}"`);
+    }
+    return;
+  }
+  if (unlock.type === 'boss-kill') {
+    if (!entities.has(unlock.entityId)) {
+      throw new Error(`${owner} unlock references unknown entity "${unlock.entityId}"`);
+    }
+    return;
+  }
+  if (
+    unlock.type === 'total-kills' ||
+    unlock.type === 'elite-kills' ||
+    unlock.type === 'victories'
+  ) {
+    if (typeof unlock.count !== 'number' || unlock.count <= 0) {
+      throw new Error(`${owner} unlock.count must be > 0`);
+    }
+    return;
+  }
+  throw new Error(`${owner} uses unknown unlock type "${(unlock as { type: string }).type}"`);
 }
 
 function asWorld(raw: unknown): WorldDef {

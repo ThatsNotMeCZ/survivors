@@ -2,7 +2,7 @@ import { FX_DEATH, FX_HURT, FX_MUZZLE } from '../config';
 import type { EntityDef, EntityRole, RangedAi, SniperAi } from '../data/schema';
 import { circlesOverlap, clamp } from './collision';
 import { emitFx } from './fx';
-import { spawnGem } from './gems';
+import { hasActiveLoreDrop, spawnGem, spawnLoreDrop } from './gems';
 import { grantXp } from './level';
 import { spawnAcidPool } from './obstacles';
 import { TEAM_ENEMY, spawnProjectile } from './projectiles';
@@ -13,6 +13,9 @@ import type { World } from './world';
 export const ROLE_FODDER = 0;
 export const ROLE_ELITE = 1;
 export const ROLE_BOSS = 2;
+
+export const CHASE_ATTACK_DURATION = 0.35;
+export const CHASE_ATTACK_COOLDOWN = 0.8;
 
 const ROLE_CODE: Record<EntityRole, number> = {
   fodder: ROLE_FODDER,
@@ -91,6 +94,7 @@ export function clearEnemies(world: World): void {
 }
 
 export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): number {
+  if (world.bossDefeated) return -1;
   const role = ROLE_CODE[def.role];
   if (role === ROLE_FODDER && world.counts.fodder >= world.catalog.loop.maxFodder) return -1;
   if (role === ROLE_ELITE && world.counts.elite >= world.catalog.loop.maxElites) return -1;
@@ -135,6 +139,7 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
     }
 
     enemies.defId[i] = def.id;
+    world.encountersByEntity[def.id] = (world.encountersByEntity[def.id] ?? 0) + 1;
     if (role === ROLE_FODDER) world.counts.fodder += 1;
     else if (role === ROLE_ELITE) world.counts.elite += 1;
     else world.counts.boss += 1;
@@ -168,26 +173,50 @@ export function killEnemy(world: World, index: number): void {
   const { enemies } = world;
   if (enemies.alive[index] === 0) return;
   const role = enemies.role[index];
+  const defId = enemies.defId[index];
   const x = enemies.x[index];
   const y = enemies.y[index];
   const xp = enemies.xp[index];
   world.credits += enemies.credits[index];
   const heal = onKillHeal(world.inventory, world.catalog.item);
   if (heal > 0) {
+    const prevHp = world.player.hp;
     world.player.hp = Math.min(world.player.maxHp, world.player.hp + heal);
+    world.healingDone += Math.max(0, world.player.hp - prevHp);
   }
   emitFx(world.fx, FX_DEATH, x, y, 0xffd35a);
   enemies.alive[index] = 0;
-  if (role === ROLE_FODDER) world.counts.fodder -= 1;
-  else if (role === ROLE_ELITE) world.counts.elite -= 1;
-  else if (role === ROLE_BOSS) {
+  world.kills.total += 1;
+  if (defId) {
+    world.killsByEntity[defId] = (world.killsByEntity[defId] ?? 0) + 1;
+  }
+  if (role === ROLE_FODDER) {
+    world.counts.fodder -= 1;
+    world.kills.fodder += 1;
+  } else if (role === ROLE_ELITE) {
+    world.counts.elite -= 1;
+    world.kills.elite += 1;
+  } else if (role === ROLE_BOSS) {
     world.counts.boss -= 1;
+    world.kills.boss += 1;
     world.bossesDefeated += 1;
+    world.bossDefeated = true;
     world.portal.x = x;
     world.portal.y = y;
   }
   if (!spawnGem(world.gems, x, y, xp)) {
     grantXp(world, xp);
+  }
+  if (
+    defId &&
+    !world.collectedLores.has(defId) &&
+    !hasActiveLoreDrop(world.lores, defId)
+  ) {
+    const def = world.catalog.entity(defId);
+    const chance = world.catalog.loop.loreDropChance[def.role] ?? 0;
+    if (chance > 0 && Math.random() < chance) {
+      spawnLoreDrop(world.lores, x, y, defId);
+    }
   }
 }
 
@@ -231,6 +260,9 @@ export function stepEnemies(world: World, dt: number): void {
     if (enemies.attackRemain[i] > 0) {
       enemies.attackRemain[i] = Math.max(0, enemies.attackRemain[i] - dt);
     }
+    if (enemies.attackCd[i] > 0) {
+      enemies.attackCd[i] = Math.max(0, enemies.attackCd[i] - dt);
+    }
     const defId = enemies.defId[i];
     const ai = defId ? world.catalog.entity(defId).ai : { type: 'chase' as const };
     const target = chaseTarget(world, i);
@@ -254,7 +286,10 @@ export function stepEnemies(world: World, dt: number): void {
       }
       const targetRadius = world.decoy.active && enemies.role[i] === ROLE_FODDER ? 14 : world.player.radius;
       if (len <= enemies.radius[i] + targetRadius + 6) {
-        enemies.attackRemain[i] = 0.35;
+        if (enemies.attackRemain[i] <= 0 && enemies.attackCd[i] <= 0) {
+          enemies.attackRemain[i] = CHASE_ATTACK_DURATION;
+          enemies.attackCd[i] = CHASE_ATTACK_COOLDOWN;
+        }
       }
     }
     const insetX = bounds.borderInsetX ?? 0;
@@ -330,7 +365,6 @@ function stepRanged(
     return;
   }
 
-  enemies.attackCd[i] = Math.max(0, enemies.attackCd[i] - dt);
   if (len <= ai.range && enemies.attackCd[i] <= 0) {
     enemies.windup[i] = ai.windup;
     enemies.aimX[i] = world.player.x;
@@ -376,7 +410,6 @@ function stepSniper(
     return;
   }
 
-  enemies.attackCd[i] = Math.max(0, enemies.attackCd[i] - dt);
   if (enemies.attackCd[i] <= 0) {
     enemies.windup[i] = ai.windup;
     enemies.aimX[i] = world.player.x;
@@ -395,7 +428,9 @@ function fireSniper(world: World, i: number, ai: SniperAi): void {
   const dist = pointToSegment(player.x, player.y, x0, y0, x1, y1);
   if (dist > ai.lineWidth + player.radius) return;
   emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
-  player.hp -= ai.damage * world.coefficient;
+  const dmg = ai.damage * world.coefficient;
+  player.hp -= dmg;
+  world.damageTaken += dmg;
 }
 
 function deflectFromObstacles(
@@ -471,7 +506,9 @@ function explodeNoxious(world: World, index: number): void {
     circlesOverlap(x, y, cfg.popRadius, player.x, player.y, player.radius)
   ) {
     emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
-    player.hp -= cfg.popDamage * world.coefficient;
+    const dmg = cfg.popDamage * world.coefficient;
+    player.hp -= dmg;
+    world.damageTaken += dmg;
   }
   spawnAcidPool(world, x, y);
   killEnemy(world, index);
@@ -503,19 +540,23 @@ function tickTetherBurn(world: World, dt: number): void {
 
 export function applyEnemyDamage(world: World, index: number, damage: number): void {
   const { enemies } = world;
-  if (enemies.alive[index] === 0) return;
+  if (enemies.alive[index] === 0 || damage <= 0) return;
   if (enemies.role[index] === ROLE_ELITE) {
     enemies.shieldDelayRemain[index] = world.catalog.loop.shielder.delay;
     if (enemies.shieldHp[index] > 0) {
       if (damage <= enemies.shieldHp[index]) {
         enemies.shieldHp[index] -= damage;
+        world.damageDealt += damage;
         return;
       } else {
+        world.damageDealt += enemies.shieldHp[index];
         damage -= enemies.shieldHp[index];
         enemies.shieldHp[index] = 0;
       }
     }
   }
+  const dealt = Math.min(Math.max(0, enemies.hp[index]), damage);
+  world.damageDealt += dealt;
   enemies.hp[index] -= damage;
   if (enemies.hp[index] <= 0) startEnemyDeath(world, index);
 }

@@ -49,7 +49,12 @@
         "inner": "#f0e0c8",
         "mid": "#c4783a"
       },
-      "crosshair": "penitent"
+      "crosshair": "penitent",
+      "unlock": {
+        "type": "boss-kill",
+        "entityId": "frost-sovereign",
+        "label": "Slay the Frost Sovereign in the Rime Dock"
+      }
     }
   ]
 }

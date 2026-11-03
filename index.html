@@ -135,7 +135,7 @@
               <span class="plaque-label">ALCHEMIST'S DESK</span>
             </button>
           </nav>
-          <div class="menu-pillar-foot" aria-hidden="true">
+          <div class="menu-pillar-foot" aria-hidden="true" data-ui-sprite="pillar-ornament">
             <svg viewBox="0 0 120 80" class="pillar-ornament">
               <path d="M60 8 L78 26 L60 44 L42 26 Z" fill="none" stroke="currentColor" stroke-width="2" />
               <path d="M20 68 Q60 32 100 68" fill="none" stroke="currentColor" stroke-width="1.5" />
@@ -144,16 +144,7 @@
           </div>
         </div>
         <div class="menu-stage">
-          <div class="transmutation-seal" aria-hidden="true">
-            <svg viewBox="0 0 400 400" class="seal-svg">
-              <circle cx="200" cy="200" r="185" fill="none" stroke="currentColor" stroke-width="3" />
-              <circle cx="200" cy="200" r="154" fill="none" stroke="currentColor" stroke-width="2" />
-              <polygon points="200,48 332,276 68,276" fill="none" stroke="currentColor" stroke-width="3" />
-              <polygon points="200,352 332,124 68,124" fill="none" stroke="currentColor" stroke-width="3" />
-              <circle cx="200" cy="200" r="88" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 6" />
-            </svg>
-            <div class="seal-runes">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛃ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</div>
-          </div>
+          <div id="menu-cinder-circle" class="transmutation-seal" aria-hidden="true"></div>
           <div id="menu-preview" class="menu-preview"></div>
         </div>
         <button type="button" id="menu-commence" class="magma-cta" data-ui-sprite="btn-cta">
@@ -180,6 +171,27 @@
           <span>START</span>
           <span>TRANSMUTATION</span>
         </button>
+      </div>
+
+      <!-- 2B. THE ARCHIVES (Standalone Codex & Ledger) -->
+      <div id="archives" class="hidden">
+        <header class="hall-header archives-header" data-ui-sprite="hall-banner">
+          <button type="button" id="archives-back" class="hall-medallion" aria-label="Back" title="Back" data-ui-sprite="hall-medailon">
+            <span aria-hidden="true">◁</span>
+          </button>
+          <div class="archives-brand-group">
+            <p class="archives-kicker">HERMETIC CODEX &amp; LEDGER</p>
+            <h1 id="archives-brand" class="hall-brand">THE ARCHIVES</h1>
+          </div>
+        </header>
+        <div id="archives-ribbon" class="archives-ribbon" aria-label="Archive Totals"></div>
+        <aside class="hall-sidebar archives-sidebar">
+          <nav id="archives-nav" class="archives-nav" role="tablist" aria-label="Archive Chapters"></nav>
+          <div class="archives-sidebar-foot" aria-hidden="true">
+            <span>☉ ☽ ☿ ♀ ♂ ♃ ♄</span>
+          </div>
+        </aside>
+        <main id="archives-stage" class="archives-stage" aria-live="polite"></main>
       </div>
 
       <!-- 3. LEVEL UP / SELECT AUGMENTATION -->
@@ -216,6 +228,10 @@
               <button type="button" id="pause-resume" class="plaque-btn plaque-glyph-btn action-primary" data-ui-sprite="btn-plaque">
                 <span class="plaque-label">RESUME SEQUENCE</span>
                 <span class="plaque-glyph" aria-hidden="true">⚶</span>
+              </button>
+              <button type="button" id="pause-archives" class="plaque-btn plaque-glyph-btn" data-ui-sprite="btn-plaque">
+                <span class="plaque-label">THE ARCHIVES</span>
+                <span class="plaque-glyph" aria-hidden="true">🜍</span>
               </button>
               <button type="button" id="pause-settings" class="plaque-btn plaque-glyph-btn" data-ui-sprite="btn-plaque">
                 <span class="plaque-label">SETTINGS</span>
