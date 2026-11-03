@@ -1,5 +1,8 @@
 import type { ItemDef, ItemInstance, ResolvedStats, StatId, SurvivorStats } from '../data/schema';
 
+export const MIN_RADIUS_RATIO = 0.5;
+export const MAX_RADIUS_RATIO = 2.0;
+
 const ZERO: Record<StatId, number> = {
   speed: 0,
   maxHp: 0,
@@ -29,10 +32,16 @@ export function resolveStats(
     }
   }
 
+  const baseRadius = base.radius || 14;
+  const rawRadius = (base.radius + add.radius) * (1 + pct.radius);
+  const minRadius = Math.max(1, baseRadius * MIN_RADIUS_RATIO);
+  const maxRadius = Math.max(minRadius, baseRadius * MAX_RADIUS_RATIO);
+  const radius = Math.max(minRadius, Math.min(maxRadius, rawRadius));
+
   return {
     speed: (base.speed + add.speed) * (1 + pct.speed),
     maxHp: (base.maxHp + add.maxHp) * (1 + pct.maxHp),
-    radius: (base.radius + add.radius) * (1 + pct.radius),
+    radius,
     damageMul: (1 + add.damage) * (1 + pct.damage),
     cooldownMul: (1 + add.cooldown) * (1 + pct.cooldown),
     critChance: Math.max(0, Math.min(1, (base.critChance ?? 0.05) + add.critChance + pct.critChance)),

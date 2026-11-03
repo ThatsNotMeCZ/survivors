@@ -9,6 +9,7 @@ import { applyLevelChoice } from '../sim/level';
 import { currentObjective, currentStage, type Objective } from '../sim/loop';
 import { playerSpeedMul } from '../sim/obstacles';
 import { ZONE_LINE, ZONE_STRIKE } from '../sim/zones';
+import { MAX_RADIUS_RATIO, MIN_RADIUS_RATIO } from '../sim/stats';
 import { aimAngle, createWorld, stepWorld, type World } from '../sim/world';
 import { formatTime, initArenaHud, setHudCombat, setHudFps } from '../ui/hud';
 import {
@@ -114,6 +115,7 @@ export class ArenaScene extends Phaser.Scene {
   private volatileGlows: Phaser.GameObjects.Image[] = [];
   private floor!: Phaser.GameObjects.Image;
   private circleSprite!: Phaser.GameObjects.Image;
+  private circleGlowFilter?: any;
   private portalSprite!: Phaser.GameObjects.Image;
   private telGlow!: Phaser.GameObjects.Image;
   private crosshair!: Phaser.GameObjects.Image;
@@ -189,6 +191,18 @@ export class ArenaScene extends Phaser.Scene {
 
     this.floor = this.add.image(width / 2, height / 2, floorKey(theme)).setDepth(0);
     this.circleSprite = this.add.image(0, 0, '').setVisible(false).setDepth(1);
+    if (typeof (this.circleSprite as any).enableFilters === 'function') {
+      try {
+        (this.circleSprite as any).enableFilters();
+        const filters = (this.circleSprite as any).filters;
+        if (filters?.internal?.addGlow) {
+          this.circleGlowFilter = filters.internal.addGlow(0xffaa33, 8, 0, 0);
+          this.circleGlowFilter.setActive(false);
+        }
+      } catch {
+        // Fallback for non-WebGL / unsupported filter environments
+      }
+    }
     this.portalSprite = this.add.image(0, 0, '').setVisible(false).setDepth(1);
     this.zoneGfx = this.add.graphics().setDepth(1);
     this.telegraphGfx = this.add.graphics().setDepth(3);
@@ -382,14 +396,21 @@ export class ArenaScene extends Phaser.Scene {
     return this.world.survivor.id;
   }
 
-  private fitBody(image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite): void {
+  private playerScale(): number {
+    const base = this.world?.survivor?.stats?.radius || 14;
+    const current = this.world?.player?.radius ?? base;
+    const ratio = base > 0 ? current / base : 1;
+    return Math.max(MIN_RADIUS_RATIO, Math.min(MAX_RADIUS_RATIO, ratio));
+  }
+
+  private fitBody(image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite, scale = this.playerScale()): void {
     const fw = image.frame?.width ?? PLAYER_DISPLAY;
     const fh = image.frame?.height ?? PLAYER_DISPLAY;
     if (fw === fh) {
-      image.setDisplaySize(PLAYER_DISPLAY, PLAYER_DISPLAY);
+      image.setDisplaySize(PLAYER_DISPLAY * scale, PLAYER_DISPLAY * scale);
       return;
     }
-    image.setDisplaySize(fw, fh);
+    image.setDisplaySize(fw * scale, fh * scale);
   }
 
   private eyesKey(biome: BiomeId): string {
@@ -487,6 +508,7 @@ export class ArenaScene extends Phaser.Scene {
   private syncPlayer(dt: number, biome: BiomeId): void {
     const { player } = this.world;
     const vessel = this.vesselId();
+    const scale = this.playerScale();
     const moving = this.inputFrame.moveX !== 0 || this.inputFrame.moveY !== 0;
     const baseSpeed = this.world.survivor.stats.speed;
     const inputMag = Math.min(1, Math.hypot(this.inputFrame.moveX, this.inputFrame.moveY));
@@ -495,11 +517,11 @@ export class ArenaScene extends Phaser.Scene {
       : 0;
     const speedRatio = baseSpeed > 0 ? currentSpeed / baseSpeed : 1;
     if (moving && player.dashRemain <= 0) this.walkPhase += dt * 8 * speedRatio;
-    const bob = Math.round(Math.sin(this.walkPhase) * 1.5);
+    const bob = Math.round(Math.sin(this.walkPhase) * 1.5 * scale);
     this.lastFacing = spriteFacing(moveFacing(this.inputFrame.moveX, this.inputFrame.moveY), this.lastFacing);
     const flipX = this.lastFacing === 'left';
     playEntity(this.playerSprite, vessel, moving && player.dashRemain <= 0 ? 'walk' : 'idle', speedRatio);
-    this.fitBody(this.playerSprite);
+    this.fitBody(this.playerSprite, scale);
     this.playerSprite.setFlipX(flipX);
     this.playerEyes.setVisible(!authoredEntity(vessel));
     const ang = aimAngle(this.world);
@@ -509,7 +531,7 @@ export class ArenaScene extends Phaser.Scene {
     this.playerSprite.setAlpha(player.iframeRemain > 0 ? 0.45 : 1);
     if (this.world.decoy.active) {
       playEntity(this.decoySprite, vessel, 'idle');
-      this.fitBody(this.decoySprite);
+      this.fitBody(this.decoySprite, scale);
       this.decoySprite.setFlipX(flipX);
       this.decoySprite.setVisible(true);
       this.decoySprite.setPosition(Math.round(this.world.decoy.x), Math.round(this.world.decoy.y));
@@ -518,8 +540,13 @@ export class ArenaScene extends Phaser.Scene {
       this.decoySprite.setVisible(false);
     }
     this.playerGlow.setPosition(x, y);
+    this.playerGlow.setScale(2.4 * scale);
     this.playerGlow.setAlpha(biome === 'cinder' ? 0.16 : 0.12);
-    this.playerEyes.setPosition(x + Math.round(Math.cos(ang) * 2), y - 6 + Math.round(Math.sin(ang) * 1));
+    this.playerEyes.setScale(scale);
+    this.playerEyes.setPosition(
+      x + Math.round(Math.cos(ang) * 2 * scale),
+      y - Math.round(6 * scale) + Math.round(Math.sin(ang) * 1 * scale),
+    );
   }
 
   private syncObstacles(biome: BiomeId, theme: EnvThemeId): void {
@@ -561,9 +588,25 @@ export class ArenaScene extends Phaser.Scene {
 
       sprite.setVisible(true);
       sprite.setPosition(Math.round(obs.x), Math.round(obs.y));
-      const display = (obs.radius * 2) / sprite.width;
-      sprite.setScale(display);
-      if (obs.type === 'pillar') {
+      sprite.setDepth(obs.type === 'hazard' ? 1.05 : 2);
+
+      if (obs.type === 'pillar' && envId) {
+        sprite.setScale(1);
+      } else if (obs.type === 'volatile' && envId) {
+        sprite.setScale(1);
+      } else {
+        const display = (obs.radius * 2) / sprite.width;
+        sprite.setScale(display);
+      }
+
+      if (obs.type === 'hazard') {
+        sprite.clearTint();
+        glow.setVisible(true);
+        glow.setPosition(obs.x, obs.y);
+        glow.setTint(biome === 'cinder' ? 0xff4411 : 0x2288ff);
+        glow.setAlpha(0.22 + 0.04 * Math.sin(this.world.runTime * 3 + i));
+        glow.setScale((obs.radius * 2.2) / 32);
+      } else if (obs.type === 'pillar') {
         const near = Math.hypot(player.x - obs.x, player.y - obs.y) < 170;
         sprite.setTint(near ? 0xffe8d0 : 0xffffff);
         glow.setVisible(false);
@@ -571,6 +614,9 @@ export class ArenaScene extends Phaser.Scene {
         sprite.setTint(flash ? 0xffffff : 0xff3322);
         glow.setVisible(true);
         glow.setPosition(obs.x, obs.y);
+        glow.setTint(0xff3322);
+        glow.setAlpha(0.2);
+        glow.setScale(3.2);
       } else {
         sprite.clearTint();
         glow.setVisible(false);
@@ -883,8 +929,44 @@ export class ArenaScene extends Phaser.Scene {
     if (inZone && tel.state === 'charging') {
       this.circleSparkCd -= dt;
       if (this.circleSparkCd <= 0) {
-        this.circleSparkCd = 0.14;
-        spawnBurst(this.sparks, tel.x, tel.y, biome === 'cinder' ? 0xffaa33 : 0x55ffff, 2, 40, 0.22);
+        this.circleSparkCd = 0.05;
+        const px = this.world.player.x;
+        const py = this.world.player.y;
+        const dx = tel.x - px;
+        const dy = tel.y - py;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 16) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const perpX = -ny;
+          const perpY = nx;
+          const chainTint = biome === 'cinder' ? 0xffaa33 : 0x55ffff;
+          const speed = 240 + Math.random() * 80;
+          const jitter = (Math.random() - 0.5) * 40;
+          const life = Math.min(dist / speed, 0.42);
+          spawnDirectedSpark(
+            this.sparks,
+            px + nx * 8 + perpX * (Math.random() - 0.5) * 10,
+            py + ny * 8 + perpY * (Math.random() - 0.5) * 10,
+            nx * speed + perpX * jitter,
+            ny * speed + perpY * jitter,
+            chainTint,
+            life,
+            0.8 + Math.random() * 0.4,
+          );
+        }
+      }
+    }
+
+    if (this.circleGlowFilter) {
+      if (tel.state === 'charging') {
+        this.circleGlowFilter.setActive(true);
+        this.circleGlowFilter.color = biome === 'cinder' ? 0xffaa33 : 0x55ffff;
+        const pulse = 0.5 + 0.5 * Math.sin(this.world.runTime * 8);
+        this.circleGlowFilter.outerStrength = inZone ? (2 + 4 * t + pulse * 2.5) : (1 + pulse);
+        this.circleGlowFilter.innerStrength = inZone ? (0.5 + 1.2 * t) : 0;
+      } else {
+        this.circleGlowFilter.setActive(false);
       }
     }
 
@@ -1228,6 +1310,31 @@ function spawnBurst(
     sparks[i].size = 0.7 + Math.random() * 0.6;
     sparks[i].tint = tint;
     spawned += 1;
+  }
+}
+
+function spawnDirectedSpark(
+  sparks: Spark[],
+  x: number,
+  y: number,
+  vx: number,
+  vy: number,
+  tint: number,
+  life: number,
+  size: number,
+): void {
+  if (getSettings().reduceVfx) return;
+  for (let i = 0; i < sparks.length; i += 1) {
+    if (sparks[i].life > 0) continue;
+    sparks[i].life = life;
+    sparks[i].max = life;
+    sparks[i].x = x;
+    sparks[i].y = y;
+    sparks[i].vx = vx;
+    sparks[i].vy = vy;
+    sparks[i].size = size;
+    sparks[i].tint = tint;
+    return;
   }
 }
 

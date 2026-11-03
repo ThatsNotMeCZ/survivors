@@ -1,7 +1,7 @@
 import { FX_DEATH, FX_HIT, FX_HURT } from '../config';
 import type { Obstacle, ObstacleKind } from '../data/schema';
 import { aabbOverlap, circlesOverlap, pushCircles } from './collision';
-import { ROLE_BOSS, startEnemyDeath } from './enemies';
+import { startEnemyDeath } from './enemies';
 import { emitFx } from './fx';
 import { FLAG_FLYOVER, TEAM_PLAYER, killProjectile } from './projectiles';
 import { applyEnemySlow, applySlow, tickSlow } from './status';
