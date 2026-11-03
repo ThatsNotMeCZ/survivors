@@ -105,7 +105,28 @@
     "skill-condemn-tether",
     "skill-crucible-cull"
   ],
-  "env": [],
+  "env": [
+    "ambient-ash",
+    "ambient-ember",
+    "cinder-border-corner-bottom",
+    "cinder-border-corner-top",
+    "cinder-border-h-0",
+    "cinder-border-h-1",
+    "cinder-border-v-0",
+    "cinder-border-v-1",
+    "cinder-circle",
+    "cinder-hazard-0",
+    "cinder-pillar",
+    "cinder-portal",
+    "cinder-tile-0",
+    "cinder-tile-1",
+    "cinder-tile-2",
+    "cinder-tile-rune-0",
+    "cinder-tile-rune-1",
+    "cinder-tile-rune-2",
+    "cinder-tile-rune-3",
+    "cinder-volatile"
+  ],
   "fx": [
     "bolt",
     "cinder-spit",
@@ -782,6 +803,133 @@
           "w": 32,
           "h": 32
         }
+      }
+    }
+  },
+  "envAtlas": {
+    "src": "sprites/env/atlas.png",
+    "width": 574,
+    "height": 1653,
+    "frames": {
+      "cinder-tile-0": {
+        "x": 5,
+        "y": 5,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-1": {
+        "x": 75,
+        "y": 5,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-2": {
+        "x": 145,
+        "y": 5,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-rune-0": {
+        "x": 5,
+        "y": 75,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-rune-1": {
+        "x": 75,
+        "y": 75,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-rune-2": {
+        "x": 145,
+        "y": 75,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-rune-3": {
+        "x": 215,
+        "y": 75,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-border-h-0": {
+        "x": 285,
+        "y": 5,
+        "w": 64,
+        "h": 34
+      },
+      "cinder-border-h-1": {
+        "x": 355,
+        "y": 5,
+        "w": 64,
+        "h": 34
+      },
+      "cinder-border-v-0": {
+        "x": 425,
+        "y": 5,
+        "w": 21,
+        "h": 64
+      },
+      "cinder-border-v-1": {
+        "x": 450,
+        "y": 5,
+        "w": 21,
+        "h": 64
+      },
+      "cinder-border-corner-top": {
+        "x": 285,
+        "y": 45,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-border-corner-bottom": {
+        "x": 355,
+        "y": 45,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-pillar": {
+        "x": 485,
+        "y": 5,
+        "w": 58,
+        "h": 104
+      },
+      "cinder-hazard-0": {
+        "x": 5,
+        "y": 370,
+        "w": 128,
+        "h": 128
+      },
+      "cinder-volatile": {
+        "x": 5,
+        "y": 670,
+        "w": 32,
+        "h": 32
+      },
+      "cinder-circle": {
+        "x": 5,
+        "y": 720,
+        "w": 320,
+        "h": 315
+      },
+      "cinder-portal": {
+        "x": 5,
+        "y": 1430,
+        "w": 140,
+        "h": 137
+      },
+      "ambient-ash": {
+        "x": 5,
+        "y": 1600,
+        "w": 8,
+        "h": 8
+      },
+      "ambient-ember": {
+        "x": 15,
+        "y": 1600,
+        "w": 8,
+        "h": 8
       }
     }
   }

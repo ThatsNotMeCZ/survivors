@@ -96,13 +96,18 @@ function resolvePlayerEnemies(world: World): void {
 function clampActors(world: World): void {
   const bounds = world.catalog.world;
   const { player, enemies } = world;
-  player.x = clamp(player.x, player.radius, bounds.width - player.radius);
-  player.y = clamp(player.y, player.radius, bounds.height - player.radius);
+  const insetX = bounds.borderInsetX ?? 0;
+  const insetY = bounds.borderInsetY ?? 0;
+  const playerPadX = insetX + player.radius;
+  const playerPadY = insetY + player.radius;
+  player.x = clamp(player.x, playerPadX, bounds.width - playerPadX);
+  player.y = clamp(player.y, playerPadY, bounds.height - playerPadY);
   for (let i = 0; i < enemies.cap; i += 1) {
     if (enemies.alive[i] === 0) continue;
-    const pad = enemies.radius[i] + 8;
-    enemies.x[i] = clamp(enemies.x[i], pad, bounds.width - pad);
-    enemies.y[i] = clamp(enemies.y[i], pad, bounds.height - pad);
+    const padX = insetX + enemies.radius[i] + 8;
+    const padY = insetY + enemies.radius[i] + 8;
+    enemies.x[i] = clamp(enemies.x[i], padX, bounds.width - padX);
+    enemies.y[i] = clamp(enemies.y[i], padY, bounds.height - padY);
   }
 }
 

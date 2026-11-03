@@ -242,8 +242,10 @@ function movePlayer(world: World, input: InputFrame, dt: number): void {
     player.x += mx * speed * dt;
     player.y += my * speed * dt;
   }
-  player.x = clamp(player.x, player.radius, bounds.width - player.radius);
-  player.y = clamp(player.y, player.radius, bounds.height - player.radius);
+  const padX = (bounds.borderInsetX ?? 0) + player.radius;
+  const padY = (bounds.borderInsetY ?? 0) + player.radius;
+  player.x = clamp(player.x, padX, bounds.width - padX);
+  player.y = clamp(player.y, padY, bounds.height - padY);
 }
 
 function rebuildHash(world: World): void {

@@ -105,7 +105,6 @@ export function resolveObstacleBodies(world: World): void {
     });
     for (let e = 0; e < enemies.cap; e += 1) {
       if (enemies.alive[e] === 0) continue;
-      if (enemies.role[e] === ROLE_BOSS && obs.type === 'pillar') continue;
       pushActorFromObstacle(enemies.x[e], enemies.y[e], enemies.radius[e], obs, (x, y) => {
         enemies.x[e] = x;
         enemies.y[e] = y;

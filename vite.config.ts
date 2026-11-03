@@ -12,7 +12,17 @@ function audioManifestPlugin(): Plugin {
     configureServer(server) {
       run();
       server.watcher.add('public/audio');
-      server.watcher.on('all', (_event, file) => {
+      server.watcher.on('add', (file) => {
+        if (!file.includes('public/audio') || file.endsWith('manifest.json')) return;
+        run();
+        server.restart();
+      });
+      server.watcher.on('unlink', (file) => {
+        if (!file.includes('public/audio') || file.endsWith('manifest.json')) return;
+        run();
+        server.restart();
+      });
+      server.watcher.on('change', (file) => {
         if (!file.includes('public/audio') || file.endsWith('manifest.json')) return;
         run();
       });
@@ -30,7 +40,17 @@ function spriteManifestPlugin(): Plugin {
     configureServer(server) {
       run();
       server.watcher.add('public/sprites');
-      server.watcher.on('all', (_event, file) => {
+      server.watcher.on('add', (file) => {
+        if (!file.includes('public/sprites') || file.endsWith('public/sprites/manifest.json')) return;
+        run();
+        server.restart();
+      });
+      server.watcher.on('unlink', (file) => {
+        if (!file.includes('public/sprites') || file.endsWith('public/sprites/manifest.json')) return;
+        run();
+        server.restart();
+      });
+      server.watcher.on('change', (file) => {
         if (!file.includes('public/sprites') || file.endsWith('public/sprites/manifest.json')) return;
         run();
       });

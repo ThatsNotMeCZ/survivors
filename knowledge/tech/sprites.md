@@ -82,8 +82,13 @@ If a frame has `{ "w": 0, "h": 0 }` or is omitted, the game automatically uses t
 Themes map per stage: `cinder` (`cinder-yard`), `rime` (`rime-dock`), `glacial` (`glacial-tomb`). Glacial automatically falls back to `rime` if a `glacial-*` prop is missing from the atlas before falling back to procedural.
 
 ### Frame keys & recommended dimensions:
-- **Floor tiles** (`64×64 px`): `{theme}-tile-0`, `{theme}-tile-1`, `{theme}-tile-2`, `{theme}-tile-3` (variant 0 serves as fallback).
-- **Arena borders**: `{theme}-border-edge` (`64×16 px` or `64×32 px`), `{theme}-border-corner` (`16×16 px` or `32×32 px`).
+- **Floor tiles** (`64×64 px`):
+  - Base tiles: `{theme}-tile-0`, `{theme}-tile-1`, `{theme}-tile-2`, `{theme}-tile-3` (variant 0 serves as fallback).
+  - Rune tiles: `{theme}-tile-rune-0`, `{theme}-tile-rune-1`, `{theme}-tile-rune-2`, `{theme}-tile-rune-3` (scattered ~12.5% as occult accents).
+- **Arena borders (6 pieces)**:
+  - Horizontal edges: `{theme}-border-h-0`, `{theme}-border-h-1` (`64×16 px` or `64×32 px` or `64×64 px`).
+  - Vertical edges: `{theme}-border-v-0`, `{theme}-border-v-1` (`16×64 px` or `32×64 px` or `64×64 px`).
+  - Corners: `{theme}-border-corner-top` (TL & TR), `{theme}-border-corner-bottom` (BL & BR) (`16×16 px` or `32×32 px` or `64×64 px`).
 - **Pillars** (`radius: 52` -> `64×64 px` or `104×104 px`): `{theme}-pillar` (`cinder-pillar`, `rime-pillar`, `glacial-pillar`).
 - **Hazards** (`radius: 68` -> `64×64 px` or `128×128 px`): `{theme}-hazard-0`, `{theme}-hazard-1` (frame 1 falls back to frame 0).
 - **Volatiles** (`radius: 22` -> `32×32 px` or `24×24 px`): `{theme}-volatile` (`cinder-volatile`, `rime-volatile`, `glacial-volatile`).

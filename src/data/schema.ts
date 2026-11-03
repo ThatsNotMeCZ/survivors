@@ -208,6 +208,8 @@ export type WorldDef = {
   version: number;
   width: number;
   height: number;
+  borderInsetX?: number;
+  borderInsetY?: number;
   viewZoom: number;
   maxProjectiles: number;
   defaultSurvivor: string;

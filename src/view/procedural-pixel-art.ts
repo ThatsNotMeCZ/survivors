@@ -198,6 +198,44 @@ export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   return out;
 }
 
+export interface AtlasBorderFrames {
+  h0?: UiRect;
+  h1?: UiRect;
+  v0?: UiRect;
+  v1?: UiRect;
+  cornerTop?: UiRect;
+  cornerBottom?: UiRect;
+}
+
+export function resolveAtlasBorderFrames(
+  theme: EnvThemeId | BiomeId,
+  atlasFrames?: Record<string, UiRect>,
+): AtlasBorderFrames | null {
+  if (!atlasFrames) return null;
+  const get = (key: string): UiRect | undefined => {
+    let f = atlasFrames[`${theme}-${key}`];
+    if ((!f || f.w === 0 || f.h === 0) && theme === 'glacial') {
+      f = atlasFrames[`rime-${key}`];
+    }
+    return f && f.w > 0 && f.h > 0 ? f : undefined;
+  };
+
+  const legacyEdge = get('border-edge');
+  const legacyCorner = get('border-corner');
+
+  const h0 = get('border-h-0') ?? legacyEdge;
+  const h1 = get('border-h-1') ?? h0;
+  const v0 = get('border-v-0') ?? legacyEdge;
+  const v1 = get('border-v-1') ?? v0;
+  const cornerTop = get('border-corner-top') ?? legacyCorner;
+  const cornerBottom = get('border-corner-bottom') ?? legacyCorner;
+
+  if (!h0 && !h1 && !v0 && !v1 && !cornerTop && !cornerBottom) {
+    return null;
+  }
+  return { h0, h1, v0, v1, cornerTop, cornerBottom };
+}
+
 export function generateFloor(
   theme: EnvThemeId | BiomeId,
   width: number,
@@ -215,37 +253,62 @@ export function generateFloor(
     const tileRects: (UiRect | null)[] = [0, 1, 2, 3].map((v) => {
       if (!atlasFrames) return null;
       let frame = atlasFrames[`${theme}-tile-${v}`];
-      if (!frame && theme === 'glacial') frame = atlasFrames[`rime-tile-${v}`];
-      if (!frame) frame = atlasFrames[`${theme}-tile-0`];
-      if (!frame && theme === 'glacial') frame = atlasFrames['rime-tile-0'];
+      if ((!frame || frame.w === 0 || frame.h === 0) && theme === 'glacial') frame = atlasFrames[`rime-tile-${v}`];
+      if (!frame || frame.w === 0 || frame.h === 0) frame = atlasFrames[`${theme}-tile-0`];
+      if ((!frame || frame.w === 0 || frame.h === 0) && theme === 'glacial') frame = atlasFrames['rime-tile-0'];
+      return frame && frame.w > 0 && frame.h > 0 ? frame : null;
+    });
+
+    const runeRects: (UiRect | null)[] = [0, 1, 2, 3].map((v) => {
+      if (!atlasFrames) return null;
+      let frame = atlasFrames[`${theme}-tile-rune-${v}`];
+      if ((!frame || frame.w === 0 || frame.h === 0) && theme === 'glacial') frame = atlasFrames[`rime-tile-rune-${v}`];
+      if (!frame || frame.w === 0 || frame.h === 0) frame = atlasFrames[`${theme}-tile-rune-0`];
+      if ((!frame || frame.w === 0 || frame.h === 0) && theme === 'glacial') frame = atlasFrames['rime-tile-rune-0'];
       return frame && frame.w > 0 && frame.h > 0 ? frame : null;
     });
 
     const hasAtlasTiles = !!atlasSource && tileRects.some((r) => r !== null);
-    const tiles = [0, 1, 2, 3].map((v) => makeFloorTile(biome, v));
+    const baseTiles = [0, 1, 2, 3].map((v) => makeFloorTile(biome, v));
+    const runeTiles = [0, 1, 2, 3].map((v) => makeRuneTile(biome, v));
     const tile = 64;
+    const maxTx = Math.floor(width / tile);
+    const maxTy = Math.floor(height / tile);
+    const seed = theme === 'cinder' ? 1013 : theme === 'rime' ? 2027 : 3049;
 
-    for (let ty = 0; ty < height / tile; ty += 1) {
-      for (let tx = 0; tx < width / tile; tx += 1) {
-        const variant = tileVariant(tx, ty);
-        const rect = tileRects[variant] ?? tileRects[0];
-        if (hasAtlasTiles && atlasSource && rect) {
-          ctx.drawImage(atlasSource, rect.x, rect.y, rect.w, rect.h, tx * tile, ty * tile, tile, tile);
+    for (let ty = 0; ty < maxTy; ty += 1) {
+      for (let tx = 0; tx < maxTx; tx += 1) {
+        const isRune = isRuneCell(tx, ty, maxTx, maxTy, seed);
+        if (isRune) {
+          const rVar = runeTileVariant(tx, ty, seed);
+          const rRect = runeRects[rVar] ?? runeRects[0];
+          if (hasAtlasTiles && atlasSource && rRect) {
+            ctx.drawImage(atlasSource, rRect.x, rRect.y, rRect.w, rRect.h, tx * tile, ty * tile, tile, tile);
+          } else if (hasAtlasTiles && atlasSource) {
+            const bRect = tileRects[tileVariant(tx, ty, seed)] ?? tileRects[0];
+            if (bRect) {
+              ctx.drawImage(atlasSource, bRect.x, bRect.y, bRect.w, bRect.h, tx * tile, ty * tile, tile, tile);
+            } else {
+              ctx.drawImage(runeTiles[rVar], tx * tile, ty * tile);
+            }
+          } else {
+            ctx.drawImage(runeTiles[rVar], tx * tile, ty * tile);
+          }
         } else {
-          ctx.drawImage(tiles[variant], tx * tile, ty * tile);
+          const bVar = tileVariant(tx, ty, seed);
+          const rect = tileRects[bVar] ?? tileRects[0];
+          if (hasAtlasTiles && atlasSource && rect) {
+            ctx.drawImage(atlasSource, rect.x, rect.y, rect.w, rect.h, tx * tile, ty * tile, tile, tile);
+          } else {
+            ctx.drawImage(baseTiles[bVar], tx * tile, ty * tile);
+          }
         }
       }
     }
 
-    const edgeRect = atlasFrames
-      ? (atlasFrames[`${theme}-border-edge`] ?? (theme === 'glacial' ? atlasFrames['rime-border-edge'] : undefined))
-      : undefined;
-    const cornerRect = atlasFrames
-      ? (atlasFrames[`${theme}-border-corner`] ?? (theme === 'glacial' ? atlasFrames['rime-border-corner'] : undefined))
-      : undefined;
-
-    if (atlasSource && edgeRect && edgeRect.w > 0 && edgeRect.h > 0) {
-      drawAtlasBoundary(ctx, width, height, atlasSource, edgeRect, cornerRect);
+    const borders = resolveAtlasBorderFrames(theme, atlasFrames);
+    if (atlasSource && borders) {
+      drawAtlasBoundary(ctx, width, height, atlasSource, borders);
     } else {
       drawBoundary(ctx, width, height, biome);
     }
@@ -258,28 +321,67 @@ function drawAtlasBoundary(
   width: number,
   height: number,
   source: HTMLImageElement | HTMLCanvasElement,
-  edge: UiRect,
-  corner?: UiRect,
+  borders: AtlasBorderFrames,
 ): void {
-  const edgeW = edge.w;
-  const edgeH = edge.h;
-  for (let x = 0; x < width; x += edgeW) {
-    const drawW = Math.min(edgeW, width - x);
-    ctx.drawImage(source, edge.x, edge.y, drawW, edgeH, x, 0, drawW, edgeH);
-    ctx.drawImage(source, edge.x, edge.y, drawW, edgeH, x, height - edgeH, drawW, edgeH);
+  const { h0, h1, v0, v1, cornerTop, cornerBottom } = borders;
+
+  // 1. Horizontal top and bottom edges (mixing h0 and h1)
+  const hPrimary = h0 ?? h1;
+  if (hPrimary) {
+    const edgeW = hPrimary.w;
+    const edgeH = hPrimary.h;
+    for (let x = 0; x < width; x += edgeW) {
+      const drawW = Math.min(edgeW, width - x);
+      // Top edge
+      const topPick = ((x * 2654435761) >>> 0) % 2 === 0 ? (h0 ?? hPrimary) : (h1 ?? hPrimary);
+      ctx.drawImage(source, topPick.x, topPick.y, drawW, edgeH, x, 0, drawW, edgeH);
+
+      // Bottom edge
+      const botPick = (((x + 1337) * 2654435761) >>> 0) % 2 === 0 ? (h0 ?? hPrimary) : (h1 ?? hPrimary);
+      ctx.drawImage(source, botPick.x, botPick.y, drawW, edgeH, x, height - edgeH, drawW, edgeH);
+    }
   }
-  for (let y = edgeH; y < height - edgeH; y += edgeH) {
-    const drawH = Math.min(edgeH, height - edgeH - y);
-    ctx.drawImage(source, edge.x, edge.y, edgeW, drawH, 0, y, edgeW, drawH);
-    ctx.drawImage(source, edge.x, edge.y, edgeW, drawH, width - edgeW, y, edgeW, drawH);
+
+  // 2. Vertical left and right edges (mixing v0 and v1)
+  const vPrimary = v0 ?? v1 ?? hPrimary;
+  if (vPrimary) {
+    const edgeW = vPrimary.w;
+    const edgeH = vPrimary.h;
+    for (let y = 0; y < height; y += edgeH) {
+      const drawH = Math.min(edgeH, height - y);
+      // Left edge
+      const leftPick = ((y * 1597334677) >>> 0) % 2 === 0 ? (v0 ?? vPrimary) : (v1 ?? vPrimary);
+      ctx.drawImage(source, leftPick.x, leftPick.y, edgeW, drawH, 0, y, edgeW, drawH);
+
+      // Right edge
+      const rightPick = (((y + 7919) * 1597334677) >>> 0) % 2 === 0 ? (v0 ?? vPrimary) : (v1 ?? vPrimary);
+      ctx.drawImage(source, rightPick.x, rightPick.y, edgeW, drawH, width - edgeW, y, edgeW, drawH);
+    }
   }
-  if (corner && corner.w > 0 && corner.h > 0) {
-    const cw = corner.w;
-    const ch = corner.h;
-    ctx.drawImage(source, corner.x, corner.y, cw, ch, 0, 0, cw, ch);
-    ctx.drawImage(source, corner.x, corner.y, cw, ch, width - cw, 0, cw, ch);
-    ctx.drawImage(source, corner.x, corner.y, cw, ch, 0, height - ch, cw, ch);
-    ctx.drawImage(source, corner.x, corner.y, cw, ch, width - cw, height - ch, cw, ch);
+
+  // 3. Corners
+  // Top-Left & Top-Right (cornerTop)
+  if (cornerTop && cornerTop.w > 0 && cornerTop.h > 0) {
+    const cw = cornerTop.w;
+    const ch = cornerTop.h;
+    ctx.drawImage(source, cornerTop.x, cornerTop.y, cw, ch, 0, 0, cw, ch);
+    ctx.save();
+    ctx.translate(width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(source, cornerTop.x, cornerTop.y, cw, ch, 0, 0, cw, ch);
+    ctx.restore();
+  }
+
+  // Bottom-Left & Bottom-Right (cornerBottom)
+  if (cornerBottom && cornerBottom.w > 0 && cornerBottom.h > 0) {
+    const cw = cornerBottom.w;
+    const ch = cornerBottom.h;
+    ctx.drawImage(source, cornerBottom.x, cornerBottom.y, cw, ch, 0, height - ch, cw, ch);
+    ctx.save();
+    ctx.translate(width, height - ch);
+    ctx.scale(-1, 1);
+    ctx.drawImage(source, cornerBottom.x, cornerBottom.y, cw, ch, 0, 0, cw, ch);
+    ctx.restore();
   }
 }
 
@@ -704,8 +806,124 @@ function makeFloorTile(biome: BiomeId, variant: number): HTMLCanvasElement {
   });
 }
 
-function tileVariant(tx: number, ty: number): number {
-  return ((tx * 73856093) ^ (ty * 19349663)) >>> 0 & 3;
+function makeRuneTile(biome: BiomeId, variant: number): HTMLCanvasElement {
+  const key = `px-tile-rune-${biome}-${variant}`;
+  const pal =
+    biome === 'cinder'
+      ? ['#1c1113', '#231517', '#170d0f', '#2a1814']
+      : ['#0e1722', '#121e2b', '#0a111a', '#162030'];
+  const glow = biome === 'cinder' ? '#ff9933' : '#55ffff';
+  const runeBase = biome === 'cinder' ? '#b44a24' : '#2888aa';
+  return cachedPixel(key, 64, biome, (px) => {
+    px.fill(0, 0, 64, 64, pal[variant % 3]);
+    px.fill(2, 2, 28, 28, pal[(variant + 1) % 3]);
+    px.fill(34, 6, 26, 22, pal[(variant + 2) % 3]);
+    px.fill(8, 36, 40, 20, pal[variant % 3]);
+    // Inner circular recess for the rune engraving
+    px.fill(20, 20, 24, 24, '#100a0d');
+    px.fill(22, 22, 20, 20, pal[(variant + 1) % 3]);
+
+    if (variant === 0) {
+      // Hexagram / Star shard
+      px.fill(26, 31, 12, 2, runeBase);
+      px.fill(31, 26, 2, 12, runeBase);
+      px.dot(31, 31, glow);
+      px.dot(32, 32, glow);
+      px.dot(26, 31, glow);
+      px.dot(37, 31, glow);
+    } else if (variant === 1) {
+      // Flame / Alchemical sulfur triangle
+      px.fill(28, 26, 8, 2, runeBase);
+      px.fill(26, 28, 2, 8, runeBase);
+      px.fill(36, 28, 2, 8, runeBase);
+      px.fill(28, 36, 8, 2, runeBase);
+      px.fill(31, 24, 2, 16, glow);
+    } else if (variant === 2) {
+      // Sol / Circular seal with eye
+      px.fill(26, 26, 12, 2, runeBase);
+      px.fill(26, 36, 12, 2, runeBase);
+      px.fill(24, 28, 2, 8, runeBase);
+      px.fill(38, 28, 2, 8, runeBase);
+      px.fill(30, 30, 4, 4, glow);
+    } else {
+      // Dual crescent / crucible rune
+      px.fill(27, 25, 10, 2, runeBase);
+      px.fill(27, 37, 10, 2, runeBase);
+      px.fill(25, 27, 2, 10, glow);
+      px.fill(37, 27, 2, 10, glow);
+      px.dot(31, 31, glow);
+    }
+  });
+}
+
+function hash2d(x: number, y: number, seed = 1337): number {
+  let h = (seed + Math.imul(x, 0x9e3779b1) + Math.imul(y, 0x85ebca77)) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
+function patchNoise(tx: number, ty: number, seed = 42): number {
+  const fx = tx * 0.12;
+  const fy = ty * 0.12;
+  const ix = Math.floor(fx);
+  const iy = Math.floor(fy);
+  const sx = fx - ix;
+  const sy = fy - iy;
+  const ux = sx * sx * (3 - 2 * sx);
+  const uy = sy * sy * (3 - 2 * sy);
+
+  const n00 = (hash2d(ix, iy, seed) & 0xffff) / 0xffff;
+  const n10 = (hash2d(ix + 1, iy, seed) & 0xffff) / 0xffff;
+  const n01 = (hash2d(ix, iy + 1, seed) & 0xffff) / 0xffff;
+  const n11 = (hash2d(ix + 1, iy + 1, seed) & 0xffff) / 0xffff;
+
+  const nx0 = n00 * (1 - ux) + n10 * ux;
+  const nx1 = n01 * (1 - ux) + n11 * ux;
+  return nx0 * (1 - uy) + nx1 * uy;
+}
+
+export function isRuneCell(tx: number, ty: number, maxTx: number, maxTy: number, seed = 1337): boolean {
+  if (tx <= 1 || ty <= 1 || tx >= maxTx - 2 || ty >= maxTy - 2) return false;
+  const selfH = hash2d(tx, ty, seed + 8888);
+  // Rare candidate threshold (~3.9% of cells)
+  if (selfH < 0xf6000000) return false;
+
+  // Local peak in Chebyshev neighborhood (distance <= 2) to ensure runes are isolated and well-spaced
+  for (let dy = -2; dy <= 2; dy++) {
+    for (let dx = -2; dx <= 2; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      if (hash2d(tx + dx, ty + dy, seed + 8888) >= selfH) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+export function runeTileVariant(tx: number, ty: number, seed = 1337): number {
+  return (hash2d(tx, ty, seed + 4444) >>> 16) & 3;
+}
+
+export function tileVariant(tx: number, ty: number, seed = 1337): number {
+  const patch = patchNoise(tx, ty, seed + 101);
+  const micro = (hash2d(tx, ty, seed + 202) & 0xffff) / 0xffff;
+
+  // Dominant base paver (variant 0), with natural organic patches of wear and ash
+  if (patch > 0.65) {
+    if (micro < 0.60) return 1;
+    if (micro < 0.85) return 2;
+    return 0;
+  }
+  if (patch < 0.30) {
+    if (micro < 0.60) return 2;
+    if (micro < 0.85) return 1;
+    return 0;
+  }
+  if (micro < 0.68) return 0;
+  if (micro < 0.83) return 1;
+  if (micro < 0.94) return 2;
+  return 3;
 }
 
 function drawBoundary(ctx: CanvasRenderingContext2D, width: number, height: number, biome: BiomeId): void {

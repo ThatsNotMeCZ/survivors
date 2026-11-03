@@ -18,25 +18,49 @@ Přehled rozměrů a mapování všech herních objektů prostředí pro Dark He
 | Klíč v `atlas.json` | Herní název / Objekt | Kolizní rozměr ve světě | Ideální rozměr v atlasu (`w × h`) | Chování / Poznámka |
 |---|---|---|---|---|
 | **1. Podlahové dlaždice (Floor Tiles)** | | | | |
-| `cinder-tile-0` | Cinder Yard paver (hlavní) | `64 × 64 px` | **`64 × 64 px`** | Čedič / sopečná dlažba. Pokud vyplníš jen tuto variantu, použije se pro všechny 4 sloty. |
+| `cinder-tile-0` | Cinder Yard paver (hlavní) | `64 × 64 px` | **`64 × 64 px`** | Čedič / sopečná dlažba. Pokud vyplníš jen tuto variantu, použije se pro všechny základní sloty. |
 | `cinder-tile-1` | Cinder Yard paver (varianta 1) | `64 × 64 px` | **`64 × 64 px`** | Popraskaný kámen / uhlíky. |
-| `cinder-tile-2` | Cinder Yard paver (varianta 2) | `64 × 64 px` | **`64 × 64 px`** | Dlaždice s runovým znakem / zlatou rytinou. |
+| `cinder-tile-2` | Cinder Yard paver (varianta 2) | `64 × 64 px` | **`64 × 64 px`** | Uhlíkový blok s popelem. |
 | `cinder-tile-3` | Cinder Yard paver (varianta 3) | `64 × 64 px` | **`64 × 64 px`** | Hladký lávový blok. |
+| `cinder-tile-rune-0` | Cinder Yard runa (varianta 0) | `64 × 64 px` | **`64 × 64 px`** | Runová dlaždice – hexagram / hvězdicový sigil. Míchá se do podlahy (~12.5% výskyt). |
+| `cinder-tile-rune-1` | Cinder Yard runa (varianta 1) | `64 × 64 px` | **`64 × 64 px`** | Runová dlaždice – plamenný trojúhelník síry. |
+| `cinder-tile-rune-2` | Cinder Yard runa (varianta 2) | `64 × 64 px` | **`64 × 64 px`** | Runová dlaždice – solární pečeť. |
+| `cinder-tile-rune-3` | Cinder Yard runa (varianta 3) | `64 × 64 px` | **`64 × 64 px`** | Runová dlaždice – alchymistický kelímek. |
 | `rime-tile-0` | Rime Dock paver (hlavní) | `64 × 64 px` | **`64 × 64 px`** | Zmrzlá břidlice / přístavní molo. Fallback pro varianty 1–3. |
 | `rime-tile-1` | Rime Dock paver (varianta 1) | `64 × 64 px` | **`64 × 64 px`** | Námraza / zmrzlá louže. |
-| `rime-tile-2` | Rime Dock paver (varianta 2) | `64 × 64 px` | **`64 × 64 px`** | Dlaždice s kyanovou runou. |
+| `rime-tile-2` | Rime Dock paver (varianta 2) | `64 × 64 px` | **`64 × 64 px`** | Zmrzlý břidlicový blok. |
 | `rime-tile-3` | Rime Dock paver (varianta 3) | `64 × 64 px` | **`64 × 64 px`** | Popraskaný permafrost. |
+| `rime-tile-rune-0` | Rime Dock runa (varianta 0) | `64 × 64 px` | **`64 × 64 px`** | Kyanová ledová runa – hexagram. Míchá se do podlahy (~12.5% výskyt). |
+| `rime-tile-rune-1` | Rime Dock runa (varianta 1) | `64 × 64 px` | **`64 × 64 px`** | Kyanová ledová runa – mrazivý klín. |
+| `rime-tile-rune-2` | Rime Dock runa (varianta 2) | `64 × 64 px` | **`64 × 64 px`** | Kyanová ledová runa – pečeť mola. |
+| `rime-tile-rune-3` | Rime Dock runa (varianta 3) | `64 × 64 px` | **`64 × 64 px`** | Kyanová ledová runa – solankový uzel. |
 | `glacial-tile-0` | Glacial Tomb paver (hlavní) | `64 × 64 px` | **`64 × 64 px`** | Hrobka v ledu. Při `0×0` přebírá `rime-tile-0`. |
 | `glacial-tile-1` | Glacial Tomb paver (varianta 1) | `64 × 64 px` | **`64 × 64 px`** | Ledovcový blok. Fallback na `rime-tile-1`. |
 | `glacial-tile-2` | Glacial Tomb paver (varianta 2) | `64 × 64 px` | **`64 × 64 px`** | Rytina krypty. Fallback na `rime-tile-2`. |
 | `glacial-tile-3` | Glacial Tomb paver (varianta 3) | `64 × 64 px` | **`64 × 64 px`** | Hluboký led. Fallback na `rime-tile-3`. |
-| **2. Okraje mapy (Arena Borders)** | | | | |
-| `cinder-border-edge` | Cinder Yard obrubník | délka po obvodu | **`64 × 16 px`** (nebo `64 × 32 px`) | Opakuje se po obvodu arény (nahoře, dole, vlevo i vpravo). |
-| `cinder-border-corner` | Cinder Yard roh | roh arény | **`16 × 16 px`** (nebo `32 × 32 px`) | Vykreslí se do 4 rohů mapy. |
-| `rime-border-edge` | Rime Dock molo okraj | délka po obvodu | **`64 × 16 px`** (nebo `64 × 32 px`) | Hrana přístavního mola. |
-| `rime-border-corner` | Rime Dock roh mola | roh arény | **`16 × 16 px`** (nebo `32 × 32 px`) | Rohové zakončení mola. |
-| `glacial-border-edge` | Glacial Tomb okraj ledu | délka po obvodu | **`64 × 16 px`** (nebo `64 × 32 px`) | Fallback na `rime-border-edge`. |
-| `glacial-border-corner` | Glacial Tomb ledový roh | roh arény | **`16 × 16 px`** (nebo `32 × 32 px`) | Fallback na `rime-border-corner`. |
+| `glacial-tile-rune-0` | Glacial Tomb runa (varianta 0) | `64 × 64 px` | **`64 × 64 px`** | Prastará kryptová runa 0. Fallback na `rime-tile-rune-0`. |
+| `glacial-tile-rune-1` | Glacial Tomb runa (varianta 1) | `64 × 64 px` | **`64 × 64 px`** | Prastará kryptová runa 1. Fallback na `rime-tile-rune-1`. |
+| `glacial-tile-rune-2` | Glacial Tomb runa (varianta 2) | `64 × 64 px` | **`64 × 64 px`** | Prastará kryptová runa 2. Fallback na `rime-tile-rune-2`. |
+| `glacial-tile-rune-3` | Glacial Tomb runa (varianta 3) | `64 × 64 px` | **`64 × 64 px`** | Prastará kryptová runa 3. Fallback na `rime-tile-rune-3`. |
+| **2. Okraje mapy (Arena Borders - 6ks)** | | | | |
+| `cinder-border-h-0` | Cinder obrubník horizontální 0 | délka po obvodu | **`64 × 16 px`** (nebo `64 × 32 px` / `64 × 64 px`) | Vodorovný okraj (horní a dolní hrana). Míchá se s variantou `h-1`. |
+| `cinder-border-h-1` | Cinder obrubník horizontální 1 | délka po obvodu | **`64 × 16 px`** (nebo `64 × 32 px` / `64 × 64 px`) | Druhá vodorovná varianta (např. prasklina, lávový průsak). Fallback na `h-0`. |
+| `cinder-border-v-0` | Cinder obrubník vertikální 0 | výška po obvodu | **`16 × 64 px`** (nebo `32 × 64 px` / `64 × 64 px`) | Svislý okraj (levá a pravá hrana). Míchá se s variantou `v-1`. |
+| `cinder-border-v-1` | Cinder obrubník vertikální 1 | výška po obvodu | **`16 × 64 px`** (nebo `32 × 64 px` / `64 × 64 px`) | Druhá svislá varianta. Fallback na `v-0`. |
+| `cinder-border-corner-top` | Cinder roh horní | roh arény | **`16 × 16 px`** (nebo `32 × 32 px` / `64 × 64 px`) | Horní rohy (levý normálně, pravý horizontálně zrcadlený). |
+| `cinder-border-corner-bottom` | Cinder roh spodní | roh arény | **`16 × 16 px`** (nebo `32 × 32 px` / `64 × 64 px`) | Spodní rohy (levý normálně, pravý horizontálně zrcadlený). |
+| `rime-border-h-0` | Rime molo okraj horizontální 0 | délka po obvodu | **`64 × 16 px`** (nebo `64 × 32 px` / `64 × 64 px`) | Vodorovný okraj mola. Míchá se s `h-1`. |
+| `rime-border-h-1` | Rime molo okraj horizontální 1 | délka po obvodu | **`64 × 16 px`** (nebo `64 × 32 px` / `64 × 64 px`) | Druhá vodorovná varianta mola. Fallback na `h-0`. |
+| `rime-border-v-0` | Rime molo okraj vertikální 0 | výška po obvodu | **`16 × 64 px`** (nebo `32 × 64 px` / `64 × 64 px`) | Svislý okraj mola. Míchá se s `v-1`. |
+| `rime-border-v-1` | Rime molo okraj vertikální 1 | výška po obvodu | **`16 × 64 px`** (nebo `32 × 64 px` / `64 × 64 px`) | Druhá svislá varianta mola. Fallback na `v-0`. |
+| `rime-border-corner-top` | Rime roh horní | roh arény | **`16 × 16 px`** (nebo `32 × 32 px` / `64 × 64 px`) | Horní rohy mola. |
+| `rime-border-corner-bottom` | Rime roh spodní | roh arény | **`16 × 16 px`** (nebo `32 × 32 px` / `64 × 64 px`) | Spodní rohy mola. |
+| `glacial-border-h-0` | Glacial okraj ledu horizontální 0 | délka po obvodu | **`64 × 16 px`** (nebo `64 × 32 px` / `64 × 64 px`) | Fallback na `rime-border-h-0`. |
+| `glacial-border-h-1` | Glacial okraj ledu horizontální 1 | délka po obvodu | **`64 × 16 px`** (nebo `64 × 32 px` / `64 × 64 px`) | Fallback na `rime-border-h-1`. |
+| `glacial-border-v-0` | Glacial okraj ledu vertikální 0 | výška po obvodu | **`16 × 64 px`** (nebo `32 × 64 px` / `64 × 64 px`) | Fallback na `rime-border-v-0`. |
+| `glacial-border-v-1` | Glacial okraj ledu vertikální 1 | výška po obvodu | **`16 × 64 px`** (nebo `32 × 64 px` / `64 × 64 px`) | Fallback na `rime-border-v-1`. |
+| `glacial-border-corner-top` | Glacial ledový roh horní | roh arény | **`16 × 16 px`** (nebo `32 × 32 px` / `64 × 64 px`) | Fallback na `rime-border-corner-top`. |
+| `glacial-border-corner-bottom` | Glacial ledový roh spodní | roh arény | **`16 × 16 px`** (nebo `32 × 32 px` / `64 × 64 px`) | Fallback na `rime-border-corner-bottom`. |
 | **3. Sloupy / Překážky (Pillars)** | `radius: 52` | `průměr 104 px` | | |
 | `cinder-pillar` | *Obsidian Kiln* | `104 × 104 px` | **`64 × 64 px`** (nebo `104 × 104 px`) | Černá sopečná pec s žhnoucími oranžovými runami. Hra automaticky škáluje sprite na `obs.radius * 2` (`104 px`). |
 | `rime-pillar` | *Frozen Bollard* | `104 × 104 px` | **`64 × 64 px`** (nebo `104 × 104 px`) | Masivní zamrzlé přístavní pachole s ledovými runami. |

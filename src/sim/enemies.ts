@@ -246,17 +246,23 @@ export function stepEnemies(world: World, dt: number): void {
       stepSniper(world, i, ai, dx, dy, len, dt, speed);
     } else {
       if (len > 0.001) {
-        enemies.x[i] += (dx / len) * speed * dt;
-        enemies.y[i] += (dy / len) * speed * dt;
+        const mx = (dx / len) * speed * dt;
+        const my = (dy / len) * speed * dt;
+        const deflected = deflectFromObstacles(world, enemies.x[i], enemies.y[i], enemies.radius[i], mx, my, target.x, target.y);
+        enemies.x[i] += deflected.x;
+        enemies.y[i] += deflected.y;
       }
       const targetRadius = world.decoy.active && enemies.role[i] === ROLE_FODDER ? 14 : world.player.radius;
       if (len <= enemies.radius[i] + targetRadius + 6) {
         enemies.attackRemain[i] = 0.35;
       }
     }
-    const pad = enemies.radius[i] + 8;
-    enemies.x[i] = clamp(enemies.x[i], pad, bounds.width - pad);
-    enemies.y[i] = clamp(enemies.y[i], pad, bounds.height - pad);
+    const insetX = bounds.borderInsetX ?? 0;
+    const insetY = bounds.borderInsetY ?? 0;
+    const padX = insetX + enemies.radius[i] + 8;
+    const padY = insetY + enemies.radius[i] + 8;
+    enemies.x[i] = clamp(enemies.x[i], padX, bounds.width - padX);
+    enemies.y[i] = clamp(enemies.y[i], padY, bounds.height - padY);
 
     const moveX = enemies.x[i] - startX;
     if (enemies.windup[i] > 0) {
@@ -297,16 +303,21 @@ function stepRanged(
   if (len > 0.001) {
     const nx = dx / len;
     const ny = dy / len;
+    let mx = 0;
+    let my = 0;
     if (len > ai.range) {
-      enemies.x[i] += nx * speed * dt;
-      enemies.y[i] += ny * speed * dt;
+      mx = nx * speed * dt;
+      my = ny * speed * dt;
     } else if (len < ai.keep) {
-      enemies.x[i] -= nx * speed * dt;
-      enemies.y[i] -= ny * speed * dt;
+      mx = -nx * speed * dt;
+      my = -ny * speed * dt;
     } else {
-      enemies.x[i] += -ny * speed * 0.45 * dt;
-      enemies.y[i] += nx * speed * 0.45 * dt;
+      mx = -ny * speed * 0.45 * dt;
+      my = nx * speed * 0.45 * dt;
     }
+    const defl = deflectFromObstacles(world, enemies.x[i], enemies.y[i], enemies.radius[i], mx, my, world.player.x, world.player.y);
+    enemies.x[i] += defl.x;
+    enemies.y[i] += defl.y;
   }
 
   if (enemies.windup[i] > 0) {
@@ -341,13 +352,18 @@ function stepSniper(
   if (len > 0.001) {
     const nx = dx / len;
     const ny = dy / len;
+    let mx = 0;
+    let my = 0;
     if (len < ai.keep) {
-      enemies.x[i] -= nx * speed * dt;
-      enemies.y[i] -= ny * speed * dt;
+      mx = -nx * speed * dt;
+      my = -ny * speed * dt;
     } else {
-      enemies.x[i] += -ny * speed * 0.25 * dt;
-      enemies.y[i] += nx * speed * 0.25 * dt;
+      mx = -ny * speed * 0.25 * dt;
+      my = nx * speed * 0.25 * dt;
     }
+    const defl = deflectFromObstacles(world, enemies.x[i], enemies.y[i], enemies.radius[i], mx, my, world.player.x, world.player.y);
+    enemies.x[i] += defl.x;
+    enemies.y[i] += defl.y;
   }
 
   if (enemies.windup[i] > 0) {
@@ -380,6 +396,57 @@ function fireSniper(world: World, i: number, ai: SniperAi): void {
   if (dist > ai.lineWidth + player.radius) return;
   emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
   player.hp -= ai.damage * world.coefficient;
+}
+
+function deflectFromObstacles(
+  world: World,
+  x: number,
+  y: number,
+  radius: number,
+  mx: number,
+  my: number,
+  targetX: number,
+  targetY: number,
+): { x: number; y: number } {
+  const { obstacles } = world;
+  const moveLen = Math.hypot(mx, my);
+  if (moveLen < 0.0001) return { x: mx, y: my };
+
+  let outX = mx;
+  let outY = my;
+
+  for (let i = 0; i < obstacles.cap; i += 1) {
+    if (obstacles.alive[i] === 0) continue;
+    const obs = obstacles.items[i];
+    if (obs.type === 'hazard') continue;
+    const reach = obs.radius + radius + 10;
+    const ox = x - obs.x;
+    const oy = y - obs.y;
+    const distSq = ox * ox + oy * oy;
+    if (distSq > reach * reach) continue;
+
+    const dist = Math.sqrt(distSq);
+    const nx = dist > 0.0001 ? ox / dist : 1;
+    const ny = dist > 0.0001 ? oy / dist : 0;
+
+    const dot = outX * nx + outY * ny;
+    if (dot < 0) {
+      outX -= dot * nx;
+      outY -= dot * ny;
+
+      const tanLen = Math.hypot(outX, outY);
+      if (tanLen > 0.0001) {
+        outX = (outX / tanLen) * moveLen;
+        outY = (outY / tanLen) * moveLen;
+      } else {
+        const cross = (targetX - obs.x) * ny - (targetY - obs.y) * nx;
+        const side = cross >= 0 ? 1 : -1;
+        outX = -ny * side * moveLen;
+        outY = nx * side * moveLen;
+      }
+    }
+  }
+  return { x: outX, y: outY };
 }
 
 function pillarBlocksShot(world: World, x0: number, y0: number, x1: number, y1: number): boolean {
