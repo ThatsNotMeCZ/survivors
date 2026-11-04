@@ -163,7 +163,8 @@ export class AmbientShader {
     this.viewOrigin[1] = view.y - pad;
     this.viewSize[0] = w;
     this.viewSize[1] = h;
-    this.quad.setPosition(view.centerX, view.centerY);
     this.quad.setSize(w, h);
+    this.quad.setOrigin(0.5, 0.5);
+    this.quad.setPosition(view.centerX, view.centerY);
   }
 }

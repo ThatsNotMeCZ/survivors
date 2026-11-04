@@ -406,6 +406,7 @@ export type LoopDef = {
     maxSnipers: number;
     spawnMin: number;
     spawnMax: number;
+    spawnSafeRadius: number;
   };
   noxious: {
     contactSlowMul: number;

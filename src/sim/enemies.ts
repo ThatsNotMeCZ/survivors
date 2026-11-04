@@ -153,10 +153,46 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
   return -1;
 }
 
+export function pickSpawnPoint(
+  world: World,
+  radius: number,
+): { x: number; y: number } | null {
+  const { spawnMin, spawnMax, spawnSafeRadius } = world.catalog.loop.director;
+  const bounds = world.catalog.world;
+  const { x: px, y: py } = world.player;
+  const padX = (bounds.borderInsetX ?? 0) + radius + 8;
+  const padY = (bounds.borderInsetY ?? 0) + radius + 8;
+  const safeDist = spawnSafeRadius ?? spawnMin;
+  const minD = Math.max(spawnMin, safeDist);
+
+  // 1) Ring around the player without clamping — reject points outside map
+  const range = Math.max(0, spawnMax - minD);
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    const dist = minD + Math.random() * range;
+    const ang = Math.random() * Math.PI * 2;
+    const x = px + Math.cos(ang) * dist;
+    const y = py + Math.sin(ang) * dist;
+    if (x < padX || x > bounds.width - padX || y < padY || y > bounds.height - padY) {
+      continue;
+    }
+    return { x, y };
+  }
+
+  // 2) Fallback: uniform random across arena, strictly outside safe radius
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    const x = padX + Math.random() * (bounds.width - 2 * padX);
+    const y = padY + Math.random() * (bounds.height - 2 * padY);
+    if (Math.hypot(x - px, y - py) >= safeDist) {
+      return { x, y };
+    }
+  }
+
+  return null;
+}
+
 export function spawnAround(world: World, def: EntityDef): number {
-  const originX = world.teleporter.state === 'charging' ? world.teleporter.x : world.player.x;
-  const originY = world.teleporter.state === 'charging' ? world.teleporter.y : world.player.y;
-  const point = ringPoint(world, originX, originY, def.stats.radius);
+  const point = pickSpawnPoint(world, def.stats.radius);
+  if (!point) return -1;
   return spawnEnemy(world, def, point.x, point.y);
 }
 

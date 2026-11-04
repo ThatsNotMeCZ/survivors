@@ -48,61 +48,33 @@ void main() {
   vec2 rotUv = vec2(d.x * ca - d.y * sa, d.x * sa + d.y * ca) + center;
 
   vec4 base = sampleTex(rotUv);
+  if (base.a < 0.03) {
+    gl_FragColor = vec4(0.0);
+    return;
+  }
   float selfEmissive = getEmissive(base);
 
-  // Subtle 16-tap radial bloom around carved runes + outer silhouette halo
-  float glowAccum = 0.0;
-  float innerBloom = 0.0;
-  float rimAlpha = 0.0;
+  // Slow hypnotic in-place blinking of the carved runes (~5.2s cycle)
+  // Pulses smoothly in place without radiating outward into surroundings
+  float wave = sin(u_time * 1.2);
+  float blink = smoothstep(-0.4, 0.85, wave);
+  float pulse = 0.12 + 0.88 * blink;
 
-  for (int i = 0; i < 8; i++) {
-    float a = float(i) * 0.785398;
-    vec2 off1 = vec2(cos(a), sin(a)) * 0.010;
-    vec2 off2 = vec2(cos(a + 0.392), sin(a + 0.392)) * 0.026;
-    vec2 off3 = vec2(cos(a), sin(a)) * 0.044;
+  // Dark Hermetic palette: deep smoldering ruby -> molten gold amber
+  vec3 deepEmber = vec3(0.50, 0.08, 0.02);
+  vec3 brightAmber = vec3(0.96, 0.56, 0.14);
+  vec3 runeColor = mix(deepEmber, brightAmber, pulse);
 
-    vec4 s1 = sampleTex(rotUv + off1);
-    vec4 s2 = sampleTex(rotUv + off2);
-    vec4 s3 = sampleTex(rotUv + off3);
+  // Dark grounded stone body
+  vec3 darkStone = vec3(base.r * 0.72, base.g * 0.62, base.b * 0.68);
 
-    float e1 = getEmissive(s1);
-    float e2 = getEmissive(s2);
+  // Inscribed runes blink brightly on stone; stone remains dark and quiet
+  vec3 finalRgb = mix(darkStone, runeColor, selfEmissive);
 
-    innerBloom += e1;
-    glowAccum += e1 * 0.6 + e2 * 0.4;
-    rimAlpha += s2.a * 0.5 + s3.a * 0.5;
-  }
-  innerBloom /= 8.0;
-  glowAccum /= 8.0;
-  rimAlpha /= 8.0;
+  // Strict premultiplied alpha clamping: RGB never exceeds Alpha, eliminating any boundary halo
+  finalRgb = clamp(finalRgb * base.a, 0.0, base.a);
 
-  // Slow, subdued ember breathing
-  float pulse = 0.84 + 0.16 * sin(u_time * 1.8) + 0.06 * cos(u_time * 3.9);
-  glowAccum *= pulse;
-  innerBloom *= pulse;
-
-  // Moody outer rim halo outside the stone perimeter
-  float outerHalo = max(rimAlpha - base.a, 0.0) * (0.55 + 0.25 * pulse);
-
-  // Dark Hermetic ember palette (deep smoldering crimson -> muted molten amber)
-  vec3 deepEmber = vec3(0.52, 0.09, 0.02);
-  vec3 smolderOrange = vec3(0.85, 0.32, 0.06);
-  vec3 warmGold = vec3(0.95, 0.62, 0.18);
-
-  vec3 glowCol = mix(deepEmber, smolderOrange, clamp(glowAccum * 1.5, 0.0, 1.0));
-  glowCol = mix(glowCol, warmGold, clamp(innerBloom * 1.15 - 0.15, 0.0, 1.0));
-
-  // Keep stone and ring dark/moody; let runes smolder and outer rim cast a subtle dark crimson halo
-  vec3 tonedBase = vec3(base.r * 0.85, base.g * 0.72, base.b * 0.78);
-  vec3 darkStoneRgb = tonedBase * mix(0.65, 0.92, selfEmissive) * base.a;
-  float stoneMask = mix(1.0, 0.25, base.a * (1.0 - selfEmissive));
-  vec3 runeGlowRgb = glowCol * (glowAccum * 0.42 + selfEmissive * 0.16 * pulse) * stoneMask;
-  vec3 haloRgb = mix(deepEmber, smolderOrange, outerHalo * 0.5) * outerHalo * 0.55;
-
-  vec3 finalRgb = darkStoneRgb + runeGlowRgb + haloRgb;
-  float finalAlpha = clamp(base.a + glowAccum * 0.38 + outerHalo * 0.65, 0.0, 1.0);
-
-  gl_FragColor = vec4(finalRgb, finalAlpha);
+  gl_FragColor = vec4(finalRgb, base.a);
 }
 `;
 

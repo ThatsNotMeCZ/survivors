@@ -459,8 +459,9 @@ export class BossShaders {
 
       slot.quad
         .setVisible(true)
-        .setPosition(Math.round(pool.x[i]), Math.round(pool.y[i]))
-        .setSize(r * 2, r * 2);
+        .setSize(r * 2, r * 2)
+        .setOrigin(0.5, 0.5)
+        .setPosition(Math.round(pool.x[i]), Math.round(pool.y[i]));
     }
 
     for (let i = used; i < HAZARD_QUAD_CAP; i += 1) {
@@ -476,7 +477,11 @@ export class BossShaders {
       this.pulseProgress = Math.min(1, Math.max(0, pool.elapsed[pulseSlot] / dur));
       this.pulseRadius = r;
       this.fillPillarMatrices(world, px, py);
-      this.pulseQuad.setVisible(true).setPosition(Math.round(px), Math.round(py)).setSize(r * 2, r * 2);
+      this.pulseQuad
+        .setVisible(true)
+        .setSize(r * 2, r * 2)
+        .setOrigin(0.5, 0.5)
+        .setPosition(Math.round(px), Math.round(py));
     } else {
       this.pulseQuad.setVisible(false);
     }
@@ -529,8 +534,9 @@ export class BossShaders {
 
     this.laserQuad
       .setVisible(true)
-      .setPosition(midX, midY)
       .setSize(len, atk.hitRadius * 3.0)
+      .setOrigin(0.5, 0.5)
+      .setPosition(midX, midY)
       .setRotation(ang);
   }
 

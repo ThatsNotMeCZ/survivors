@@ -2,13 +2,14 @@ import { playSfx, setMusicOverlay, setMusicScene, type SfxId } from '../audio';
 import { catalog } from '../data/catalog';
 import type { ItemDef, ItemHook, SkillDef, SkillSlot, StatId, SurvivorDef } from '../data/schema';
 import { renderArchivesView, type ArchiveTab } from './archives';
-import { formatTime, getHudItems, getHudSummary, type HudItem } from './hud';
+import { formatTime, getHudItems, getHudSummary, hideHud, type HudItem } from './hud';
 import { ITEM_CHOICE_PX, makeItemChip, makeItemIcon } from './item-art';
-import { checkUnlockCondition, getRecords, isSurvivorUnlocked } from './records';
+import { checkUnlockCondition, getRecords, isSurvivorUnlocked, type RunOutcome } from './records';
 import { SKILL_SLOT_PX, makeSkillIcon } from './skill-art';
 import { hydrateUiSprites } from './ui-art';
 import { mountVesselArt } from './vessel-art';
 import { mountMenuCinderCircle, type CinderCircleController } from './cinder-circle';
+import { mountHallBackdrop, type HallBackdropController } from './hall-backdrop';
 import { applySettingsToDom, getSettings, patchSettings, skipShell, type GameSettings } from './settings';
 
 export type OverlayMode =
@@ -33,6 +34,23 @@ export type OverlayHandlers = {
   onRestart: () => void;
 };
 
+export type RunRecapItem = {
+  id: string;
+  name: string;
+  stacks: number;
+  rarity: string;
+  lore?: string;
+  hooks?: string[];
+};
+
+export type RunRecapUnlock = {
+  kind: 'item' | 'survivor';
+  id: string;
+  name: string;
+  rarity?: string;
+  desc: string;
+};
+
 export type RunRecap = {
   stage: string;
   time: number;
@@ -41,8 +59,19 @@ export type RunRecap = {
   bosses: number;
   kills?: number;
   damageDealt?: number;
-  items: { name: string; stacks: number }[];
+  damageTaken?: number;
+  healingDone?: number;
+  gemsCollected?: number;
+  items: RunRecapItem[];
   survivor: string;
+  survivorId?: string;
+  newUnlocks?: RunRecapUnlock[];
+  unlockProgress?: {
+    itemsUnlocked: number;
+    totalItems: number;
+    survivorsUnlocked: number;
+    totalSurvivors: number;
+  };
 };
 
 const STAT_LABEL: Record<StatId, string> = {
@@ -74,6 +103,7 @@ let runPaused = false;
 let stingTimer = 0;
 let stingUntil = 0;
 let cinderCircleCtrl: CinderCircleController | null = null;
+let hallBackdropCtrl: HallBackdropController | null = null;
 let lastSfxPreview = 0;
 let hallInspectedId = '';
 
@@ -105,6 +135,7 @@ export function hideOverlay(): void {
   const wasPause = mode === 'pause';
   const root = overlayEl();
   cinderCircleCtrl?.stop();
+  hallBackdropCtrl?.stop();
   mode = 'hidden';
   runPaused = false;
   origin = 'menu';
@@ -181,13 +212,12 @@ export function showAbandon(): void {
     screen: 'abandon',
     kicker: 'Break the vessel?',
     title: 'Abandon run',
-    sub: 'The vessel shatters. Progress in this working is lost.',
+    sub: 'The vessel shatters. Progress in this working will be committed to the Great Ledger.',
     actions: [
       {
         label: 'Abandon Vessel',
         onClick: () => {
           handlers.onAbandon();
-          handlers.onQuit();
         },
         primary: true,
         sfx: 'error',
@@ -277,20 +307,11 @@ export function showLevelUp(items: ItemDef[]): void {
   syncChill();
 }
 
-export function showRunEnd(kind: 'victory' | 'defeat', detail: string, recap?: RunRecap): void {
+export function showRunEnd(kind: RunOutcome, detail: string, recap?: RunRecap): void {
+  hideHud();
   runPaused = true;
   playSfx(kind === 'victory' ? 'victory' : 'defeat');
-  renderScreen({
-    screen: 'runend',
-    kicker: kind === 'victory' ? 'The Great Work holds' : 'The clay splits',
-    title: kind === 'victory' ? 'Transmutation Complete' : 'Vessel Shattered',
-    sub: detail,
-    body: recap ? recapBody(recap) : undefined,
-    actions: [
-      { label: 'Run again', onClick: () => handlers.onRestart(), primary: true, sfx: 'confirm' },
-      { label: 'Return to hall', onClick: () => handlers.onQuit(), sfx: 'close' },
-    ],
-  });
+  renderRunEnd(kind, detail, recap);
 }
 
 export function showSting(copy: { kicker: string; title: string; sub: string }, durationMs = 2000): void {
@@ -413,6 +434,9 @@ function onOverlayKey(event: KeyboardEvent): void {
       showMainMenu();
     } else if (mode === 'howto' || mode === 'survivor' || mode === 'abandon') {
       goBack();
+    } else if (mode === 'runend') {
+      playSfx('close');
+      handlers.onQuit();
     } else if (mode === 'hidden') {
       handlers.onPause();
     }
@@ -438,9 +462,8 @@ function onOverlayKey(event: KeyboardEvent): void {
       handlers.onResume();
     } else if (mode === 'abandon') {
       event.preventDefault();
-      playSfx('error');
+      playSfx('defeat');
       handlers.onAbandon();
-      handlers.onQuit();
     } else if (mode === 'survivor') {
       event.preventDefault();
       goBack();
@@ -473,11 +496,13 @@ type ActionSpec = { label: string; onClick: () => void; primary?: boolean; sfx?:
 
 function hideAllViews(): void {
   cinderCircleCtrl?.stop();
+  hallBackdropCtrl?.stop();
   mainMenuEl()?.classList.add('hidden');
   hallEl()?.classList.add('hidden');
   archivesEl()?.classList.add('hidden');
   levelupViewEl()?.classList.add('hidden');
   pauseViewEl()?.classList.add('hidden');
+  runEndViewEl()?.classList.add('hidden');
   cardEl()?.classList.add('hidden');
 }
 
@@ -571,9 +596,7 @@ function fillMenuPreview(): void {
   const root = document.getElementById('menu-preview');
   if (!root) return;
   const survivor = selectedSurvivor();
-  const ash = document.createElement('div');
-  ash.className = 'hall-particles';
-  root.replaceChildren(ash);
+  root.replaceChildren();
   mountVesselArt(root, survivor.id, 'menu-vessel', survivor.name);
 }
 
@@ -600,6 +623,13 @@ function renderHall(): void {
   root.setAttribute('aria-labelledby', 'hall-brand');
   hideAllViews();
   hall.classList.remove('hidden');
+  const backdropEl = document.getElementById('hall-backdrop');
+  if (backdropEl) {
+    if (!hallBackdropCtrl) {
+      hallBackdropCtrl = mountHallBackdrop(backdropEl);
+    }
+    hallBackdropCtrl.start();
+  }
   bindHall();
   fillHallNav();
   fillHallPreview();
@@ -691,17 +721,9 @@ function fillHallPreview(): void {
   const survivor = hallSurvivor();
   const unlocked = isSurvivorUnlocked(survivor);
   root.dataset.locked = unlocked ? '0' : '1';
-  const circle = document.createElement('div');
-  circle.className = 'hall-stage-circle';
-  circle.setAttribute('aria-hidden', 'true');
-  const ash = document.createElement('div');
-  ash.className = 'hall-particles';
-  circle.setAttribute('aria-hidden', 'true');
-  const pedestal = document.createElement('div');
-  pedestal.className = 'hall-pedestal';
-  pedestal.setAttribute('aria-hidden', 'true');
-  root.replaceChildren(circle, ash, pedestal);
+  root.replaceChildren();
   mountVesselArt(root, survivor.id, 'hall-vessel', unlocked ? survivor.name : 'Sealed Vessel');
+  hallBackdropCtrl?.updateStage(root, !unlocked);
 }
 
 function fillHallDossier(): void {
@@ -1037,34 +1059,183 @@ function pct(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
-function recapBody(recap: RunRecap): HTMLElement {
-  const list = document.createElement('div');
-  list.className = 'recap-list';
-  const rows: [string, string][] = [
-    ['Vessel', recap.survivor],
-    ['Stage', recap.stage],
-    ['Total Time', formatTime(recap.time)],
-    ['Level Reached', String(recap.level)],
-    ['Dross Slain', String(recap.kills ?? 0)],
-    ['Bosses Defeated', String(recap.bosses)],
-    ['Damage Dealt', Math.round(recap.damageDealt ?? 0).toLocaleString('en-US')],
-    [
-      'Final Inventory',
-      recap.items.length > 0 ? recap.items.map((item) => `${item.name} ×${item.stacks}`).join(', ') : 'None',
-    ],
-  ];
-  for (const [key, value] of rows) {
-    const row = document.createElement('div');
-    const k = document.createElement('span');
-    k.className = 'recap-k';
-    k.textContent = key;
-    const v = document.createElement('span');
-    v.className = 'recap-v';
-    v.textContent = value;
-    row.append(k, v);
-    list.appendChild(row);
+function renderRunEnd(kind: RunOutcome, detail: string, recap?: RunRecap): void {
+  const root = overlayEl();
+  const view = runEndViewEl();
+  const kicker = document.getElementById('runend-kicker');
+  const title = document.getElementById('runend-title');
+  const sub = document.getElementById('runend-sub');
+  const statsRows = document.getElementById('runend-stats-rows');
+  const unlocksList = document.getElementById('runend-unlocks-list');
+  const invList = document.getElementById('runend-inv-list');
+  const tooltip = document.getElementById('runend-item-tooltip');
+  const restartBtn = document.getElementById('runend-restart');
+  const quitBtn = document.getElementById('runend-quit');
+
+  if (
+    !root ||
+    !view ||
+    !kicker ||
+    !title ||
+    !sub ||
+    !statsRows ||
+    !unlocksList ||
+    !invList ||
+    !restartBtn ||
+    !quitBtn
+  ) {
+    return;
   }
-  return list;
+
+  mode = 'runend';
+  syncOverlayAttr();
+  root.dataset.screen = 'runend';
+  view.dataset.outcome = kind;
+  hideAllViews();
+  view.classList.remove('hidden');
+
+  if (kind === 'victory') {
+    kicker.textContent = 'The Great Work Holds';
+    title.textContent = 'TRANSMUTATION COMPLETE';
+  } else if (kind === 'defeat') {
+    kicker.textContent = 'The Clay Splits';
+    title.textContent = 'VESSEL SHATTERED';
+  } else {
+    kicker.textContent = 'The Crucible Cools';
+    title.textContent = 'VESSEL DISSOLVED';
+  }
+  sub.textContent = detail;
+
+  // Run stats
+  statsRows.replaceChildren();
+  if (recap) {
+    const stats: [string, string][] = [
+      ['Vessel', recap.survivor],
+      ['Chamber Reached', recap.stage],
+      ['Rift Duration', formatTime(recap.time)],
+      ['Level Attained', String(recap.level)],
+      ['Dross Slain', String(recap.kills ?? 0)],
+      ['Bosses Slain', String(recap.bosses)],
+      ['Damage Dealt', Math.round(recap.damageDealt ?? 0).toLocaleString('en-US')],
+      ['Damage Taken', Math.round(recap.damageTaken ?? 0).toLocaleString('en-US')],
+      ['Healing Done', Math.round(recap.healingDone ?? 0).toLocaleString('en-US')],
+      ['Essence Gathered', String(recap.gemsCollected ?? 0)],
+    ];
+    for (const [k, v] of stats) {
+      const row = document.createElement('div');
+      row.className = 'summary-row';
+      const kEl = document.createElement('span');
+      kEl.textContent = k;
+      const vEl = document.createElement('span');
+      vEl.className = 'summary-v';
+      vEl.textContent = v;
+      row.append(kEl, vEl);
+      statsRows.appendChild(row);
+    }
+  }
+
+  // Unlocks & Discoveries
+  unlocksList.replaceChildren();
+  if (recap?.newUnlocks && recap.newUnlocks.length > 0) {
+    for (const u of recap.newUnlocks) {
+      const card = document.createElement('div');
+      card.className = 'runend-unlock-card';
+      if (u.kind === 'item') {
+        const icon = makeItemIcon(u.id, u.name, 'runend-unlock-icon', 32);
+        icon.addEventListener('error', () => icon.remove());
+        card.appendChild(icon);
+      }
+      const info = document.createElement('div');
+      info.className = 'runend-unlock-info';
+      const name = document.createElement('span');
+      name.className = 'runend-unlock-name';
+      name.textContent = `${u.name} (Unlocked)`;
+      const desc = document.createElement('span');
+      desc.className = 'runend-unlock-desc';
+      desc.textContent = u.desc;
+      info.append(name, desc);
+      card.appendChild(info);
+      unlocksList.appendChild(card);
+    }
+  } else {
+    const empty = document.createElement('div');
+    empty.className = 'runend-unlock-empty';
+    const msg = document.createElement('span');
+    msg.textContent = 'No new relics unsealed in this working.';
+    empty.appendChild(msg);
+    if (recap?.unlockProgress) {
+      const prog = document.createElement('span');
+      prog.className = 'runend-unlock-progress';
+      prog.textContent = `Archival Codex: ${recap.unlockProgress.itemsUnlocked} / ${recap.unlockProgress.totalItems} Relics Attuned · ${recap.unlockProgress.survivorsUnlocked} / ${recap.unlockProgress.totalSurvivors} Vessels Unsealed`;
+      empty.appendChild(prog);
+    }
+    unlocksList.appendChild(empty);
+  }
+
+  // Inventory items
+  invList.replaceChildren();
+  const showTooltip = (item: RunRecapItem) => {
+    if (!tooltip) return;
+    let def: ItemDef;
+    try {
+      def = catalog.item(item.id);
+    } catch {
+      return;
+    }
+    tooltip.classList.remove('hidden');
+    const artWrap = document.createElement('div');
+    artWrap.className = 'tooltip-art-wrap';
+    const icon = makeItemIcon(def.id, def.name, 'tooltip-item-icon', 64);
+    icon.addEventListener('error', () => icon.remove());
+    artWrap.appendChild(icon);
+
+    const name = document.createElement('h4');
+    name.className = 'tooltip-item-name';
+    name.textContent = item.stacks > 1 ? `${def.name.toUpperCase()} ×${item.stacks}` : def.name.toUpperCase();
+
+    const hooks = document.createElement('div');
+    hooks.className = 'tooltip-item-hooks';
+    hooks.append(...hookLines(def, false));
+
+    const lore = document.createElement('p');
+    lore.className = 'tooltip-item-lore';
+    lore.textContent = def.lore;
+
+    tooltip.replaceChildren(artWrap, name, hooks, lore);
+  };
+
+  if (!recap || recap.items.length === 0) {
+    if (tooltip) tooltip.classList.add('hidden');
+    const empty = document.createElement('p');
+    empty.className = 'pause-inv-empty';
+    empty.textContent = 'No relics bound in this cycle.';
+    invList.appendChild(empty);
+  } else {
+    for (const item of recap.items) {
+      const chip = makeItemChip(
+        { id: item.id, name: item.name, stacks: item.stacks, rarity: item.rarity },
+        'item-chip runend-chip',
+      );
+      chip.tabIndex = 0;
+      chip.addEventListener('mouseenter', () => showTooltip(item));
+      chip.addEventListener('focus', () => showTooltip(item));
+      invList.appendChild(chip);
+    }
+    showTooltip(recap.items[0]);
+  }
+
+  restartBtn.onclick = () => {
+    playSfx('confirm');
+    handlers.onRestart();
+  };
+  quitBtn.onclick = () => {
+    playSfx('close');
+    handlers.onQuit();
+  };
+
+  hydrateUiSprites(view);
+  showRoot(root);
+  syncChill();
 }
 
 function selectedSurvivor(): SurvivorDef {
@@ -1137,6 +1308,10 @@ function levelupViewEl(): HTMLElement | null {
 
 function pauseViewEl(): HTMLElement | null {
   return document.getElementById('pause-view');
+}
+
+function runEndViewEl(): HTMLElement | null {
+  return document.getElementById('runend-view');
 }
 
 function cardEl(): HTMLElement | null {

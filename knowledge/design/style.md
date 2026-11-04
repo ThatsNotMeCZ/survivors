@@ -3,6 +3,8 @@
 Chunky **32px** pixel art, vessel taller than fodder (mite 24 / spitter 28). Square fallback sheets display at 40px; authored sheets keep native frame size (Homunculus 32×48). Silhouette over detail. Arena camera `viewZoom` in `world.json` (2.5) so that scale reads on 1080p.
 
 HUD, pause, level-up, and menus are HTML in `src/ui/` using Dark Hermetic tokens (`theme.css`): brass, ember, mercury, parchment. Not Phaser text.
+- **Main menu circle**: Authored sprite (`src/ui/cinder-circle.ts`) rendered via WebGL with a slow in-place occult breathing/blink (~6.5s wave, no external glow spill into surroundings).
+- **The Hall (Lobby) background**: Fullscreen WebGL fragment shader (`src/ui/hall-backdrop.ts`) with dark cosmic violet depth, domain-warped aetheric smoke, light cone, perspective-squashed transmutation seal with rotating sigils under vessel feet, and rising embers (dimmed/cold when vessel is sealed).
 
 Authored PNGs live in `public/sprites/` (`knowledge/tech/sprites.md`). Entity bodies are spritesheets keyed by catalog id — **not** by biome. Cinder and Rime share Homunculus / a mite until you add a new entity with its own sheet. Procedural canvases in `src/view/procedural-pixel-art.ts` fill any id that has no PNG. Do not draw high-res vectors in the entity update loop.
 

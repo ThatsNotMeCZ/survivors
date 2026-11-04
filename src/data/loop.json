@@ -22,8 +22,9 @@
     "eliteInterval": 14,
     "sniperInterval": 7,
     "maxSnipers": 2,
-    "spawnMin": 340,
-    "spawnMax": 520
+    "spawnMin": 460,
+    "spawnMax": 900,
+    "spawnSafeRadius": 460
   },
   "noxious": {
     "contactSlowMul": 0.5,

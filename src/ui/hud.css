@@ -1095,9 +1095,7 @@ select:focus-visible,
   grid-template-columns: minmax(320px, 420px) 1fr;
   align-items: stretch;
   padding: 0 48px;
-  background:
-    radial-gradient(circle at 66% 48%, rgba(212, 84, 42, 0.16) 0%, rgba(16, 12, 16, 0.92) 62%),
-    #0d0a0e;
+  background: #0d0a0e;
 }
 
 .menu-pillar {
@@ -1154,12 +1152,12 @@ select:focus-visible,
 }
 
 .menu-brand {
-  margin: 6px 0;
+  margin: 6px 0 32px;
   display: flex;
   flex-direction: column;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(32px, 3.8vw, 48px);
+  font-size: clamp(42px, 3.8vw, 64px);
   line-height: 1.02;
   letter-spacing: 0.12em;
   color: var(--gold-molten);
@@ -1232,9 +1230,7 @@ select:focus-visible,
   height: 248px;
   object-fit: contain;
   image-rendering: pixelated;
-  filter:
-    drop-shadow(0 18px 18px rgba(0, 0, 0, 0.8))
-    drop-shadow(0 0 22px rgba(255, 110, 30, 0.38));
+  filter: none;
 }
 
 /* ==========================================================================
@@ -1245,14 +1241,28 @@ select:focus-visible,
   position: relative;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 230px 1fr minmax(340px, 410px);
   grid-template-rows: auto 1fr;
   gap: 0 24px;
   padding: 0 32px 28px 0;
-  background:
-    radial-gradient(circle at 46% 52%, rgba(44, 34, 42, 0.45) 0%, rgba(10, 9, 13, 0.96) 70%),
-    #0c0a0e;
+  background: #09070b;
+}
+
+.hall-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hall-backdrop-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
 }
 
 .hall-header {
@@ -1494,9 +1504,7 @@ select:focus-visible,
   height: 280px;
   object-fit: contain;
   image-rendering: pixelated;
-  filter:
-    drop-shadow(0 18px 18px rgba(0, 0, 0, 0.75))
-    drop-shadow(0 0 18px rgba(212, 130, 50, 0.28));
+  filter: drop-shadow(0 16px 16px rgba(0, 0, 0, 0.8));
 }
 
 .hall-particles {

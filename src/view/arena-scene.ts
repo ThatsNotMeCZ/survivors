@@ -33,11 +33,14 @@ import {
   showRunEnd,
   showSting,
   stingActive,
+  type RunRecapUnlock,
 } from '../ui/overlay';
 import {
   commitWorldProgress,
   getCollectedLoreIds,
+  getRecords,
   getUnlockedItemIds,
+  isItemUnlocked,
   isSurvivorUnlocked,
   recordItemPick,
   recordLorePickup,
@@ -195,6 +198,8 @@ export class ArenaScene extends Phaser.Scene {
   private circleSparkCd = 0;
   private lastCircleKey = '';
   private lastFacing: HorizontalFacing = 'right';
+  private initialUnlockedItems = new Set<string>();
+  private initialUnlockedSurvivors = new Set<string>();
 
   constructor() {
     super({ key: 'arena' });
@@ -205,9 +210,14 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   create(): void {
+    const initialRec = getRecords();
+    this.initialUnlockedItems = getUnlockedItemIds(initialRec);
+    this.initialUnlockedSurvivors = new Set(
+      catalog.survivors.filter((s) => isSurvivorUnlocked(s, initialRec)).map((s) => s.id),
+    );
     this.world = createWorld(resolveSurvivorId(), {
-      unlockedItems: getUnlockedItemIds(),
-      collectedLores: getCollectedLoreIds(),
+      unlockedItems: this.initialUnlockedItems,
+      collectedLores: getCollectedLoreIds(initialRec),
     });
     commitWorldProgress(this.world);
     const { width, height, maxProjectiles } = catalog.world;
@@ -395,6 +405,7 @@ export class ArenaScene extends Phaser.Scene {
       },
       onAbandon: () => {
         recordRunEnd(this.world, 'abandon');
+        showRunEnd('abandon', `${currentStage(this.world).name} · ${formatTime(this.world.runTime)}`, this.runRecap());
       },
       onPause: () => {
         if (this.world.phase !== 'play') return;
@@ -1256,19 +1267,63 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private runRecap() {
+    const finalRec = getRecords();
+    const newUnlockedItems = catalog.items.filter(
+      (item) => !this.initialUnlockedItems.has(item.id) && isItemUnlocked(item, finalRec),
+    );
+    const newUnlockedSurvivors = catalog.survivors.filter(
+      (s) => !this.initialUnlockedSurvivors.has(s.id) && isSurvivorUnlocked(s, finalRec),
+    );
+
+    const newUnlocks: RunRecapUnlock[] = [
+      ...newUnlockedItems.map((item) => ({
+        kind: 'item' as const,
+        id: item.id,
+        name: item.name,
+        rarity: item.rarity,
+        desc: item.unlock?.label ? `Condition Met: ${item.unlock.label}` : 'New Relic Unlocked',
+      })),
+      ...newUnlockedSurvivors.map((s) => ({
+        kind: 'survivor' as const,
+        id: s.id,
+        name: s.name,
+        desc: s.unlock?.label ? `Condition Met: ${s.unlock.label}` : 'New Vessel Unsealed',
+      })),
+    ];
+
+    const allUnlockedItems = getUnlockedItemIds(finalRec);
+    const allUnlockedSurvivors = catalog.survivors.filter((s) => isSurvivorUnlocked(s, finalRec));
+
     return {
+      survivor: this.world.survivor.name,
+      survivorId: this.world.survivor.id,
       stage: currentStage(this.world).name,
       time: this.world.runTime,
       level: this.world.level,
       coefficient: this.world.coefficient,
-      survivor: this.world.survivor.name,
       bosses: this.world.bossesDefeated,
       kills: this.world.kills.total,
       damageDealt: Math.round(this.world.damageDealt),
+      damageTaken: Math.round(this.world.damageTaken),
+      healingDone: Math.round(this.world.healingDone),
+      gemsCollected: this.world.gemsCollected,
       items: this.world.inventory.map((inst) => {
         const def = this.world.catalog.item(inst.id);
-        return { name: def.name, stacks: inst.stacks };
+        return {
+          id: inst.id,
+          name: def.name,
+          stacks: inst.stacks,
+          rarity: def.rarity,
+          lore: def.lore,
+        };
       }),
+      newUnlocks,
+      unlockProgress: {
+        itemsUnlocked: allUnlockedItems.size,
+        totalItems: catalog.items.length,
+        survivorsUnlocked: allUnlockedSurvivors.length,
+        totalSurvivors: catalog.survivors.length,
+      },
     };
   }
 
