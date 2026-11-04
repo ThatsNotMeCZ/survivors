@@ -343,6 +343,25 @@ function stepRanged(
   speed: number,
 ): void {
   const { enemies } = world;
+
+  if (enemies.windup[i] > 0) {
+    enemies.windup[i] -= dt;
+    if (enemies.windup[i] <= 0) {
+      fireEnemyBolt(world, i, ai);
+      enemies.attackCd[i] = ai.cooldown;
+      enemies.windup[i] = 0;
+    }
+    return;
+  }
+
+  if (len <= ai.range && enemies.attackCd[i] <= 0) {
+    enemies.windup[i] = ai.windup;
+    enemies.aimX[i] = world.player.x;
+    enemies.aimY[i] = world.player.y;
+    enemies.animName[i] = ai.anim ?? 'attack';
+    return;
+  }
+
   if (len > 0.001) {
     const nx = dx / len;
     const ny = dy / len;
@@ -361,23 +380,6 @@ function stepRanged(
     const defl = deflectFromObstacles(world, enemies.x[i], enemies.y[i], enemies.radius[i], mx, my, world.player.x, world.player.y);
     enemies.x[i] += defl.x;
     enemies.y[i] += defl.y;
-  }
-
-  if (enemies.windup[i] > 0) {
-    enemies.windup[i] -= dt;
-    if (enemies.windup[i] <= 0) {
-      fireEnemyBolt(world, i, ai);
-      enemies.attackCd[i] = ai.cooldown;
-      enemies.windup[i] = 0;
-    }
-    return;
-  }
-
-  if (len <= ai.range && enemies.attackCd[i] <= 0) {
-    enemies.windup[i] = ai.windup;
-    enemies.aimX[i] = world.player.x;
-    enemies.aimY[i] = world.player.y;
-    enemies.animName[i] = ai.anim ?? 'attack';
   }
 }
 
@@ -607,6 +609,7 @@ export function currentEnemySpeed(world: World, index: number): number {
     return baseEffective;
   }
   if (ai.type === 'ranged' || ai.type === 'sniper') {
+    if (isEnemyAttacking(world, index)) return 0;
     const target = chaseTarget(world, index);
     const len = Math.hypot(target.x - enemies.x[index], target.y - enemies.y[index]);
     if (ai.type === 'ranged' && len <= ai.range && len >= ai.keep) {

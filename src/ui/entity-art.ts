@@ -57,6 +57,10 @@ function loadPng(src: string): Promise<HTMLImageElement | null> {
 
 function resolveSheetId(entityId: string, data: SpriteManifest): string {
   if (entityId in data.entities) return entityId;
+  if (entityId === 'ember-chaser' && 'ember-warden' in data.entities) return 'ember-warden';
+  if (entityId === 'ember-warden' && 'ember-chaser' in data.entities) return 'ember-chaser';
+  if (entityId === 'frost-chaser' && 'frost-warden' in data.entities) return 'frost-warden';
+  if (entityId === 'frost-warden' && 'frost-chaser' in data.entities) return 'frost-chaser';
   if ((entityId === 'ember-mite' || entityId === 'frost-mite') && 'mite' in data.entities) {
     return 'mite';
   }

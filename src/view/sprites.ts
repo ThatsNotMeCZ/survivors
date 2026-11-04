@@ -1,5 +1,13 @@
 import Phaser from 'phaser';
-import type { EntitySpriteDef, EnvAtlasDef, SpriteAnimDef, SpriteManifest, UiRect } from './sprite-types';
+import type {
+  EntitySpriteDef,
+  EnvAtlasDef,
+  SpriteAnimDef,
+  SpriteManifest,
+  UiAtlasDef,
+  UiRect,
+  UiSpriteEntry,
+} from './sprite-types';
 
 const emptyManifest = (): SpriteManifest => ({
   entities: {},
@@ -14,13 +22,32 @@ const fallbacks = new Map<string, EntitySpriteDef>();
 const fxIds = new Set<string>();
 
 export function resolveEntitySheetId(id: string): string {
-  if (id in manifest.entities || fallbacks.has(id)) return id;
-  if ((id === 'ember-mite' || id === 'frost-mite') && ('mite' in manifest.entities || fallbacks.has('mite'))) {
+  if (id in manifest.entities) return id;
+  if (id === 'ember-chaser' && 'ember-warden' in manifest.entities) return 'ember-warden';
+  if (id === 'ember-warden' && 'ember-chaser' in manifest.entities) return 'ember-chaser';
+  if (id === 'frost-chaser' && 'frost-warden' in manifest.entities) return 'frost-warden';
+  if (id === 'frost-warden' && 'frost-chaser' in manifest.entities) return 'frost-chaser';
+  if ((id === 'ember-mite' || id === 'frost-mite') && 'mite' in manifest.entities) {
     return 'mite';
   }
   if (
     (id === 'ember-spitter' || id === 'frost-spitter') &&
-    ('spitter' in manifest.entities || fallbacks.has('spitter'))
+    'spitter' in manifest.entities
+  ) {
+    return 'spitter';
+  }
+
+  if (fallbacks.has(id)) return id;
+  if (id === 'ember-chaser' && fallbacks.has('ember-warden')) return 'ember-warden';
+  if (id === 'ember-warden' && fallbacks.has('ember-chaser')) return 'ember-chaser';
+  if (id === 'frost-chaser' && fallbacks.has('frost-warden')) return 'frost-warden';
+  if (id === 'frost-warden' && fallbacks.has('frost-chaser')) return 'frost-chaser';
+  if ((id === 'ember-mite' || id === 'frost-mite') && fallbacks.has('mite')) {
+    return 'mite';
+  }
+  if (
+    (id === 'ember-spitter' || id === 'frost-spitter') &&
+    fallbacks.has('spitter')
   ) {
     return 'spitter';
   }
@@ -84,8 +111,12 @@ export function preloadSprites(scene: Phaser.Scene): void {
   scene.load.json('sprite-manifest', 'sprites/manifest.json');
   scene.load.once('filecomplete-json-sprite-manifest', (_key: string, _type: string, data: unknown) => {
     applySpriteManifest(data);
+    const loadedEntityTextures = new Set<string>();
     for (const [id, def] of Object.entries(manifest.entities)) {
-      scene.load.spritesheet(entityTextureKey(id), def.src, {
+      const tex = entityTextureKey(id);
+      if (loadedEntityTextures.has(tex)) continue;
+      loadedEntityTextures.add(tex);
+      scene.load.spritesheet(tex, def.src, {
         frameWidth: def.frameWidth,
         frameHeight: def.frameHeight,
       });
@@ -101,7 +132,72 @@ export function preloadSprites(scene: Phaser.Scene): void {
         scene.load.image(`env-${id}`, `sprites/env/${id}.png`);
       }
     }
+    if (manifest.uiAtlas && Object.keys(manifest.uiAtlas.frames).length > 0) {
+      scene.load.image('ui-atlas', manifest.uiAtlas.src);
+    }
+    for (const id of manifest.ui ?? []) {
+      if (!manifest.uiAtlas?.frames[id]) {
+        scene.load.image(`ui-${id}`, `sprites/ui/${id}.png`);
+      }
+    }
   });
+}
+
+export function createUiFrames(scene: Phaser.Scene): void {
+  if (!manifest.uiAtlas || !scene.textures.exists('ui-atlas')) return;
+  const texture = scene.textures.get('ui-atlas');
+  for (const [frameId, entry] of Object.entries(manifest.uiAtlas.frames)) {
+    if (!texture.has(frameId)) {
+      const rect = entry.idle ?? entry;
+      texture.add(frameId, 0, rect.x, rect.y, rect.w, rect.h);
+    }
+  }
+}
+
+export function hasUiTexture(scene: Phaser.Scene, id: string): boolean {
+  if (manifest.uiAtlas?.frames[id] && scene.textures.exists('ui-atlas')) {
+    const tex = scene.textures.get('ui-atlas');
+    if (tex.has(id)) return true;
+  }
+  return scene.textures.exists(`ui-${id}`);
+}
+
+export function applyUiTexture(
+  image: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite,
+  id: string,
+  fallbackKey?: string,
+): boolean {
+  const scene = image.scene;
+  if (manifest.uiAtlas?.frames[id] && scene.textures.exists('ui-atlas')) {
+    const tex = scene.textures.get('ui-atlas');
+    if (!tex.has(id)) {
+      const entry = manifest.uiAtlas.frames[id];
+      const rect = entry.idle ?? entry;
+      tex.add(id, 0, rect.x, rect.y, rect.w, rect.h);
+    }
+    if (tex.has(id)) {
+      image.setTexture('ui-atlas', id);
+      return true;
+    }
+  }
+  const standalone = `ui-${id}`;
+  if (scene.textures.exists(standalone)) {
+    image.setTexture(standalone);
+    return true;
+  }
+  if (fallbackKey && scene.textures.exists(fallbackKey)) {
+    image.setTexture(fallbackKey);
+  }
+  return false;
+}
+
+export function getUiAtlasDef(): UiAtlasDef | undefined {
+  return manifest.uiAtlas;
+}
+
+export function getUiFrame(id: string): UiRect | undefined {
+  const entry = manifest.uiAtlas?.frames[id];
+  return entry ? (entry.idle ?? entry) : undefined;
 }
 
 export function createEnvFrames(scene: Phaser.Scene): void {
@@ -352,13 +448,59 @@ function parseManifest(data: unknown): SpriteManifest {
     }
   }
   const envAtlas = parseEnvAtlas(rec.envAtlas);
+  const uiAtlas = parseUiAtlas(rec.uiAtlas);
   return {
     entities,
     items: stringList(rec.items),
     skills: stringList(rec.skills),
     env: stringList(rec.env),
     fx: stringList(rec.fx),
+    ui: stringList(rec.ui),
     ...(envAtlas ? { envAtlas } : {}),
+    ...(uiAtlas ? { uiAtlas } : {}),
+  };
+}
+
+function parseUiRect(raw: unknown): UiRect | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  if (
+    typeof r.x === 'number' &&
+    typeof r.y === 'number' &&
+    typeof r.w === 'number' &&
+    typeof r.h === 'number' &&
+    r.w > 0 &&
+    r.h > 0
+  ) {
+    return { x: r.x, y: r.y, w: r.w, h: r.h };
+  }
+  return null;
+}
+
+function parseUiAtlas(data: unknown): UiAtlasDef | undefined {
+  if (!data || typeof data !== 'object') return undefined;
+  const rec = data as Record<string, unknown>;
+  if (typeof rec.src !== 'string' || typeof rec.width !== 'number' || typeof rec.height !== 'number') {
+    return undefined;
+  }
+  const frames: Record<string, UiSpriteEntry> = {};
+  if (rec.frames && typeof rec.frames === 'object') {
+    for (const [id, frameRaw] of Object.entries(rec.frames as Record<string, unknown>)) {
+      if (!frameRaw || typeof frameRaw !== 'object') continue;
+      const f = frameRaw as Record<string, unknown>;
+      const rawIdle = f.idle && typeof f.idle === 'object' ? f.idle : f;
+      const idle = parseUiRect(rawIdle);
+      if (!idle) continue;
+      const hover = (f.hover && typeof f.hover === 'object' ? parseUiRect(f.hover) : null) ?? idle;
+      const active = (f.active && typeof f.active === 'object' ? parseUiRect(f.active) : null) ?? idle;
+      frames[id] = { idle, hover, active };
+    }
+  }
+  return {
+    src: rec.src,
+    width: rec.width,
+    height: rec.height,
+    frames,
   };
 }
 
@@ -371,18 +513,8 @@ function parseEnvAtlas(data: unknown): EnvAtlasDef | undefined {
   const frames: Record<string, UiRect> = {};
   if (rec.frames && typeof rec.frames === 'object') {
     for (const [id, frameRaw] of Object.entries(rec.frames as Record<string, unknown>)) {
-      if (!frameRaw || typeof frameRaw !== 'object') continue;
-      const f = frameRaw as Record<string, unknown>;
-      if (
-        typeof f.x === 'number' &&
-        typeof f.y === 'number' &&
-        typeof f.w === 'number' &&
-        typeof f.h === 'number' &&
-        f.w > 0 &&
-        f.h > 0
-      ) {
-        frames[id] = { x: f.x, y: f.y, w: f.w, h: f.h };
-      }
+      const rect = parseUiRect(frameRaw);
+      if (rect) frames[id] = rect;
     }
   }
   return {

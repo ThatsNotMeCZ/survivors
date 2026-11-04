@@ -59,6 +59,16 @@ export function writeSpriteManifest(root = process.cwd()): string {
     if (!entities['ember-spitter']) entities['ember-spitter'] = { ...entities.spitter };
     if (!entities['frost-spitter']) entities['frost-spitter'] = { ...entities.spitter };
   }
+  if (entities['ember-warden'] && !entities['ember-chaser']) {
+    entities['ember-chaser'] = { ...entities['ember-warden'] };
+  } else if (entities['ember-chaser'] && !entities['ember-warden']) {
+    entities['ember-warden'] = { ...entities['ember-chaser'] };
+  }
+  if (entities['frost-warden'] && !entities['frost-chaser']) {
+    entities['frost-chaser'] = { ...entities['frost-warden'] };
+  } else if (entities['frost-chaser'] && !entities['frost-warden']) {
+    entities['frost-warden'] = { ...entities['frost-chaser'] };
+  }
 
   const envDir = join(spritesDir, 'env');
   const envAtlas = readEnvAtlas(envDir);

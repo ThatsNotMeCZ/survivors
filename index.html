@@ -259,7 +259,49 @@
         </div>
       </div>
 
-      <!-- 5. GENERIC MODAL CARD (HowTo, Abandon confirm, Run End) -->
+      <!-- 5. GAME OVER / RUN END VIEW -->
+      <div id="runend-view" class="hidden" aria-labelledby="runend-title">
+        <header class="runend-header" data-ui-sprite="hall-banner">
+          <p id="runend-kicker" class="runend-kicker"></p>
+          <h1 id="runend-title" class="runend-title"></h1>
+          <p id="runend-sub" class="runend-sub"></p>
+        </header>
+
+        <div class="runend-content">
+          <section class="runend-col-stats parchment-box" data-ui-sprite="parchment-panel" aria-label="Run Statistics">
+            <h3 class="parchment-heading">RUN STATISTICS</h3>
+            <div id="runend-stats-rows" class="summary-rows"></div>
+          </section>
+
+          <div class="runend-col-details">
+            <section id="runend-unlocks-section" class="runend-unlocks parchment-box" data-ui-sprite="parchment-panel" aria-label="Discoveries">
+              <h3 class="parchment-heading">DISCOVERIES &amp; ARCHIVES</h3>
+              <div id="runend-unlocks-list" class="runend-unlocks-list"></div>
+            </section>
+
+            <section class="runend-inv-section" aria-label="Vessel Relics">
+              <h3 class="runend-inv-heading">VESSEL RELICS</h3>
+              <div id="runend-inventory" class="runend-inv-box" data-ui-sprite="pause-inventory">
+                <div id="runend-inv-list" class="pause-inv-list"></div>
+              </div>
+              <div id="runend-item-tooltip" class="pause-item-tooltip parchment-box hidden" data-ui-sprite="parchment-panel"></div>
+            </section>
+          </div>
+        </div>
+
+        <footer class="runend-actions">
+          <button type="button" id="runend-restart" class="magma-cta runend-cta" data-ui-sprite="btn-cta">
+            <span>RUN AGAIN</span>
+            <span class="cta-sub">[Enter]</span>
+          </button>
+          <button type="button" id="runend-quit" class="plaque-btn runend-quit-btn" data-ui-sprite="btn-plaque">
+            <span class="plaque-label">RETURN TO HALL</span>
+            <span class="plaque-glyph" aria-hidden="true">[Esc]</span>
+          </button>
+        </footer>
+      </div>
+
+      <!-- 6. GENERIC MODAL CARD (HowTo, Abandon confirm) -->
       <div class="overlay-card parchment-box" data-ui-sprite="parchment-panel">
         <p class="overlay-kicker" id="overlay-kicker"></p>
         <h2 id="overlay-title"></h2>

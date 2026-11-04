@@ -9,6 +9,7 @@ import {
 } from './procedural-pixel-art';
 import {
   createEnvFrames,
+  createUiFrames,
   entityTextureKey,
   getEnvAtlasDef,
   getEnvAtlasSource,
@@ -20,6 +21,7 @@ const THEMES: EnvThemeId[] = ['cinder', 'rime', 'glacial'];
 /** Uploads procedural canvases for any `px-*` / entity key not already loaded (PNG sheets win). */
 export function uploadPixelTextures(scene: Phaser.Scene): void {
   createEnvFrames(scene);
+  createUiFrames(scene);
   const canvases = generateAllEntityCanvases();
   canvases.forEach((canvas, key) => addCanvasTexture(scene, key, canvas));
   const { width, height } = catalog.world;

@@ -1,5 +1,36 @@
 {
   "entities": {
+    "cinder-heart": {
+      "src": "sprites/entities/cinder-heart.png",
+      "frameWidth": 86,
+      "frameHeight": 86,
+      "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 2,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 2,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 2,
+          "repeat": 0
+        }
+      }
+    },
     "ember-mite": {
       "src": "sprites/entities/ember-mite.png",
       "frameWidth": 24,
@@ -27,6 +58,68 @@
             5
           ],
           "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
+    "ember-spitter": {
+      "src": "sprites/entities/ember-spitter.png",
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        }
+      }
+    },
+    "ember-warden": {
+      "src": "sprites/entities/ember-warden.png",
+      "frameWidth": 56,
+      "frameHeight": 56,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 4,
           "repeat": 0
         }
       }
@@ -76,6 +169,37 @@
           ],
           "frameRate": 2.5,
           "repeat": -1
+        }
+      }
+    },
+    "ember-chaser": {
+      "src": "sprites/entities/ember-warden.png",
+      "frameWidth": 56,
+      "frameHeight": 56,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 4,
+          "repeat": 0
         }
       }
     }

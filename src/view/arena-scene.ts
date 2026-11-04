@@ -44,7 +44,6 @@ import {
   recordRunEnd,
 } from '../ui/records';
 import { getSettings } from '../ui/settings';
-import { createMotionSmear, updateMotionSmear, type MotionSmearHandle } from './shaders/motion-smear';
 import {
   applyShotVisual,
   createFxStillPool,
@@ -73,6 +72,7 @@ import {
 } from './procedural-pixel-art';
 import {
   applyEnvTexture,
+  applyUiTexture,
   authoredEntity,
   createEntityAnims,
   entityTextureKey,
@@ -138,9 +138,12 @@ export class ArenaScene extends Phaser.Scene {
   private ghostCd = 0;
   private ambientShader!: AmbientShader;
   private bossShaders!: BossShaders;
-  private playerSmear: MotionSmearHandle | null = null;
-  private eliteSmears: (MotionSmearHandle | null)[] = [];
-  private bossSmear: MotionSmearHandle | null = null;
+  private playerTrail1!: Phaser.GameObjects.Sprite;
+  private playerTrail2!: Phaser.GameObjects.Sprite;
+  private eliteTrails1: Phaser.GameObjects.Sprite[] = [];
+  private eliteTrails2: Phaser.GameObjects.Sprite[] = [];
+  private bossTrail1!: Phaser.GameObjects.Sprite;
+  private bossTrail2!: Phaser.GameObjects.Sprite;
   private fodderLayers = new Map<string, Phaser.GameObjects.SpriteGPULayer>();
   private fodderTrailLayers = new Map<string, Phaser.GameObjects.SpriteGPULayer>();
   private enemyPrevX = new Float32Array(0);
@@ -286,24 +289,32 @@ export class ArenaScene extends Phaser.Scene {
 
     this.playerGlow = this.add.image(0, 0, 'px-glow').setDepth(4).setAlpha(0.18).setScale(2.4);
     this.playerGlow.setBlendMode(Phaser.BlendModes.ADD);
+    this.playerTrail1 = this.add.sprite(this.world.player.x, this.world.player.y, entityTextureKey(vessel)).setVisible(false).setDepth(4.8);
+    this.fitBody(this.playerTrail1);
+    this.playerTrail2 = this.add.sprite(this.world.player.x, this.world.player.y, entityTextureKey(vessel)).setVisible(false).setDepth(4.7);
+    this.fitBody(this.playerTrail2);
     this.playerSprite = this.add.sprite(this.world.player.x, this.world.player.y, entityTextureKey(vessel)).setDepth(5);
     playEntity(this.playerSprite, vessel, 'idle');
     this.fitBody(this.playerSprite);
-    this.playerSmear = createMotionSmear(this.playerSprite);
     this.playerEyes = this.add.image(0, 0, this.eyesKey(biome)).setDepth(6);
     this.decoySprite = this.add.sprite(0, 0, entityTextureKey(vessel)).setVisible(false).setDepth(4).setAlpha(0.45).setTint(0xc4a05a);
     this.fitBody(this.decoySprite);
     this.eliteSprites = [];
     this.eliteGlyphs = [];
-    this.eliteSmears = [];
+    this.eliteTrails1 = [];
+    this.eliteTrails2 = [];
     for (let i = 0; i < loop.maxElites; i += 1) {
       this.eliteGlyphs.push(this.add.image(0, 0, eliteGlyphKey()).setVisible(false).setDepth(2).setAlpha(0.7));
       const elite = this.add.sprite(0, 0, entityTextureKey('ember-chaser')).setVisible(false).setDepth(3);
       this.eliteSprites.push(elite);
-      this.eliteSmears.push(createMotionSmear(elite));
+      const t1 = this.add.sprite(0, 0, entityTextureKey('ember-chaser')).setVisible(false).setDepth(2.9);
+      const t2 = this.add.sprite(0, 0, entityTextureKey('ember-chaser')).setVisible(false).setDepth(2.8);
+      this.eliteTrails1.push(t1);
+      this.eliteTrails2.push(t2);
     }
     this.bossSprite = this.add.sprite(0, 0, entityTextureKey('cinder-heart')).setVisible(false).setDepth(3);
-    this.bossSmear = createMotionSmear(this.bossSprite);
+    this.bossTrail1 = this.add.sprite(0, 0, entityTextureKey('cinder-heart')).setVisible(false).setDepth(2.9);
+    this.bossTrail2 = this.add.sprite(0, 0, entityTextureKey('cinder-heart')).setVisible(false).setDepth(2.8);
     this.bossOrbits = [];
     for (let i = 0; i < ORBIT_CAP; i += 1) {
       this.bossOrbits.push(this.add.image(0, 0, 'px-orbit-cinder').setVisible(false).setDepth(3));
@@ -320,7 +331,12 @@ export class ArenaScene extends Phaser.Scene {
     this.telGlow = this.add.image(0, 0, 'px-glow').setDepth(1).setAlpha(0).setScale(6);
     this.telGlow.setBlendMode(Phaser.BlendModes.ADD);
     this.crosshair = this.add.image(this.world.aimX, this.world.aimY, this.crosshairKey()).setDepth(10);
-    this.waypoint = this.add.image(0, 0, 'px-waypoint').setVisible(false).setDepth(11).setScale(1.2);
+    this.waypoint = this.add.image(0, 0, 'px-waypoint').setVisible(false).setDepth(11);
+    if (applyUiTexture(this.waypoint, 'nav-arrow', 'px-waypoint')) {
+      this.waypoint.setScale(1.0);
+    } else {
+      this.waypoint.setScale(1.2);
+    }
 
     this.shots = [];
     for (let i = 0; i < maxProjectiles; i += 1) {
@@ -595,7 +611,40 @@ export class ArenaScene extends Phaser.Scene {
     const pvy = player.y - this.playerPrevY;
     const pdist = Math.hypot(pvx, pvy);
     const pspeed = dt > 0 ? pdist / dt : 0;
-    updateMotionSmear(this.playerSmear, pvx, pvy, pspeed, biome, !getSettings().reduceVfx);
+    const reduceVfx = getSettings().reduceVfx;
+
+    if (pspeed > 10 && pdist > 0.05 && !reduceVfx) {
+      const norm = 1 / pdist;
+      const dirX = pvx * norm;
+      const dirY = pvy * norm;
+      const trailLen = Math.min(8.0, Math.max(2.5, (pspeed / 100) * 3.8));
+      const trailTint = biome === 'cinder' ? 0x24100c : 0x0e1824;
+
+      this.playerTrail1.setTexture(this.playerSprite.texture.key, this.playerSprite.frame.name);
+      this.fitBody(this.playerTrail1, scale);
+      this.playerTrail1.setFlipX(flipX);
+      this.playerTrail1.setPosition(
+        Math.round(x - dirX * (trailLen * 0.45)),
+        Math.round(y - dirY * (trailLen * 0.45)),
+      );
+      this.playerTrail1.setAlpha(0.38);
+      this.playerTrail1.setTint(trailTint);
+      this.playerTrail1.setVisible(true);
+
+      this.playerTrail2.setTexture(this.playerSprite.texture.key, this.playerSprite.frame.name);
+      this.fitBody(this.playerTrail2, scale);
+      this.playerTrail2.setFlipX(flipX);
+      this.playerTrail2.setPosition(
+        Math.round(x - dirX * trailLen),
+        Math.round(y - dirY * trailLen),
+      );
+      this.playerTrail2.setAlpha(0.16);
+      this.playerTrail2.setTint(trailTint);
+      this.playerTrail2.setVisible(true);
+    } else {
+      this.playerTrail1.setVisible(false);
+      this.playerTrail2.setVisible(false);
+    }
     this.playerPrevX = player.x;
     this.playerPrevY = player.y;
     if (this.world.decoy.active) {
@@ -859,7 +908,39 @@ export class ArenaScene extends Phaser.Scene {
         const bvy = enemies.y[i] - this.enemyPrevY[i];
         const bdist = this.enemyAliveLast[i] !== 0 ? Math.hypot(bvx, bvy) : 0;
         const bspeed = dt > 0 ? bdist / dt : 0;
-        updateMotionSmear(this.bossSmear, bvx, bvy, bspeed, biome, !getSettings().reduceVfx);
+        const reduceVfx = getSettings().reduceVfx;
+
+        if (bspeed > 10 && bdist > 0.05 && !reduceVfx) {
+          const norm = 1 / bdist;
+          const dirX = bvx * norm;
+          const dirY = bvy * norm;
+          const trailLen = Math.min(10.0, Math.max(3.0, (bspeed / 80) * 4.2));
+          const trailTint = biome === 'cinder' ? 0x24100c : 0x0e1824;
+          const flipX = enemies.facing[i] < 0;
+
+          this.bossTrail1.setTexture(this.bossSprite.texture.key, this.bossSprite.frame.name);
+          this.bossTrail1.setFlipX(flipX);
+          this.bossTrail1.setPosition(
+            Math.round(enemies.x[i] - dirX * (trailLen * 0.45)),
+            Math.round(enemies.y[i] - dirY * (trailLen * 0.45)),
+          );
+          this.bossTrail1.setAlpha(0.38);
+          this.bossTrail1.setTint(trailTint);
+          this.bossTrail1.setVisible(true);
+
+          this.bossTrail2.setTexture(this.bossSprite.texture.key, this.bossSprite.frame.name);
+          this.bossTrail2.setFlipX(flipX);
+          this.bossTrail2.setPosition(
+            Math.round(enemies.x[i] - dirX * trailLen),
+            Math.round(enemies.y[i] - dirY * trailLen),
+          );
+          this.bossTrail2.setAlpha(0.16);
+          this.bossTrail2.setTint(trailTint);
+          this.bossTrail2.setVisible(true);
+        } else {
+          this.bossTrail1.setVisible(false);
+          this.bossTrail2.setVisible(false);
+        }
 
         if (this.world.boss.enraged) {
           this.bossSprite.setTint(defId === 'cinder-heart' ? 0xffbb88 : 0xb8f0ff);
@@ -906,7 +987,41 @@ export class ArenaScene extends Phaser.Scene {
         const evy = enemies.y[i] - this.enemyPrevY[i];
         const edist = this.enemyAliveLast[i] !== 0 ? Math.hypot(evx, evy) : 0;
         const espeed = dt > 0 ? edist / dt : 0;
-        updateMotionSmear(this.eliteSmears[eliteSlot], evx, evy, espeed, biome, !getSettings().reduceVfx);
+        const reduceVfx = getSettings().reduceVfx;
+        const t1 = this.eliteTrails1[eliteSlot];
+        const t2 = this.eliteTrails2[eliteSlot];
+
+        if (espeed > 10 && edist > 0.05 && !reduceVfx && t1 && t2) {
+          const norm = 1 / edist;
+          const dirX = evx * norm;
+          const dirY = evy * norm;
+          const trailLen = Math.min(8.0, Math.max(2.5, (espeed / 100) * 3.8));
+          const trailTint = biome === 'cinder' ? 0x24100c : 0x0e1824;
+          const flipX = enemies.facing[i] < 0;
+
+          t1.setTexture(sprite.texture.key, sprite.frame.name);
+          t1.setFlipX(flipX);
+          t1.setPosition(
+            Math.round(enemies.x[i] - dirX * (trailLen * 0.45)),
+            Math.round(enemies.y[i] - dirY * (trailLen * 0.45)),
+          );
+          t1.setAlpha(0.38);
+          t1.setTint(trailTint);
+          t1.setVisible(true);
+
+          t2.setTexture(sprite.texture.key, sprite.frame.name);
+          t2.setFlipX(flipX);
+          t2.setPosition(
+            Math.round(enemies.x[i] - dirX * trailLen),
+            Math.round(enemies.y[i] - dirY * trailLen),
+          );
+          t2.setAlpha(0.16);
+          t2.setTint(trailTint);
+          t2.setVisible(true);
+        } else if (t1 && t2) {
+          t1.setVisible(false);
+          t2.setVisible(false);
+        }
 
         if (enemies.shieldHp[i] > 0) {
           glyph.setTint(0x5ad4ff);
@@ -931,14 +1046,16 @@ export class ArenaScene extends Phaser.Scene {
       this.eliteSprites[i].setVisible(false);
       this.eliteGlyphs[i].setVisible(false);
       this.eliteSprites[i].setData('attackDone', false);
-      updateMotionSmear(this.eliteSmears[i], 0, 0, 0, biome, false);
+      if (this.eliteTrails1[i]) this.eliteTrails1[i].setVisible(false);
+      if (this.eliteTrails2[i]) this.eliteTrails2[i].setVisible(false);
     }
     if (!bossOn) {
       this.bossSprite.setVisible(false);
       this.bossSprite.setData('attackDone', false);
       this.bossSprite.setData('activeAttackKey', '');
       for (const orbit of this.bossOrbits) orbit.setVisible(false);
-      updateMotionSmear(this.bossSmear, 0, 0, 0, biome, false);
+      this.bossTrail1.setVisible(false);
+      this.bossTrail2.setVisible(false);
     }
   }
 
@@ -1406,12 +1523,19 @@ export class ArenaScene extends Phaser.Scene {
       this.waypoint.setVisible(false);
       return;
     }
+    if (this.waypoint.texture.key !== 'ui-atlas' && this.waypoint.texture.key !== 'ui-nav-arrow') {
+      if (applyUiTexture(this.waypoint, 'nav-arrow', 'px-waypoint')) {
+        this.waypoint.setScale(1.0);
+      }
+    }
     this.waypoint.setVisible(true);
     this.waypoint.setPosition(
       this.world.player.x + (dx / len) * WAYPOINT_DIST,
       this.world.player.y + (dy / len) * WAYPOINT_DIST,
     );
-    this.waypoint.setRotation(Math.atan2(dy, dx));
+    const isUiArrow = this.waypoint.frame?.name === 'nav-arrow' || this.waypoint.texture?.key === 'ui-nav-arrow';
+    const angleOffset = isUiArrow ? -Math.PI / 2 : 0;
+    this.waypoint.setRotation(Math.atan2(dy, dx) + angleOffset);
   }
 
   private consumeFx(): void {

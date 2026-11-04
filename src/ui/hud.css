@@ -921,10 +921,20 @@ select:focus-visible,
 
 #overlay[data-screen='levelup'],
 #overlay[data-screen='pause'],
-#overlay[data-screen='abandon'],
-#overlay[data-screen='runend'] {
+#overlay[data-screen='abandon'] {
   backdrop-filter: blur(4px) brightness(35%);
   background: rgba(10, 8, 12, 0.45);
+}
+
+#overlay[data-screen='runend'] {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(38, 26, 32, 0.98) 0%, rgba(10, 8, 12, 1) 75%),
+    #08060a;
+  backdrop-filter: none;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+  overflow-y: auto;
 }
 
 .screen-frame {
@@ -1262,7 +1272,7 @@ select:focus-visible,
 
 .hall-header[data-has-ui-sprite='1'] {
   min-height: 64px;
-  padding: 6px 46px 12px 6px;
+  padding: 6px 46px 6px 6px;
   gap: 18px;
 }
 
@@ -2314,7 +2324,229 @@ select:focus-visible,
 }
 
 /* ==========================================================================
-   5. GENERIC MODAL CARD (HowTo, Abandon, RunEnd, Settings)
+   5. GAME OVER / RUN END SCREEN (#runend-view)
+   ========================================================================== */
+
+#runend-view {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px 32px;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+.runend-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.runend-kicker {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: var(--gold-molten);
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+
+.runend-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--parchment);
+  text-shadow:
+    0 2px 4px #000,
+    0 0 24px rgba(255, 110, 30, 0.35);
+}
+
+#runend-view[data-outcome='defeat'] .runend-title,
+#runend-view[data-outcome='abandon'] .runend-title {
+  text-shadow:
+    0 2px 4px #000,
+    0 0 24px rgba(220, 60, 40, 0.45);
+  color: #f1dedb;
+}
+
+.runend-sub {
+  margin: 6px 0 0;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--ash);
+}
+
+.runend-content {
+  display: grid;
+  grid-template-columns: minmax(320px, 380px) minmax(380px, 560px);
+  gap: 24px;
+  width: min(1000px, 100%);
+  align-items: start;
+}
+
+.runend-col-stats {
+  padding: 24px 28px 30px;
+}
+
+.runend-col-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.runend-unlocks {
+  padding: 20px 24px 24px;
+  min-height: auto;
+}
+
+.runend-unlocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.runend-unlock-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(32, 22, 16, 0.15);
+  border: 1px solid rgba(196, 163, 90, 0.4);
+  border-radius: 4px;
+}
+
+.runend-unlock-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.runend-unlock-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.runend-unlock-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--parchment-ink);
+}
+
+.runend-unlock-desc {
+  font-size: 12px;
+  color: var(--parchment-faded);
+}
+
+.runend-unlock-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 4px;
+  font-size: 13px;
+  color: var(--parchment-faded);
+  font-style: italic;
+}
+
+.runend-unlock-progress {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  color: var(--parchment-ink);
+}
+
+.runend-inv-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.runend-inv-heading {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--parchment);
+  text-shadow: 0 2px 4px #000;
+}
+
+.runend-inv-box {
+  width: 100%;
+  min-height: 140px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 20px 24px;
+  background: linear-gradient(180deg, rgba(22, 19, 24, 0.96), rgba(12, 10, 14, 0.98));
+  border: 3px solid var(--brass);
+  box-shadow:
+    inset 0 0 0 2px #0c0a0d,
+    inset 0 0 22px rgba(0, 0, 0, 0.9),
+    0 12px 32px rgba(0, 0, 0, 0.85);
+  box-sizing: border-box;
+}
+
+.runend-inv-box .pause-inv-list {
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 10px;
+}
+
+.runend-chip {
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 120ms ease-out, background 120ms ease-out;
+}
+
+.runend-chip:hover,
+.runend-chip:focus-visible {
+  background: rgba(196, 163, 90, 0.22);
+  transform: scale(1.12);
+}
+
+.runend-actions {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.runend-cta {
+  min-width: 220px;
+  height: 52px;
+}
+
+.runend-quit-btn {
+  min-width: 220px;
+  height: 52px;
+}
+
+@media (max-width: 900px) {
+  .runend-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   6. GENERIC MODAL CARD (HowTo, Abandon confirm, Settings)
    ========================================================================== */
 
 .overlay-card {

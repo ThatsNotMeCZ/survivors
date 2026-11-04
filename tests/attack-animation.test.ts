@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   CHASE_ATTACK_COOLDOWN,
   CHASE_ATTACK_DURATION,
+  currentEnemySpeed,
   isEnemyAttacking,
   spawnEnemy,
   stepEnemies,
@@ -99,6 +100,51 @@ describe('Attack Animation & Attack State Lifecycle', () => {
     expect(world.enemies.windup[idx]).toBe(0);
     expect(world.enemies.attackCd[idx]).toBeGreaterThan(0);
     expect(isEnemyAttacking(world, idx)).toBe(false);
+  });
+
+  it('spitter entity stops moving while attacking and resumes moving when attack finishes', () => {
+    const world = createWorld();
+    world.player.x = 200;
+    world.player.y = 200;
+
+    const spitter = world.catalog.entity('ember-spitter');
+    // Place spitter at (300, 200) (distance 100 < keep 200, so it would normally flee away)
+    const idx = spawnEnemy(world, spitter, 300, 200);
+    world.enemies.attackCd[idx] = 0;
+
+    const startX = world.enemies.x[idx];
+    const startY = world.enemies.y[idx];
+
+    // First step triggers attack windup
+    stepEnemies(world, 0.05);
+    expect(isEnemyAttacking(world, idx)).toBe(true);
+    expect(world.enemies.windup[idx]).toBeGreaterThan(0);
+    expect(currentEnemySpeed(world, idx)).toBe(0);
+    // Spitter must not move while initiating attack
+    expect(world.enemies.x[idx]).toBe(startX);
+    expect(world.enemies.y[idx]).toBe(startY);
+
+    // Another step during attack windup
+    stepEnemies(world, 0.1);
+    expect(isEnemyAttacking(world, idx)).toBe(true);
+    expect(world.enemies.windup[idx]).toBeGreaterThan(0);
+    expect(currentEnemySpeed(world, idx)).toBe(0);
+    // Spitter must not move during windup
+    expect(world.enemies.x[idx]).toBe(startX);
+    expect(world.enemies.y[idx]).toBe(startY);
+
+    // Complete the attack windup (projectile fires)
+    const windupLeft = world.enemies.windup[idx];
+    stepEnemies(world, windupLeft + 0.001);
+    expect(isEnemyAttacking(world, idx)).toBe(false);
+    expect(world.enemies.windup[idx]).toBe(0);
+    expect(world.enemies.x[idx]).toBe(startX);
+    expect(world.enemies.y[idx]).toBe(startY);
+
+    // Now on cooldown, speed is restored and enemy resumes movement (retreating from player since distance < keep)
+    expect(currentEnemySpeed(world, idx)).toBeGreaterThan(0);
+    stepEnemies(world, 0.1);
+    expect(world.enemies.x[idx]).toBeGreaterThan(startX);
   });
 
   it('manifest.json defines entity attack animation with repeat: 0', () => {
