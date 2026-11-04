@@ -2,6 +2,7 @@ export type SpriteAnimDef = {
   frames: number[];
   frameRate: number;
   repeat: number;
+  durations?: number[];
 };
 
 export type EntitySpriteDef = {

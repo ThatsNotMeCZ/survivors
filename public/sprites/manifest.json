@@ -9,7 +9,7 @@
           "frames": [
             0
           ],
-          "frameRate": 6,
+          "frameRate": 5.99,
           "repeat": -1
         },
         "walk": {
@@ -18,7 +18,7 @@
             2,
             3
           ],
-          "frameRate": 6,
+          "frameRate": 5.99,
           "repeat": -1
         },
         "attack": {
@@ -26,7 +26,7 @@
             4,
             5
           ],
-          "frameRate": 6,
+          "frameRate": 5.99,
           "repeat": 0
         }
       }
@@ -42,7 +42,7 @@
             1,
             2
           ],
-          "frameRate": 6,
+          "frameRate": 5.99,
           "repeat": -1
         },
         "idle": {
@@ -50,7 +50,7 @@
             3,
             4
           ],
-          "frameRate": 6,
+          "frameRate": 5.99,
           "repeat": -1
         }
       }

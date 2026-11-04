@@ -9,6 +9,12 @@ import type {
   SurvivorDef,
   TeleporterState,
 } from '../data/schema';
+import { createBossState, type BossState } from './boss';
+import {
+  createBossHazardPool,
+  stepBossHazards,
+  type BossHazardPool,
+} from './boss-hazards';
 import { aabbOverlap, circlesOverlap, clamp } from './collision';
 import { stepDirector } from './director';
 import {
@@ -89,6 +95,7 @@ export type PlayerState = Actor & {
   iframeRemain: number;
   slowRemain: number;
   slowMul: number;
+  rootRemain: number;
 };
 
 export type FocusState = {
@@ -146,6 +153,8 @@ export type World = {
   focus: FocusState;
   fx: FxPool;
   zones: ZonePool;
+  boss: BossState;
+  bossHazards: BossHazardPool;
   decoy: DecoyState;
   bossesDefeated: number;
   lastSniperAt: number;
@@ -222,6 +231,8 @@ export function createWorld(
     focus: { kind: 'none', hp: 0, maxHp: 0, name: '' },
     fx: createFxPool(),
     zones: createZonePool(),
+    boss: createBossState(),
+    bossHazards: createBossHazardPool(),
     decoy: emptyDecoy(),
     bossesDefeated: 0,
     lastSniperAt: -99,
@@ -262,6 +273,7 @@ export function stepWorld(world: World, input: InputFrame, dt: number): void {
   hitPlayer(world);
   contactDamage(world, dt);
   stepZones(world, dt);
+  stepBossHazards(world, dt);
   stepObstacles(world, dt);
   stepGems(world, dt);
   stepLores(world, dt);
@@ -276,10 +288,11 @@ function movePlayer(world: World, input: InputFrame, dt: number): void {
   const { player, stats } = world;
   const bounds = world.catalog.world;
   if (player.dashRemain > 0) {
+    player.rootRemain = 0;
     player.dashRemain = Math.max(0, player.dashRemain - dt);
     player.x += player.dashVx * dt;
     player.y += player.dashVy * dt;
-  } else {
+  } else if (player.rootRemain <= 0) {
     let mx = input.moveX;
     let my = input.moveY;
     const mag = Math.hypot(mx, my);
@@ -464,5 +477,6 @@ function makePlayer(defId: string, stats: ResolvedStats, width: number, height: 
     iframeRemain: 0,
     slowRemain: 0,
     slowMul: 1,
+    rootRemain: 0,
   };
 }

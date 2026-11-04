@@ -34,7 +34,7 @@ Production clocks stay ~6 min/stage, teleporter ~minute 4, hold ~60s. Change JSO
 2. Level-ups: HTML overlay, pick 1 of 3 item hooks plus lore. Pause sim.
 3. Director spends credits on the first elite, then more during the hold. ~22% of fodder spawns are ranged spitters (`stage.ranged`).
 4. Teleporter on (player-facing: Transmutation Circle). Coords are **reserved at stage start** so obstacle keep-out can run. Charge only while inside the circle. Swarm walks into the zone. HUD: `Channel the Transmutation Circle`. Off-screen chevron points at the zone.
-5. Stage boss. HUD: `Slay the [Boss Name]`. Slaying the boss immediately halts all Director entity spawns (no new fodder, snipers, or elites). Then **Descend the Rift** (chevron + pulsed circle) to the next biome, or victory on the last stage.
+5. Stage boss duel. Spawning the boss immediately halts Director credit spawns (no new fodder, spitters, snipers, or elites). Living enemies finish naturally. The boss commands the arena via unique ranged kits and summons its own brood. HUD: `Slay the [Boss Name]`. Slaying the boss opens **Descend the Rift** (chevron + pulsed circle) to the next biome, or grants victory on the final stage.
 
 ## Obstacle placement (stage init)
 

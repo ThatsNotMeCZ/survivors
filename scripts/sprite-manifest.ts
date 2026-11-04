@@ -306,7 +306,8 @@ function parsePixeloramaProject(rec: Record<string, unknown>): Sidecar | null {
   const frameHeight = positiveInt(rec.size_y);
   const fps = positiveNumber(rec.fps) ?? 8;
   const durations = frameDurations(rec.frames);
-  const anims = parseTags(rec.tags, { oneIndexed: true, fps, durations });
+  const durationsMs = durations.map((d) => Math.round((d / Math.max(1, fps)) * 1000));
+  const anims = parseTags(rec.tags, { oneIndexed: true, fps, durations, durationsMs });
   if (!frameWidth && !frameHeight && !anims) return null;
   return { frameWidth, frameHeight, anims };
 }
@@ -318,7 +319,8 @@ function parseAsepriteSheet(rec: Record<string, unknown>): Sidecar | null {
   const metaRec = meta as Record<string, unknown>;
   const size = firstFrameSize(rec.frames) ?? sheetSize(metaRec.size);
   const fps = sheetFrameRate(rec.frames);
-  const anims = parseTags(metaRec.frameTags, { oneIndexed: false, fps, durations: [] });
+  const durationsMs = sheetFrameDurationsMs(rec.frames);
+  const anims = parseTags(metaRec.frameTags, { oneIndexed: false, fps, durations: [], durationsMs });
   if (!size && !anims) return null;
   return {
     frameWidth: size?.width,
@@ -327,9 +329,19 @@ function parseAsepriteSheet(rec: Record<string, unknown>): Sidecar | null {
   };
 }
 
+function isOneShotAnimName(name: string): boolean {
+  return (
+    name !== 'idle' &&
+    name !== 'walk' &&
+    !name.startsWith('idle-') &&
+    !name.startsWith('walk-') &&
+    !name.startsWith('channel')
+  );
+}
+
 function parseTags(
   value: unknown,
-  opts: { oneIndexed: boolean; fps: number; durations: number[] },
+  opts: { oneIndexed: boolean; fps: number; durations: number[]; durationsMs?: number[] },
 ): Record<string, SpriteAnimDef> | undefined {
   if (!Array.isArray(value)) return undefined;
   const out: Record<string, SpriteAnimDef> = {};
@@ -345,17 +357,34 @@ function parseTags(
     const frames = frameRange(start, end);
     if (frames.length === 0) continue;
     const name = rec.name.trim().toLowerCase();
+    const perFrameMs =
+      opts.durationsMs && frames.every((idx) => typeof opts.durationsMs![idx] === 'number' && opts.durationsMs![idx] > 0)
+        ? frames.map((idx) => opts.durationsMs![idx])
+        : undefined;
+    const hasUnevenDurations =
+      perFrameMs !== undefined && perFrameMs.some((ms) => ms !== perFrameMs[0]);
+    const explicitRepeat = typeof rec.repeat === 'number' ? rec.repeat : undefined;
     out[name] = {
       frames,
-      frameRate: tagFrameRate(frames, opts.fps, opts.durations),
-      repeat: name === 'attack' ? 0 : -1,
+      frameRate: tagFrameRate(frames, opts.fps, opts.durations, perFrameMs),
+      repeat: explicitRepeat !== undefined ? explicitRepeat : isOneShotAnimName(name) ? 0 : -1,
+      ...(hasUnevenDurations ? { durations: perFrameMs } : {}),
     };
   }
   if (!out.idle) out.idle = { frames: [0], frameRate: 1, repeat: -1 };
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-function tagFrameRate(frames: number[], fps: number, durations: number[]): number {
+function tagFrameRate(
+  frames: number[],
+  fps: number,
+  durations: number[],
+  durationsMs?: number[],
+): number {
+  if (durationsMs && durationsMs.length > 0) {
+    const avgMs = durationsMs.reduce((sum, ms) => sum + ms, 0) / durationsMs.length;
+    if (avgMs > 0) return Math.round((1000 / avgMs) * 100) / 100;
+  }
   const used = frames
     .map((index) => durations[index])
     .filter((value): value is number => value !== undefined && value > 0);
@@ -414,17 +443,44 @@ function sheetFrameRate(value: unknown): number {
   return 8;
 }
 
+function sheetFrameDurationsMs(value: unknown): number[] {
+  const entries = Array.isArray(value)
+    ? value
+    : value && typeof value === 'object'
+      ? Object.values(value as Record<string, unknown>)
+      : [];
+  return entries.map((entry) => {
+    if (!entry || typeof entry !== 'object') return 125;
+    const duration = (entry as Record<string, unknown>).duration;
+    return typeof duration === 'number' && duration > 0 ? duration : 125;
+  });
+}
+
 function parseAnims(value: unknown): Record<string, SpriteAnimDef> | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const out: Record<string, SpriteAnimDef> = {};
-  for (const [name, spec] of Object.entries(value as Record<string, unknown>)) {
+  for (const [rawName, spec] of Object.entries(value as Record<string, unknown>)) {
     if (!spec || typeof spec !== 'object') continue;
     const rec = spec as Record<string, unknown>;
-    if (!Array.isArray(rec.frames) || rec.frames.some((frame) => typeof frame !== 'number')) continue;
+    const name = rawName.trim().toLowerCase();
+    let frames: number[] = [];
+    if (Array.isArray(rec.frames) && rec.frames.every((frame) => typeof frame === 'number')) {
+      frames = rec.frames as number[];
+    } else if (integerValue(rec.from) !== undefined && integerValue(rec.to) !== undefined) {
+      frames = frameRange(integerValue(rec.from)!, integerValue(rec.to)!);
+    }
+    if (frames.length === 0) continue;
+    const durations =
+      Array.isArray(rec.durations) &&
+      rec.durations.length === frames.length &&
+      rec.durations.every((d) => typeof d === 'number' && d > 0)
+        ? (rec.durations as number[])
+        : undefined;
     out[name] = {
-      frames: rec.frames as number[],
+      frames,
       frameRate: typeof rec.frameRate === 'number' && rec.frameRate > 0 ? rec.frameRate : 8,
-      repeat: typeof rec.repeat === 'number' ? rec.repeat : name === 'attack' ? 0 : -1,
+      repeat: typeof rec.repeat === 'number' ? rec.repeat : isOneShotAnimName(name) ? 0 : -1,
+      ...(durations ? { durations } : {}),
     };
   }
   return Object.keys(out).length > 0 ? out : undefined;

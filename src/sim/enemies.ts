@@ -1,5 +1,6 @@
 import { FX_DEATH, FX_HURT, FX_MUZZLE } from '../config';
 import type { EntityDef, EntityRole, RangedAi, SniperAi } from '../data/schema';
+import { stepBoss } from './boss';
 import { circlesOverlap, clamp } from './collision';
 import { emitFx } from './fx';
 import { hasActiveLoreDrop, spawnGem, spawnLoreDrop } from './gems';
@@ -51,6 +52,7 @@ export type EnemyPool = {
   shieldHp: Float32Array;
   shieldDelayRemain: Float32Array;
   defId: (string | null)[];
+  animName: (string | null)[];
 };
 
 export function createEnemyPool(cap: number): EnemyPool {
@@ -82,6 +84,7 @@ export function createEnemyPool(cap: number): EnemyPool {
     shieldHp: new Float32Array(cap),
     shieldDelayRemain: new Float32Array(cap),
     defId: new Array<string | null>(cap).fill(null),
+    animName: new Array<string | null>(cap).fill(null),
   };
 }
 
@@ -118,7 +121,8 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
     enemies.contactDps[i] = def.contact.dps * coeff;
     enemies.xp[i] = def.rewards.xp;
     enemies.credits[i] = def.rewards.credits;
-    enemies.attackCd[i] = def.ai.type === 'chase' ? 0 : def.ai.cooldown * Math.random();
+    enemies.attackCd[i] =
+      def.ai.type === 'chase' || def.ai.type === 'boss' ? 0 : def.ai.cooldown * Math.random();
     enemies.windup[i] = 0;
     enemies.aimX[i] = x;
     enemies.aimY[i] = y;
@@ -129,6 +133,7 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
     enemies.rootRemain[i] = 0;
     enemies.tetherDps[i] = 0;
     enemies.attackRemain[i] = 0;
+    enemies.animName[i] = null;
 
     if (role === ROLE_ELITE) {
       enemies.shieldHp[i] = hp * world.catalog.loop.shielder.percentHp;
@@ -276,6 +281,8 @@ export function stepEnemies(world: World, dt: number): void {
       stepRanged(world, i, ai, dx, dy, len, dt, speed);
     } else if (ai.type === 'sniper') {
       stepSniper(world, i, ai, dx, dy, len, dt, speed);
+    } else if (ai.type === 'boss') {
+      stepBoss(world, i, ai, dx, dy, len, dt, speed);
     } else {
       if (len > 0.001) {
         const mx = (dx / len) * speed * dt;
@@ -289,6 +296,7 @@ export function stepEnemies(world: World, dt: number): void {
         if (enemies.attackRemain[i] <= 0 && enemies.attackCd[i] <= 0) {
           enemies.attackRemain[i] = CHASE_ATTACK_DURATION;
           enemies.attackCd[i] = CHASE_ATTACK_COOLDOWN;
+          enemies.animName[i] = ai.anim ?? 'attack';
         }
       }
     }
@@ -369,6 +377,7 @@ function stepRanged(
     enemies.windup[i] = ai.windup;
     enemies.aimX[i] = world.player.x;
     enemies.aimY[i] = world.player.y;
+    enemies.animName[i] = ai.anim ?? 'attack';
   }
 }
 
@@ -414,6 +423,7 @@ function stepSniper(
     enemies.windup[i] = ai.windup;
     enemies.aimX[i] = world.player.x;
     enemies.aimY[i] = world.player.y;
+    enemies.animName[i] = ai.anim ?? 'attack';
   }
 }
 
@@ -484,7 +494,7 @@ function deflectFromObstacles(
   return { x: outX, y: outY };
 }
 
-function pillarBlocksShot(world: World, x0: number, y0: number, x1: number, y1: number): boolean {
+export function pillarBlocksShot(world: World, x0: number, y0: number, x1: number, y1: number): boolean {
   const { obstacles } = world;
   for (let i = 0; i < obstacles.cap; i += 1) {
     if (obstacles.alive[i] === 0) continue;
@@ -587,6 +597,15 @@ export function currentEnemySpeed(world: World, index: number): number {
   if (!defId) return baseEffective;
 
   const ai = world.catalog.entity(defId).ai;
+  if (ai.type === 'boss') {
+    if (enemies.windup[index] > 0) return 0;
+    const target = chaseTarget(world, index);
+    const len = Math.hypot(target.x - enemies.x[index], target.y - enemies.y[index]);
+    if (len <= ai.keep + 70 && len >= ai.keep - 50) {
+      return baseEffective * 0.45;
+    }
+    return baseEffective;
+  }
   if (ai.type === 'ranged' || ai.type === 'sniper') {
     const target = chaseTarget(world, index);
     const len = Math.hypot(target.x - enemies.x[index], target.y - enemies.y[index]);
@@ -687,4 +706,8 @@ export function applyNoxiousContact(world: World, index: number): void {
 export function isEnemyAttacking(world: World, index: number): boolean {
   const { enemies } = world;
   return enemies.attackRemain[index] > 0 || enemies.windup[index] > 0;
+}
+
+export function currentEnemyAttackAnim(world: World, index: number): string {
+  return world.enemies.animName[index] ?? 'attack';
 }

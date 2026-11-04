@@ -3,7 +3,19 @@ import type { EnemyPool } from './enemies';
 export type SlowState = {
   slowRemain: number;
   slowMul: number;
+  rootRemain?: number;
 };
+
+export function applyRoot(state: { rootRemain: number }, duration: number): void {
+  if (duration <= 0) return;
+  state.rootRemain = Math.max(state.rootRemain, duration);
+}
+
+export function tickRoot(state: { rootRemain: number }, dt: number): void {
+  if (state.rootRemain > 0) {
+    state.rootRemain = Math.max(0, state.rootRemain - dt);
+  }
+}
 
 export function applySlow(state: SlowState, mul: number, duration: number): void {
   if (duration <= 0 || mul >= 1) return;

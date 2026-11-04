@@ -24,7 +24,7 @@ Horizontal strip of equal frames. Phaser loads `entity-{id}` via `load.spriteshe
 - `idle` = frame 0
 - `walk` = every frame at 8 fps, looping (only if there is more than one cell)
 
-Sidecar can be the compact form, a **Pixelorama project JSON** (`size_x` / `size_y` / `fps` / `tags`), or an Aseprite-style spritesheet JSON (`meta.frameTags`). Pixelorama tags are 1-based; Aseprite tags are 0-based. Tag names map to Phaser anims (`idle`, `walk`). Vite bakes that into `manifest.json`.
+Sidecar can be the compact form, a **Pixelorama project JSON** (`size_x` / `size_y` / `fps` / `tags`), or an Aseprite-style spritesheet JSON (`meta.frameTags`). Pixelorama tags are 1-based; Aseprite tags are 0-based. Tag names map to Phaser anims (`idle`, `walk`, per-attack anims like `attack-fan`, `attack-sweep`, `attack-prison`, `attack-laser`, `summon`, etc.). Vite bakes that into `manifest.json`. Anim definitions support variable frame counts and uneven per-frame timings (`durations` in ms).
 
 Compact example:
 
@@ -34,7 +34,8 @@ Compact example:
   "frameHeight": 48,
   "anims": {
     "idle": { "frames": [3, 4], "frameRate": 6, "repeat": -1 },
-    "walk": { "frames": [0, 1, 2], "frameRate": 6, "repeat": -1 }
+    "walk": { "frames": [0, 1, 2], "frameRate": 6, "repeat": -1 },
+    "attack-fan": { "frames": [5, 6, 7, 8], "durations": [60, 60, 140, 80], "frameRate": 10, "repeat": 0 }
   }
 }
 ```

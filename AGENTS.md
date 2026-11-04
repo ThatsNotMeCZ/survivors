@@ -20,7 +20,7 @@
 
 ## Current milestone
 
-GPU smoke **passed**. Combat verb **A locked**. Homunculus kit complete (Bolt / Piercing Aether / Phase Step / Crucible Cull). **The Penitent** live. Astral Watcher + Noxious elites. HTML hall/HUD in `src/ui/`. Run slice: leveling, **13 items**, 2 stages, teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Art = drop-in spritesheets (`knowledge/tech/sprites.md`). Smoke: `/?smoke=1`. Skip hall: `/?dev=1`. Theme: Dark Hermetic (display strings, not ids).
+GPU smoke **passed**. Combat verb **A locked**. Homunculus kit complete (Bolt / Piercing Aether / Phase Step / Crucible Cull). **The Penitent** live. Astral Watcher + Noxious elites. Boss fight rework live: director paused during boss duel, unique boss ranged kits + summons (Cinder Heart / Frost Sovereign / Frost Emperor), variable per-attack animations & durations, custom GLSL boss hazard + ambient shaders. HTML hall/HUD in `src/ui/`. Run slice: leveling, **13 items**, 2 stages, teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Art = drop-in spritesheets (`knowledge/tech/sprites.md`). Smoke: `/?smoke=1`. Skip hall: `/?dev=1`. Theme: Dark Hermetic (display strings, not ids).
 
 ## Commands
 

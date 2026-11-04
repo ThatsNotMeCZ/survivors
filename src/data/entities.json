@@ -53,11 +53,48 @@
       "title": "Core of the First Kiln",
       "lore": "The living furnace heart that consumed its own alchemists. It awakens only when the Transmutation Circle is charged, determined to melt every vessel back into raw clay.",
       "role": "boss",
-      "tags": ["boss", "chaser"],
-      "stats": { "speed": 78, "maxHp": 520, "radius": 36 },
-      "contact": { "dps": 34 },
-      "rewards": { "xp": 40, "credits": 0 },
-      "ai": { "type": "chase" },
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 60, "maxHp": 1650, "radius": 36 },
+      "contact": { "dps": 22 },
+      "rewards": { "xp": 50, "credits": 0 },
+      "ai": {
+        "type": "boss",
+        "keep": 230,
+        "enrage": { "hpPct": 0.5, "cooldownMul": 0.75 },
+        "attacks": [
+          {
+            "type": "fan",
+            "name": "Slag Spray",
+            "anim": "attack-fan",
+            "cooldown": 3.2,
+            "windup": 0.6,
+            "count": 5,
+            "spread": 50,
+            "projectile": { "speed": 230, "lifetime": 2.0, "radius": 9, "damage": 9 }
+          },
+          {
+            "type": "meteor",
+            "name": "Falling Clinker",
+            "anim": "attack-meteor",
+            "cooldown": 5.0,
+            "windup": 0.4,
+            "delay": 1.2,
+            "radius": 58,
+            "damage": 24,
+            "pool": { "duration": 4.0, "radius": 50, "dps": 8, "slowMul": 0.6 }
+          },
+          {
+            "type": "summon",
+            "name": "Kiln Brood",
+            "anim": "summon",
+            "cooldown": 9.0,
+            "windup": 0.35,
+            "entity": "ember-mite",
+            "count": 3,
+            "maxAlive": 6
+          }
+        ]
+      },
       "view": { "kind": "dot", "size": 72, "inner": "#fff0c8", "mid": "#ff7a3a" }
     },
     {
@@ -112,11 +149,59 @@
       "title": "Regent of the Frozen Dock",
       "lore": "An ancient transmutation frozen mid-ascension when the sea-locks broke. Crowned in pale rime, it crushes any vessel that dares open the deeper Rift.",
       "role": "boss",
-      "tags": ["boss", "chaser"],
-      "stats": { "speed": 80, "maxHp": 620, "radius": 40 },
-      "contact": { "dps": 40 },
-      "rewards": { "xp": 60, "credits": 0 },
-      "ai": { "type": "chase" },
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 66, "maxHp": 2100, "radius": 40 },
+      "contact": { "dps": 26 },
+      "rewards": { "xp": 75, "credits": 0 },
+      "ai": {
+        "type": "boss",
+        "keep": 260,
+        "enrage": { "hpPct": 0.5, "cooldownMul": 0.75 },
+        "attacks": [
+          {
+            "type": "bolt",
+            "name": "Cryo Lance",
+            "anim": "attack-bolt",
+            "cooldown": 2.2,
+            "windup": 0.45,
+            "projectile": { "speed": 360, "lifetime": 1.8, "radius": 9, "damage": 14 }
+          },
+          {
+            "type": "cone",
+            "name": "Glacial Sweep",
+            "anim": "attack-sweep",
+            "cooldown": 6.5,
+            "windup": 0.75,
+            "lingering": 0.55,
+            "range": 320,
+            "angle": 75,
+            "damage": 12,
+            "slowMul": 0.22,
+            "slowDuration": 2.8
+          },
+          {
+            "type": "prison",
+            "name": "Rime Prison",
+            "anim": "attack-prison",
+            "cooldown": 8.5,
+            "windup": 0.35,
+            "delay": 1.15,
+            "radius": 64,
+            "damage": 16,
+            "rootDuration": 1.6
+          },
+          {
+            "type": "summon",
+            "name": "Rime Brood",
+            "anim": "summon",
+            "cooldown": 9.0,
+            "windup": 0.35,
+            "entity": "frost-mite",
+            "count": 3,
+            "maxAlive": 6
+          }
+        ]
+      },
       "view": { "kind": "dot", "size": 80, "inner": "#f4fbff", "mid": "#7ad4ff" }
     },
     {
@@ -125,11 +210,69 @@
       "title": "Monarch of Absolute Zero",
       "lore": "Entombed at the bottom of the Great Work where heat and motion cease. It is the final seal-keeper; to shatter its glacial hull is to complete the transmutation.",
       "role": "boss",
-      "tags": ["boss", "chaser"],
-      "stats": { "speed": 85, "maxHp": 950, "radius": 45 },
-      "contact": { "dps": 55 },
-      "rewards": { "xp": 100, "credits": 0 },
-      "ai": { "type": "chase" },
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 70, "maxHp": 2800, "radius": 45 },
+      "contact": { "dps": 30 },
+      "rewards": { "xp": 120, "credits": 0 },
+      "ai": {
+        "type": "boss",
+        "keep": 280,
+        "enrage": { "hpPct": 0.5, "cooldownMul": 0.72 },
+        "attacks": [
+          {
+            "type": "bolt",
+            "name": "Glacial Spear",
+            "anim": "attack-bolt",
+            "cooldown": 2.4,
+            "windup": 0.4,
+            "projectile": { "speed": 400, "lifetime": 1.9, "radius": 10, "damage": 18 }
+          },
+          {
+            "type": "pulse",
+            "name": "Absolute Zero Pulse",
+            "anim": "attack-pulse",
+            "cooldown": 12.0,
+            "windup": 1.8,
+            "radius": 620,
+            "damage": 48,
+            "slowMul": 0.35,
+            "slowDuration": 2.5
+          },
+          {
+            "type": "laser",
+            "name": "Aether Laser",
+            "anim": "attack-laser",
+            "cooldown": 9.5,
+            "windup": 0.8,
+            "duration": 2.4,
+            "trackSpeed": 150,
+            "hitRadius": 28,
+            "dps": 28,
+            "trailInterval": 0.22,
+            "trailPool": { "duration": 3.5, "radius": 34, "dps": 7, "slowMul": 0.55 }
+          },
+          {
+            "type": "summon",
+            "name": "Imperial Guard",
+            "anim": "summon",
+            "cooldown": 10.0,
+            "windup": 0.35,
+            "entity": "frost-mite",
+            "count": 3,
+            "maxAlive": 6
+          },
+          {
+            "type": "summon",
+            "name": "Brine Retinue",
+            "anim": "summon",
+            "cooldown": 14.0,
+            "windup": 0.35,
+            "entity": "frost-spitter",
+            "count": 2,
+            "maxAlive": 3
+          }
+        ]
+      },
       "view": { "kind": "dot", "size": 90, "inner": "#ffffff", "mid": "#3d8ad4" }
     },
     {

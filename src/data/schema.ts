@@ -121,10 +121,11 @@ export type SurvivorDef = {
   unlock?: UnlockCondition;
 };
 
-export type ChaseAi = { type: 'chase' };
+export type ChaseAi = { type: 'chase'; anim?: string };
 
 export type RangedAi = {
   type: 'ranged';
+  anim?: string;
   range: number;
   keep: number;
   cooldown: number;
@@ -134,6 +135,7 @@ export type RangedAi = {
 
 export type SniperAi = {
   type: 'sniper';
+  anim?: string;
   keep: number;
   cooldown: number;
   windup: number;
@@ -141,7 +143,133 @@ export type SniperAi = {
   lineWidth: number;
 };
 
-export type EntityAi = ChaseAi | RangedAi | SniperAi;
+export type BossProjectileSpec = {
+  speed: number;
+  lifetime: number;
+  radius: number;
+  damage: number;
+};
+
+export type BossPoolSpec = {
+  duration: number;
+  radius: number;
+  dps: number;
+  slowMul: number;
+};
+
+export type BossBoltAttack = {
+  type: 'bolt';
+  name: string;
+  anim?: string;
+  cooldown: number;
+  windup: number;
+  projectile: BossProjectileSpec;
+};
+
+export type BossFanAttack = {
+  type: 'fan';
+  name: string;
+  anim?: string;
+  cooldown: number;
+  windup: number;
+  count: number;
+  spread: number;
+  projectile: BossProjectileSpec;
+};
+
+export type BossMeteorAttack = {
+  type: 'meteor';
+  name: string;
+  anim?: string;
+  cooldown: number;
+  windup: number;
+  delay: number;
+  radius: number;
+  damage: number;
+  pool?: BossPoolSpec;
+};
+
+export type BossConeAttack = {
+  type: 'cone';
+  name: string;
+  anim?: string;
+  cooldown: number;
+  windup: number;
+  lingering: number;
+  range: number;
+  angle: number;
+  damage: number;
+  slowMul: number;
+  slowDuration: number;
+};
+
+export type BossPrisonAttack = {
+  type: 'prison';
+  name: string;
+  anim?: string;
+  cooldown: number;
+  windup: number;
+  delay: number;
+  radius: number;
+  damage: number;
+  rootDuration: number;
+};
+
+export type BossPulseAttack = {
+  type: 'pulse';
+  name: string;
+  anim?: string;
+  cooldown: number;
+  windup: number;
+  radius: number;
+  damage: number;
+  slowMul: number;
+  slowDuration: number;
+};
+
+export type BossLaserAttack = {
+  type: 'laser';
+  name: string;
+  anim?: string;
+  cooldown: number;
+  windup: number;
+  duration: number;
+  trackSpeed: number;
+  hitRadius: number;
+  dps: number;
+  trailInterval: number;
+  trailPool: BossPoolSpec;
+};
+
+export type BossSummonAttack = {
+  type: 'summon';
+  name?: string;
+  anim?: string;
+  cooldown: number;
+  windup?: number;
+  entity: string;
+  count: number;
+  maxAlive: number;
+};
+
+export type BossAttack =
+  | BossBoltAttack
+  | BossFanAttack
+  | BossMeteorAttack
+  | BossConeAttack
+  | BossPrisonAttack
+  | BossPulseAttack
+  | BossLaserAttack
+  | BossSummonAttack;
+
+export type BossAi = {
+  type: 'boss';
+  keep: number;
+  enrage?: { hpPct: number; cooldownMul: number };
+  attacks: BossAttack[];
+};
+
+export type EntityAi = ChaseAi | RangedAi | SniperAi | BossAi;
 
 export type EntityDef = {
   id: string;

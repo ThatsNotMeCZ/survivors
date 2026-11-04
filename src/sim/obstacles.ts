@@ -4,7 +4,7 @@ import { aabbOverlap, circlesOverlap, pushCircles } from './collision';
 import { startEnemyDeath } from './enemies';
 import { emitFx } from './fx';
 import { FLAG_FLYOVER, TEAM_PLAYER, killProjectile } from './projectiles';
-import { applyEnemySlow, applySlow, tickSlow } from './status';
+import { applyEnemySlow, applySlow, tickRoot, tickSlow } from './status';
 import { hashString, mulberry32 } from './rng';
 import { createHash, hashClear, hashInsert, hashQuery, type SpatialHash } from './spatial-hash';
 import type { World } from './world';
@@ -179,6 +179,7 @@ export function spawnAcidPool(world: World, x: number, y: number): void {
 export function stepObstacles(world: World, dt: number): void {
   const { player, obstacles } = world;
   tickSlow(player, dt);
+  tickRoot(player, dt);
 
   if (!playerPhasing(world) && overlappingHazard(world, player.x, player.y, player.radius)) {
     const dmg = world.catalog.obstacles.hazard.dps * world.coefficient * dt;

@@ -1,3 +1,5 @@
+import { initBossState, resetBossState } from './boss';
+import { clearBossHazards } from './boss-hazards';
 import { clamp } from './collision';
 import { ROLE_BOSS, ROLE_ELITE, clearEnemies, ringPoint, spawnEnemy } from './enemies';
 import { clearGems, clearLores } from './gems';
@@ -108,9 +110,12 @@ export function beginStage(world: World, index: number): void {
   world.player.iframeRemain = 0;
   world.player.slowRemain = 0;
   world.player.slowMul = 1;
+  world.player.rootRemain = 0;
   world.decoy.active = false;
   world.decoy.remain = 0;
   clearZones(world.zones);
+  clearBossHazards(world.bossHazards);
+  resetBossState(world.boss);
   reserveTeleporter(world);
   placeStageObstacles(world);
 }
@@ -152,7 +157,11 @@ function spawnStageBoss(world: World): void {
   const stage = currentStage(world);
   const def = world.catalog.entity(stage.boss);
   const point = ringPoint(world, world.teleporter.x, world.teleporter.y, def.stats.radius);
-  if (spawnEnemy(world, def, point.x, point.y) < 0) return;
+  const idx = spawnEnemy(world, def, point.x, point.y);
+  if (idx < 0) return;
+  if (def.ai.type === 'boss') {
+    initBossState(world, idx, def.ai);
+  }
   world.bossSpawned = true;
 }
 

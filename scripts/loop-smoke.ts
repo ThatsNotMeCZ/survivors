@@ -18,6 +18,7 @@ let lastStage = world.stageIndex;
 let lastTel = world.teleporter.state;
 let lastLevel = world.level;
 let lastBoss = world.bossSpawned;
+const encountersAtBossSpawn: Record<string, number> = {};
 
 for (let t = 0; t < LIMIT; t += DT) {
   if (world.phase === 'levelup') {
@@ -53,7 +54,26 @@ for (let t = 0; t < LIMIT; t += DT) {
   }
   if (world.bossSpawned !== lastBoss) {
     log.push(`${world.runTime.toFixed(1)}s bossSpawned=${world.bossSpawned} living=${world.counts.boss}`);
+    if (world.bossSpawned) {
+      Object.assign(encountersAtBossSpawn, world.encountersByEntity);
+    }
     lastBoss = world.bossSpawned;
+  }
+  if (world.bossSpawned && world.counts.boss > 0) {
+    const stage = world.catalog.loop.stages[world.stageIndex];
+    const bossDef = world.catalog.entity(stage.boss);
+    const allowedSummons = new Set<string>([bossDef.id]);
+    if (bossDef.ai.type === 'boss') {
+      for (const atk of bossDef.ai.attacks) {
+        if (atk.type === 'summon') allowedSummons.add(atk.entity);
+      }
+    }
+    for (const [id, count] of Object.entries(world.encountersByEntity)) {
+      const prev = encountersAtBossSpawn[id] ?? 0;
+      if (count > prev && !allowedSummons.has(id)) {
+        throw new Error(`Director spawned entity "${id}" during boss fight with ${bossDef.id}!`);
+      }
+    }
   }
 }
 
@@ -92,8 +112,11 @@ function safestOffer(world: ReturnType<typeof createWorld>): number {
     if (existing) existing.stacks += 1;
     else trial.push({ id: offer[i].id, stacks: 1 });
     const stats = resolveStats(world.survivor.stats, trial, world.catalog.item);
-    let score = stats.damageMul * 8 + stats.speed / 80 + stats.maxHp / 40;
-    if (stats.maxHp < 75) score -= 25;
+    let score = stats.damageMul * 10 + stats.speed / 60 + stats.maxHp / 25;
+    if (offer[i].id === 'brittle-plate') score += 12;
+    if (offer[i].id === 'cinnabar-leech') score += 20;
+    if (offer[i].id === 'lead-core') score += 15;
+    if (stats.maxHp < 90) score -= 20;
     if (stats.speed < 240) score -= 25;
     if (offer[i].rarity === 'lunar') score -= 40;
     if (score > bestScore) {
@@ -241,16 +264,53 @@ function steer(world: ReturnType<typeof createWorld>, input: ReturnType<typeof e
     const dx = player.x - obs.x;
     const dy = player.y - obs.y;
     const d = Math.hypot(dx, dy);
-    const pad = obs.type === 'hazard' ? obs.radius + 28 : obs.radius + player.radius + 18;
+    const pad = obs.type === 'hazard' ? obs.radius + 40 : obs.radius + player.radius + 20;
     if (d < pad && d > 0.001) {
       avoidX += dx / d;
       avoidY += dy / d;
       if (obs.type === 'hazard') hazardThreat = true;
     }
   }
+
+  // Avoid boss hazard pools
+  const bPool = world.bossHazards;
+  for (let i = 0; i < bPool.cap; i += 1) {
+    if (bPool.alive[i] === 0) continue;
+    const dx = player.x - bPool.x[i];
+    const dy = player.y - bPool.y[i];
+    const d = Math.hypot(dx, dy);
+    const reach = bPool.radius[i] + player.radius + 32;
+    if (d < reach && d > 0.001) {
+      avoidX += (dx / d) * 2.2;
+      avoidY += (dy / d) * 2.2;
+      hazardThreat = true;
+    }
+  }
+
+  // Steer away from being surrounded by fodder
+  let crowdX = 0;
+  let crowdY = 0;
+  let closeCount = 0;
+  for (let i = 0; i < enemies.cap; i += 1) {
+    if (enemies.alive[i] === 0 || enemies.corpseRemain[i] > 0) continue;
+    const dx = player.x - enemies.x[i];
+    const dy = player.y - enemies.y[i];
+    const d = Math.hypot(dx, dy);
+    if (d < 140 && d > 0.001) {
+      crowdX += (dx / d) * (140 - d);
+      crowdY += (dy / d) * (140 - d);
+      closeCount += 1;
+    }
+  }
+  if (closeCount >= 3) {
+    avoidX += crowdX * 0.02;
+    avoidY += crowdY * 0.02;
+    threat = true;
+  }
+
   if (Math.hypot(avoidX, avoidY) > 0.2) {
-    tx = player.x + avoidX * 180;
-    ty = player.y + avoidY * 180;
+    tx = player.x + avoidX * 200;
+    ty = player.y + avoidY * 200;
   }
 
   input.moveX = tx - player.x;
@@ -264,6 +324,10 @@ function steer(world: ReturnType<typeof createWorld>, input: ReturnType<typeof e
   input.aimX = aimX;
   input.aimY = aimY;
   input.held.primary = true;
+  input.held.secondary = player.skillCd.secondary <= 0;
+  input.pressed.secondary = player.skillCd.secondary <= 0;
+  input.held.special = player.skillCd.special <= 0;
+  input.pressed.special = player.skillCd.special <= 0;
   input.held.utility = false;
   input.pressed.utility = (threat || hazardThreat) && player.skillCd.utility <= 0 && player.dashRemain <= 0;
 }

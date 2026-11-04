@@ -68,6 +68,31 @@ function loadCatalog(): Catalog {
     if (!entity.lore || typeof entity.lore !== 'string') {
       throw new Error(`Entity "${entity.id}" missing lore`);
     }
+    if (entity.role === 'boss') {
+      if (entity.ai.type !== 'boss') {
+        throw new Error(`Boss "${entity.id}" must use ai.type "boss"`);
+      }
+      if (!Array.isArray(entity.ai.attacks) || entity.ai.attacks.length === 0) {
+        throw new Error(`Boss "${entity.id}" needs at least one attack`);
+      }
+      for (const atk of entity.ai.attacks) {
+        if (!(atk.cooldown > 0)) {
+          throw new Error(`Boss "${entity.id}" attack "${atk.type}" must have cooldown > 0`);
+        }
+        if (atk.type === 'summon') {
+          const summoned = entities.get(atk.entity);
+          if (!summoned) {
+            throw new Error(`Boss "${entity.id}" summon points to missing entity "${atk.entity}"`);
+          }
+          if (summoned.role !== 'fodder') {
+            throw new Error(`Boss "${entity.id}" summon "${atk.entity}" must have role "fodder"`);
+          }
+          if (!(atk.count > 0) || !(atk.maxAlive >= atk.count)) {
+            throw new Error(`Boss "${entity.id}" summon "${atk.entity}" has invalid count/maxAlive`);
+          }
+        }
+      }
+    }
   }
 
   for (const item of items.values()) {

@@ -184,11 +184,26 @@ export function createEntityAnims(scene: Phaser.Scene): void {
     for (const [anim, spec] of Object.entries(def.anims)) {
       const key = entityAnimKey(id, anim);
       if (scene.anims.exists(key)) continue;
+      const isOneShot =
+        anim !== 'idle' &&
+        anim !== 'walk' &&
+        !anim.startsWith('idle-') &&
+        !anim.startsWith('walk-') &&
+        !anim.startsWith('channel');
+      const hasCustomDurations =
+        Array.isArray(spec.durations) && spec.durations.length === spec.frames.length;
+      const frames = hasCustomDurations
+        ? spec.frames.map((frame, idx) => ({
+            key: tex,
+            frame,
+            duration: spec.durations![idx],
+          }))
+        : scene.anims.generateFrameNumbers(tex, { frames: spec.frames });
       scene.anims.create({
         key,
-        frames: scene.anims.generateFrameNumbers(tex, { frames: spec.frames }),
+        frames,
         frameRate: spec.frameRate,
-        repeat: anim === 'attack' ? 0 : spec.repeat,
+        repeat: typeof spec.repeat === 'number' ? spec.repeat : isOneShot ? 0 : -1,
       });
     }
   }
@@ -197,7 +212,7 @@ export function createEntityAnims(scene: Phaser.Scene): void {
 export function playEntity(
   sprite: Phaser.GameObjects.Sprite,
   id: string,
-  anim: 'idle' | 'walk' | 'attack',
+  anim: string,
   timeScale: number = 1,
 ): void {
   const tex = entityTextureKey(id);
@@ -206,20 +221,36 @@ export function playEntity(
   const preferred = entityAnimKey(id, anim);
   const idle = entityAnimKey(id, 'idle');
   const walk = entityAnimKey(id, 'walk');
-  const attack = entityAnimKey(id, 'attack');
+  const genericAttack = entityAnimKey(id, 'attack');
 
-  const attackExists = sprite.anims.animationManager.exists(attack);
-  const isPlayingAttack = sprite.anims.isPlaying && sprite.anims.currentAnim?.key === attack;
+  const isAttackRequest = anim !== 'idle' && anim !== 'walk';
+  const resolvedAttackKey = sprite.anims.animationManager.exists(preferred)
+    ? preferred
+    : sprite.anims.animationManager.exists(genericAttack)
+      ? genericAttack
+      : '';
+  const prevAttackKey = (sprite.getData('activeAttackKey') as string | undefined) ?? '';
+  const currentKey = sprite.anims.currentAnim?.key ?? '';
+  const isPlayingAttack =
+    sprite.anims.isPlaying &&
+    currentKey !== '' &&
+    currentKey !== idle &&
+    currentKey !== walk;
   const attackDone = sprite.getData('attackDone') === true;
 
-  if (anim === 'attack') {
-    if (attackExists) {
+  if (isAttackRequest) {
+    if (resolvedAttackKey) {
+      if (prevAttackKey !== resolvedAttackKey) {
+        sprite.setData('activeAttackKey', resolvedAttackKey);
+        sprite.setData('attackDone', false);
+        sprite.play(resolvedAttackKey);
+        if (sprite.anims) sprite.anims.timeScale = 1;
+        return;
+      }
       if (isPlayingAttack) {
-        // Still playing its single attack pass - keep playing uninterrupted
         return;
       }
       if (attackDone) {
-        // Already played once for this attack - show walk if moving, else idle
         const fallback = timeScale > 0 && sprite.anims.animationManager.exists(walk)
           ? walk
           : sprite.anims.animationManager.exists(idle)
@@ -231,7 +262,7 @@ export function playEntity(
         }
         return;
       }
-      if (!sprite.anims.isPlaying && sprite.anims.currentAnim?.key === attack) {
+      if (!sprite.anims.isPlaying && currentKey === resolvedAttackKey) {
         sprite.setData('attackDone', true);
         const fallback = timeScale > 0 && sprite.anims.animationManager.exists(walk)
           ? walk
@@ -244,13 +275,15 @@ export function playEntity(
         }
         return;
       }
-      // New attack: start playing attack animation
+      sprite.setData('activeAttackKey', resolvedAttackKey);
       sprite.setData('attackDone', false);
-      sprite.play(attack);
+      sprite.play(resolvedAttackKey);
+      if (sprite.anims) sprite.anims.timeScale = 1;
       return;
     }
   } else {
     sprite.setData('attackDone', false);
+    sprite.setData('activeAttackKey', '');
     if (isPlayingAttack) {
       return;
     }

@@ -1864,13 +1864,43 @@ select:focus-visible,
 }
 
 .aug-card-name {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  background: rgba(10, 8, 14, 0.78);
+  border: 1px solid rgba(196, 163, 90, 0.28);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 10px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--parchment);
   letter-spacing: 0.03em;
+  text-align: center;
+  line-height: 1.18;
   margin-bottom: 12px;
   text-shadow: 0 2px 4px #000;
+  transition: border-color var(--ease), color var(--ease);
+}
+
+.aug-card.rarity-rare .aug-card-name {
+  border-color: rgba(224, 106, 40, 0.45);
+}
+
+.aug-card.rarity-lunar .aug-card-name {
+  border-color: rgba(98, 224, 255, 0.45);
+}
+
+.aug-card-col:hover .aug-card-name,
+.aug-card:focus-visible .aug-card-name {
+  border-color: var(--brass-bright);
+  color: #fff;
 }
 
 .aug-card-art {
