@@ -1,81 +1,77 @@
 # survivors — LIVE vs TARGET vs ZAKÁZÁNO
 
-Snapshot: **2026-10-21**.  
-Když navrhuješ feature, nejdřív ji zařaď sem. Neoznačený návrh ber jako podezřelý.
+Snapshot: **2026-11-05**.  
+Když navrhuješ nový herní prvek nebo úpravu, vždy jej zařaď do jedné z těchto kategorií.
 
-## LIVE (playable teď)
+---
 
-Playtest slice, hodiny zkrácené.
+## LIVE (Plně hratelné v kódu teď)
 
-- Combat verb **A**: mouse-aimed primary, hold LMB
-- **2 survivors**, každý 4 bound skilly
-- Homunculus: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull
-- The Penitent: Censer Lob / Brimstone Line / Ash Step / Condemnation Tether
-- RMB secondary + Q ultimate, oba aimed press
-- 2 stage: Cinder Yard → Rime Dock, pak victory
-- Director + difficulty coefficient
-- 13 itemů s tradeoffem, včetně lunar Pale Moon Covenant a on-kill Cinnabar Leech
-- Level-up 1 of 3, sim pause
-- Transmutation Circle hold, pak stage boss, pak Rift (jen po stage 1)
-- Ranged spitters ~22 %
-- Astral Watcher sniper (max 2)
-- Noxious na každé elitě (contact slow, corpse pop, permanent acid)
-- Arena obstacles: 14 pillars, 8 hazards, 9 volatiles + až 8 acid pools
-- Contact DPS (fodder cap 4), dash i-frames
-- HTML hall s výběrem vesselu / pause / HUD 4 sloty / recap / settings
-- Dark Hermetic display copy (hall title Hermetic Rifts)
-- GPU fodder, gems, sparks; sprite player/elite/boss/obstacles
-- Web Audio bus (menu / map / pause overlay)
-- Soft slice cap: 32 fodder + 3 elite + 1 boss
+Aktuální build představuje kompletní **tříkomorový hratelný run** s komprimovaným časováním pro playtestování:
 
-## TARGET v1 (schváleno, není v kódu)
+- **Combat verb A:** Hráč míří myší. Držet LMB pálí mířenou primární zbraň. RMB sekundární skill, Shift/Space úhybný dash s i-framy, Q speciální úder.
+- **2 schránky (Survivors):**
+  - **Homunculus:** Skirmisher, odemčen od začátku, přesný rtuťový zaměřovač. Skilly: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull.
+  - **The Penitent:** Caster/Controller, odemyká se porážkou Frost Sovereigna, liturgický kruhový zaměřovač. Skilly: Censer Lob / Brimstone Line / Ash Step / Condemnation Tether.
+- **3 komory (Stages):**
+  - Stage 1: Cinder Yard (*Nigredo & Calcination*) → Boss: Cinder Heart.
+  - Stage 2: Rime Dock (*Albedo & Fixation*) → Boss: Frost Sovereign.
+  - Stage 3: Glacial Tomb (*Rubedo & The Great Seal*) → Boss: Frost Emperor → Dokončení Velkého díla.
+- **Boss Duel System:**
+  - V momentě příchodu bosse Director **zastaví credit spawny** (žádný nový fodder, spitters ani elity).
+  - Bossové fázují skrz pilíře a mají unikátní telegraphované útoky (salvy lávy, meteority s loužemi, mrazivé kužely, ledové vězení, arénový pulz r=620, rotující aether laser).
+  - Enrage při 50 % HP (zkrácení cooldownů o ~25 %).
+  - Bossové si sami líhnou vlastní miniony (Kiln Brood, Rime Brood, Imperial Guard, Brine Retinue).
+- **Elitní modifikátory (LIVE na každé elitě):**
+  - **Noxious:** Contact slow ×0.5 na 1.1 s, exploze mrtvoly po 0.5 s, trvalá louže kyseliny (hazard r=68) až do konce stage.
+  - **Shielder:** Extra aetherický štít o hodnotě +30 % max HP, který se po 5.0 s bez poškození plně obnoví.
+- **13 hermetických augmentací (Itemů):**
+  - Vyvážení: Common a Uncommon jsou pozitivní stavební kameny, Rare a Lunar jsou silné dvousečné meče s rizikem.
+  - Systém kritických zásahů (`critChance`, `critDamage`).
+  - Systém odemykání: 6 augmentací vyžaduje splnění podmínek (zabití bossů, elit, drossu, dokončení komory).
+- **The Archives & Ledger:**
+  - Plnoobrazovkový kodex (`#archives`) přístupný z menu i pauzy: 5 svazků (Rites of Motion, Chronicles, Bestiary s 10 entitami, Reliquary s 13 itemy, Persistent Ledger s trvalými statistikami v `localStorage`).
+  - Lore fragmenty padající z nepřátel (2.5 % fodder, 25 % elita, 60 % boss).
+- **Arénové překážky ve 3 biomech:**
+  - 14 pilířů (r=28 px), 8 hazardů (r=68 px), 9 volatilních nádob (r=14 px) + až 8 dynamických louží kyseliny.
+  - Odlišné modely a názvy pro Cinder Yard, Rime Dock i Glacial Tomb.
+- **Audiovizuální podoba:**
+  - Aetherický WebGL fragment shader v pozadí Sálu (The Hall).
+  - GLSL shadery pro boss hazardy a arénové efekty.
+  - Vlastní skladby pro menu, stage a jednotlivé bossy přes Web Audio bus.
 
-- 2 survivors × 4 skilly — **už LIVE**
-- 13 itemů s hookem — **už LIVE**; další item jen s novým hookem
-- 4. enemy archetype (chase / ranged / sniper už LIVE)
-- Elite modifiers burn (červená) a chain lightning (modrá)
-- Noxious jako **roll mezi 3 modifiers**, ne default na každé elitě
-- 3 stage + finale, produkční hodiny (~6 min/stage, circle ~min 4, hold ~60 s)
-- Late game: méně těl, scarier elite
+---
 
-## ZAKÁZÁNO (ani jako experiment v návrhu)
+## TARGET v1 (Plánováno pro plnou produkční verzi v1)
 
-- Auto-aim / auto-fire primary
-- Orbital garlic, screen-delete evolutions, full-auto do všech směrů
-- AFK win (stát venku kruhu, schovat se za pilíř, nechat orbital hrát)
-- Čistý `+damage` / `+HP` / `+speed` bez ceny
-- Co-op (v1)
-- 100+ itemů
-- Roster 20 survivorů
-- Meta unlock tree / lobby shop
-- Infinite empty lawn bez objectives
-- Volatile, který bouchá sám od sebe nebo z contactu (musí to být aimed Bolt + telegraph)
+- **Produkční časování:** Prodloužení délky runu na standardních ~15–20 minut (~5–6 minut na komoru, kruh v minutě ~4, hold ~60 s) namísto současného zrychleného playtest tempa.
+- **Náhodný roll elitních afixů:** Elity budou náhodně losovat mezi modifikátory (Burn, Chain Lightning, Noxious, Shielder) namísto současné kombinace Noxious + Shielder na každé elitě.
+- **4. enemy archetyp:** Rozšíření trojice chase / ranged / sniper o čtvrtý výrazný archetyp chování nepřátel.
 
-## Časté záměny (nepleť Gemini)
+---
 
-| Není LIVE | Co je LIVE místo toho |
+## ZAKÁZÁNO (Nikdy nenavrhovat)
+
+- Auto-aim nebo auto-fire na primární zbrani. Hráč musí aktivně mířit a držet střelbu.
+- Obrazovku mažící pasivní aury (orbital garlic) nebo evoluce, které smažou celou arénu.
+- AFK výhry (stát za sloupem po celou dobu rituálu, nechat miniony umírat o zeď).
+- Čisté generické `+damage` nebo `+HP` augmentace v kategorii Rare a Lunar bez odpovídajícího rizika či tradeoffu.
+- Kooperativní multiplayer (ve v1 je hra striktní singleplayer zážitek).
+- Přeplácaný pool 100+ zbytečných itemů a 20 postav.
+- Nekonečné prázdné travnaté louky bez překážek, krytů a hazardů.
+
+---
+
+## Časté omyly konzultantů (Pozor na záměny!)
+
+| Zastaralý předpoklad / Chyba | Co je LIVE ve skutečnosti |
 |---|---|
-| 1 survivor, secondary/ultimate unbound | 2 survivors, 4 skilly bound |
-| Ignis Bolt CD 0.16 s | **0.28 s** |
-| Effecty jen `projectile` / `dash` | + `self-slow` / `delayed-strike` / `slow-line` / `tether` |
-| Sniper / corpse explosions = TARGET | Astral Watcher + Noxious corpse acid = **LIVE** |
-| Elite modifiers burn/chain/poison | jen **Noxious**, na každé elitě |
-| 8 itemů | 13 itemů |
-| Žádný lunar item | Pale Moon Covenant |
-| Runner / Bolt / Dash jako hráčské názvy | Homunculus / Ignis Bolt / Phase Step |
-| Prázdná aréna | 31 překážek + acid pools |
-| 3 stage + finale | 2 stage slice |
-| Hold 60 s | Hold 20 / 22 s |
-| Spitter bolt 6 / 7 | bolt damage **5** |
-| Elite stage 1 „Ember“ | **Ember Warden** (`ember-chaser`) |
-
-## Produkční vs slice hodiny
-
-| Beat | Slice Cinder / Rime | Produkce (v1) |
-|---|---|---|
-| Délka stage | ~1–2 min playtest | ~6 min |
-| Circle on | 55 s / 50 s | ~minuta 4 |
-| Hold | 20 s / 22 s | ~60 s |
-| Stage count | 2 + last boss | 3 + finale |
-
-Retune hodin = JSON v `loop.json`, ne nový systém.
+| Jen 2 stage a 2 bossové | **3 stage a 3 unikátní bossové** (včetně Glacial Tomb & Frost Emperor) |
+| Bossové jsou jen tupí chase chodiči | **Bossové mají unikátní sady útoků**, enrage fází, hazardy a miniony |
+| Director dál spawnuje během bosse | **Director spawny kreditů ZASTAVÍ**, duel je čistý |
+| Všechny itemy mají negativní postih | **Common a Uncommon jsou čistě pozitivní**, Rare a Lunar mají tradeoff |
+| Elity mají jen Noxious jed | **Elity mají Noxious jed i Shielder regenerující štít** |
+| Pilíř má poloměr 52 px | **Pilíř má poloměr 28 px** (přizpůsobeno přesné kolizi) |
+| Ignis Bolt má cooldown 0.16 s | **Ignis Bolt má cooldown 0.28 s** |
+| Žádný systém odemykání | **The Penitent a 6 itemů mají unlock podmínky** v Archívu |
+| Všechny itemy jsou od začátku v nabídce | **Zamčené itemy se v draftu neobjeví**, dokud nesplníš podmínku |
