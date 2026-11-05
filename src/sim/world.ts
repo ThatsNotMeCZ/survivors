@@ -96,6 +96,8 @@ export type PlayerState = Actor & {
   slowRemain: number;
   slowMul: number;
   rootRemain: number;
+  hurtRemain: number;
+  hurtCooldown: number;
 };
 
 export type FocusState = {
@@ -251,6 +253,7 @@ export function createWorld(
 
 export function stepWorld(world: World, input: InputFrame, dt: number): void {
   if (world.phase !== 'play') return;
+  const prevDamageTaken = world.damageTaken;
   clearFx(world.fx);
   world.aimX = input.aimX;
   world.aimY = input.aimY;
@@ -278,6 +281,13 @@ export function stepWorld(world: World, input: InputFrame, dt: number): void {
   stepGems(world, dt);
   stepLores(world, dt);
   stepLoop(world, dt);
+
+  if (world.damageTaken > prevDamageTaken && world.player.hurtCooldown <= 0) {
+    world.player.hurtRemain = 0.14;
+    world.player.hurtCooldown = 0.22;
+  }
+  world.player.hurtCooldown = Math.max(0, world.player.hurtCooldown - dt);
+  world.player.hurtRemain = Math.max(0, world.player.hurtRemain - dt);
 }
 
 export function aimAngle(world: World): number {
@@ -478,5 +488,7 @@ function makePlayer(defId: string, stats: ResolvedStats, width: number, height: 
     slowRemain: 0,
     slowMul: 1,
     rootRemain: 0,
+    hurtRemain: 0,
+    hurtCooldown: 0,
   };
 }

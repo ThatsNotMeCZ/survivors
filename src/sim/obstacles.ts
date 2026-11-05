@@ -1,7 +1,7 @@
 import { FX_DEATH, FX_HIT, FX_HURT } from '../config';
 import type { Obstacle, ObstacleKind } from '../data/schema';
 import { aabbOverlap, circlesOverlap, pushCircles } from './collision';
-import { startEnemyDeath } from './enemies';
+import { applyEnemyDamage } from './enemies';
 import { emitFx } from './fx';
 import { FLAG_FLYOVER, TEAM_PLAYER, killProjectile } from './projectiles';
 import { applyEnemySlow, applySlow, tickRoot, tickSlow } from './status';
@@ -224,9 +224,8 @@ function detonateVolatile(world: World, index: number): void {
   for (let i = 0; i < enemies.cap; i += 1) {
     if (enemies.alive[i] === 0) continue;
     if (!circlesOverlap(obs.x, obs.y, blast, enemies.x[i], enemies.y[i], enemies.radius[i])) continue;
-    enemies.hp[i] -= enemyDmg;
+    applyEnemyDamage(world, i, enemyDmg);
     if (rime) applyEnemySlow(enemies, i, cfg.rimeSlowMul, cfg.rimeSlowDuration);
-    if (enemies.hp[i] <= 0) startEnemyDeath(world, i);
   }
   const { player } = world;
   if (circlesOverlap(obs.x, obs.y, blast, player.x, player.y, player.radius)) {

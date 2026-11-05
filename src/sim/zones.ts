@@ -1,6 +1,6 @@
 import { FX_HIT, FX_STRIKE } from '../config';
 import { circlesOverlap } from './collision';
-import { applyEnemyDamage, ROLE_FODDER, startEnemyDeath } from './enemies';
+import { applyEnemyDamage, ROLE_FODDER } from './enemies';
 import { emitFx } from './fx';
 import { applyEnemySlow } from './status';
 import type { World } from './world';
@@ -158,8 +158,7 @@ function tickSlowLine(world: World, index: number, dt: number): void {
     if (!onLine(zones, index, enemies.x[e], enemies.y[e], enemies.radius[e] + width, half)) continue;
     applyEnemySlow(enemies, e, zones.slowMul[index], 0.2);
     if (dps > 0) {
-      enemies.hp[e] -= dps * dt;
-      if (enemies.hp[e] <= 0) startEnemyDeath(world, e);
+      applyEnemyDamage(world, e, dps * dt);
     }
   }
 }

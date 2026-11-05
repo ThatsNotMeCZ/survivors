@@ -51,6 +51,7 @@ export type EnemyPool = {
   attackRemain: Float32Array;
   shieldHp: Float32Array;
   shieldDelayRemain: Float32Array;
+  hurtRemain: Float32Array;
   defId: (string | null)[];
   animName: (string | null)[];
 };
@@ -83,6 +84,7 @@ export function createEnemyPool(cap: number): EnemyPool {
     attackRemain: new Float32Array(cap),
     shieldHp: new Float32Array(cap),
     shieldDelayRemain: new Float32Array(cap),
+    hurtRemain: new Float32Array(cap),
     defId: new Array<string | null>(cap).fill(null),
     animName: new Array<string | null>(cap).fill(null),
   };
@@ -278,6 +280,7 @@ export function stepEnemies(world: World, dt: number): void {
   const shielderCfg = world.catalog.loop.shielder;
   for (let i = 0; i < enemies.cap; i += 1) {
     if (enemies.alive[i] === 0) continue;
+    enemies.hurtRemain[i] = Math.max(0, enemies.hurtRemain[i] - dt);
     tickEnemySlow(enemies, i, dt);
 
     if (enemies.role[i] === ROLE_ELITE) {
@@ -589,6 +592,7 @@ function tickTetherBurn(world: World, dt: number): void {
 export function applyEnemyDamage(world: World, index: number, damage: number): void {
   const { enemies } = world;
   if (enemies.alive[index] === 0 || damage <= 0) return;
+  enemies.hurtRemain[index] = 0.12;
   if (enemies.role[index] === ROLE_ELITE) {
     enemies.shieldDelayRemain[index] = world.catalog.loop.shielder.delay;
     if (enemies.shieldHp[index] > 0) {

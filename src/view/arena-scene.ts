@@ -88,6 +88,8 @@ import {
 } from './sprites';
 import { AmbientShader } from './shaders/ambient-shader';
 import { BossShaders } from './shaders/boss-shaders';
+import { DamageFxShaderPool } from './shaders/damage-fx-shader';
+import { PlayerHurtShader } from './shaders/player-hurt-shader';
 
 type GpuMember = Omit<Partial<Phaser.Types.GameObjects.SpriteGPULayer.Member>, 'animation'> & {
   animation?: string | number | { base?: string | number; duration?: number; delay?: number; yoyo?: boolean };
@@ -141,6 +143,8 @@ export class ArenaScene extends Phaser.Scene {
   private ghostCd = 0;
   private ambientShader!: AmbientShader;
   private bossShaders!: BossShaders;
+  private damageFx!: DamageFxShaderPool;
+  private playerHurtShader!: PlayerHurtShader;
   private playerTrail1!: Phaser.GameObjects.Sprite;
   private playerTrail2!: Phaser.GameObjects.Sprite;
   private eliteTrails1: Phaser.GameObjects.Sprite[] = [];
@@ -367,6 +371,8 @@ export class ArenaScene extends Phaser.Scene {
 
     this.ambientShader = new AmbientShader(this);
     this.bossShaders = new BossShaders(this);
+    this.damageFx = new DamageFxShaderPool(this);
+    this.playerHurtShader = new PlayerHurtShader(this);
 
     this.cameras.main.setBounds(0, 0, width, height);
     this.cameras.main.setZoom(catalog.world.viewZoom);
@@ -582,6 +588,8 @@ export class ArenaScene extends Phaser.Scene {
     this.stepSparks(dt);
     this.stepGhosts(dt);
     this.ambientShader.sync(this.cameras.main, this.world.runTime, biome);
+    this.damageFx.sync(dt, this.world.runTime);
+    this.playerHurtShader.sync(this.cameras.main, this.world.runTime, player.hp, player.maxHp, dt);
 
     for (let i = 0; i < this.shots.length; i += 1) {
       const sprite = this.shots[i];
@@ -617,6 +625,11 @@ export class ArenaScene extends Phaser.Scene {
     const y = Math.round(player.y + bob);
     this.playerSprite.setPosition(x, y);
     this.playerSprite.setAlpha(player.iframeRemain > 0 ? 0.45 : 1);
+    if (player.hurtRemain > 0) {
+      this.playerSprite.setTint(0xff5566).setTintMode(Phaser.TintModes.MULTIPLY);
+    } else {
+      this.playerSprite.clearTint();
+    }
 
     const pvx = player.x - this.playerPrevX;
     const pvy = player.y - this.playerPrevY;
@@ -845,11 +858,22 @@ export class ArenaScene extends Phaser.Scene {
             this.gpuMember.frame = idleAnim ? Number(idleAnim.frames[0]) || 0 : 0;
           }
 
-          this.gpuMember.tintBlend = defId === 'enemy-astral-sniper' ? 0.55 : 0;
-          this.gpuMember.tintBottomLeft = tint;
-          this.gpuMember.tintTopLeft = tint;
-          this.gpuMember.tintBottomRight = tint;
-          this.gpuMember.tintTopRight = tint;
+          const hurt = enemies.hurtRemain[i] > 0;
+          if (hurt) {
+            this.gpuMember.tintMode = Phaser.TintModes.MULTIPLY;
+            this.gpuMember.tintBlend = 0.70;
+            this.gpuMember.tintBottomLeft = 0xff5566;
+            this.gpuMember.tintTopLeft = 0xff5566;
+            this.gpuMember.tintBottomRight = 0xff5566;
+            this.gpuMember.tintTopRight = 0xff5566;
+          } else {
+            this.gpuMember.tintMode = Phaser.TintModes.MULTIPLY;
+            this.gpuMember.tintBlend = defId === 'enemy-astral-sniper' ? 0.55 : 0;
+            this.gpuMember.tintBottomLeft = tint;
+            this.gpuMember.tintTopLeft = tint;
+            this.gpuMember.tintBottomRight = tint;
+            this.gpuMember.tintTopRight = tint;
+          }
           layer.editMember(i, this.gpuMember);
           this.fodderShown[defId][i] = 1;
 
@@ -953,8 +977,10 @@ export class ArenaScene extends Phaser.Scene {
           this.bossTrail2.setVisible(false);
         }
 
-        if (this.world.boss.enraged) {
-          this.bossSprite.setTint(defId === 'cinder-heart' ? 0xffbb88 : 0xb8f0ff);
+        if (enemies.hurtRemain[i] > 0) {
+          this.bossSprite.setTint(0xff5566).setTintMode(Phaser.TintModes.MULTIPLY);
+        } else if (this.world.boss.enraged) {
+          this.bossSprite.setTint(defId === 'cinder-heart' ? 0xffbb88 : 0xb8f0ff).setTintMode(Phaser.TintModes.MULTIPLY);
         } else {
           this.bossSprite.clearTint();
         }
@@ -1040,9 +1066,11 @@ export class ArenaScene extends Phaser.Scene {
           glyph.setTint(0x66ff88);
         }
 
-        if (enemies.corpseRemain[i] > 0) {
+        if (enemies.hurtRemain[i] > 0) {
+          sprite.setTint(0xff5566).setTintMode(Phaser.TintModes.MULTIPLY);
+        } else if (enemies.corpseRemain[i] > 0) {
           const flashCorpse = Math.floor(this.world.runTime * 16) % 2 === 0;
-          sprite.setTint(flashCorpse ? 0x88ffaa : 0x226644);
+          sprite.setTint(flashCorpse ? 0x88ffaa : 0x226644).setTintMode(Phaser.TintModes.MULTIPLY);
         } else {
           sprite.clearTint();
         }
@@ -1605,6 +1633,13 @@ export class ArenaScene extends Phaser.Scene {
       const stillId = eventFxId(kind, tint, utilityId);
       const rotation = kind === FX_DASH ? dashRot : 0;
       const shown = stillId ? spawnFxStill(this, this.fxStills, stillId, x, y, rotation) : false;
+      if (kind === FX_HIT) {
+        const isCrit = tint === 0xff4422;
+        this.damageFx.spawn(x, y, isCrit ? 1 : 0);
+      } else if (kind === FX_HURT) {
+        this.damageFx.spawn(x, y, 2, 88);
+        this.playerHurtShader.trigger(1.0);
+      }
       if (!shown) {
         if (kind === FX_HIT) spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
         else if (kind === FX_HURT) spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
