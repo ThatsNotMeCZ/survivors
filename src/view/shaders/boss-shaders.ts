@@ -7,6 +7,7 @@ import {
   HAZ_PULSE,
 } from '../../sim/boss-hazards';
 import type { World } from '../../sim/world';
+import { CinderSmokeShader } from './cinder-smoke-shader';
 
 const HAZARD_FRAG = `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -337,6 +338,8 @@ export class BossShaders {
   private laserChanneling = 0;
   private laserProgress = 0;
 
+  private cinderSmoke: CinderSmokeShader;
+
   constructor(scene: Phaser.Scene) {
     for (let i = 0; i < HAZARD_QUAD_CAP; i += 1) {
       const slot: HazardQuadSlot = {
@@ -418,10 +421,13 @@ export class BossShaders {
       )
       .setDepth(5)
       .setVisible(false);
+
+    this.cinderSmoke = new CinderSmokeShader(scene);
   }
 
-  sync(world: World): void {
+  sync(world: World, dt = 1 / 60): void {
     this.time = world.runTime;
+    this.cinderSmoke.sync(world, dt);
     const pool = world.bossHazards;
     let used = 0;
     let pulseSlot = -1;

@@ -124,6 +124,37 @@
         }
       }
     },
+    "frost-mite": {
+      "src": "sprites/entities/frost-mite.png",
+      "frameWidth": 23,
+      "frameHeight": 22,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
     "penitent": {
       "src": "sprites/entities/penitent.png",
       "frameWidth": 48,

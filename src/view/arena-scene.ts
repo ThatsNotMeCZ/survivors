@@ -573,7 +573,7 @@ export class ArenaScene extends Phaser.Scene {
     this.syncGems();
     this.syncLores();
     this.drawZones(dt);
-    this.bossShaders.sync(this.world);
+    this.bossShaders.sync(this.world, dt);
     this.drawTelegraphs(biome);
     this.syncWaypoint();
     syncZoneFx(this, this.zoneFx, this.world.zones);
