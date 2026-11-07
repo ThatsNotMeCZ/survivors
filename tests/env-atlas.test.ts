@@ -12,6 +12,7 @@ import {
   tileVariant,
 } from '../src/view/procedural-pixel-art';
 import {
+  applyEnvAtlasJson,
   applySpriteManifest,
   getEnvAtlasDef,
   getEnvFrame,
@@ -272,5 +273,34 @@ describe('Environment Atlas & Mapping', () => {
     // Blocks should NOT be identical repetitions
     const periodic4 = block1.every((v, idx) => v === block2[idx] && v === block3[idx]);
     expect(periodic4).toBe(false);
+  });
+
+  it('cinder-pillar and rime-pillar have authored dimensions in atlas.json and manifest.json', () => {
+    const raw = JSON.parse(readFileSync(join(process.cwd(), 'public/sprites/env/atlas.json'), 'utf8'));
+    expect(raw.frames['cinder-pillar']).toEqual({ x: 485, y: 5, w: 58, h: 104 });
+    expect(raw.frames['rime-pillar'].w).toBe(56);
+    expect(raw.frames['rime-pillar'].h).toBe(104);
+
+    const manifestRaw = JSON.parse(readFileSync(join(process.cwd(), 'public/sprites/manifest.json'), 'utf8'));
+    expect(manifestRaw.envAtlas.frames['cinder-pillar']).toEqual({ x: 485, y: 5, w: 58, h: 104 });
+    expect(manifestRaw.envAtlas.frames['rime-pillar'].w).toBe(56);
+    expect(manifestRaw.envAtlas.frames['rime-pillar'].h).toBe(104);
+
+    applySpriteManifest(manifestRaw);
+    expect(getEnvFrame('cinder-pillar')).toEqual({ x: 485, y: 5, w: 58, h: 104 });
+    expect(getEnvFrame('rime-pillar')?.w).toBe(56);
+    expect(getEnvFrame('rime-pillar')?.h).toBe(104);
+
+    // Test applyEnvAtlasJson direct update
+    applyEnvAtlasJson({
+      frames: {
+        'test-pillar': { x: 10, y: 20, w: 52, h: 98 },
+      },
+    });
+    expect(getEnvFrame('test-pillar')).toEqual({ x: 10, y: 20, w: 52, h: 98 });
+    // Preserves existing frames
+    expect(getEnvFrame('cinder-pillar')).toEqual({ x: 485, y: 5, w: 58, h: 104 });
+    expect(getEnvFrame('rime-pillar')?.w).toBe(56);
+    expect(getEnvFrame('rime-pillar')?.h).toBe(104);
   });
 });

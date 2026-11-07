@@ -2279,6 +2279,15 @@ select:focus-visible,
   text-align: center;
 }
 
+#pause-item-tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 40;
+  margin: 0;
+  pointer-events: none;
+}
+
 .tooltip-art-wrap {
   width: 68px;
   height: 68px;

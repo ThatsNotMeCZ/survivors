@@ -746,7 +746,7 @@ function fillHallDossier(): void {
   lore.className = unlocked ? 'hall-lore' : 'hall-lore is-locked-lore';
   lore.textContent = unlocked
     ? survivor.lore ?? ''
-    : `Rite of Unsealing: ${survivor.unlock?.label ?? 'Complete required working'} (${unlockState.progress}).`;
+    : `Rite of Unsealing: ${unlockState.label} (${unlockState.progress}).`;
 
   const statsGrid = document.createElement('div');
   statsGrid.className = 'hall-stats-grid';
@@ -908,11 +908,11 @@ function fillPauseInventory(items: HudItem[]): void {
   const cols = Math.max(4, Math.ceil(Math.sqrt(Math.max(1, items.length))));
   listEl.style.setProperty('--inv-cols', String(cols));
   listEl.replaceChildren();
+  tooltipEl.classList.add('hidden');
 
   const isEmpty = items.length === 0;
   listEl.classList.toggle('is-empty', isEmpty);
   if (isEmpty) {
-    tooltipEl.classList.add('hidden');
     const empty = document.createElement('p');
     empty.className = 'pause-inv-empty';
     empty.textContent = 'No augmentations bound yet.';
@@ -949,15 +949,48 @@ function fillPauseInventory(items: HudItem[]): void {
     tooltipEl.replaceChildren(artWrap, name, hooks, lore);
   };
 
+  const positionItemTooltip = (clientX: number, clientY: number): void => {
+    const offset = 16;
+    const pad = 12;
+    const rect = tooltipEl.getBoundingClientRect();
+    const w = rect.width || 280;
+    const h = rect.height || 220;
+    let x = clientX + offset;
+    let y = clientY + offset;
+    if (x + w + pad > window.innerWidth) {
+      x = Math.max(pad, clientX - w - offset);
+    }
+    if (y + h + pad > window.innerHeight) {
+      y = Math.max(pad, clientY - h - offset);
+    }
+    tooltipEl.style.left = `${Math.round(x)}px`;
+    tooltipEl.style.top = `${Math.round(y)}px`;
+  };
+
+  const hideItemTooltip = (): void => {
+    tooltipEl.classList.add('hidden');
+  };
+
   for (const item of items) {
     const chip = makeItemChip(item, 'item-chip pause-chip');
+    chip.removeAttribute('title');
     chip.tabIndex = 0;
-    chip.addEventListener('mouseenter', () => showItemTooltip(item));
-    chip.addEventListener('focus', () => showItemTooltip(item));
+    chip.addEventListener('mouseenter', (e: MouseEvent) => {
+      showItemTooltip(item);
+      positionItemTooltip(e.clientX, e.clientY);
+    });
+    chip.addEventListener('mousemove', (e: MouseEvent) => {
+      positionItemTooltip(e.clientX, e.clientY);
+    });
+    chip.addEventListener('mouseleave', hideItemTooltip);
+    chip.addEventListener('focus', () => {
+      showItemTooltip(item);
+      const r = chip.getBoundingClientRect();
+      positionItemTooltip(r.right, r.top);
+    });
+    chip.addEventListener('blur', hideItemTooltip);
     listEl.appendChild(chip);
   }
-
-  showItemTooltip(items[0]);
 }
 
 /* --- SETTINGS, CONTROLS, RECAP --- */

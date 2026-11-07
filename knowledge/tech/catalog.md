@@ -66,7 +66,7 @@ Display names elsewhere: survivor `runner` → **Homunculus**; `penitent` → **
 - `ranged` — keep `keep`–`range`, windup telegraph, then `projectile` bolt (enemy team)
 - `sniper` — stay at `keep`, 1.5s laser telegraph, hitscan. Pillars block. Directed separately (`sniperCost`)
 
-Elites spawn with the **Noxious** modifier: contact slow, corpse explode, permanent acid `hazard`.
+Elites spawn with the **Noxious** modifier and regenerating Aether Shield: contact slow, corpse explode, temporary acid `hazard`. Any non-boss enemy can spawn with the Elite modifier based on difficulty coefficient. Normal enemies spawn in clusters of 3–6, while Elite mutations spawn in compact squads of 1–2.
 
 Unknown `ai.type` is a catalog/schema miss; add the JSON shape then a case in `sim/enemies.ts`.
 

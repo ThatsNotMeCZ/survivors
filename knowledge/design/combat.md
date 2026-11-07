@@ -28,7 +28,7 @@ Obstacles use **circle vs circle** push-out in sim (not Arcade). Numbers: `src/d
 |---|---|---|
 | `pillar` | Obsidian Kiln / Frozen Bollard | Solid vs player, fodder, elites. **Bosses phase through** (Cinder Heart, Frost Sovereign) so they never soft-lock. Blocks player Bolt and enemy Spitter bolts; hit spark on impact. |
 | `hazard` | Slag Fissure / Brine Pool | No projectile collision (bolts fly over). Player walking: ×0.65 speed and `4 * difficultyCoefficient` DPS. Player **dashing** (`dashRemain > 0` or `iframeRemain > 0`): clean pass, no slow, no damage. Phase Step 210 vs diameter 136. Fodder/elites: ×0.85 speed while overlapping. |
-| `volatile` | Brimstone Urn / Pressurized Rime Cask | Slight movement block (r=22) and projectile block. HP `25 * coefficient`, damaged **only** by player-aimed Bolt. At 0 HP → `primed` 0.4s telegraph, then `45 * coefficient` AoE r=110 to all enemies and 18 flat to the player if inside without i-frames. Rime Dock also applies 2.0s ×0.7 move slow. Removed after detonation. |
+| `volatile` | Brimstone Urn / Pressurized Rime Cask | Slight movement block (r=22) and projectile block. HP `25 * coefficient`, damaged **only** by player skills (Bolt/Pierce direct hits, Censer Lob impact AoE, Crucible Cull, Brimstone Line, Condemnation Tether; enemies cannot damage volatiles). At 0 HP → `primed` 0.4s telegraph, then `45 * coefficient` AoE r=110 to all enemies and 18 flat to the player if inside without i-frames. Rime Dock also applies 2.0s ×0.7 move slow. Removed after detonation. |
 
 Volatiles are a skill-shot, not an AFK farm. Pillars break edge-kiting; they are not hide spots (fodder path around, bosses crush through, spitters still shoot lines of sight that die on stone).
 

@@ -17,7 +17,35 @@ async function loadManifest(): Promise<SpriteManifest | null> {
         if (!res.ok) return null;
         const data: unknown = await res.json();
         if (!data || typeof data !== 'object' || !('entities' in data)) return null;
-        return data as SpriteManifest;
+        const parsed = data as SpriteManifest;
+        try {
+          const envRes = await fetch('sprites/env/atlas.json');
+          if (envRes.ok) {
+            const envJson: unknown = await envRes.json();
+            if (envJson && typeof envJson === 'object') {
+              const framesSource =
+                'frames' in envJson && typeof (envJson as Record<string, unknown>).frames === 'object'
+                  ? ((envJson as Record<string, unknown>).frames as Record<string, unknown>)
+                  : (envJson as Record<string, unknown>);
+              if (parsed.envAtlas) {
+                for (const [id, f] of Object.entries(framesSource)) {
+                  const r = f as Record<string, unknown>;
+                  if (r && typeof r.w === 'number' && typeof r.h === 'number' && r.w > 0 && r.h > 0) {
+                    parsed.envAtlas.frames[id] = {
+                      x: Number(r.x) || 0,
+                      y: Number(r.y) || 0,
+                      w: r.w,
+                      h: r.h,
+                    };
+                  }
+                }
+              }
+            }
+          }
+        } catch {
+          // Keep base manifest if atlas.json fetch is unavailable
+        }
+        return parsed;
       } catch {
         return null;
       }

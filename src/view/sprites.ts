@@ -107,8 +107,34 @@ export function applySpriteManifest(data: unknown): SpriteManifest {
   return manifest;
 }
 
+export function applyEnvAtlasJson(data: unknown): void {
+  if (!data || typeof data !== 'object') return;
+  const rec = data as Record<string, unknown>;
+  const framesSource =
+    rec.frames && typeof rec.frames === 'object' && !Array.isArray(rec.frames)
+      ? (rec.frames as Record<string, unknown>)
+      : rec;
+  const frames: Record<string, UiRect> = {};
+  for (const [id, frameRaw] of Object.entries(framesSource)) {
+    const rect = parseUiRect(frameRaw);
+    if (rect) frames[id] = rect;
+  }
+  if (Object.keys(frames).length > 0) {
+    manifest.envAtlas = {
+      src: manifest.envAtlas?.src ?? 'sprites/env/atlas.png',
+      width: (typeof rec.width === 'number' ? rec.width : manifest.envAtlas?.width) ?? 0,
+      height: (typeof rec.height === 'number' ? rec.height : manifest.envAtlas?.height) ?? 0,
+      frames: { ...(manifest.envAtlas?.frames ?? {}), ...frames },
+    };
+  }
+}
+
 export function preloadSprites(scene: Phaser.Scene): void {
   scene.load.json('sprite-manifest', 'sprites/manifest.json');
+  scene.load.json('env-atlas-json', 'sprites/env/atlas.json');
+  scene.load.once('filecomplete-json-env-atlas-json', (_key: string, _type: string, data: unknown) => {
+    applyEnvAtlasJson(data);
+  });
   scene.load.once('filecomplete-json-sprite-manifest', (_key: string, _type: string, data: unknown) => {
     applySpriteManifest(data);
     const loadedEntityTextures = new Set<string>();

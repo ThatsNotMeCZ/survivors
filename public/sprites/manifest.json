@@ -124,6 +124,115 @@
         }
       }
     },
+    "frost-mite": {
+      "src": "sprites/entities/frost-mite.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
+    "frost-sovereign": {
+      "src": "sprites/entities/frost-sovereign.png",
+      "frameWidth": 56,
+      "frameHeight": 64,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        },
+        "attack-bolt": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "attack-sweep": {
+          "frames": [
+            6,
+            7
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "attack-prison": {
+          "frames": [
+            8,
+            9
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        }
+      }
+    },
+    "frost-spitter": {
+      "src": "sprites/entities/frost-spitter.png",
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
     "penitent": {
       "src": "sprites/entities/penitent.png",
       "frameWidth": 48,
@@ -257,8 +366,15 @@
     "glacial-tile-rune-1",
     "glacial-tile-rune-2",
     "glacial-tile-rune-3",
+    "rime-border-corner-bottom",
+    "rime-border-corner-top",
+    "rime-border-h-0",
+    "rime-border-h-1",
+    "rime-border-v-0",
+    "rime-border-v-1",
     "rime-circle",
     "rime-hazard-0",
+    "rime-pillar",
     "rime-portal",
     "rime-tile-0",
     "rime-tile-1",
@@ -950,7 +1066,7 @@
   },
   "envAtlas": {
     "src": "sprites/env/atlas.png",
-    "width": 538,
+    "width": 572,
     "height": 1603,
     "frames": {
       "cinder-tile-0": {
@@ -1102,6 +1218,48 @@
         "y": 215,
         "w": 64,
         "h": 64
+      },
+      "rime-border-h-0": {
+        "x": 285,
+        "y": 145,
+        "w": 64,
+        "h": 34
+      },
+      "rime-border-h-1": {
+        "x": 355,
+        "y": 145,
+        "w": 64,
+        "h": 34
+      },
+      "rime-border-v-0": {
+        "x": 425,
+        "y": 145,
+        "w": 21,
+        "h": 64
+      },
+      "rime-border-v-1": {
+        "x": 425,
+        "y": 215,
+        "w": 21,
+        "h": 64
+      },
+      "rime-border-corner-top": {
+        "x": 285,
+        "y": 185,
+        "w": 64,
+        "h": 64
+      },
+      "rime-border-corner-bottom": {
+        "x": 355,
+        "y": 185,
+        "w": 64,
+        "h": 64
+      },
+      "rime-pillar": {
+        "x": 485,
+        "y": 145,
+        "w": 56,
+        "h": 104
       },
       "rime-hazard-0": {
         "x": 5,

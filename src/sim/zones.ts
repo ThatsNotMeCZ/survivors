@@ -2,6 +2,7 @@ import { FX_HIT, FX_STRIKE } from '../config';
 import { circlesOverlap } from './collision';
 import { applyEnemyDamage, ROLE_FODDER } from './enemies';
 import { emitFx } from './fx';
+import { damageVolatile, hitObstaclesAoE } from './obstacles';
 import { applyEnemySlow } from './status';
 import type { World } from './world';
 
@@ -161,6 +162,16 @@ function tickSlowLine(world: World, index: number, dt: number): void {
       applyEnemyDamage(world, e, dps * dt);
     }
   }
+  if (dps > 0) {
+    const { obstacles } = world;
+    for (let i = 0; i < obstacles.cap; i += 1) {
+      if (obstacles.alive[i] === 0) continue;
+      const obs = obstacles.items[i];
+      if (obs.type !== 'volatile' || obs.state !== 'intact') continue;
+      if (!onLine(zones, index, obs.x, obs.y, obs.radius + width, half)) continue;
+      damageVolatile(world, i, dps * dt);
+    }
+  }
 }
 
 function detonateStrike(world: World, index: number): void {
@@ -177,6 +188,7 @@ function detonateStrike(world: World, index: number): void {
     emitFx(world.fx, FX_HIT, enemies.x[e], enemies.y[e], isCrit ? 0xff4422 : 0xfff4c8);
     applyEnemyDamage(world, e, damage);
   }
+  hitObstaclesAoE(world, x, y, radius, damage);
 }
 
 function onLine(

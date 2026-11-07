@@ -53,6 +53,7 @@
       "unlock": {
         "type": "boss-kill",
         "entityId": "frost-sovereign",
+        "stageId": "rime-dock",
         "label": "Slay the Frost Sovereign in the Rime Dock"
       }
     }

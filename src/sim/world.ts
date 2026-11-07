@@ -46,6 +46,7 @@ import { beginStage, stepLoop } from './loop';
 import {
   createObstaclePool,
   hitObstacleProjectiles,
+  hitObstaclesAoE,
   obstacleCap,
   playerSpeedMul,
   stepObstacles,
@@ -347,6 +348,9 @@ function detonateImpacts(world: World): void {
       if (enemies.alive[e] === 0 || enemies.corpseRemain[e] > 0) continue;
       if (!circlesOverlap(x, y, radius, enemies.x[e], enemies.y[e], enemies.radius[e])) continue;
       applyEnemyDamage(world, e, damage);
+    }
+    if (projectiles.team[i] === TEAM_PLAYER) {
+      hitObstaclesAoE(world, x, y, radius, damage);
     }
     killProjectile(projectiles, i);
   }

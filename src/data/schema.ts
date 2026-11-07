@@ -16,7 +16,7 @@ export type ItemHook =
 
 export type UnlockCondition =
   | { type: 'stage-clear'; stageId: string; count?: number; label: string }
-  | { type: 'boss-kill'; entityId: string; count?: number; label: string }
+  | { type: 'boss-kill'; entityId: string; stageId?: string; count?: number; label: string }
   | { type: 'total-kills'; count: number; label: string }
   | { type: 'elite-kills'; count: number; label: string }
   | { type: 'victories'; count: number; label: string };
@@ -407,6 +407,22 @@ export type LoopDef = {
     spawnMin: number;
     spawnMax: number;
     spawnSafeRadius: number;
+    groupSizeMin: number;
+    groupSizeMax: number;
+    eliteGroupSizeMin: number;
+    eliteGroupSizeMax: number;
+    groupSpreadRadius: number;
+    eliteChanceBase: number;
+    eliteChancePerCoeff: number;
+    eliteChanceMax: number;
+    eliteCostMul: number;
+  };
+  elite: {
+    hpMul: number;
+    damageMul: number;
+    xpMul: number;
+    creditsMul: number;
+    radiusMul: number;
   };
   noxious: {
     contactSlowMul: number;
@@ -414,6 +430,7 @@ export type LoopDef = {
     corpseDelay: number;
     popRadius: number;
     popDamage: number;
+    poolDuration: number;
   };
   shielder: {
     delay: number;

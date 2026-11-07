@@ -1,5 +1,5 @@
 import { FX_DEATH, FX_HURT, FX_MUZZLE } from '../config';
-import type { EntityDef, EntityRole, RangedAi, SniperAi } from '../data/schema';
+import type { EntityDef, RangedAi, SniperAi } from '../data/schema';
 import { stepBoss } from './boss';
 import { circlesOverlap, clamp } from './collision';
 import { emitFx } from './fx';
@@ -17,12 +17,6 @@ export const ROLE_BOSS = 2;
 
 export const CHASE_ATTACK_DURATION = 0.35;
 export const CHASE_ATTACK_COOLDOWN = 0.8;
-
-const ROLE_CODE: Record<EntityRole, number> = {
-  fodder: ROLE_FODDER,
-  elite: ROLE_ELITE,
-  boss: ROLE_BOSS,
-};
 
 export type EnemyPool = {
   cap: number;
@@ -44,6 +38,7 @@ export type EnemyPool = {
   aimY: Float32Array;
   slowRemain: Float32Array;
   slowMul: Float32Array;
+  shielder: Uint8Array;
   noxious: Uint8Array;
   corpseRemain: Float32Array;
   rootRemain: Float32Array;
@@ -77,6 +72,7 @@ export function createEnemyPool(cap: number): EnemyPool {
     aimY: new Float32Array(cap),
     slowRemain: new Float32Array(cap),
     slowMul: new Float32Array(cap),
+    shielder: new Uint8Array(cap),
     noxious: new Uint8Array(cap),
     corpseRemain: new Float32Array(cap),
     rootRemain: new Float32Array(cap),
@@ -98,9 +94,16 @@ export function clearEnemies(world: World): void {
   world.counts.boss = 0;
 }
 
-export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): number {
+export function spawnEnemy(
+  world: World,
+  def: EntityDef,
+  x: number,
+  y: number,
+  isElite = false,
+  eliteAffix?: 'shielder' | 'noxious',
+): number {
   if (world.bossDefeated) return -1;
-  const role = ROLE_CODE[def.role];
+  const role = def.role === 'boss' ? ROLE_BOSS : isElite ? ROLE_ELITE : ROLE_FODDER;
   if (role === ROLE_FODDER && world.counts.fodder >= world.catalog.loop.maxFodder) return -1;
   if (role === ROLE_ELITE && world.counts.elite >= world.catalog.loop.maxElites) return -1;
   if (role === ROLE_BOSS && world.counts.boss >= 1) return -1;
@@ -110,19 +113,26 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
     if (enemies.alive[i] !== 0) continue;
     const coeff = world.coefficient;
     const speedMul = 1 + world.catalog.loop.difficulty.speedPerCoeff * (coeff - 1);
-    const hp = def.stats.maxHp * coeff;
+    const eliteCfg = world.catalog.loop.elite;
+    const hpMul = role === ROLE_ELITE ? eliteCfg.hpMul : 1;
+    const dmgMul = role === ROLE_ELITE ? eliteCfg.damageMul : 1;
+    const xpMul = role === ROLE_ELITE ? eliteCfg.xpMul : 1;
+    const credMul = role === ROLE_ELITE ? eliteCfg.creditsMul : 1;
+    const radMul = role === ROLE_ELITE ? eliteCfg.radiusMul : 1;
+
+    const hp = def.stats.maxHp * coeff * hpMul;
     enemies.alive[i] = 1;
     enemies.role[i] = role;
     enemies.x[i] = x;
     enemies.y[i] = y;
     enemies.facing[i] = world.player.x < x ? -1 : 1;
-    enemies.radius[i] = def.stats.radius;
+    enemies.radius[i] = def.stats.radius * radMul;
     enemies.hp[i] = hp;
     enemies.maxHp[i] = hp;
     enemies.speed[i] = def.stats.speed * speedMul;
-    enemies.contactDps[i] = def.contact.dps * coeff;
-    enemies.xp[i] = def.rewards.xp;
-    enemies.credits[i] = def.rewards.credits;
+    enemies.contactDps[i] = def.contact.dps * coeff * dmgMul;
+    enemies.xp[i] = def.rewards.xp * xpMul;
+    enemies.credits[i] = def.rewards.credits * credMul;
     enemies.attackCd[i] =
       def.ai.type === 'chase' || def.ai.type === 'boss' ? 0 : def.ai.cooldown * Math.random();
     enemies.windup[i] = 0;
@@ -130,20 +140,33 @@ export function spawnEnemy(world: World, def: EntityDef, x: number, y: number): 
     enemies.aimY[i] = y;
     enemies.slowRemain[i] = 0;
     enemies.slowMul[i] = 1;
-    enemies.noxious[i] = role === ROLE_ELITE ? 1 : 0;
+
+    // Split elites into two distinct variants: Shielder vs Noxious
+    if (role === ROLE_ELITE) {
+      const chosenAffix = eliteAffix ?? (Math.random() < 0.5 ? 'shielder' : 'noxious');
+      if (chosenAffix === 'shielder') {
+        enemies.shielder[i] = 1;
+        enemies.noxious[i] = 0;
+        enemies.shieldHp[i] = hp * world.catalog.loop.shielder.percentHp;
+        enemies.shieldDelayRemain[i] = 0;
+      } else {
+        enemies.shielder[i] = 0;
+        enemies.noxious[i] = 1;
+        enemies.shieldHp[i] = 0;
+        enemies.shieldDelayRemain[i] = 0;
+      }
+    } else {
+      enemies.shielder[i] = 0;
+      enemies.noxious[i] = 0;
+      enemies.shieldHp[i] = 0;
+      enemies.shieldDelayRemain[i] = 0;
+    }
+
     enemies.corpseRemain[i] = 0;
     enemies.rootRemain[i] = 0;
     enemies.tetherDps[i] = 0;
     enemies.attackRemain[i] = 0;
     enemies.animName[i] = null;
-
-    if (role === ROLE_ELITE) {
-      enemies.shieldHp[i] = hp * world.catalog.loop.shielder.percentHp;
-      enemies.shieldDelayRemain[i] = 0;
-    } else {
-      enemies.shieldHp[i] = 0;
-      enemies.shieldDelayRemain[i] = 0;
-    }
 
     enemies.defId[i] = def.id;
     world.encountersByEntity[def.id] = (world.encountersByEntity[def.id] ?? 0) + 1;
@@ -192,10 +215,53 @@ export function pickSpawnPoint(
   return null;
 }
 
-export function spawnAround(world: World, def: EntityDef): number {
-  const point = pickSpawnPoint(world, def.stats.radius);
+export function spawnAround(
+  world: World,
+  def: EntityDef,
+  isElite = false,
+  eliteAffix?: 'shielder' | 'noxious',
+): number {
+  const radius = def.stats.radius * (isElite ? world.catalog.loop.elite.radiusMul : 1);
+  const point = pickSpawnPoint(world, radius);
   if (!point) return -1;
-  return spawnEnemy(world, def, point.x, point.y);
+  return spawnEnemy(world, def, point.x, point.y, isElite, eliteAffix);
+}
+
+export function spawnGroupAround(
+  world: World,
+  def: EntityDef,
+  count: number,
+  isElite = false,
+  eliteAffix?: 'shielder' | 'noxious',
+): number {
+  if (count <= 0) return 0;
+  const radius = def.stats.radius * (isElite ? world.catalog.loop.elite.radiusMul : 1);
+  const center = pickSpawnPoint(world, radius);
+  if (!center) return 0;
+
+  const { groupSpreadRadius } = world.catalog.loop.director;
+  const bounds = world.catalog.world;
+  const padX = (bounds.borderInsetX ?? 0) + radius + 8;
+  const padY = (bounds.borderInsetY ?? 0) + radius + 8;
+  let spawned = 0;
+
+  for (let s = 0; s < count; s += 1) {
+    let sx = center.x;
+    let sy = center.y;
+    if (s > 0) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * groupSpreadRadius;
+      sx = clamp(center.x + Math.cos(angle) * dist, padX, bounds.width - padX);
+      sy = clamp(center.y + Math.sin(angle) * dist, padY, bounds.height - padY);
+    }
+    const idx = spawnEnemy(world, def, sx, sy, isElite, eliteAffix);
+    if (idx >= 0) {
+      spawned += 1;
+    } else {
+      break;
+    }
+  }
+  return spawned;
 }
 
 export function startEnemyDeath(world: World, index: number): void {
@@ -283,7 +349,7 @@ export function stepEnemies(world: World, dt: number): void {
     enemies.hurtRemain[i] = Math.max(0, enemies.hurtRemain[i] - dt);
     tickEnemySlow(enemies, i, dt);
 
-    if (enemies.role[i] === ROLE_ELITE) {
+    if (enemies.role[i] === ROLE_ELITE && enemies.shielder[i] !== 0) {
       if (enemies.shieldDelayRemain[i] > 0) {
         enemies.shieldDelayRemain[i] -= dt;
         if (enemies.shieldDelayRemain[i] <= 0) {
@@ -479,7 +545,8 @@ function fireSniper(world: World, i: number, ai: SniperAi): void {
   const dist = pointToSegment(player.x, player.y, x0, y0, x1, y1);
   if (dist > ai.lineWidth + player.radius) return;
   emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
-  const dmg = ai.damage * world.coefficient;
+  const dmgMul = enemies.role[i] === ROLE_ELITE ? world.catalog.loop.elite.damageMul : 1;
+  const dmg = ai.damage * world.coefficient * dmgMul;
   player.hp -= dmg;
   world.damageTaken += dmg;
 }
@@ -593,7 +660,7 @@ export function applyEnemyDamage(world: World, index: number, damage: number): v
   const { enemies } = world;
   if (enemies.alive[index] === 0 || damage <= 0) return;
   enemies.hurtRemain[index] = 0.12;
-  if (enemies.role[index] === ROLE_ELITE) {
+  if (enemies.role[index] === ROLE_ELITE && enemies.shielder[index] !== 0) {
     enemies.shieldDelayRemain[index] = world.catalog.loop.shielder.delay;
     if (enemies.shieldHp[index] > 0) {
       if (damage <= enemies.shieldHp[index]) {
@@ -673,6 +740,7 @@ function fireEnemyBolt(world: World, i: number, ai: RangedAi): void {
   const muzzle = enemies.radius[i] + 8;
   const x = enemies.x[i] + nx * muzzle;
   const y = enemies.y[i] + ny * muzzle;
+  const dmgMul = enemies.role[i] === ROLE_ELITE ? world.catalog.loop.elite.damageMul : 1;
   spawnProjectile(world.projectiles, {
     x,
     y,
@@ -681,7 +749,7 @@ function fireEnemyBolt(world: World, i: number, ai: RangedAi): void {
     speed: ai.projectile.speed,
     lifetime: ai.projectile.lifetime,
     radius: ai.projectile.radius,
-    damage: ai.projectile.damage * world.coefficient,
+    damage: ai.projectile.damage * world.coefficient * dmgMul,
     team: TEAM_ENEMY,
   });
   emitFx(world.fx, FX_MUZZLE, x, y, 0xff7a3a);

@@ -39,6 +39,7 @@ import {
   commitWorldProgress,
   getCollectedLoreIds,
   getRecords,
+  getUnlockLabel,
   getUnlockedItemIds,
   isItemUnlocked,
   isSurvivorUnlocked,
@@ -58,7 +59,6 @@ import {
 } from './fx-sprites';
 import { uploadPixelTextures } from './pixel-textures';
 import {
-  eliteGlyphKey,
   floorKey,
   hazardKey,
   pillarKey,
@@ -82,6 +82,7 @@ import {
   fodderAnimSpec,
   fodderGpuAnimations,
   fxTextureKey,
+  getEnvFrame,
   playEntity,
   preloadSprites,
   resolveEnvThemeProp,
@@ -89,6 +90,8 @@ import {
 import { AmbientShader } from './shaders/ambient-shader';
 import { BossShaders } from './shaders/boss-shaders';
 import { DamageFxShaderPool } from './shaders/damage-fx-shader';
+import { EliteAffixShaderPool } from './shaders/elite-affix-shader';
+import { EnvHazardShaderPool } from './shaders/env-hazard-shader';
 import { PlayerHurtShader } from './shaders/player-hurt-shader';
 
 type GpuMember = Omit<Partial<Phaser.Types.GameObjects.SpriteGPULayer.Member>, 'animation'> & {
@@ -123,7 +126,7 @@ export class ArenaScene extends Phaser.Scene {
   private playerEyes!: Phaser.GameObjects.Image;
   private playerGlow!: Phaser.GameObjects.Image;
   private eliteSprites: Phaser.GameObjects.Sprite[] = [];
-  private eliteGlyphs: Phaser.GameObjects.Image[] = [];
+  private eliteAffixShaders!: EliteAffixShaderPool;
   private bossSprite!: Phaser.GameObjects.Sprite;
   private bossOrbits: Phaser.GameObjects.Image[] = [];
   private obstacleSprites: Phaser.GameObjects.Image[] = [];
@@ -144,6 +147,7 @@ export class ArenaScene extends Phaser.Scene {
   private ambientShader!: AmbientShader;
   private bossShaders!: BossShaders;
   private damageFx!: DamageFxShaderPool;
+  private envHazardShaders!: EnvHazardShaderPool;
   private playerHurtShader!: PlayerHurtShader;
   private playerTrail1!: Phaser.GameObjects.Sprite;
   private playerTrail2!: Phaser.GameObjects.Sprite;
@@ -254,7 +258,7 @@ export class ArenaScene extends Phaser.Scene {
     this.fodderTrailLayers = new Map();
     this.fodderShown = {};
     for (const def of catalog.entities) {
-      if (def.role !== 'fodder') continue;
+      if (def.role === 'boss') continue;
       const tex = entityTextureKey(def.id);
       if (!this.textures.exists(tex)) continue;
       const trailLayer = this.add.spriteGPULayer(tex, this.world.enemies.cap * 2).setDepth(1.9);
@@ -314,11 +318,9 @@ export class ArenaScene extends Phaser.Scene {
     this.decoySprite = this.add.sprite(0, 0, entityTextureKey(vessel)).setVisible(false).setDepth(4).setAlpha(0.45).setTint(0xc4a05a);
     this.fitBody(this.decoySprite);
     this.eliteSprites = [];
-    this.eliteGlyphs = [];
     this.eliteTrails1 = [];
     this.eliteTrails2 = [];
     for (let i = 0; i < loop.maxElites; i += 1) {
-      this.eliteGlyphs.push(this.add.image(0, 0, eliteGlyphKey()).setVisible(false).setDepth(2).setAlpha(0.7));
       const elite = this.add.sprite(0, 0, entityTextureKey('ember-chaser')).setVisible(false).setDepth(3);
       this.eliteSprites.push(elite);
       const t1 = this.add.sprite(0, 0, entityTextureKey('ember-chaser')).setVisible(false).setDepth(2.9);
@@ -372,6 +374,8 @@ export class ArenaScene extends Phaser.Scene {
     this.ambientShader = new AmbientShader(this);
     this.bossShaders = new BossShaders(this);
     this.damageFx = new DamageFxShaderPool(this);
+    this.eliteAffixShaders = new EliteAffixShaderPool(this);
+    this.envHazardShaders = new EnvHazardShaderPool(this);
     this.playerHurtShader = new PlayerHurtShader(this);
 
     this.cameras.main.setBounds(0, 0, width, height);
@@ -588,6 +592,16 @@ export class ArenaScene extends Phaser.Scene {
     this.stepSparks(dt);
     this.stepGhosts(dt);
     this.ambientShader.sync(this.cameras.main, this.world.runTime, biome);
+    this.envHazardShaders.sync(
+      this.world.obstacles,
+      player.x,
+      player.y,
+      player.radius,
+      biome,
+      theme,
+      this.world.runTime,
+      dt,
+    );
     this.damageFx.sync(dt, this.world.runTime);
     this.playerHurtShader.sync(this.cameras.main, this.world.runTime, player.hp, player.maxHp, dt);
 
@@ -693,7 +707,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private syncObstacles(biome: BiomeId, theme: EnvThemeId): void {
     const { obstacles, player } = this.world;
-    const hazardFrame: 0 | 1 = Math.floor(this.world.runTime / 0.25) % 2 === 0 ? 0 : 1;
+    const hazardFrame: 0 | 1 = Math.floor(this.world.runTime / 0.45) % 2 === 0 ? 0 : 1;
     const flash = Math.floor(this.world.runTime * 16) % 2 === 0;
     for (let i = 0; i < obstacles.cap; i += 1) {
       const sprite = this.obstacleSprites[i];
@@ -715,15 +729,18 @@ export class ArenaScene extends Phaser.Scene {
       }
 
       const envId = resolveEnvThemeProp(theme, propSuffix, this);
-      if (envId) {
-        applyEnvTexture(sprite, envId, fallback);
-      } else if (obs.type === 'hazard' && hazardFrame === 1) {
-        const frame0 = resolveEnvThemeProp(theme, 'hazard-0', this);
-        if (frame0 && applyEnvTexture(sprite, frame0, fallback)) {
-          // hazard-0 fallback for frame 1
+      if (obs.type === 'hazard') {
+        const resolvedHazardId = envId ?? (hazardFrame === 1 ? resolveEnvThemeProp(theme, 'hazard-0', this) : null);
+        const blendedKey = resolvedHazardId ? `env-blended-${resolvedHazardId}` : '';
+        if (blendedKey && this.textures.exists(blendedKey)) {
+          sprite.setTexture(blendedKey);
+        } else if (resolvedHazardId && applyEnvTexture(sprite, resolvedHazardId, fallback)) {
+          // applied direct env texture
         } else {
           sprite.setTexture(fallback);
         }
+      } else if (envId) {
+        applyEnvTexture(sprite, envId, fallback);
       } else {
         sprite.setTexture(fallback);
       }
@@ -732,27 +749,55 @@ export class ArenaScene extends Phaser.Scene {
       sprite.setPosition(Math.round(obs.x), Math.round(obs.y));
       sprite.setDepth(obs.type === 'hazard' ? 1.05 : 2);
 
-      if (obs.type === 'pillar' && envId) {
-        sprite.setScale(1);
-      } else if (obs.type === 'volatile' && envId) {
-        sprite.setScale(1);
+      if (obs.type === 'pillar') {
+        if (envId) {
+          const rect = getEnvFrame(envId);
+          if (rect) {
+            sprite.setDisplaySize(rect.w, rect.h);
+          } else {
+            sprite.setScale(1);
+          }
+        } else {
+          const display = (obs.radius * 2) / sprite.width;
+          sprite.setScale(display);
+        }
+      } else if (obs.type === 'volatile') {
+        if (envId) {
+          const rect = getEnvFrame(envId);
+          if (rect) {
+            sprite.setDisplaySize(rect.w, rect.h);
+          } else {
+            sprite.setScale(1);
+          }
+        } else {
+          const display = (obs.radius * 2) / sprite.width;
+          sprite.setScale(display);
+        }
+      } else if (obs.type === 'hazard') {
+        const diameter = obs.radius * 2;
+        sprite.setDisplaySize(diameter, diameter);
       } else {
         const display = (obs.radius * 2) / sprite.width;
         sprite.setScale(display);
       }
 
       if (obs.type === 'hazard') {
+        const isTimed = obs.timer > 0;
+        const fade = isTimed ? Math.min(1.0, obs.timer / 1.0) : 1.0;
         sprite.clearTint();
+        sprite.setAlpha(fade);
         glow.setVisible(true);
         glow.setPosition(obs.x, obs.y);
-        glow.setTint(biome === 'cinder' ? 0xff4411 : 0x2288ff);
-        glow.setAlpha(0.22 + 0.04 * Math.sin(this.world.runTime * 3 + i));
+        glow.setTint(isTimed ? 0x28f090 : biome === 'cinder' ? 0xff4411 : 0x28f090);
+        glow.setAlpha((0.24 + 0.05 * Math.sin(this.world.runTime * 3 + i)) * fade);
         glow.setScale((obs.radius * 2.2) / 32);
       } else if (obs.type === 'pillar') {
+        sprite.setAlpha(1.0);
         const near = Math.hypot(player.x - obs.x, player.y - obs.y) < 170;
         sprite.setTint(near ? 0xffe8d0 : 0xffffff);
         glow.setVisible(false);
       } else if (obs.type === 'volatile' && obs.state === 'primed') {
+        sprite.setAlpha(1.0);
         sprite.setTint(flash ? 0xffffff : 0xff3322);
         glow.setVisible(true);
         glow.setPosition(obs.x, obs.y);
@@ -760,6 +805,7 @@ export class ArenaScene extends Phaser.Scene {
         glow.setAlpha(0.2);
         glow.setScale(3.2);
       } else {
+        sprite.setAlpha(1.0);
         sprite.clearTint();
         glow.setVisible(false);
       }
@@ -770,6 +816,13 @@ export class ArenaScene extends Phaser.Scene {
     const { enemies } = this.world;
     let eliteSlot = 0;
     let bossOn = false;
+    const eliteData: Array<{
+      active: boolean;
+      isShielder: boolean;
+      shieldActive: boolean;
+      isNoxious: boolean;
+      isCorpse: boolean;
+    }> = [];
     for (let i = 0; i < enemies.cap; i += 1) {
       const alive = enemies.alive[i] !== 0;
       const fodder = alive && enemies.role[i] === ROLE_FODDER;
@@ -1001,24 +1054,30 @@ export class ArenaScene extends Phaser.Scene {
         }
       } else if (enemies.role[i] === ROLE_ELITE && eliteSlot < this.eliteSprites.length) {
         const sprite = this.eliteSprites[eliteSlot];
-        const glyph = this.eliteGlyphs[eliteSlot];
         const curSpeed = currentEnemySpeed(this.world, i);
         const baseSpeed = this.world.catalog.entity(defId).stats.speed;
         const speedRatio = baseSpeed > 0 ? curSpeed / baseSpeed : 1;
         const attacking = isEnemyAttacking(this.world, i);
         const attackAnimKey = currentEnemyAttackAnim(this.world, i);
+        const eliteScale = this.world.catalog.loop.elite.radiusMul;
         playEntity(
           sprite,
           defId,
           attacking ? attackAnimKey : curSpeed > 0 ? 'walk' : 'idle',
           speedRatio,
         );
+        sprite.setScale(eliteScale);
         sprite.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i]));
         sprite.setFlipX(enemies.facing[i] < 0);
         sprite.setVisible(true);
-        glyph.setVisible(true);
-        glyph.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i] + 18));
-        glyph.setRotation(this.world.runTime * 1.1);
+
+        eliteData.push({
+          active: true,
+          isShielder: enemies.shielder[i] !== 0,
+          shieldActive: enemies.shieldHp[i] > 0,
+          isNoxious: enemies.noxious[i] !== 0,
+          isCorpse: enemies.corpseRemain[i] > 0,
+        });
 
         const evx = enemies.x[i] - this.enemyPrevX[i];
         const evy = enemies.y[i] - this.enemyPrevY[i];
@@ -1037,6 +1096,7 @@ export class ArenaScene extends Phaser.Scene {
           const flipX = enemies.facing[i] < 0;
 
           t1.setTexture(sprite.texture.key, sprite.frame.name);
+          t1.setScale(eliteScale);
           t1.setFlipX(flipX);
           t1.setPosition(
             Math.round(enemies.x[i] - dirX * (trailLen * 0.45)),
@@ -1047,6 +1107,7 @@ export class ArenaScene extends Phaser.Scene {
           t1.setVisible(true);
 
           t2.setTexture(sprite.texture.key, sprite.frame.name);
+          t2.setScale(eliteScale);
           t2.setFlipX(flipX);
           t2.setPosition(
             Math.round(enemies.x[i] - dirX * trailLen),
@@ -1060,17 +1121,13 @@ export class ArenaScene extends Phaser.Scene {
           t2.setVisible(false);
         }
 
-        if (enemies.shieldHp[i] > 0) {
-          glyph.setTint(0x5ad4ff);
-        } else {
-          glyph.setTint(0x66ff88);
-        }
-
         if (enemies.hurtRemain[i] > 0) {
           sprite.setTint(0xff5566).setTintMode(Phaser.TintModes.MULTIPLY);
         } else if (enemies.corpseRemain[i] > 0) {
           const flashCorpse = Math.floor(this.world.runTime * 16) % 2 === 0;
           sprite.setTint(flashCorpse ? 0x88ffaa : 0x226644).setTintMode(Phaser.TintModes.MULTIPLY);
+        } else if (defId === 'enemy-astral-sniper') {
+          sprite.setTint(0xb47aff).setTintMode(Phaser.TintModes.MULTIPLY);
         } else {
           sprite.clearTint();
         }
@@ -1083,11 +1140,11 @@ export class ArenaScene extends Phaser.Scene {
     }
     for (let i = eliteSlot; i < this.eliteSprites.length; i += 1) {
       this.eliteSprites[i].setVisible(false);
-      this.eliteGlyphs[i].setVisible(false);
       this.eliteSprites[i].setData('attackDone', false);
       if (this.eliteTrails1[i]) this.eliteTrails1[i].setVisible(false);
       if (this.eliteTrails2[i]) this.eliteTrails2[i].setVisible(false);
     }
+    this.eliteAffixShaders.sync(this.world.runTime, this.eliteSprites, eliteData);
     if (!bossOn) {
       this.bossSprite.setVisible(false);
       this.bossSprite.setData('attackDone', false);
@@ -1309,13 +1366,13 @@ export class ArenaScene extends Phaser.Scene {
         id: item.id,
         name: item.name,
         rarity: item.rarity,
-        desc: item.unlock?.label ? `Condition Met: ${item.unlock.label}` : 'New Relic Unlocked',
+        desc: item.unlock?.label ? `Condition Met: ${getUnlockLabel(item.unlock, finalRec)}` : 'New Relic Unlocked',
       })),
       ...newUnlockedSurvivors.map((s) => ({
         kind: 'survivor' as const,
         id: s.id,
         name: s.name,
-        desc: s.unlock?.label ? `Condition Met: ${s.unlock.label}` : 'New Vessel Unsealed',
+        desc: s.unlock?.label ? `Condition Met: ${getUnlockLabel(s.unlock, finalRec)}` : 'New Vessel Unsealed',
       })),
     ];
 

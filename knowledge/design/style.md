@@ -12,11 +12,10 @@ Arena floor is still a cached 2560×2560 stamp of 4× 64px tiles per biome (hash
 
 ## Elites
 
-Same mesh as the base enemy until a sheet exists for that elite id. Recolor + 1 glyph:
+Elites spawn scaled up with one of two distinct affixes (no floor glyph; marked via dedicated shaders):
 
-- red = burn
-- blue = chain lightning
-- green = **Noxious** poison slow (live: every elite, green glyph, acid corpse)
+- **Shielder** (blue outline): Distinct 1px azure outline around the entity silhouette (`#4d9be6` / `#8fd3ff` active, `#484a77` broken). Carries a regenerating Aether Shield (+35% max HP ward, recharges when unharmed).
+- **Noxious** (green overlay): Caustic viridian shader overlay (`#1ebc73`, `#91db69`, `#239063`) with subtle animated pulse over the entire sprite. Inflicts contact slow and detonates into a temporary acid pool post-mortem.
 
 ## VFX do the wow
 

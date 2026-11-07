@@ -253,6 +253,7 @@ function updateFocus(world: World): void {
     world.focus.kind = 'elite';
     world.focus.hp = enemies.hp[elite];
     world.focus.maxHp = enemies.maxHp[elite];
-    world.focus.name = eliteId ? world.catalog.entity(eliteId).name : 'Elite';
+    const baseName = eliteId ? world.catalog.entity(eliteId).name : 'Elite';
+    world.focus.name = baseName.startsWith('Elite ') ? baseName : `Elite ${baseName}`;
   }
 }

@@ -17,6 +17,8 @@ import { ITEM_CHOICE_PX, makeItemChip, makeItemIcon } from './item-art';
 import {
   checkUnlockCondition,
   getRecords,
+  isEntitySeen,
+  isStageVisited,
   isSurvivorUnlocked,
   resetRecords,
   type ArchiveRecords,
@@ -339,9 +341,9 @@ function buildHowToView(): HTMLElement {
     },
     {
       kind: 'elite',
-      kicker: 'ELITE AFFLICTION · NOXIOUS & SHIELDED',
-      title: 'Aether Wards & Caustic Corpses',
-      body: `Every Elite carries a +${Math.round(shieldCfg.percentHp * 100)}% regenerating Aether Shield (recharges after ${shieldCfg.delay}s unharmed), slows your stride by ${Math.round((1 - noxCfg.contactSlowMul) * 100)}% on contact, and detonates ${noxCfg.corpseDelay}s after death into a permanent acid pool.`,
+      kicker: 'ELITE AFFLICTIONS · SHIELDER & NOXIOUS',
+      title: 'Aether Wards & Caustic Blights',
+      body: `Elites emerge with one of two distinct affixes: Shielder elites are encircled by an azure Aether Ward (+${Math.round(shieldCfg.percentHp * 100)}% shield, recharges after ${shieldCfg.delay}s unharmed). Noxious elites radiate a viridian caustic haze, slowing your stride by ${Math.round((1 - noxCfg.contactSlowMul) * 100)}% on contact and detonating ${noxCfg.corpseDelay}s after death into a temporary acid pool (${noxCfg.poolDuration}s).`,
     },
   ];
 
@@ -591,7 +593,7 @@ function buildVesselsLore(): HTMLElement {
     lore.className = unlocked ? 'vessel-lore-text' : 'vessel-lore-text hall-lore is-locked-lore';
     lore.textContent = unlocked
       ? survivor.lore ?? ''
-      : `Vessel Sealed — Requirement: ${survivor.unlock?.label ?? 'Complete required rite'} (${unlockState.progress}).`;
+      : `Vessel Sealed — Requirement: ${unlockState.label} (${unlockState.progress}).`;
 
     const statPills = document.createElement('div');
     statPills.className = 'archives-stat-chips';
@@ -730,11 +732,11 @@ function buildChambersLore(): HTMLElement {
     const dList = document.createElement('p');
     dList.className = 'info-card-body';
     if (visited) {
-      const fodderName = catalog.entity(stage.fodder).name;
-      const rangedName = stage.ranged ? catalog.entity(stage.ranged).name : 'None';
-      const sniperName = stage.sniper ? catalog.entity(stage.sniper).name : 'None';
-      const eliteName = catalog.entity(stage.elite).name;
-      const bossName = catalog.entity(stage.boss).name;
+      const fodderName = isEntitySeen(stage.fodder, rec) ? catalog.entity(stage.fodder).name : '???';
+      const rangedName = stage.ranged ? (isEntitySeen(stage.ranged, rec) ? catalog.entity(stage.ranged).name : '???') : 'None';
+      const sniperName = stage.sniper ? (isEntitySeen(stage.sniper, rec) ? catalog.entity(stage.sniper).name : '???') : 'None';
+      const eliteName = isEntitySeen(stage.elite, rec) ? catalog.entity(stage.elite).name : '???';
+      const bossName = isEntitySeen(stage.boss, rec) ? catalog.entity(stage.boss).name : '???';
       dList.textContent = `Swarm: ${fodderName} & ${rangedName} · Sightline: ${sniperName} · First Elite (${eliteName}) at ${stage.firstEliteAt}s · Seal Guardian: ${bossName}.`;
     } else {
       dList.textContent = 'Swarm: ??? · Sightline: ??? · Seal Guardian: ???';
@@ -964,7 +966,7 @@ function fillEntityDossier(root: HTMLElement, entity: EntityDef, rec: ArchiveRec
 
   const statsGrid = document.createElement('div');
   statsGrid.className = 'hall-stats-grid';
-  const habitats = entityHabitats(entity.id);
+  const habitats = entityHabitats(entity.id, rec);
   const statRows: [string, string][] = seen
     ? [
         ['♥', `VITALITY: ${entity.stats.maxHp}`],
@@ -1004,8 +1006,9 @@ function fillEntityDossier(root: HTMLElement, entity: EntityDef, rec: ArchiveRec
   root.replaceChildren(header, name, subTitle, stageWrap, ledgerStrip, lore, statsGrid, behaviorNote);
 }
 
-function entityHabitats(entityId: string): string {
+function entityHabitats(entityId: string, rec: ArchiveRecords): string {
   const hits: string[] = [];
+  let allStages = true;
   for (const st of catalog.loop.stages) {
     if (
       st.fodder === entityId ||
@@ -1014,10 +1017,15 @@ function entityHabitats(entityId: string): string {
       st.elite === entityId ||
       st.boss === entityId
     ) {
-      hits.push(st.name);
+      if (isStageVisited(st.id, rec)) {
+        hits.push(st.name);
+      } else {
+        hits.push('???');
+        allStages = false;
+      }
     }
   }
-  if (hits.length === catalog.loop.stages.length) return 'ALL CHAMBERS';
+  if (allStages && hits.length === catalog.loop.stages.length) return 'ALL CHAMBERS';
   return hits.length > 0 ? hits.join(', ').toUpperCase() : 'THE RIFTS';
 }
 
@@ -1044,7 +1052,7 @@ function describeEntityBehavior(entity: EntityDef): string {
     const nox = catalog.loop.noxious;
     const sh = catalog.loop.shielder;
     parts.push(
-      `Protected by a +${Math.round(sh.percentHp * 100)}% regenerating Aether Shield. Slows on contact and ruptures ${nox.corpseDelay}s after death into a permanent acid hazard.`,
+      `Spawns as either Shielder (azure outline, +${Math.round(sh.percentHp * 100)}% regenerating Aether Shield) or Noxious (viridian overlay, slows on contact, erupts into a temporary acid hazard ${nox.corpseDelay}s post-mortem).`,
     );
   } else if (entity.role === 'boss') {
     parts.push('Manifests when the Transmutation Circle is fully charged. Slaying it opens the Rift.');
@@ -1223,7 +1231,7 @@ function fillItemDossier(root: HTMLElement, item: ItemDef, rec: ArchiveRecords):
     lore.textContent = item.lore;
   } else if (!unlockState.unlocked && item.unlock) {
     lore.className = 'hall-lore is-locked-lore';
-    lore.textContent = `Sealed Relic — Requirement: ${item.unlock.label} (${unlockState.progress}).`;
+    lore.textContent = `Sealed Relic — Requirement: ${unlockState.label} (${unlockState.progress}).`;
   } else {
     lore.className = 'hall-lore is-locked-lore';
     lore.textContent =
@@ -1412,7 +1420,7 @@ function buildLedgerView(): HTMLElement {
     } else {
       chips.append(
         makeStatChip('Status', `SEALED (${unlockState.progress})`),
-        makeStatChip('Rite', survivor.unlock?.label ?? 'Locked'),
+        makeStatChip('Rite', unlockState.label),
       );
     }
     copy.append(kicker, name, chips);

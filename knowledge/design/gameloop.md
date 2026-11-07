@@ -57,7 +57,7 @@ HTML overlay, not Phaser text. Top center gold objective banner (Hold fills with
 
 ## Director (RoR2, not VS)
 
-Spends a credit budget. Credits buy **elites and bosses**, not 2000 bats. Fodder is texture and XP, capped (`maxFodder`). Soft living cap stays in `knowledge/tech/performance-budget.md`.
+Spends a credit budget. Spawns enemies in localized clusters (pack size 3–6 normal entities). Every spawn roll has a difficulty-scaled chance to mutate into an Elite pack (smaller pack size of 1–2 formidable entities). Any non-boss enemy (Mite, Spitter, Sniper, Warden) can roll the Elite modifier. Fodder is texture and XP, tightly capped (`maxFodder`). Soft living cap stays in `knowledge/tech/performance-budget.md`.
 
 ## Level-up (VS)
 

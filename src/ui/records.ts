@@ -258,18 +258,62 @@ export function commitWorldProgress(world: World): ArchiveRecords {
   return rec;
 }
 
+export function isStageVisited(stageId: string, rec: ArchiveRecords = getRecords()): boolean {
+  return (rec.stageVisits[stageId] ?? 0) > 0 || (rec.stageClears[stageId] ?? 0) > 0;
+}
+
+export function isEntitySeen(entityId: string, rec: ArchiveRecords = getRecords()): boolean {
+  return (rec.entityEncounters[entityId] ?? 0) > 0 || (rec.entityKills[entityId] ?? 0) > 0;
+}
+
+export function getUnlockLabel(
+  cond: UnlockCondition | undefined,
+  rec: ArchiveRecords = getRecords(),
+): string {
+  if (!cond) return 'Unlocked';
+  let text = cond.label;
+
+  if (cond.type === 'stage-clear') {
+    const stage = catalog.loop.stages.find((s) => s.id === cond.stageId);
+    if (stage && !isStageVisited(stage.id, rec)) {
+      text = text.split(stage.name).join('???');
+    }
+    return text;
+  }
+
+  if (cond.type === 'boss-kill') {
+    const entity = catalog.entities.find((e) => e.id === cond.entityId);
+    if (entity && !isEntitySeen(cond.entityId, rec)) {
+      text = text.split(entity.name).join('???');
+    }
+    const stageId = cond.stageId ?? catalog.loop.stages.find((s) => s.boss === cond.entityId)?.id;
+    if (stageId) {
+      const stage = catalog.loop.stages.find((s) => s.id === stageId);
+      if (stage && !isStageVisited(stage.id, rec)) {
+        text = text.split(stage.name).join('???');
+      }
+    }
+    return text;
+  }
+
+  return text;
+}
+
 export function checkUnlockCondition(
   cond: UnlockCondition | undefined,
   rec: ArchiveRecords = getRecords(),
-): { unlocked: boolean; progress: string } {
-  if (!cond) return { unlocked: true, progress: 'Unlocked' };
+): { unlocked: boolean; progress: string; label: string } {
+  const label = getUnlockLabel(cond, rec);
+  if (!cond) return { unlocked: true, progress: 'Unlocked', label };
   if (cond.type === 'stage-clear') {
     const need = cond.count ?? 1;
     const have = rec.stageClears[cond.stageId] ?? 0;
-    const stageName = catalog.loop.stages.find((s) => s.id === cond.stageId)?.name ?? cond.stageId;
+    const stage = catalog.loop.stages.find((s) => s.id === cond.stageId);
+    const stageName = isStageVisited(cond.stageId, rec) ? (stage?.name ?? cond.stageId) : '???';
     return {
       unlocked: have >= need,
       progress: need > 1 ? `${Math.min(have, need)} / ${need} ${stageName} Clears` : have >= 1 ? 'Cleared' : '0 / 1 Cleared',
+      label,
     };
   }
   if (cond.type === 'boss-kill') {
@@ -278,6 +322,7 @@ export function checkUnlockCondition(
     return {
       unlocked: have >= need,
       progress: need > 1 ? `${Math.min(have, need)} / ${need} Slain` : have >= 1 ? 'Slain' : '0 / 1 Slain',
+      label,
     };
   }
   if (cond.type === 'total-kills') {
@@ -285,6 +330,7 @@ export function checkUnlockCondition(
     return {
       unlocked: have >= cond.count,
       progress: `${Math.min(have, cond.count).toLocaleString()} / ${cond.count.toLocaleString()} Slain`,
+      label,
     };
   }
   if (cond.type === 'elite-kills') {
@@ -292,12 +338,14 @@ export function checkUnlockCondition(
     return {
       unlocked: have >= cond.count,
       progress: `${Math.min(have, cond.count).toLocaleString()} / ${cond.count.toLocaleString()} Elites Slain`,
+      label,
     };
   }
   const have = rec.victories;
   return {
     unlocked: have >= cond.count,
     progress: `${Math.min(have, cond.count)} / ${cond.count} Transmutations`,
+    label,
   };
 }
 

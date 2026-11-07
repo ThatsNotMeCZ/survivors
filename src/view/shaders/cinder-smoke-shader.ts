@@ -22,11 +22,6 @@ float hash21(vec2 p) {
   return fract(p.x * p.y);
 }
 
-vec2 hash22(vec2 p) {
-  float n = hash21(p);
-  return vec2(n, hash21(p + n + 19.19));
-}
-
 float vnoise(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
@@ -39,121 +34,71 @@ float vnoise(vec2 p) {
 }
 
 float fbm(vec2 p) {
-  float v = 0.0;
-  v += 0.55 * vnoise(p);
-  v += 0.30 * vnoise(p * 2.07 + vec2(13.1, 7.7));
-  v += 0.15 * vnoise(p * 4.13 + vec2(3.7, 29.3));
-  return v;
-}
-
-float sparkLayer(vec2 uv, vec2 gridScale, float speed, float threshold, float seed, out vec3 sparkColor) {
-  vec2 p = vec2(uv.x * gridScale.x, uv.y * gridScale.y - uTime * speed);
-  vec2 cell = floor(p);
-  vec2 local = fract(p) - 0.5;
-  vec2 rnd = hash22(cell + seed);
-
-  if (rnd.x > threshold) {
-    sparkColor = vec3(0.0);
-    return 0.0;
-  }
-
-  vec2 offset = (rnd - 0.5) * 0.65;
-  offset.x += sin(uTime * 14.0 + rnd.y * 6.28) * 0.16;
-
-  vec2 diff = local - offset;
-  // Elongate vertically to simulate rising spark streak
-  diff.y *= 0.52;
-  float d = length(diff);
-
-  float core = smoothstep(0.09, 0.01, d);
-  float halo = smoothstep(0.26, 0.02, d) * 0.45;
-  float intensity = core + halo;
-
-  // Cool from incandescent white-gold near vent to burning orange and deep amber-red
-  float coolProgress = clamp(uv.y * 1.15 + (1.0 - rnd.y) * 0.25, 0.0, 1.0);
-  vec3 hotCol = mix(vec3(1.0, 0.95, 0.65), vec3(1.0, 0.45, 0.08), coolProgress);
-  vec3 coldCol = vec3(0.95, 0.16, 0.02);
-  sparkColor = mix(hotCol, coldCol, smoothstep(0.45, 1.0, coolProgress));
-  sparkColor = mix(sparkColor, vec3(1.0, 1.0, 0.92), core * 0.7);
-
-  return intensity;
+  return 0.58 * vnoise(p) + 0.28 * vnoise(p * 2.05 + vec2(7.3, 3.1)) + 0.14 * vnoise(p * 4.1 + vec2(11.7, 9.5));
 }
 
 void main() {
-  vec2 uv = vec2(outTexCoord.x, 1.0 - outTexCoord.y);
+  // Quantize coordinates to exact 28x32 pixel grid matching boss sprite resolution (1:1)
+  const vec2 GRID = vec2(28.0, 32.0);
+  vec2 rawUv = vec2(outTexCoord.x, 1.0 - outTexCoord.y);
+  vec2 uv = (floor(rawUv * GRID) + 0.5) / GRID;
 
-  // Plume geometry: widening cone rising from furnace vent
-  float width = mix(0.12, 0.44, pow(clamp(uv.y, 0.0, 1.0), 0.72));
-  float sway = sin(uv.y * 6.0 - uTime * (3.0 + uAttack * 2.0)) * 0.035 * (1.0 + 0.6 * uAttack);
-  sway += uFacing * 0.025 * uv.y;
+  // Narrow, gentle plume geometry rising from top furnace vent
+  float width = mix(0.14, 0.38, pow(clamp(uv.y, 0.0, 1.0), 0.75));
+  float sway = sin(uv.y * 5.0 - uTime * (1.6 + uAttack * 0.8)) * 0.04;
+  sway += uFacing * 0.02 * uv.y;
 
   float dx = abs(uv.x - 0.5 - sway);
-  float cone = smoothstep(width, width * 0.15, dx);
+  float cone = smoothstep(width, width * 0.25, dx);
 
-  // Vertical boundary fading: vent entrance at bottom, dispersion at top
-  float bottomFade = smoothstep(0.04, 0.16, uv.y);
-  float topFade = smoothstep(0.98, 0.62, uv.y);
+  // Soft vertical fades: gentle release at bottom, evaporation at top
+  float bottomFade = smoothstep(0.04, 0.18, uv.y);
+  float topFade = smoothstep(0.96, 0.60, uv.y);
   float plumeMask = cone * bottomFade * topFade;
 
-  if (plumeMask <= 0.001) {
+  if (plumeMask <= 0.02) {
     gl_FragColor = vec4(0.0);
     return;
   }
 
-  // Multi-octave rising turbulent FBM smoke
-  float riseSpeed = mix(2.2, 4.6, uAttack);
-  vec2 flow = vec2(-sway * 1.5, -uTime * riseSpeed);
-  vec2 p = vec2((uv.x - 0.5) * 4.2, uv.y * 3.4) + flow;
+  // Gentle, slow upward smoke motion
+  float riseSpeed = mix(1.2, 2.2, uAttack);
+  vec2 flow = vec2(-sway * 1.2, -uTime * riseSpeed);
+  vec2 p = vec2((uv.x - 0.5) * 3.4, uv.y * 2.8) + flow;
 
-  vec2 warp = vec2(
-    fbm(p + vec2(1.7, 7.3)),
-    fbm(p + vec2(8.1, 2.9))
-  );
-  float smokeNoise = fbm(p * 1.4 + warp * 1.3);
+  float smokeNoise = fbm(p);
 
-  // Smoke density threshold & contrast
-  float densityCut = mix(0.34, 0.22, uAttack);
-  float smokeDensity = smoothstep(densityCut, 0.78, smokeNoise) * plumeMask;
-  smokeDensity = clamp(smokeDensity * mix(1.15, 1.55, uAttack + uEnraged * 0.2), 0.0, 1.0);
+  // Discrete pixel-art opacity steps for light smoke
+  float densityCut = mix(0.44, 0.36, uAttack);
+  float rawDensity = smoothstep(densityCut, 0.78, smokeNoise) * plumeMask;
+  if (rawDensity <= 0.04) {
+    gl_FragColor = vec4(0.0);
+    return;
+  }
 
-  // Furnace fire bleeding into base of plume
-  float glowHeight = mix(0.24, 0.50, uAttack);
-  float heat = smoothstep(glowHeight, 0.05, uv.y) * (0.65 + 0.35 * smokeNoise);
-  vec3 fireRim = vec3(1.0, 0.28, 0.05);
-  vec3 fireCore = vec3(1.0, 0.82, 0.28);
-  vec3 furnaceCol = mix(fireRim, fireCore, heat * (0.75 + 0.25 * uAttack));
+  // Resurrect 64 soot & cool chimney smoke palette
+  // Dark kiln soot:   #181014 vec3(0.094, 0.063, 0.078)
+  // Cool charcoal:    #2e222f vec3(0.180, 0.133, 0.184)
+  // Ash smoke mid:    #3e3546 vec3(0.243, 0.208, 0.275)
+  // Pale wisps:       #625565 vec3(0.384, 0.333, 0.396)
+  vec3 sootDark = vec3(0.094, 0.063, 0.078);
+  vec3 sootCharcoal = vec3(0.180, 0.133, 0.184);
+  vec3 ashMid = vec3(0.243, 0.208, 0.275);
+  vec3 wispLight = vec3(0.384, 0.333, 0.396);
 
-  // Volcanic / kiln soot shading
-  vec3 sootDark = vec3(0.10, 0.06, 0.07);
-  vec3 sootMid = vec3(0.25, 0.16, 0.14);
-  vec3 sootRim = vec3(0.42, 0.30, 0.26);
-  vec3 smokeCol = mix(sootDark, sootMid, smokeNoise);
-  smokeCol = mix(smokeCol, sootRim, smoothstep(width * 0.35, width, dx) * 0.5);
+  vec3 smokeCol = mix(sootCharcoal, ashMid, smokeNoise);
+  smokeCol = mix(smokeCol, wispLight, smoothstep(width * 0.4, width, dx) * 0.45);
 
-  vec3 compositeSmoke = mix(smokeCol, furnaceCol, clamp(heat * (1.3 + uAttack * 0.5), 0.0, 1.0));
+  // Subtle warm ember glow at very base of vent
+  float emberBase = smoothstep(0.22, 0.04, uv.y) * (0.6 + 0.4 * uAttack);
+  vec3 emberCol = vec3(0.969, 0.588, 0.090); // Resurrect 64 ember
+  smokeCol = mix(smokeCol, emberCol, emberBase * 0.35);
 
-  // Attack Sparks / Flying Embers
-  // Low baseline occasional ember during idle, eruption during attack
-  float sparkThreshold1 = mix(0.06, 0.55, uAttack);
-  float sparkThreshold2 = mix(0.03, 0.42, uAttack);
+  // Light, non-intrusive transparency
+  float maxAlpha = mix(0.34, 0.52, uAttack + uEnraged * 0.12);
+  float alpha = clamp(rawDensity * maxAlpha, 0.0, 0.60);
 
-  vec3 col1 = vec3(0.0);
-  vec3 col2 = vec3(0.0);
-  float s1 = sparkLayer(uv, vec2(30.0, 20.0), mix(12.0, 25.0, uAttack), sparkThreshold1, 19.3, col1);
-  float s2 = sparkLayer(uv, vec2(22.0, 15.0), mix(9.0, 20.0, uAttack), sparkThreshold2, 83.7, col2);
-
-  // Mask sparks within the plume cone and vertical limits
-  float sparkMask = cone * smoothstep(0.06, 0.18, uv.y) * smoothstep(0.96, 0.55, uv.y);
-  s1 *= sparkMask;
-  s2 *= sparkMask;
-
-  vec3 sparkOutput = (col1 * s1 + col2 * s2) * (1.1 + uAttack * 0.8);
-  float totalSparkAlpha = clamp((s1 + s2) * (0.85 + uAttack * 0.4), 0.0, 1.0);
-
-  vec3 finalColor = compositeSmoke + sparkOutput;
-  float totalAlpha = clamp(smokeDensity * 0.85 + totalSparkAlpha, 0.0, 0.96);
-
-  gl_FragColor = vec4(finalColor * totalAlpha, totalAlpha);
+  gl_FragColor = vec4(smokeCol * alpha, alpha);
 }
 `;
 
@@ -180,10 +125,10 @@ export class CinderSmokeShader {
         },
         0,
         0,
-        112,
-        144,
+        28,
+        32,
       )
-      .setOrigin(0.5, 0.90)
+      .setOrigin(0.5, 0.92)
       .setDepth(3.05)
       .setVisible(false);
   }
@@ -216,12 +161,12 @@ export class CinderSmokeShader {
       boss.phase === 'channel';
 
     const targetAttack = attacking ? 1.0 : 0.0;
-    const lerpSpeed = attacking ? 10.0 : 4.5;
+    const lerpSpeed = attacking ? 8.0 : 3.5;
     this.attackIntensity += (targetAttack - this.attackIntensity) * Math.min(1.0, dt * lerpSpeed);
 
-    // Cinder Heart top chimneys are ~26px above boss center
+    // Vents are situated right at the top perimeter of Cinder Heart
     const bx = Math.round(enemies.x[idx]);
-    const by = Math.round(enemies.y[idx] - 26);
+    const by = Math.round(enemies.y[idx] - 20);
 
     this.quad
       .setPosition(bx, by)

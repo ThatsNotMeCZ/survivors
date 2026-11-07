@@ -155,24 +155,50 @@ export function hitObstacleProjectiles(world: World): void {
     }
     if (hit < 0) continue;
     if ((projectiles.flags[i] & FLAG_FLYOVER) !== 0) continue;
-    const obs = obstacles.items[hit];
     emitFx(world.fx, FX_HIT, projectiles.x[i], projectiles.y[i], 0xfff4c8);
-    if (projectiles.team[i] === TEAM_PLAYER && obs.type === 'volatile' && obs.state === 'intact') {
-      obs.hp -= projectiles.damage[i];
-      if (obs.hp <= 0) {
-        obs.hp = 0;
-        obs.state = 'primed';
-        obs.timer = world.catalog.obstacles.volatile.prime;
-      }
+    if (projectiles.team[i] === TEAM_PLAYER) {
+      const dmg = projectiles.damage[i] > 0 ? projectiles.damage[i] : projectiles.tetherDps[i];
+      if (dmg > 0) damageVolatile(world, hit, dmg);
     }
     killProjectile(projectiles, i);
   }
 }
 
+export function damageVolatile(world: World, index: number, damage: number): boolean {
+  const obs = world.obstacles.items[index];
+  if (obs.type !== 'volatile' || obs.state !== 'intact') return false;
+  obs.hp -= damage;
+  if (obs.hp <= 0) {
+    obs.hp = 0;
+    obs.state = 'primed';
+    obs.timer = world.catalog.obstacles.volatile.prime;
+  }
+  return true;
+}
+
+export function hitObstaclesAoE(
+  world: World,
+  x: number,
+  y: number,
+  radius: number,
+  damage: number,
+): void {
+  const { obstacles } = world;
+  const reachPad = 56;
+  const n = hashQuery(obstacles.hash, x, y, radius + reachPad, obstacles.scratch);
+  for (let k = 0; k < n; k += 1) {
+    const idx = obstacles.scratch[k];
+    if (obstacles.alive[idx] === 0) continue;
+    const obs = obstacles.items[idx];
+    if (obs.type !== 'volatile' || obs.state !== 'intact') continue;
+    if (!circlesOverlap(x, y, radius, obs.x, obs.y, obs.radius)) continue;
+    damageVolatile(world, idx, damage);
+  }
+}
+
 export function spawnAcidPool(world: World, x: number, y: number): void {
-  const stage = world.catalog.loop.stages[world.stageIndex];
-  const name = world.catalog.obstacles.biomes[stage.id].hazard;
-  spawnObstacle(world, 'hazard', x, y, name);
+  const duration = world.catalog.loop.noxious.poolDuration ?? 6;
+  spawnObstacle(world, 'hazard', x, y, 'Caustic Acid Pool', duration);
   rebuildObstacleHash(world);
 }
 
@@ -187,17 +213,26 @@ export function stepObstacles(world: World, dt: number): void {
     world.damageTaken += dmg;
   }
 
-  let detonated = false;
+  let needsRebuild = false;
   for (let i = 0; i < obstacles.cap; i += 1) {
     if (obstacles.alive[i] === 0) continue;
     const obs = obstacles.items[i];
+    if (obs.type === 'hazard' && obs.timer > 0) {
+      obs.timer -= dt;
+      if (obs.timer <= 0) {
+        obs.timer = 0;
+        obstacles.alive[i] = 0;
+        needsRebuild = true;
+      }
+      continue;
+    }
     if (obs.type !== 'volatile' || obs.state !== 'primed') continue;
     obs.timer -= dt;
     if (obs.timer > 0) continue;
     detonateVolatile(world, i);
-    detonated = true;
+    needsRebuild = true;
   }
-  if (detonated) rebuildObstacleHash(world);
+  if (needsRebuild) rebuildObstacleHash(world);
 }
 
 export function overlappingHazard(world: World, x: number, y: number, radius: number): boolean {
@@ -253,28 +288,54 @@ function pushActorFromObstacle(
   apply(split.ax, split.ay);
 }
 
-function spawnObstacle(world: World, type: ObstacleKind, x: number, y: number, biomeVariant: string): void {
+function spawnObstacle(
+  world: World,
+  type: ObstacleKind,
+  x: number,
+  y: number,
+  biomeVariant: string,
+  timer = 0,
+): void {
   const { obstacles } = world;
+  let targetIndex = -1;
   for (let i = 0; i < obstacles.cap; i += 1) {
-    if (obstacles.alive[i] !== 0) continue;
-    const cfg = world.catalog.obstacles;
-    const radius = type === 'pillar' ? cfg.pillar.radius : type === 'hazard' ? cfg.hazard.radius : cfg.volatile.radius;
-    const hp = type === 'volatile' ? cfg.volatile.hp * world.coefficient : 0;
-    const item = obstacles.items[i];
-    item.id = obstacles.nextId;
-    obstacles.nextId += 1;
-    item.type = type;
-    item.x = x;
-    item.y = y;
-    item.radius = radius;
-    item.hp = hp;
-    item.maxHp = hp;
-    item.state = 'intact';
-    item.timer = 0;
-    item.biomeVariant = biomeVariant;
-    obstacles.alive[i] = 1;
-    return;
+    if (obstacles.alive[i] === 0) {
+      targetIndex = i;
+      break;
+    }
   }
+
+  // If full and spawning a timed dynamic hazard, reclaim the oldest expiring timed hazard
+  if (targetIndex < 0 && timer > 0) {
+    let minTimer = Infinity;
+    for (let i = 0; i < obstacles.cap; i += 1) {
+      if (obstacles.alive[i] !== 0 && obstacles.items[i].type === 'hazard' && obstacles.items[i].timer > 0) {
+        if (obstacles.items[i].timer < minTimer) {
+          minTimer = obstacles.items[i].timer;
+          targetIndex = i;
+        }
+      }
+    }
+  }
+
+  if (targetIndex < 0) return;
+
+  const cfg = world.catalog.obstacles;
+  const radius = type === 'pillar' ? cfg.pillar.radius : type === 'hazard' ? cfg.hazard.radius : cfg.volatile.radius;
+  const hp = type === 'volatile' ? cfg.volatile.hp * world.coefficient : 0;
+  const item = obstacles.items[targetIndex];
+  item.id = obstacles.nextId;
+  obstacles.nextId += 1;
+  item.type = type;
+  item.x = x;
+  item.y = y;
+  item.radius = radius;
+  item.hp = hp;
+  item.maxHp = hp;
+  item.state = 'intact';
+  item.timer = timer;
+  item.biomeVariant = biomeVariant;
+  obstacles.alive[targetIndex] = 1;
 }
 
 function tryPlace(

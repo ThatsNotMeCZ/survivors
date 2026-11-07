@@ -229,6 +229,9 @@ function assertUnlock(
     if (!entities.has(unlock.entityId)) {
       throw new Error(`${owner} unlock references unknown entity "${unlock.entityId}"`);
     }
+    if (unlock.stageId && !stages.some((s) => s.id === unlock.stageId)) {
+      throw new Error(`${owner} unlock references unknown stage "${unlock.stageId}"`);
+    }
     return;
   }
   if (
@@ -259,6 +262,21 @@ function asLoop(raw: unknown): LoopDef {
   }
   if (!Array.isArray(data.stages)) {
     throw new Error('loop.json missing stages[]');
+  }
+  const dir = data.director;
+  if (
+    !(dir.groupSizeMin > 0) ||
+    !(dir.groupSizeMax >= dir.groupSizeMin) ||
+    !(dir.eliteGroupSizeMin > 0) ||
+    !(dir.eliteGroupSizeMax >= dir.eliteGroupSizeMin) ||
+    !(dir.groupSpreadRadius > 0) ||
+    !(dir.eliteCostMul >= 1)
+  ) {
+    throw new Error('loop.json director group/elite sizing config invalid');
+  }
+  const el = data.elite;
+  if (!el || !(el.hpMul > 0) || !(el.damageMul > 0) || !(el.xpMul > 0) || !(el.creditsMul > 0) || !(el.radiusMul > 0)) {
+    throw new Error('loop.json missing valid elite multiplier config');
   }
   return data;
 }
