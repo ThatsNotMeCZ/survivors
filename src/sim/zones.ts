@@ -28,6 +28,7 @@ export type ZonePool = {
   width: Float32Array;
   radius: Float32Array;
   remain: Float32Array;
+  duration: Float32Array;
   damage: Float32Array;
   slowMul: Float32Array;
   fodderOnly: Uint8Array;
@@ -46,6 +47,7 @@ export function createZonePool(cap = 8): ZonePool {
     width: new Float32Array(cap),
     radius: new Float32Array(cap),
     remain: new Float32Array(cap),
+    duration: new Float32Array(cap),
     damage: new Float32Array(cap),
     slowMul: new Float32Array(cap),
     fodderOnly: new Uint8Array(cap),
@@ -91,6 +93,7 @@ export function spawnSlowLine(
   pool.width[slot] = spec.width;
   pool.radius[slot] = 0;
   pool.remain[slot] = spec.duration;
+  pool.duration[slot] = spec.duration;
   pool.damage[slot] = spec.damage;
   pool.slowMul[slot] = spec.slowMul;
   pool.fodderOnly[slot] = spec.fodderOnly ? 1 : 0;
@@ -113,6 +116,7 @@ export function spawnDelayedStrike(
   pool.width[slot] = 0;
   pool.radius[slot] = spec.radius;
   pool.remain[slot] = spec.delay;
+  pool.duration[slot] = spec.delay;
   pool.damage[slot] = spec.damage;
   pool.slowMul[slot] = 1;
   pool.fodderOnly[slot] = 0;

@@ -89,6 +89,7 @@ import {
 } from './sprites';
 import { AmbientShader } from './shaders/ambient-shader';
 import { BossShaders } from './shaders/boss-shaders';
+import { BrimstoneLineShaderPool } from './shaders/brimstone-line-shader';
 import { CircleChargeShader } from './shaders/circle-charge-shader';
 import { DamageFxShaderPool } from './shaders/damage-fx-shader';
 import { EliteAffixShaderPool } from './shaders/elite-affix-shader';
@@ -146,6 +147,7 @@ export class ArenaScene extends Phaser.Scene {
   private ghostCd = 0;
   private ambientShader!: AmbientShader;
   private bossShaders!: BossShaders;
+  private brimstoneLineShaders!: BrimstoneLineShaderPool;
   private damageFx!: DamageFxShaderPool;
   private envHazardShaders!: EnvHazardShaderPool;
   private playerHurtShader!: PlayerHurtShader;
@@ -368,6 +370,7 @@ export class ArenaScene extends Phaser.Scene {
 
     this.ambientShader = new AmbientShader(this);
     this.bossShaders = new BossShaders(this);
+    this.brimstoneLineShaders = new BrimstoneLineShaderPool(this);
     this.circleChargeShader = new CircleChargeShader(this);
     this.damageFx = new DamageFxShaderPool(this);
     this.eliteAffixShaders = new EliteAffixShaderPool(this);
@@ -580,6 +583,8 @@ export class ArenaScene extends Phaser.Scene {
     this.syncLores();
     this.drawZones(dt);
     this.bossShaders.sync(this.world, dt);
+    this.brimstoneLineShaders.sync(this.world.zones, this.world.runTime);
+    this.syncBrimstoneSparks(dt);
     this.drawTelegraphs(biome);
     this.syncWaypoint();
     syncZoneFx(this, this.zoneFx, this.world.zones);
@@ -1599,13 +1604,15 @@ export class ArenaScene extends Phaser.Scene {
         g.lineStyle(2, flash ? 0xfff4c8 : 0xffaa33, 0.95);
         g.strokeCircle(Math.round(zones.x[i]), Math.round(zones.y[i]), Math.round(zones.radius[i] * grow));
       } else if (zones.kind[i] === ZONE_LINE) {
-        const half = zones.length[i] * 0.5;
-        const x0 = zones.x[i] - zones.dirX[i] * half;
-        const y0 = zones.y[i] - zones.dirY[i] * half;
-        const x1 = zones.x[i] + zones.dirX[i] * half;
-        const y1 = zones.y[i] + zones.dirY[i] * half;
-        g.lineStyle(Math.max(2, zones.width[i] * 0.35), flash ? 0xffcc66 : 0xff5522, 0.8);
-        g.lineBetween(Math.round(x0), Math.round(y0), Math.round(x1), Math.round(y1));
+        if (getSettings().reduceVfx) {
+          const half = zones.length[i] * 0.5;
+          const x0 = zones.x[i] - zones.dirX[i] * half;
+          const y0 = zones.y[i] - zones.dirY[i] * half;
+          const x1 = zones.x[i] + zones.dirX[i] * half;
+          const y1 = zones.y[i] + zones.dirY[i] * half;
+          g.lineStyle(Math.max(2, zones.width[i] * 0.35), flash ? 0xffcc66 : 0xff5522, 0.8);
+          g.lineBetween(Math.round(x0), Math.round(y0), Math.round(x1), Math.round(y1));
+        }
       }
     }
   }
@@ -1746,6 +1753,33 @@ export class ArenaScene extends Phaser.Scene {
       if (this.ghostLife[i] <= 0) this.ghosts[i].setVisible(false);
     }
   }
+
+  private syncBrimstoneSparks(dt: number): void {
+    if (getSettings().reduceVfx) return;
+    const { zones } = this.world;
+    for (let i = 0; i < zones.cap; i += 1) {
+      if (zones.alive[i] === 0 || zones.kind[i] !== ZONE_LINE) continue;
+      if (Math.random() < dt * 26) {
+        const half = zones.length[i] * 0.46;
+        const along = (Math.random() * 2 - 1) * half;
+        const across = (Math.random() * 2 - 1) * (zones.width[i] * 0.3);
+        const perpX = -zones.dirY[i];
+        const perpY = zones.dirX[i];
+        const sx = zones.x[i] + zones.dirX[i] * along + perpX * across;
+        const sy = zones.y[i] + zones.dirY[i] * along + perpY * across;
+        const tint = Math.random() < 0.65 ? 0xf9c22b : 0xf79617;
+        spawnSingleSpark(
+          this.sparks,
+          sx,
+          sy,
+          tint,
+          (Math.random() - 0.5) * 22,
+          -30 - Math.random() * 45,
+          0.22 + Math.random() * 0.18,
+        );
+      }
+    }
+  }
 }
 
 function seedGpuLayer(
@@ -1809,6 +1843,29 @@ function spawnBurst(
     sparks[i].size = 0.7 + Math.random() * 0.6;
     sparks[i].tint = tint;
     spawned += 1;
+  }
+}
+
+function spawnSingleSpark(
+  sparks: Spark[],
+  x: number,
+  y: number,
+  tint: number,
+  vx: number,
+  vy: number,
+  life: number,
+): void {
+  for (let i = 0; i < sparks.length; i += 1) {
+    if (sparks[i].life > 0) continue;
+    sparks[i].life = life;
+    sparks[i].max = life;
+    sparks[i].x = x;
+    sparks[i].y = y;
+    sparks[i].vx = vx;
+    sparks[i].vy = vy;
+    sparks[i].size = 0.6 + Math.random() * 0.5;
+    sparks[i].tint = tint;
+    return;
   }
 }
 

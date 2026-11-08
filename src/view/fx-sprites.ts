@@ -39,7 +39,7 @@ export function shotFxId(team: number, flags: number, biome: BiomeId): string {
 }
 
 export function zoneFxId(kind: number): string | null {
-  if (kind === ZONE_LINE) return 'skill-brimstone-line';
+  if (kind === ZONE_LINE) return null;
   if (kind === ZONE_STRIKE) return 'skill-crucible-cull';
   return null;
 }

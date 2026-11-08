@@ -1,36 +1,5 @@
 {
   "entities": {
-    "astral-watcher": {
-      "src": "sprites/entities/astral-watcher.png",
-      "frameWidth": 28,
-      "frameHeight": 28,
-      "anims": {
-        "idle": {
-          "frames": [
-            0,
-            1
-          ],
-          "frameRate": 5.99,
-          "repeat": -1
-        },
-        "walk": {
-          "frames": [
-            0,
-            1
-          ],
-          "frameRate": 5.99,
-          "repeat": -1
-        },
-        "attack": {
-          "frames": [
-            2,
-            3
-          ],
-          "frameRate": 5.99,
-          "repeat": 0
-        }
-      }
-    },
     "cinder-heart": {
       "src": "sprites/entities/cinder-heart.png",
       "frameWidth": 86,
@@ -152,6 +121,37 @@
           ],
           "frameRate": 5.99,
           "repeat": -1
+        }
+      }
+    },
+    "enemy-astral-sniper": {
+      "src": "sprites/entities/enemy-astral-sniper.png",
+      "frameWidth": 28,
+      "frameHeight": 28,
+      "anims": {
+        "idle": {
+          "frames": [
+            0,
+            1
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            0,
+            1
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
         }
       }
     },
