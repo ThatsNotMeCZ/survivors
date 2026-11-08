@@ -312,7 +312,7 @@ export function generateFloor(
     const hasAtlasTiles = !!atlasSource && tileRects.some((r) => r !== null);
     const baseTiles = [0, 1, 2, 3].map((v) => makeFloorTile(biome, v));
     const runeTiles = [0, 1, 2, 3].map((v) => makeRuneTile(biome, v));
-    const tile = 64;
+    const tile = 48;
     const maxTx = Math.floor(width / tile);
     const maxTy = Math.floor(height / tile);
     const seed = theme === 'cinder' ? 1013 : theme === 'rime' ? 2027 : 3049;
@@ -330,10 +330,10 @@ export function generateFloor(
             if (bRect) {
               ctx.drawImage(atlasSource, bRect.x, bRect.y, bRect.w, bRect.h, tx * tile, ty * tile, tile, tile);
             } else {
-              ctx.drawImage(runeTiles[rVar], tx * tile, ty * tile);
+              ctx.drawImage(runeTiles[rVar], tx * tile, ty * tile, tile, tile);
             }
           } else {
-            ctx.drawImage(runeTiles[rVar], tx * tile, ty * tile);
+            ctx.drawImage(runeTiles[rVar], tx * tile, ty * tile, tile, tile);
           }
         } else {
           const bVar = tileVariant(tx, ty, seed);
@@ -341,7 +341,7 @@ export function generateFloor(
           if (hasAtlasTiles && atlasSource && rect) {
             ctx.drawImage(atlasSource, rect.x, rect.y, rect.w, rect.h, tx * tile, ty * tile, tile, tile);
           } else {
-            ctx.drawImage(baseTiles[bVar], tx * tile, ty * tile);
+            ctx.drawImage(baseTiles[bVar], tx * tile, ty * tile, tile, tile);
           }
         }
       }
