@@ -14,12 +14,12 @@
   "portalRadius": 70,
   "portalHold": 1.4,
   "director": {
-    "creditRate": 3.6,
+    "creditRate": 3.0,
     "fodderCost": 6,
-    "eliteCost": 16,
+    "eliteCost": 18,
     "sniperCost": 18,
     "fodderInterval": 1.6,
-    "eliteInterval": 10,
+    "eliteInterval": 14,
     "sniperInterval": 9,
     "maxSnipers": 3,
     "spawnMin": 460,
@@ -28,12 +28,12 @@
     "groupSizeMin": 3,
     "groupSizeMax": 6,
     "eliteGroupSizeMin": 1,
-    "eliteGroupSizeMax": 2,
+    "eliteGroupSizeMax": 1,
     "groupSpreadRadius": 56,
-    "eliteChanceBase": 0.08,
-    "eliteChancePerCoeff": 0.18,
-    "eliteChanceMax": 0.65,
-    "eliteCostMul": 2.5
+    "eliteChanceBase": 0.02,
+    "eliteChancePerCoeff": 0.12,
+    "eliteChanceMax": 0.40,
+    "eliteCostMul": 3.0
   },
   "elite": {
     "hpMul": 2.4,
@@ -55,9 +55,9 @@
     "percentHp": 0.3
   },
   "difficulty": {
-    "perSecond": 0.006,
-    "stageBonus": 0.35,
-    "speedPerCoeff": 0.05
+    "perSecond": 0.0032,
+    "stageBonus": 0.20,
+    "speedPerCoeff": 0.035
   },
   "rarityWeight": {
     "common": 1,
@@ -82,7 +82,7 @@
       "sniper": "enemy-astral-sniper",
       "elite": "ember-chaser",
       "boss": "cinder-heart",
-      "firstEliteAt": 15,
+      "firstEliteAt": 25,
       "teleporterAt": 55,
       "teleporterHold": 20,
       "teleporterRadius": 160,
@@ -104,7 +104,7 @@
       "sniper": "enemy-astral-sniper",
       "elite": "frost-warden",
       "boss": "frost-sovereign",
-      "firstEliteAt": 12,
+      "firstEliteAt": 18,
       "teleporterAt": 50,
       "teleporterHold": 22,
       "teleporterRadius": 150,
@@ -126,7 +126,7 @@
       "sniper": "enemy-astral-sniper",
       "elite": "frost-warden",
       "boss": "frost-emperor",
-      "firstEliteAt": 10,
+      "firstEliteAt": 14,
       "teleporterAt": 50,
       "teleporterHold": 25,
       "teleporterRadius": 140,

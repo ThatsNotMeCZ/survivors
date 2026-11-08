@@ -7,7 +7,7 @@ import { FLAG_FLYOVER, TEAM_PLAYER, killProjectile } from './projectiles';
 import { applyEnemySlow, applySlow, tickRoot, tickSlow } from './status';
 import { hashString, mulberry32 } from './rng';
 import { createHash, hashClear, hashInsert, hashQuery, type SpatialHash } from './spatial-hash';
-import type { World } from './world';
+import { damagePlayer, type World } from './world';
 
 export type ObstaclePool = {
   cap: number;
@@ -59,7 +59,9 @@ export function playerPhasing(world: World): boolean {
 export function playerSpeedMul(world: World): number {
   let mul = world.player.slowMul;
   if (!playerPhasing(world) && overlappingHazard(world, world.player.x, world.player.y, world.player.radius)) {
-    mul *= world.catalog.obstacles.hazard.playerSpeedMul;
+    const rawMul = world.catalog.obstacles.hazard.playerSpeedMul;
+    const effectiveMul = 1 - (1 - rawMul) * (1 - world.stats.hazardResist);
+    mul *= effectiveMul;
   }
   return mul;
 }
@@ -209,8 +211,7 @@ export function stepObstacles(world: World, dt: number): void {
 
   if (!playerPhasing(world) && overlappingHazard(world, player.x, player.y, player.radius)) {
     const dmg = world.catalog.obstacles.hazard.dps * world.coefficient * dt;
-    player.hp -= dmg;
-    world.damageTaken += dmg;
+    damagePlayer(world, dmg, true);
   }
 
   let needsRebuild = false;
@@ -266,8 +267,7 @@ function detonateVolatile(world: World, index: number): void {
   if (circlesOverlap(obs.x, obs.y, blast, player.x, player.y, player.radius)) {
     if (player.iframeRemain <= 0) {
       emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
-      player.hp -= cfg.playerDamage;
-      world.damageTaken += cfg.playerDamage;
+      damagePlayer(world, cfg.playerDamage);
     }
     if (rime) applySlow(player, cfg.rimeSlowMul, cfg.rimeSlowDuration);
   }

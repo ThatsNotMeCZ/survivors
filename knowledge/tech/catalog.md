@@ -44,19 +44,19 @@ Hooks only. Common and Uncommon items are purely positive building blocks. Rare 
 
 | id | Display | Rarity | Hook |
 |---|---|---|---|
-| `glass-cannon` | Vitriol Veins | rare | +60% damage, −25% max HP |
-| `goat-hoof` | Cloven Sinew | common | +14% speed |
-| `brittle-plate` | Slag Carapace | common | +25% max HP |
+| `glass-cannon` | Vitriol Veins | rare | +55% damage, −25% max HP |
+| `goat-hoof` | Cloven Sinew | common | +15% speed |
+| `brittle-plate` | Slag Carapace | common | +12% armor |
 | `hair-trigger` | Spasmodic Nerve | uncommon | −15% cooldown |
-| `overclock` | Bellows Heart | uncommon | +16% damage, +35% crit damage |
-| `wax-wings` | Waxen Pinions | common | +12% speed |
-| `hungry-clip` | Parasitic Alembic | rare | −30% cooldown, +25% hurtbox |
+| `overclock` | Bellows Heart | uncommon | +22% AoE radius, +20% projectile speed |
+| `wax-wings` | Waxen Pinions | common | +35% hazard ward |
+| `hungry-clip` | Parasitic Alembic | rare | +2.5 HP/s regen, +35% rite duration, +25% hurtbox |
 | `lead-core` | Lead Plumbum | common | +25 max HP |
-| `mercury-vial` | Quicksilver Draught | uncommon | −12% cooldown, +6% speed |
-| `calcined-lens` | Astrologer's Ocular | rare | +30% crit chance, +50% crit damage, −18% speed |
+| `mercury-vial` | Quicksilver Draught | uncommon | +35% essence magnet, +15% essence XP |
+| `calcined-lens` | Astrologer's Ocular | rare | +25% crit chance, -0.25s CD on crit, −15% speed |
 | `salt-ward` | Salt Effigy | common | −12% hurtbox |
-| `lunar-tithe` | Pale Moon Covenant | lunar (weight 0.08) | +75% damage, +50% crit damage, −40% max HP, +20% hurtbox |
-| `cinnabar-leech` | Cinnabar Leech | common | +0.25 HP on kill |
+| `lunar-tithe` | Pale Moon Covenant | lunar (weight 0.08) | +60% elite & boss damage, +75% crit damage, −25% armor, −25% essence XP |
+| `cinnabar-leech` | Cinnabar Leech | common | +0.3 HP on kill |
 
 Display names elsewhere: survivor `runner` → **Homunculus**; `penitent` → **The Penitent**; skill `bolt` → **Ignis Bolt**; skill `dash` → **Phase Step**; XP gems → **Mercury Drops** / Essence.
 

@@ -85,20 +85,23 @@ export function clearLores(pool: LorePool): void {
 export function stepGems(world: World, dt: number): void {
   const { gems, player } = world;
   const { gemPickup, gemMagnet, gemMagnetSpeed } = world.catalog.loop;
+  const pickup = gemPickup * world.stats.pickupRadiusMul;
+  const magnet = gemMagnet * world.stats.pickupRadiusMul;
+  const magnetSpeed = gemMagnetSpeed * Math.max(1, world.stats.pickupRadiusMul);
   for (let i = 0; i < gems.cap; i += 1) {
     if (gems.alive[i] === 0) continue;
     const dx = player.x - gems.x[i];
     const dy = player.y - gems.y[i];
     const dist = Math.hypot(dx, dy);
-    if (dist <= gemPickup) {
+    if (dist <= pickup) {
       gems.alive[i] = 0;
       world.gemsCollected += 1;
       emitFx(world.fx, FX_GEM, gems.x[i], gems.y[i], 0x88ddff);
-      grantXp(world, gems.xp[i]);
+      grantXp(world, gems.xp[i] * world.stats.xpMul);
       continue;
     }
-    if (dist < gemMagnet && dist > 0.001) {
-      const step = (gemMagnetSpeed * dt) / dist;
+    if (dist < magnet && dist > 0.001) {
+      const step = (magnetSpeed * dt) / dist;
       gems.x[i] += dx * step;
       gems.y[i] += dy * step;
     }
@@ -108,12 +111,15 @@ export function stepGems(world: World, dt: number): void {
 export function stepLores(world: World, dt: number): void {
   const { lores, player } = world;
   const { gemPickup, gemMagnet, gemMagnetSpeed } = world.catalog.loop;
+  const pickup = gemPickup * world.stats.pickupRadiusMul;
+  const magnet = gemMagnet * world.stats.pickupRadiusMul;
+  const magnetSpeed = gemMagnetSpeed * Math.max(1, world.stats.pickupRadiusMul);
   for (let i = 0; i < lores.cap; i += 1) {
     if (lores.alive[i] === 0) continue;
     const dx = player.x - lores.x[i];
     const dy = player.y - lores.y[i];
     const dist = Math.hypot(dx, dy);
-    if (dist <= gemPickup) {
+    if (dist <= pickup) {
       const entityId = lores.entityId[i];
       lores.alive[i] = 0;
       lores.entityId[i] = null;
@@ -124,8 +130,8 @@ export function stepLores(world: World, dt: number): void {
       }
       continue;
     }
-    if (dist < gemMagnet && dist > 0.001) {
-      const step = (gemMagnetSpeed * dt) / dist;
+    if (dist < magnet && dist > 0.001) {
+      const step = (magnetSpeed * dt) / dist;
       lores.x[i] += dx * step;
       lores.y[i] += dy * step;
     }

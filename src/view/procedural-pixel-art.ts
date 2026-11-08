@@ -116,7 +116,7 @@ export function renderPixelArt(
   opts?: PixelArtOpts,
 ): HTMLCanvasElement {
   const canvas = makeCanvas(size, size);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) throw new Error('2d context missing');
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, size, size);
@@ -232,7 +232,6 @@ export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   put(out, 'px-crosshair', makePlayerCrosshair('runner'));
   put(out, 'px-waypoint', makeWaypoint());
   put(out, 'px-glow', makeGlow());
-  put(out, 'px-orbit-cinder', makeOrbitShard('cinder'));
   put(out, 'px-ash', makeSpeck('#9a8a80', 2));
   put(out, 'px-ember', makeSpeck('#ff7722', 1));
   put(out, 'px-snow', makeSpeck('#d8eef8', 2));
@@ -852,13 +851,6 @@ function makeGlow(): HTMLCanvasElement {
   ctx.fillRect(0, 0, 32, 32);
   cache.set('px-glow', canvas);
   return canvas;
-}
-
-function makeOrbitShard(biome: BiomeId): HTMLCanvasElement {
-  return cachedPixel('px-orbit-cinder', 16, biome, (px) => {
-    px.fill(5, 2, 6, 12, '#3a2018');
-    px.fill(6, 4, 4, 8, '#ff7722');
-  });
 }
 
 function makeSpeck(color: string, size: number): HTMLCanvasElement {

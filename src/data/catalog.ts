@@ -32,7 +32,7 @@ const IMPLEMENTED_EFFECTS = new Set<SkillEffect['type']>([
   'tether',
 ]);
 
-const IMPLEMENTED_HOOK_OPS = new Set<ItemHook['op']>(['add', 'pct', 'on-kill']);
+const IMPLEMENTED_HOOK_OPS = new Set<ItemHook['op']>(['add', 'pct', 'on-kill', 'on-crit']);
 
 export type Catalog = {
   world: WorldDef;
@@ -102,6 +102,9 @@ function loadCatalog(): Catalog {
       }
       if (hook.op === 'on-kill' && hook.stat !== 'hp') {
         throw new Error(`Item "${item.id}" on-kill stat must be hp`);
+      }
+      if (hook.op === 'on-crit' && hook.stat !== 'cooldown') {
+        throw new Error(`Item "${item.id}" on-crit stat must be cooldown`);
       }
     }
     if (item.unlock) {
@@ -205,8 +208,9 @@ function assertStageEntity(
   if (!def) {
     throw new Error(`Stage "${stage.id}" ${key} missing: "${id}"`);
   }
-  if (def.role !== key) {
-    throw new Error(`Stage "${stage.id}" ${key} "${id}" has role "${def.role}"`);
+  const expectedRole = key === 'elite' ? 'fodder' : key;
+  if (def.role !== expectedRole) {
+    throw new Error(`Stage "${stage.id}" ${key} "${id}" has role "${def.role}", expected "${expectedRole}"`);
   }
 }
 

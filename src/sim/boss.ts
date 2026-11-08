@@ -13,7 +13,7 @@ import {
 import { spawnEnemy } from './enemies';
 import { emitFx } from './fx';
 import { TEAM_ENEMY, spawnProjectile } from './projectiles';
-import type { World } from './world';
+import { damagePlayer, type World } from './world';
 
 const MAX_BOSS_ATTACKS = 8;
 
@@ -217,8 +217,7 @@ export function stepBoss(
     const distToEnd = Math.hypot(player.x - end.x, player.y - end.y);
     if (player.iframeRemain <= 0 && distToEnd <= atk.hitRadius + player.radius) {
       const dmg = atk.dps * world.coefficient * dt;
-      player.hp -= dmg;
-      world.damageTaken += dmg;
+      damagePlayer(world, dmg);
     }
 
     boss.trailTimer += dt;

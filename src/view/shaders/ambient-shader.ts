@@ -50,7 +50,7 @@ float particleLayer(vec2 worldPos, float cellSize, vec2 vel, float radius, float
   vec2 cell = floor(p);
   vec2 local = fract(p) - 0.5;
   vec2 rnd = hash22(cell + seed);
-  if (rnd.x < 0.42) return 0.0;
+  if (rnd.x < 0.68) return 0.0;
   vec2 offset = (rnd - 0.5) * 0.62;
   offset.x += sin(uTime * pulseSpeed + rnd.y * 6.2831) * 0.12;
   float d = length(local - offset);
@@ -82,15 +82,15 @@ void main() {
     col += smokeCol * smokeA;
     alpha += smokeA;
 
-    float ash = particleLayer(qWorld, 76.0, vec2(13.0, -11.0), 0.055, 11.3, 1.6)
-              + particleLayer(qWorld, 110.0, vec2(9.0, -7.0), 0.045, 37.9, 1.2) * 0.75;
+    float ash = particleLayer(qWorld, 115.0, vec2(13.0, -11.0), 0.052, 11.3, 1.6)
+              + particleLayer(qWorld, 165.0, vec2(9.0, -7.0), 0.042, 37.9, 1.2) * 0.65;
     vec3 ashCol = vec3(0.58, 0.49, 0.44);
     float ashA = clamp(ash, 0.0, 1.0) * 0.34;
     col += ashCol * ashA;
     alpha += ashA;
 
-    float ember = particleLayer(qWorld, 92.0, vec2(5.0, 24.0), 0.065, 73.1, 3.2)
-                + particleLayer(qWorld, 134.0, vec2(-7.0, 31.0), 0.055, 109.7, 2.7);
+    float ember = particleLayer(qWorld, 140.0, vec2(5.0, 24.0), 0.060, 73.1, 3.2)
+                + particleLayer(qWorld, 200.0, vec2(-7.0, 31.0), 0.050, 109.7, 2.7);
     float emberClamped = clamp(ember, 0.0, 1.0);
     vec3 emberCol = mix(vec3(1.0, 0.38, 0.12), vec3(1.0, 0.88, 0.45), emberClamped);
     float emberA = emberClamped * 0.62;
@@ -103,15 +103,15 @@ void main() {
     col += fogCol * fogA;
     alpha += fogA;
 
-    float snow1 = particleLayer(qWorld, 72.0, vec2(-22.0, -18.0), 0.055, 19.7, 1.8);
-    float snow2 = particleLayer(qWorld, 108.0, vec2(-15.0, -13.0), 0.048, 53.4, 1.3);
+    float snow1 = particleLayer(qWorld, 110.0, vec2(-22.0, -18.0), 0.052, 19.7, 1.8);
+    float snow2 = particleLayer(qWorld, 160.0, vec2(-15.0, -13.0), 0.045, 53.4, 1.3);
     float snow = clamp(snow1 + snow2 * 0.8, 0.0, 1.0);
     vec3 snowCol = vec3(0.86, 0.95, 1.0);
     float snowA = snow * 0.42;
     col += snowCol * snowA;
     alpha += snowA;
 
-    float glint = particleLayer(qWorld, 124.0, vec2(-9.0, -6.0), 0.042, 141.2, 4.0);
+    float glint = particleLayer(qWorld, 185.0, vec2(-9.0, -6.0), 0.040, 141.2, 4.0);
     vec3 glintCol = vec3(0.55, 0.92, 1.0);
     float glintA = clamp(glint, 0.0, 1.0) * 0.50;
     col += glintCol * glintA;

@@ -82,6 +82,15 @@ const STAT_LABEL: Record<StatId, string> = {
   cooldown: 'Cooldown',
   critChance: 'Crit Chance',
   critDamage: 'Crit Damage',
+  armor: 'Armor',
+  hazardResist: 'Hazard Ward',
+  hpRegen: 'HP/s Regen',
+  pickupRadius: 'Essence Magnet',
+  xpGain: 'Essence XP',
+  aoeRadius: 'Area Size',
+  projSpeed: 'Projectile Speed',
+  controlDuration: 'Rite Duration',
+  eliteDamage: 'Elite & Boss Damage',
 };
 
 let handlers: OverlayHandlers = {
@@ -402,6 +411,9 @@ function formatHook(hook: ItemHook): { text: string; up: boolean } {
   const sign = hook.value > 0 ? '+' : '';
   if (hook.op === 'on-kill') {
     return { text: `${sign}${hook.value} HP on kill`, up: hook.value > 0 };
+  }
+  if (hook.op === 'on-crit') {
+    return { text: `-${hook.value}s CD on crit`, up: true };
   }
   const amount =
     hook.op === 'pct' ? `${sign}${Math.round(hook.value * 100)}%` : `${sign}${hook.value}`;
@@ -1207,6 +1219,8 @@ function renderRunEnd(kind: RunOutcome, detail: string, recap?: RunRecap): void 
 
   // Inventory items
   invList.replaceChildren();
+  if (tooltip) tooltip.classList.add('hidden');
+
   const showTooltip = (item: RunRecapItem) => {
     if (!tooltip) return;
     let def: ItemDef;
@@ -1237,8 +1251,30 @@ function renderRunEnd(kind: RunOutcome, detail: string, recap?: RunRecap): void 
     tooltip.replaceChildren(artWrap, name, hooks, lore);
   };
 
-  if (!recap || recap.items.length === 0) {
+  const positionTooltip = (clientX: number, clientY: number): void => {
+    if (!tooltip) return;
+    const offset = 16;
+    const pad = 12;
+    const rect = tooltip.getBoundingClientRect();
+    const w = rect.width || 300;
+    const h = rect.height || 220;
+    let x = clientX + offset;
+    let y = clientY + offset;
+    if (x + w + pad > window.innerWidth) {
+      x = Math.max(pad, clientX - w - offset);
+    }
+    if (y + h + pad > window.innerHeight) {
+      y = Math.max(pad, clientY - h - offset);
+    }
+    tooltip.style.left = `${Math.round(x)}px`;
+    tooltip.style.top = `${Math.round(y)}px`;
+  };
+
+  const hideTooltip = (): void => {
     if (tooltip) tooltip.classList.add('hidden');
+  };
+
+  if (!recap || recap.items.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'pause-inv-empty';
     empty.textContent = 'No relics bound in this cycle.';
@@ -1249,12 +1285,24 @@ function renderRunEnd(kind: RunOutcome, detail: string, recap?: RunRecap): void 
         { id: item.id, name: item.name, stacks: item.stacks, rarity: item.rarity },
         'item-chip runend-chip',
       );
+      chip.removeAttribute('title');
       chip.tabIndex = 0;
-      chip.addEventListener('mouseenter', () => showTooltip(item));
-      chip.addEventListener('focus', () => showTooltip(item));
+      chip.addEventListener('mouseenter', (e: MouseEvent) => {
+        showTooltip(item);
+        positionTooltip(e.clientX, e.clientY);
+      });
+      chip.addEventListener('mousemove', (e: MouseEvent) => {
+        positionTooltip(e.clientX, e.clientY);
+      });
+      chip.addEventListener('mouseleave', hideTooltip);
+      chip.addEventListener('focus', () => {
+        showTooltip(item);
+        const r = chip.getBoundingClientRect();
+        positionTooltip(r.right, r.top);
+      });
+      chip.addEventListener('blur', hideTooltip);
       invList.appendChild(chip);
     }
-    showTooltip(recap.items[0]);
   }
 
   restartBtn.onclick = () => {

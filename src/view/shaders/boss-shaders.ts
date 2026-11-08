@@ -110,7 +110,7 @@ void main() {
     float fade = 1.0 - smoothstep(0.75, 1.0, uProgress);
     if (uStyle < 0.5) {
       // Lava Pool from Cinder Heart meteor:
-      // Resurrect 64 palette + slow movement + boiling/bubbling matching env hazard
+      // Resurrect 64 palette + slow movement + clean discrete magma crater
       const float GRID = 64.0;
       vec2 uvGrid = (floor(uv * GRID) + 0.5) / GRID;
       vec2 pGrid = (uvGrid - 0.5) * 2.0;
@@ -121,12 +121,12 @@ void main() {
         return;
       }
 
-      float boilSpeed = 0.18;
+      float boilSpeed = 0.14;
       float animTime = uTime * boilSpeed;
 
-      float edgeNoise = fbm(pGrid * 2.2 + vec2(sin(animTime * 0.8), cos(animTime * 0.6)) * 0.35);
-      float poolR = 0.88 + (edgeNoise - 0.5) * 0.16;
-      float poolMask = smoothstep(poolR, poolR - 0.16, rGrid);
+      float edgeNoise = fbm(pGrid * 2.5 + vec2(sin(animTime * 0.8), cos(animTime * 0.6)) * 0.35);
+      float poolR = 0.86 + (edgeNoise - 0.5) * 0.14;
+      float poolMask = smoothstep(poolR, poolR - 0.14, rGrid);
 
       if (poolMask <= 0.01) {
         gl_FragColor = vec4(0.0);
@@ -134,39 +134,30 @@ void main() {
       }
 
       vec2 flow = vec2(
-        fbm(pGrid * 1.5 + vec2(animTime * 0.22, -animTime * 0.18)),
-        fbm(pGrid * 1.5 + vec2(-animTime * 0.18, animTime * 0.22))
+        fbm(pGrid * 1.6 + vec2(animTime * 0.2, -animTime * 0.16)),
+        fbm(pGrid * 1.6 + vec2(-animTime * 0.16, animTime * 0.2))
       );
-      float surface = fbm(pGrid * 2.2 + flow * 1.2);
-
-      float b1Body, b1Ring, b1Spec;
-      float b2Body, b2Ring, b2Spec;
-      bubbleLayer(pGrid + flow * 0.10, 0.15, 2.3, b1Body, b1Ring, b1Spec);
-      bubbleLayer(pGrid - flow * 0.12 + vec2(17.3, 41.2), 0.19, 3.2, b2Body, b2Ring, b2Spec);
-
-      float totalBubbleBody = clamp(b1Body + b2Body, 0.0, 1.0);
-      float totalBubbleRing = clamp(b1Ring + b2Ring, 0.0, 1.0);
-      float totalBubbleSpec = clamp(b1Spec + b2Spec, 0.0, 1.0);
+      float surface = fbm(pGrid * 2.4 + flow * 0.8);
 
       // Resurrect 64 lava palette:
       vec3 crust = vec3(0.180, 0.094, 0.082);      // #2e1815
       vec3 deepMagma = vec3(0.620, 0.157, 0.208);  // #9e2835
       vec3 magmaDeep = vec3(0.918, 0.310, 0.212);  // #ea4f36
-      vec3 lavaBubble = vec3(0.984, 0.420, 0.114); // #fb6b1d
-      vec3 lavaRing = vec3(0.969, 0.588, 0.090);   // #f79617
-      vec3 lavaSpec = vec3(0.976, 0.761, 0.169);   // #f9c22b
+      vec3 lavaEmber = vec3(0.969, 0.588, 0.090);  // #f79617
+      vec3 lavaGlint = vec3(0.976, 0.761, 0.169);  // #f9c22b
 
       float heatVeins = step(0.48, surface);
       vec3 fluid = mix(crust, magmaDeep, surface);
       fluid = mix(fluid, deepMagma, (1.0 - surface) * 0.45);
-      fluid = mix(fluid, lavaBubble, heatVeins * 0.65);
+      fluid = mix(fluid, lavaEmber, heatVeins * 0.65);
 
-      fluid = mix(fluid, lavaBubble, totalBubbleBody);
-      fluid = mix(fluid, lavaRing, totalBubbleRing);
-      fluid = mix(fluid, lavaSpec, totalBubbleSpec);
+      // Fine micro-fissure sparks
+      float sparkNoise = fbm(pGrid * 7.0 - vec2(animTime * 0.8, -animTime * 0.6));
+      float sparkGlow = step(0.76, sparkNoise);
+      fluid = mix(fluid, lavaGlint, sparkGlow * 0.8);
 
       col = fluid;
-      alpha = clamp((surface * 0.62 + totalBubbleBody * 0.85 + 0.12) * poolMask * fade * 0.94, 0.0, 0.94);
+      alpha = clamp((0.40 + surface * 0.38 + sparkGlow * 0.2) * poolMask * fade * 0.92, 0.0, 0.92);
     } else {
       // Crystalline rime pool
       float n = fbm(p * 3.8 + vec2(uTime * 0.65, -uTime * 0.45));
@@ -544,7 +535,7 @@ export class BossShaders {
       slot.dir[0] = pool.dirX[i];
       slot.dir[1] = pool.dirY[i];
 
-      const quadSize = kind === HAZ_POOL && pool.style[i] === 0 ? Math.round(r * 2.3) : r * 2;
+      const quadSize = r * 2;
       slot.quad
         .setVisible(true)
         .setSize(quadSize, quadSize)

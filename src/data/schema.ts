@@ -7,12 +7,29 @@ export type EntityRole = 'fodder' | 'elite' | 'boss';
 export type RunPhase = 'play' | 'levelup' | 'portal' | 'victory' | 'defeat';
 export type TeleporterState = 'hidden' | 'charging' | 'done';
 
-export type StatId = 'speed' | 'maxHp' | 'radius' | 'damage' | 'cooldown' | 'critChance' | 'critDamage';
+export type StatId =
+  | 'speed'
+  | 'maxHp'
+  | 'radius'
+  | 'damage'
+  | 'cooldown'
+  | 'critChance'
+  | 'critDamage'
+  | 'armor'
+  | 'hazardResist'
+  | 'hpRegen'
+  | 'pickupRadius'
+  | 'xpGain'
+  | 'aoeRadius'
+  | 'projSpeed'
+  | 'controlDuration'
+  | 'eliteDamage';
 
 export type ItemHook =
   | { op: 'add'; stat: StatId; value: number }
   | { op: 'pct'; stat: StatId; value: number }
-  | { op: 'on-kill'; stat: 'hp'; value: number };
+  | { op: 'on-kill'; stat: 'hp'; value: number }
+  | { op: 'on-crit'; stat: 'cooldown'; value: number };
 
 export type UnlockCondition =
   | { type: 'stage-clear'; stageId: string; count?: number; label: string }
@@ -464,4 +481,13 @@ export type ResolvedStats = {
   cooldownMul: number;
   critChance: number;
   critMul: number;
+  armor: number;
+  hazardResist: number;
+  hpRegen: number;
+  pickupRadiusMul: number;
+  xpMul: number;
+  aoeRadiusMul: number;
+  projSpeedMul: number;
+  controlDurationMul: number;
+  eliteDamageMul: number;
 };

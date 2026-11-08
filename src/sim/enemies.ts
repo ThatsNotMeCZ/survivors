@@ -1,5 +1,5 @@
 import { FX_DEATH, FX_HURT, FX_MUZZLE } from '../config';
-import type { EntityDef, RangedAi, SniperAi } from '../data/schema';
+import type { EntityDef, EntityRole, RangedAi, SniperAi } from '../data/schema';
 import { stepBoss } from './boss';
 import { circlesOverlap, clamp } from './collision';
 import { emitFx } from './fx';
@@ -9,7 +9,7 @@ import { spawnAcidPool } from './obstacles';
 import { TEAM_ENEMY, spawnProjectile } from './projectiles';
 import { onKillHeal } from './stats';
 import { applySlow, tickEnemySlow } from './status';
-import type { World } from './world';
+import { damagePlayer, healPlayer, type World } from './world';
 
 export const ROLE_FODDER = 0;
 export const ROLE_ELITE = 1;
@@ -289,9 +289,7 @@ export function killEnemy(world: World, index: number): void {
   world.credits += enemies.credits[index];
   const heal = onKillHeal(world.inventory, world.catalog.item);
   if (heal > 0) {
-    const prevHp = world.player.hp;
-    world.player.hp = Math.min(world.player.maxHp, world.player.hp + heal);
-    world.healingDone += Math.max(0, world.player.hp - prevHp);
+    healPlayer(world, heal);
   }
   emitFx(world.fx, FX_DEATH, x, y, 0xffd35a);
   enemies.alive[index] = 0;
@@ -314,15 +312,16 @@ export function killEnemy(world: World, index: number): void {
     world.portal.y = y;
   }
   if (!spawnGem(world.gems, x, y, xp)) {
-    grantXp(world, xp);
+    grantXp(world, xp * world.stats.xpMul);
   }
   if (
     defId &&
     !world.collectedLores.has(defId) &&
     !hasActiveLoreDrop(world.lores, defId)
   ) {
-    const def = world.catalog.entity(defId);
-    const chance = world.catalog.loop.loreDropChance[def.role] ?? 0;
+    const roleKey: EntityRole =
+      role === ROLE_BOSS ? 'boss' : role === ROLE_ELITE ? 'elite' : 'fodder';
+    const chance = world.catalog.loop.loreDropChance[roleKey] ?? 0;
     if (chance > 0 && Math.random() < chance) {
       spawnLoreDrop(world.lores, x, y, defId);
     }
@@ -547,8 +546,7 @@ function fireSniper(world: World, i: number, ai: SniperAi): void {
   emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
   const dmgMul = enemies.role[i] === ROLE_ELITE ? world.catalog.loop.elite.damageMul : 1;
   const dmg = ai.damage * world.coefficient * dmgMul;
-  player.hp -= dmg;
-  world.damageTaken += dmg;
+  damagePlayer(world, dmg);
 }
 
 function deflectFromObstacles(
@@ -625,8 +623,7 @@ function explodeNoxious(world: World, index: number): void {
   ) {
     emitFx(world.fx, FX_HURT, player.x, player.y, 0xff3355);
     const dmg = cfg.popDamage * world.coefficient;
-    player.hp -= dmg;
-    world.damageTaken += dmg;
+    damagePlayer(world, dmg, true);
   }
   spawnAcidPool(world, x, y);
   killEnemy(world, index);
@@ -660,23 +657,27 @@ export function applyEnemyDamage(world: World, index: number, damage: number): v
   const { enemies } = world;
   if (enemies.alive[index] === 0 || damage <= 0) return;
   enemies.hurtRemain[index] = 0.12;
+  let finalDamage = damage;
+  if (enemies.role[index] === ROLE_ELITE || enemies.role[index] === ROLE_BOSS) {
+    finalDamage *= world.stats.eliteDamageMul;
+  }
   if (enemies.role[index] === ROLE_ELITE && enemies.shielder[index] !== 0) {
     enemies.shieldDelayRemain[index] = world.catalog.loop.shielder.delay;
     if (enemies.shieldHp[index] > 0) {
-      if (damage <= enemies.shieldHp[index]) {
-        enemies.shieldHp[index] -= damage;
-        world.damageDealt += damage;
+      if (finalDamage <= enemies.shieldHp[index]) {
+        enemies.shieldHp[index] -= finalDamage;
+        world.damageDealt += finalDamage;
         return;
       } else {
         world.damageDealt += enemies.shieldHp[index];
-        damage -= enemies.shieldHp[index];
+        finalDamage -= enemies.shieldHp[index];
         enemies.shieldHp[index] = 0;
       }
     }
   }
-  const dealt = Math.min(Math.max(0, enemies.hp[index]), damage);
+  const dealt = Math.min(Math.max(0, enemies.hp[index]), finalDamage);
   world.damageDealt += dealt;
-  enemies.hp[index] -= damage;
+  enemies.hp[index] -= finalDamage;
   if (enemies.hp[index] <= 0) startEnemyDeath(world, index);
 }
 

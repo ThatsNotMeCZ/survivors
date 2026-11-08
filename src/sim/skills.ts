@@ -53,7 +53,7 @@ function applyEffect(world: World, input: InputFrame, effect: SkillEffect): void
       spawnDelayedStrike(world.zones, {
         x: world.aimX,
         y: world.aimY,
-        radius: effect.radius,
+        radius: effect.radius * world.stats.aoeRadiusMul,
         delay: effect.delay,
         damage: effect.damage * world.stats.damageMul,
       });
@@ -74,14 +74,14 @@ function fireProjectile(world: World, effect: Extract<SkillEffect, { type: 'proj
   let flags = 0;
   if (effect.pierce) flags |= FLAG_PIERCE;
   if (effect.flyOver) flags |= FLAG_FLYOVER;
-  const impactRadius = effect.impactRadius ?? 0;
+  const impactRadius = (effect.impactRadius ?? 0) * world.stats.aoeRadiusMul;
   if (impactRadius > 0) flags |= FLAG_IMPACT | FLAG_FLYOVER;
   spawnProjectile(world.projectiles, {
     x: world.player.x + aim.x * muzzle,
     y: world.player.y + aim.y * muzzle,
     dirX: aim.x,
     dirY: aim.y,
-    speed: effect.speed,
+    speed: effect.speed * world.stats.projSpeedMul,
     lifetime: effect.lifetime,
     radius: effect.radius,
     damage: effect.damage * world.stats.damageMul,
@@ -102,13 +102,13 @@ function fireTether(world: World, effect: Extract<SkillEffect, { type: 'tether' 
     y: world.player.y + aim.y * muzzle,
     dirX: aim.x,
     dirY: aim.y,
-    speed: effect.speed,
+    speed: effect.speed * world.stats.projSpeedMul,
     lifetime: effect.lifetime,
     radius: effect.radius,
     damage: 0,
     team: TEAM_PLAYER,
     flags: FLAG_TETHER,
-    rootDuration: effect.rootDuration,
+    rootDuration: effect.rootDuration * world.stats.controlDurationMul,
     tetherDps: effect.fodderContactDps * world.stats.damageMul,
   });
 }
@@ -124,9 +124,9 @@ function laySlowLine(world: World, effect: Extract<SkillEffect, { type: 'slow-li
     y: world.player.y + aim.y * offset,
     dirX: perpX,
     dirY: perpY,
-    length: effect.length,
-    width: effect.width,
-    duration: effect.duration,
+    length: effect.length * world.stats.aoeRadiusMul,
+    width: effect.width * world.stats.aoeRadiusMul,
+    duration: effect.duration * world.stats.controlDurationMul,
     slowMul: effect.slowMul,
     damage: effect.damage * world.stats.damageMul,
     fodderOnly: effect.fodderOnly,
@@ -149,7 +149,7 @@ function startDash(
   if (len < 0.001) return;
   const speed = effect.distance / effect.duration;
   if ((effect.decoyDuration ?? 0) > 0) {
-    spawnDecoy(world.decoy, world.player.x, world.player.y, effect.decoyDuration ?? 0);
+    spawnDecoy(world.decoy, world.player.x, world.player.y, (effect.decoyDuration ?? 0) * world.stats.controlDurationMul);
   }
   world.player.dashVx = (dx / len) * speed;
   world.player.dashVy = (dy / len) * speed;

@@ -176,17 +176,19 @@
 
       <!-- 2B. THE ARCHIVES (Standalone Codex & Ledger) -->
       <div id="archives" class="hidden">
-        <header class="hall-header archives-header" data-ui-sprite="hall-banner">
-          <button type="button" id="archives-back" class="hall-medallion" aria-label="Back" title="Back" data-ui-sprite="hall-medailon">
-            <span aria-hidden="true">◁</span>
-          </button>
+        <header class="archives-header">
           <div class="archives-brand-group">
-            <p class="archives-kicker">HERMETIC CODEX &amp; LEDGER</p>
-            <h1 id="archives-brand" class="hall-brand">THE ARCHIVES</h1>
+            <button type="button" id="archives-back" class="hall-medallion" aria-label="Back" title="Back" data-ui-sprite="hall-medailon">
+              <span aria-hidden="true">◁</span>
+            </button>
+            <div class="archives-title-wrap">
+              <p class="archives-kicker">HERMETIC CODEX &amp; LEDGER</p>
+              <h1 id="archives-brand" class="hall-brand">THE ARCHIVES</h1>
+            </div>
           </div>
+          <div id="archives-ribbon" class="archives-ribbon" aria-label="Archive Totals"></div>
         </header>
-        <div id="archives-ribbon" class="archives-ribbon" aria-label="Archive Totals"></div>
-        <aside class="hall-sidebar archives-sidebar">
+        <aside class="archives-sidebar">
           <nav id="archives-nav" class="archives-nav" role="tablist" aria-label="Archive Chapters"></nav>
           <div class="archives-sidebar-foot" aria-hidden="true">
             <span>☉ ☽ ☿ ♀ ♂ ♃ ♄</span>
@@ -262,7 +264,7 @@
 
       <!-- 5. GAME OVER / RUN END VIEW -->
       <div id="runend-view" class="hidden" aria-labelledby="runend-title">
-        <header class="runend-header" data-ui-sprite="hall-banner">
+        <header class="runend-header" data-ui-sprite="sting-banner">
           <p id="runend-kicker" class="runend-kicker"></p>
           <h1 id="runend-title" class="runend-title"></h1>
           <p id="runend-sub" class="runend-sub"></p>

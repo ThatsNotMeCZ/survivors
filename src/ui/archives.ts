@@ -2,7 +2,6 @@ import { playSfx } from '../audio';
 import { catalog } from '../data/catalog';
 import type {
   EntityDef,
-  EntityRole,
   ItemDef,
   ItemHook,
   ItemRarity,
@@ -48,17 +47,20 @@ const STAT_LABEL: Record<StatId, string> = {
   cooldown: 'Cooldown',
   critChance: 'Crit Chance',
   critDamage: 'Crit Damage',
-};
-
-const ROLE_LABEL: Record<EntityRole, string> = {
-  fodder: 'Lesser Dross',
-  elite: 'Noxious Elite',
-  boss: 'Seal Guardian',
+  armor: 'Armor',
+  hazardResist: 'Hazard Ward',
+  hpRegen: 'HP/s Regen',
+  pickupRadius: 'Essence Magnet',
+  xpGain: 'Essence XP',
+  aoeRadius: 'Area Size',
+  projSpeed: 'Projectile Speed',
+  controlDuration: 'Rite Duration',
+  eliteDamage: 'Elite & Boss Damage',
 };
 
 let activeTab: ArchiveTab = 'howto';
 let activeLoreSub: LoreSubTab = 'work';
-let activeEntityRole: 'all' | EntityRole = 'all';
+let activeEntityFilter: 'all' | 'fodder' | 'boss' = 'all';
 let selectedEntityId: string = catalog.entities[0]?.id ?? 'ember-mite';
 let activeItemRarity: 'all' | ItemRarity = 'all';
 let selectedItemId: string = catalog.items[0]?.id ?? 'glass-cannon';
@@ -121,10 +123,10 @@ function renderRibbon(): void {
     const item = document.createElement('div');
     item.className = 'archives-ribbon-pill';
     const label = document.createElement('span');
-    label.className = 'ribbon-k';
+    label.className = 'archives-ribbon-k';
     label.textContent = k;
     const val = document.createElement('span');
-    val.className = 'ribbon-v';
+    val.className = 'archives-ribbon-v';
     val.textContent = v;
     item.append(label, val);
     ribbon.appendChild(item);
@@ -160,7 +162,7 @@ function renderSidebar(): void {
     copy.append(title, sub);
 
     const arrow = document.createElement('span');
-    arrow.className = 'vessel-active-arrow';
+    arrow.className = 'archives-tab-arrow';
     arrow.setAttribute('aria-hidden', 'true');
 
     btn.append(glyph, copy, arrow);
@@ -537,10 +539,9 @@ function buildGreatWorkLore(): HTMLElement {
 
   for (const entry of treatises) {
     const card = document.createElement('article');
-    card.className = 'archives-lore-parchment parchment-box';
-    card.dataset.uiSprite = 'parchment-panel';
+    card.className = 'archives-lore-parchment';
     const kicker = document.createElement('p');
-    kicker.className = 'overlay-kicker';
+    kicker.className = 'info-card-kicker';
     kicker.textContent = entry.kicker;
     const h4 = document.createElement('h4');
     h4.className = 'lore-parchment-title';
@@ -735,9 +736,9 @@ function buildChambersLore(): HTMLElement {
       const fodderName = isEntitySeen(stage.fodder, rec) ? catalog.entity(stage.fodder).name : '???';
       const rangedName = stage.ranged ? (isEntitySeen(stage.ranged, rec) ? catalog.entity(stage.ranged).name : '???') : 'None';
       const sniperName = stage.sniper ? (isEntitySeen(stage.sniper, rec) ? catalog.entity(stage.sniper).name : '???') : 'None';
-      const eliteName = isEntitySeen(stage.elite, rec) ? catalog.entity(stage.elite).name : '???';
+      const wardenName = isEntitySeen(stage.elite, rec) ? catalog.entity(stage.elite).name : '???';
       const bossName = isEntitySeen(stage.boss, rec) ? catalog.entity(stage.boss).name : '???';
-      dList.textContent = `Swarm: ${fodderName} & ${rangedName} · Sightline: ${sniperName} · First Elite (${eliteName}) at ${stage.firstEliteAt}s · Seal Guardian: ${bossName}.`;
+      dList.textContent = `Swarm: ${fodderName} & ${rangedName} · Sightline: ${sniperName} · Warden: ${wardenName} · Seal Guardian: ${bossName}.`;
     } else {
       dList.textContent = 'Swarm: ??? · Sightline: ??? · Seal Guardian: ???';
     }
@@ -833,21 +834,20 @@ function buildBestiaryView(): HTMLElement {
 
   const filterBar = document.createElement('div');
   filterBar.className = 'archives-filter-bar';
-  const filters: { id: 'all' | EntityRole; label: string }[] = [
+  const filters: { id: 'all' | 'fodder' | 'boss'; label: string }[] = [
     { id: 'all', label: `All (${catalog.entities.length})` },
-    { id: 'fodder', label: 'Fodder' },
-    { id: 'elite', label: 'Elites' },
+    { id: 'fodder', label: 'Denizens' },
     { id: 'boss', label: 'Guardians' },
   ];
   for (const f of filters) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'archives-filter-pill';
-    btn.dataset.active = f.id === activeEntityRole ? '1' : '0';
+    btn.dataset.active = f.id === activeEntityFilter ? '1' : '0';
     btn.textContent = f.label;
     btn.addEventListener('click', () => {
       playSfx('click');
-      activeEntityRole = f.id;
+      activeEntityFilter = f.id;
       const list = filteredEntities();
       if (!list.some((e) => e.id === selectedEntityId) && list[0]) {
         selectedEntityId = list[0].id;
@@ -864,8 +864,7 @@ function buildBestiaryView(): HTMLElement {
   grid.className = 'archives-entity-grid';
 
   const dossierWrap = document.createElement('aside');
-  dossierWrap.className = 'archives-dossier parchment-box';
-  dossierWrap.dataset.uiSprite = 'parchment-panel';
+  dossierWrap.className = 'archives-dossier';
 
   const selected = catalog.entities.find((e) => e.id === selectedEntityId) ?? list[0] ?? catalog.entities[0];
   fillEntityDossier(dossierWrap, selected, rec);
@@ -874,6 +873,7 @@ function buildBestiaryView(): HTMLElement {
     const kills = rec.entityKills[entity.id] ?? 0;
     const seen = (rec.entityEncounters[entity.id] ?? 0) > 0 || kills > 0;
     const hasLore = (rec.entityLores[entity.id] ?? 0) > 0;
+    const archetype = getEntityArchetype(entity);
 
     const card = document.createElement('button');
     card.type = 'button';
@@ -887,8 +887,8 @@ function buildBestiaryView(): HTMLElement {
     mountEntityArt(artWrap, entity.id, 'entity-card-canvas', seen ? entity.name : 'Unencountered Entity');
 
     const roleTag = document.createElement('span');
-    roleTag.className = `entity-role-badge role-badge-${entity.role}`;
-    roleTag.textContent = entity.role.toUpperCase();
+    roleTag.className = `entity-role-badge archetype-badge-${archetype.toLowerCase()}`;
+    roleTag.textContent = archetype.toUpperCase();
 
     const name = document.createElement('span');
     name.className = 'entity-card-name';
@@ -918,9 +918,17 @@ function buildBestiaryView(): HTMLElement {
   return layout;
 }
 
+function getEntityArchetype(entity: EntityDef): string {
+  if (entity.role === 'boss') return 'Guardian';
+  if (entity.ai.type === 'sniper') return 'Sniper';
+  if (entity.ai.type === 'ranged') return 'Ranged';
+  return 'Chaser';
+}
+
 function filteredEntities(): EntityDef[] {
-  if (activeEntityRole === 'all') return catalog.entities;
-  return catalog.entities.filter((e) => e.role === activeEntityRole);
+  if (activeEntityFilter === 'all') return catalog.entities;
+  if (activeEntityFilter === 'boss') return catalog.entities.filter((e) => e.role === 'boss');
+  return catalog.entities.filter((e) => e.role !== 'boss');
 }
 
 function fillEntityDossier(root: HTMLElement, entity: EntityDef, rec: ArchiveRecords): void {
@@ -931,7 +939,11 @@ function fillEntityDossier(root: HTMLElement, entity: EntityDef, rec: ArchiveRec
 
   const header = document.createElement('p');
   header.className = 'dossier-header';
-  header.textContent = seen ? ROLE_LABEL[entity.role].toUpperCase() : 'UNENCOUNTERED ENTITY';
+  header.textContent = seen
+    ? entity.role === 'boss'
+      ? 'SEAL GUARDIAN'
+      : 'CHAMBER DENIZEN'
+    : 'UNENCOUNTERED ENTITY';
 
   const name = document.createElement('h2');
   name.className = 'hall-name';
@@ -949,7 +961,11 @@ function fillEntityDossier(root: HTMLElement, entity: EntityDef, rec: ArchiveRec
   const ledgerStrip = document.createElement('div');
   ledgerStrip.className = 'archives-dossier-ledger';
   const loreStatus = hasLore ? 'RECOVERED' : 'UNRECOVERED';
-  ledgerStrip.innerHTML = `<span>ENCOUNTERED: <strong>${encounters.toLocaleString()}</strong></span><span>SLAIN: <strong>${kills.toLocaleString()}</strong></span><span>TREATISE: <strong>${loreStatus}</strong></span>`;
+  ledgerStrip.innerHTML = `
+    <div class="archives-dossier-ledger-item"><span>ENCOUNTERED:</span><strong>${encounters.toLocaleString()}</strong></div>
+    <div class="archives-dossier-ledger-item"><span>SLAIN:</span><strong>${kills.toLocaleString()}</strong></div>
+    <div class="archives-dossier-ledger-item"><span>TREATISE:</span><strong>${loreStatus}</strong></div>
+  `;
 
   const lore = document.createElement('p');
   if (!seen) {
@@ -1048,14 +1064,12 @@ function describeEntityBehavior(entity: EntityDef): string {
       `Keeps ${entity.ai.keep}px distance and locks a sightline for ${entity.ai.windup}s before firing a ${entity.ai.damage}-damage beam. Solid pillars block the shot.`,
     );
   }
-  if (entity.role === 'elite') {
-    const nox = catalog.loop.noxious;
-    const sh = catalog.loop.shielder;
-    parts.push(
-      `Spawns as either Shielder (azure outline, +${Math.round(sh.percentHp * 100)}% regenerating Aether Shield) or Noxious (viridian overlay, slows on contact, erupts into a temporary acid hazard ${nox.corpseDelay}s post-mortem).`,
-    );
-  } else if (entity.role === 'boss') {
+  if (entity.role === 'boss') {
     parts.push('Manifests when the Transmutation Circle is fully charged. Slaying it opens the Rift.');
+  } else {
+    parts.push(
+      'Can spawn as an Elite affliction (azure Aether Shield or viridian Noxious aura) as chamber pressure mounts.',
+    );
   }
   return parts.join(' ');
 }
@@ -1105,8 +1119,7 @@ function buildReliquaryView(): HTMLElement {
   grid.className = 'archives-entity-grid';
 
   const dossierWrap = document.createElement('aside');
-  dossierWrap.className = 'archives-dossier parchment-box';
-  dossierWrap.dataset.uiSprite = 'parchment-panel';
+  dossierWrap.className = 'archives-dossier';
 
   const selected = catalog.items.find((i) => i.id === selectedItemId) ?? list[0] ?? catalog.items[0];
   fillItemDossier(dossierWrap, selected, rec);
@@ -1206,7 +1219,10 @@ function fillItemDossier(root: HTMLElement, item: ItemDef, rec: ArchiveRecords):
   const ledgerStrip = document.createElement('div');
   ledgerStrip.className = 'archives-dossier-ledger';
   const statusLabel = seen ? item.stack.toUpperCase() : unlockState.unlocked ? 'UNBOUND' : 'SEALED';
-  ledgerStrip.innerHTML = `<span>TIMES BOUND: <strong>×${picks.toLocaleString()}</strong></span><span>STATUS: <strong>${statusLabel}</strong></span>`;
+  ledgerStrip.innerHTML = `
+    <div class="archives-dossier-ledger-item"><span>TIMES BOUND:</span><strong>×${picks.toLocaleString()}</strong></div>
+    <div class="archives-dossier-ledger-item"><span>STATUS:</span><strong>${statusLabel}</strong></div>
+  `;
 
   const hooksBox = document.createElement('div');
   hooksBox.className = 'archives-dossier-hooks';
@@ -1245,6 +1261,9 @@ function formatHook(hook: ItemHook): { text: string; up: boolean } {
   const sign = hook.value > 0 ? '+' : '';
   if (hook.op === 'on-kill') {
     return { text: `${sign}${hook.value} HP on kill`, up: hook.value > 0 };
+  }
+  if (hook.op === 'on-crit') {
+    return { text: `-${hook.value}s CD on crit`, up: true };
   }
   const amount =
     hook.op === 'pct' ? `${sign}${Math.round(hook.value * 100)}%` : `${sign}${hook.value}`;

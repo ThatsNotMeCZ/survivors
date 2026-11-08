@@ -69,7 +69,7 @@ import {
 import { resolveBodyOverlaps } from './separation';
 import { tickSkillCooldowns, trySkills } from './skills';
 import { createHash, hashClear, hashInsert, hashQuery, type SpatialHash } from './spatial-hash';
-import { resolveStats } from './stats';
+import { onCritCooldownRefund, resolveStats } from './stats';
 import {
   createZonePool,
   emptyDecoy,
@@ -283,12 +283,44 @@ export function stepWorld(world: World, input: InputFrame, dt: number): void {
   stepLores(world, dt);
   stepLoop(world, dt);
 
+  if (world.stats.hpRegen > 0 && world.player.hp > 0) {
+    healPlayer(world, world.stats.hpRegen * dt);
+  }
+
   if (world.damageTaken > prevDamageTaken && world.player.hurtCooldown <= 0) {
     world.player.hurtRemain = 0.14;
     world.player.hurtCooldown = 0.22;
   }
   world.player.hurtCooldown = Math.max(0, world.player.hurtCooldown - dt);
   world.player.hurtRemain = Math.max(0, world.player.hurtRemain - dt);
+}
+
+export function damagePlayer(world: World, rawDamage: number, isHazard = false): void {
+  if (rawDamage <= 0 || world.player.iframeRemain > 0) return;
+  let finalDamage = rawDamage * (1 - world.stats.armor);
+  if (isHazard) {
+    finalDamage *= (1 - world.stats.hazardResist);
+  }
+  finalDamage = Math.max(0, finalDamage);
+  world.player.hp -= finalDamage;
+  world.damageTaken += finalDamage;
+}
+
+export function healPlayer(world: World, amount: number): void {
+  if (amount <= 0 || world.player.hp <= 0) return;
+  const prevHp = world.player.hp;
+  world.player.hp = Math.min(world.player.maxHp, world.player.hp + amount);
+  world.healingDone += Math.max(0, world.player.hp - prevHp);
+}
+
+export function triggerOnCrit(world: World): void {
+  const refund = onCritCooldownRefund(world.inventory, world.catalog.item);
+  if (refund <= 0) return;
+  for (const slot of ['primary', 'secondary', 'utility', 'special'] as const) {
+    if (world.player.skillCd[slot] > 0) {
+      world.player.skillCd[slot] = Math.max(0, world.player.skillCd[slot] - refund);
+    }
+  }
 }
 
 export function aimAngle(world: World): number {
@@ -344,10 +376,15 @@ function detonateImpacts(world: World): void {
     const isCrit = Math.random() < world.stats.critChance;
     const damage = isCrit ? projectiles.damage[i] * world.stats.critMul : projectiles.damage[i];
     emitFx(world.fx, FX_HIT, x, y, isCrit ? 0xff4422 : 0xffaa55);
+    let hitAny = false;
     for (let e = 0; e < enemies.cap; e += 1) {
       if (enemies.alive[e] === 0 || enemies.corpseRemain[e] > 0) continue;
       if (!circlesOverlap(x, y, radius, enemies.x[e], enemies.y[e], enemies.radius[e])) continue;
       applyEnemyDamage(world, e, damage);
+      hitAny = true;
+    }
+    if (isCrit && hitAny && projectiles.team[i] === TEAM_PLAYER) {
+      triggerOnCrit(world);
     }
     if (projectiles.team[i] === TEAM_PLAYER) {
       hitObstaclesAoE(world, x, y, radius, damage);
@@ -421,6 +458,9 @@ function applyPlayerHit(world: World, proj: number, enemy: number, tether: boole
   const damage = isCrit ? projectiles.damage[proj] * world.stats.critMul : projectiles.damage[proj];
   emitFx(world.fx, FX_HIT, projectiles.x[proj], projectiles.y[proj], isCrit ? 0xff4422 : 0xfff4c8);
   applyEnemyDamage(world, enemy, damage);
+  if (isCrit) {
+    triggerOnCrit(world);
+  }
 }
 
 function hitPlayer(world: World): void {
@@ -441,8 +481,7 @@ function hitPlayer(world: World): void {
       continue;
     }
     emitFx(world.fx, FX_HURT, projectiles.x[i], projectiles.y[i], 0xff7a3a);
-    player.hp -= projectiles.damage[i];
-    world.damageTaken += projectiles.damage[i];
+    damagePlayer(world, projectiles.damage[i]);
     killProjectile(projectiles, i);
   }
 }
@@ -469,8 +508,7 @@ function contactDamage(world: World, dt: number): void {
       fodderHits += 1;
     }
     const dmg = enemies.contactDps[idx] * dt;
-    player.hp -= dmg;
-    world.damageTaken += dmg;
+    damagePlayer(world, dmg);
     applyNoxiousContact(world, idx);
   }
 }

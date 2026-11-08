@@ -1,5 +1,36 @@
 {
   "entities": {
+    "astral-watcher": {
+      "src": "sprites/entities/astral-watcher.png",
+      "frameWidth": 28,
+      "frameHeight": 28,
+      "anims": {
+        "idle": {
+          "frames": [
+            0,
+            1
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            0,
+            1
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
     "cinder-heart": {
       "src": "sprites/entities/cinder-heart.png",
       "frameWidth": 86,
@@ -27,6 +58,37 @@
             5
           ],
           "frameRate": 2,
+          "repeat": 0
+        }
+      }
+    },
+    "ember-chaser": {
+      "src": "sprites/entities/ember-chaser.png",
+      "frameWidth": 56,
+      "frameHeight": 56,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 4,
           "repeat": 0
         }
       }
@@ -93,33 +155,41 @@
         }
       }
     },
-    "ember-warden": {
-      "src": "sprites/entities/ember-warden.png",
-      "frameWidth": 56,
-      "frameHeight": 56,
+    "frost-emperor": {
+      "src": "sprites/entities/frost-emperor.png",
+      "frameWidth": 79,
+      "frameHeight": 96,
       "anims": {
-        "walk": {
+        "idle": {
           "frames": [
-            1,
+            0,
+            1
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack-bolt": {
+          "frames": [
             2,
             3
           ],
-          "frameRate": 4,
-          "repeat": -1
+          "frameRate": 5.99,
+          "repeat": 0
         },
-        "idle": {
+        "attack-laser": {
           "frames": [
-            0
+            2,
+            3
           ],
-          "frameRate": 4,
-          "repeat": -1
+          "frameRate": 5.99,
+          "repeat": 0
         },
-        "attack": {
+        "attack-pulse": {
           "frames": [
             4,
             5
           ],
-          "frameRate": 4,
+          "frameRate": 5.99,
           "repeat": 0
         }
       }
@@ -233,6 +303,37 @@
         }
       }
     },
+    "frost-warden": {
+      "src": "sprites/entities/frost-warden.png",
+      "frameWidth": 42,
+      "frameHeight": 45,
+      "anims": {
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        }
+      }
+    },
     "penitent": {
       "src": "sprites/entities/penitent.png",
       "frameWidth": 48,
@@ -281,8 +382,8 @@
         }
       }
     },
-    "ember-chaser": {
-      "src": "sprites/entities/ember-warden.png",
+    "ember-warden": {
+      "src": "sprites/entities/ember-chaser.png",
       "frameWidth": 56,
       "frameHeight": 56,
       "anims": {
@@ -309,6 +410,37 @@
           ],
           "frameRate": 4,
           "repeat": 0
+        }
+      }
+    },
+    "frost-chaser": {
+      "src": "sprites/entities/frost-warden.png",
+      "frameWidth": 42,
+      "frameHeight": 45,
+      "anims": {
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 3,
+          "repeat": -1
         }
       }
     }

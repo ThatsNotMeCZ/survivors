@@ -7,7 +7,7 @@
       "rarity": "rare",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "damage", "value": 0.6 },
+        { "op": "pct", "stat": "damage", "value": 0.55 },
         { "op": "pct", "stat": "maxHp", "value": -0.25 }
       ],
       "lore": "Distilled volatile acid replaces your vital humors. Your strikes shatter stone with ferocious power, though your brittle shell can endure little punishment."
@@ -18,7 +18,7 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "speed", "value": 0.14 }
+        { "op": "pct", "stat": "speed", "value": 0.15 }
       ],
       "lore": "Grafted tendon from a swift sacrificial beast, woven into the vessel's stride to grant tireless speed across the arena."
     },
@@ -28,9 +28,9 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "maxHp", "value": 0.25 }
+        { "op": "pct", "stat": "armor", "value": 0.12 }
       ],
-      "lore": "Cooled furnace dross fused directly to the ribs, encasing the vessel's vital core in a hardened protective shell."
+      "lore": "Cooled furnace dross fused directly to the ribs, absorbing kinetic blows and turning aside the fiercest enemy strikes."
     },
     {
       "id": "hair-trigger",
@@ -48,10 +48,10 @@
       "rarity": "uncommon",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "damage", "value": 0.16 },
-        { "op": "pct", "stat": "critDamage", "value": 0.35 }
+        { "op": "pct", "stat": "aoeRadius", "value": 0.22 },
+        { "op": "pct", "stat": "projSpeed", "value": 0.2 }
       ],
-      "lore": "Alchemical bellows fitted to the core, stoking the inner flame to fuel destructive potency and amplify critical detonations.",
+      "lore": "Alchemical bellows fitted to the core, stoking inner combustion to propel your rites swifter and engulf wider swaths of the horde.",
       "unlock": {
         "type": "boss-kill",
         "entityId": "cinder-heart",
@@ -64,9 +64,9 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "speed", "value": 0.12 }
+        { "op": "pct", "stat": "hazardResist", "value": 0.35 }
       ],
-      "lore": "Feathers bound in consecrated tallow that lighten the vessel's frame and quicken its steps across the ash."
+      "lore": "Feathers sealed in consecrated sealing wax that insulate the vessel from boiling brimstone pools and caustic mire."
     },
     {
       "id": "hungry-clip",
@@ -74,10 +74,11 @@
       "rarity": "rare",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "cooldown", "value": -0.3 },
+        { "op": "add", "stat": "hpRegen", "value": 2.5 },
+        { "op": "pct", "stat": "controlDuration", "value": 0.35 },
         { "op": "pct", "stat": "radius", "value": 0.25 }
       ],
-      "lore": "A living glass vessel engorged on distilled vitae. Channels rapid, furious distillation into your arts, but swells your frame into an easier target.",
+      "lore": "A living glass vessel engorged on distilled vitae. Steadies the vessel with ceaseless regeneration and prolongs your binding rites, but swells your frame into an easier target.",
       "unlock": {
         "type": "elite-kills",
         "count": 10,
@@ -100,10 +101,10 @@
       "rarity": "uncommon",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "cooldown", "value": -0.12 },
-        { "op": "pct", "stat": "speed", "value": 0.06 }
+        { "op": "pct", "stat": "pickupRadius", "value": 0.35 },
+        { "op": "pct", "stat": "xpGain", "value": 0.15 }
       ],
-      "lore": "Purified liquid argent thins the humors, allowing aether to circulate freely and renewing your casts with swift grace."
+      "lore": "Purified liquid argent that resonates with spilled essence, drawing distant mercury drops to your core and transmuting them into richer insight."
     },
     {
       "id": "calcined-lens",
@@ -111,11 +112,11 @@
       "rarity": "rare",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "critChance", "value": 0.3 },
-        { "op": "pct", "stat": "critDamage", "value": 0.5 },
-        { "op": "pct", "stat": "speed", "value": -0.18 }
+        { "op": "pct", "stat": "critChance", "value": 0.25 },
+        { "op": "on-crit", "stat": "cooldown", "value": 0.25 },
+        { "op": "pct", "stat": "speed", "value": -0.15 }
       ],
-      "lore": "A heavy brass ocular bolted to the brow. Reveals fatal celestial alignments and structural fractures, drastically sharpening critical strikes at the heavy cost of your stride.",
+      "lore": "A heavy brass ocular bolted to the brow. Pinpoints fatal celestial fractures to trigger devastating critical strikes that hasten your rites, at the heavy cost of your stride.",
       "unlock": {
         "type": "total-kills",
         "count": 300,
@@ -143,12 +144,12 @@
       "rarity": "lunar",
       "stack": "linear",
       "hooks": [
-        { "op": "pct", "stat": "damage", "value": 0.75 },
-        { "op": "pct", "stat": "critDamage", "value": 0.5 },
-        { "op": "pct", "stat": "maxHp", "value": -0.4 },
-        { "op": "pct", "stat": "radius", "value": 0.2 }
+        { "op": "pct", "stat": "eliteDamage", "value": 0.6 },
+        { "op": "pct", "stat": "critDamage", "value": 0.75 },
+        { "op": "pct", "stat": "armor", "value": -0.25 },
+        { "op": "pct", "stat": "xpGain", "value": -0.25 }
       ],
-      "lore": "An unforgiven heresy against the Great Work. Ignites your arts with devastating pale lunar fire and catastrophic critical blasts, demanding a terrible toll upon your corporeal vessel.",
+      "lore": "An unforgiven heresy against the Great Work. Ignites your arts with catastrophic ruin against guardians and elite horrors, but renders your shell fragile and rejects ambient insight.",
       "unlock": {
         "type": "stage-clear",
         "stageId": "rime-dock",
@@ -161,7 +162,7 @@
       "rarity": "common",
       "stack": "linear",
       "hooks": [
-        { "op": "on-kill", "stat": "hp", "value": 0.25 }
+        { "op": "on-kill", "stat": "hp", "value": 0.3 }
       ],
       "lore": "A vermilion leech sealed in amber glass. It drinks the lingering humors from slain enemies and siphons their vital essence into your vessel.",
       "unlock": {

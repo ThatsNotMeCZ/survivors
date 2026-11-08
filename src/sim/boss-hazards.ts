@@ -3,7 +3,7 @@ import { circlesOverlap } from './collision';
 import { pillarBlocksShot } from './enemies';
 import { emitFx } from './fx';
 import { applyRoot, applySlow } from './status';
-import type { World } from './world';
+import { damagePlayer, type World } from './world';
 
 export const HAZ_METEOR = 0;
 export const HAZ_POOL = 1;
@@ -294,8 +294,7 @@ export function stepBossHazards(world: World, dt: number): void {
           circlesOverlap(x, y, r, player.x, player.y, player.radius)
         ) {
           emitFx(world.fx, FX_HURT, player.x, player.y, tint);
-          player.hp -= pool.damage[i];
-          world.damageTaken += pool.damage[i];
+          damagePlayer(world, pool.damage[i]);
         }
         if (pool.poolDuration[i] > 0) {
           pool.kind[i] = HAZ_POOL;
@@ -319,9 +318,9 @@ export function stepBossHazards(world: World, dt: number): void {
         circlesOverlap(pool.x[i], pool.y[i], pool.radius[i], player.x, player.y, player.radius)
       ) {
         const dmg = pool.damage[i] * dt;
-        player.hp -= dmg;
-        world.damageTaken += dmg;
-        applySlow(player, pool.slowMul[i], 0.25);
+        damagePlayer(world, dmg, true);
+        const slowMul = 1 - (1 - pool.slowMul[i]) * (1 - world.stats.hazardResist);
+        applySlow(player, slowMul, 0.25);
       }
       if (pool.elapsed[i] >= pool.duration[i]) {
         pool.alive[i] = 0;
@@ -341,8 +340,7 @@ export function stepBossHazards(world: World, dt: number): void {
             circlesOverlap(x, y, r, player.x, player.y, player.radius)
           ) {
             emitFx(world.fx, FX_HURT, player.x, player.y, 0x55ddff);
-            player.hp -= pool.damage[i];
-            world.damageTaken += pool.damage[i];
+            damagePlayer(world, pool.damage[i]);
             applyRoot(player, pool.rootDuration[i]);
           }
           pool.state[i] = 1;
@@ -373,8 +371,7 @@ export function stepBossHazards(world: World, dt: number): void {
             )
           ) {
             emitFx(world.fx, FX_HURT, player.x, player.y, 0x7ad4ff);
-            player.hp -= pool.damage[i];
-            world.damageTaken += pool.damage[i];
+            damagePlayer(world, pool.damage[i]);
             applySlow(player, pool.slowMul[i], pool.slowDuration[i]);
           }
           pool.state[i] = 1;
@@ -419,8 +416,7 @@ export function stepBossHazards(world: World, dt: number): void {
             !pillarBlocksShot(world, x, y, player.x, player.y)
           ) {
             emitFx(world.fx, FX_HURT, player.x, player.y, 0x55ddff);
-            player.hp -= pool.damage[i];
-            world.damageTaken += pool.damage[i];
+            damagePlayer(world, pool.damage[i]);
             applySlow(player, pool.slowMul[i], pool.slowDuration[i]);
           }
           pool.state[i] = 1;

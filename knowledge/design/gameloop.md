@@ -21,7 +21,7 @@ HTML overlays in `src/ui/` (not Phaser text). Phaser starts after **Start run**.
 
 | Beat | Stage 1 Cinder Yard | Stage 2 Rime Dock |
 |---|---|---|
-| First elite | 15s | 12s |
+| First elite | 25s | 18s |
 | Teleporter on | 55s | 50s |
 | Hold | 20s | 22s |
 | Boss | after hold | after hold (run end) |

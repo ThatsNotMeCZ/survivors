@@ -11,11 +11,14 @@ precision mediump float;
 
 varying vec2 outTexCoord;
 
+uniform sampler2D uMainSampler;
 uniform float uTime;
 uniform float uStyle;
 uniform float uPlayerIn;
 uniform float uSeed;
 uniform float uFade;
+uniform vec4 uFrameRect; // u0, v0, u1, v1
+uniform float uHasTex;
 
 float hash21(vec2 p) {
   p = fract(p * vec2(127.1, 311.7) + uSeed * 17.31);
@@ -47,152 +50,113 @@ float fbm(vec2 p) {
   return v;
 }
 
-// Boiling pixelated bubble burst cell
-float bubbleLayer(vec2 p, float speed, float scale, out float bubbleBody, out float bubbleRing, out float bubbleSpec) {
+// Micro-bubble cell confined inside fluid channels
+float microBubble(vec2 p, float speed, float scale) {
   vec2 sp = p * scale;
   vec2 cell = floor(sp);
   vec2 local = fract(sp) - 0.5;
   vec2 rnd = hash22(cell);
 
   float lifeTime = fract(uTime * speed + rnd.x * 6.28);
-  // Slower swelling, holding form, then snapping/popping
-  float grow = sin(clamp(lifeTime / 0.88, 0.0, 1.0) * 3.14159);
-  grow = pow(grow, 0.75);
-  float radius = grow * (0.34 + rnd.y * 0.14);
+  float grow = sin(clamp(lifeTime / 0.85, 0.0, 1.0) * 3.14159);
+  float radius = grow * (0.16 + rnd.y * 0.12);
 
-  vec2 offset = (rnd - 0.5) * 0.28;
-  vec2 diff = local - offset;
-  float d = length(diff);
-
-  float active = step(0.05, radius) * step(lifeTime, 0.94);
-  bubbleBody = step(d, radius) * active;
-  bubbleRing = step(radius - 0.09, d) * bubbleBody;
-  
-  // Pixel specular highlight on top-left of the bubble
-  float specDist = length(diff - vec2(-radius * 0.32, -radius * 0.32));
-  bubbleSpec = step(specDist, max(0.04, radius * 0.25)) * bubbleBody * (1.0 - bubbleRing);
-  return bubbleBody;
+  vec2 offset = (rnd - 0.5) * 0.35;
+  float d = length(local - offset);
+  return step(d, radius) * step(0.04, radius) * step(lifeTime, 0.92);
 }
 
 void main() {
-  // Quantize coordinates to discrete pixel grid for chunky pixel art reading
+  // Discrete 64x64 grid matching native pixel art resolution
   const float GRID = 64.0;
   vec2 rawUv = vec2(outTexCoord.x, 1.0 - outTexCoord.y);
   vec2 uv = (floor(rawUv * GRID) + 0.5) / GRID;
   vec2 p = (uv - 0.5) * 2.0;
   float r = length(p);
 
-  if (r > 1.0) {
+  vec2 atlasUv = mix(uFrameRect.xy, uFrameRect.zw, clamp(uv, 0.0, 1.0));
+  vec4 baseTex = uHasTex > 0.5 ? texture2D(uMainSampler, atlasUv) : vec4(0.0);
+
+  // If we have an authored sprite, isolate ONLY the molten/liquid interior
+  // Dark rocky rim, cracks in stone, and exterior transparent pixels must stay 100% unaffected.
+  float liquidMask = 0.0;
+  if (uHasTex > 0.5) {
+    if (baseTex.a < 0.2) {
+      gl_FragColor = vec4(0.0);
+      return;
+    }
+    if (uStyle < 0.5) {
+      // Cinder molten core: strong red/orange, low blue, not dark rock
+      float warmth = baseTex.r - baseTex.b;
+      float brightness = max(baseTex.r, baseTex.g);
+      liquidMask = smoothstep(0.20, 0.42, warmth) * step(0.26, brightness);
+    } else {
+      // Rime / Acid green-cyan pool: green dominance over red
+      float greenHue = baseTex.g - baseTex.r * 0.75;
+      liquidMask = smoothstep(0.08, 0.28, greenHue) * step(0.24, baseTex.g);
+    }
+  } else {
+    // Procedural fallback mask if no texture attached
+    float edgeNoise = fbm(p * 2.2);
+    liquidMask = smoothstep(0.78, 0.62, r + (edgeNoise - 0.5) * 0.15);
+  }
+
+  if (liquidMask <= 0.02) {
     gl_FragColor = vec4(0.0);
     return;
   }
 
-  // Slower boil speed
-  float boilSpeed = mix(0.18, 0.38, uPlayerIn);
-  float animTime = uTime * boilSpeed;
-
-  // Organic fluid mask with stepped perimeter
-  float edgeNoise = fbm(p * 2.2 + vec2(sin(animTime * 0.8), cos(animTime * 0.6)) * 0.35);
-  float poolR = 0.90 + (edgeNoise - 0.5) * 0.16;
-  float poolMask = smoothstep(poolR, poolR - 0.16, r);
-
-  if (poolMask <= 0.01) {
-    gl_FragColor = vec4(0.0);
-    return;
-  }
-
-  // Multi-frequency surface turbulence (slow, heavy flow)
+  // Slow, subtle surface flow
+  float flowSpeed = mix(0.12, 0.22, uPlayerIn);
   vec2 flow = vec2(
-    fbm(p * 1.5 + vec2(animTime * 0.22, -animTime * 0.18)),
-    fbm(p * 1.5 + vec2(-animTime * 0.18, animTime * 0.22))
+    fbm(p * 2.0 + vec2(uTime * flowSpeed, -uTime * flowSpeed * 0.8)),
+    fbm(p * 2.0 + vec2(-uTime * flowSpeed * 0.8, uTime * flowSpeed))
   );
-  float surface = fbm(p * 2.2 + flow * 1.2);
+  float surface = fbm(p * 3.0 + flow * 0.8);
 
-  // Large pixelated surface bubbles
-  float b1Body, b1Ring, b1Spec;
-  float b2Body, b2Ring, b2Spec;
-  bubbleLayer(p + flow * 0.10, mix(0.14, 0.28, uPlayerIn), 2.3, b1Body, b1Ring, b1Spec);
-  bubbleLayer(p - flow * 0.12 + vec2(17.3, 41.2), mix(0.18, 0.34, uPlayerIn), 3.2, b2Body, b2Ring, b2Spec);
-
-  float totalBubbleBody = clamp(b1Body + b2Body, 0.0, 1.0);
-  float totalBubbleRing = clamp(b1Ring + b2Ring, 0.0, 1.0);
-  float totalBubbleSpec = clamp(b1Spec + b2Spec, 0.0, 1.0);
-
-  // Rising vapor wisps (slow, lazy drift)
-  float vaporSway = sin(uv.y * 4.0 - uTime * (0.35 + uPlayerIn * 0.25)) * 0.08;
-  vec2 vaporCoord = vec2(p.x * 1.6 + vaporSway, (uv.y - 0.4) * 2.0 - uTime * (0.24 + uPlayerIn * 0.20));
-  float vaporNoise = fbm(vaporCoord);
-  float vaporMask = smoothstep(0.46, 0.82, vaporNoise) * smoothstep(0.12, 0.55, uv.y) * smoothstep(1.0, 0.70, r);
-  float vaporAlpha = vaporMask * mix(0.32, 0.58, uPlayerIn);
+  // Tiny discrete 1-2px boiling specks / micro-bubbles
+  float micro1 = microBubble(p + flow * 0.1, mix(0.18, 0.32, uPlayerIn), 7.0);
+  float micro2 = microBubble(p - flow * 0.12 + vec2(13.7, 29.1), mix(0.22, 0.38, uPlayerIn), 9.0);
+  float microTotal = clamp(micro1 + micro2, 0.0, 1.0);
 
   vec3 col = vec3(0.0);
   float alpha = 0.0;
 
   if (uStyle > 1.5) {
     // Style 2: Glacial Crevasse (Freezing cyan brine + crystalline ice glints)
-    vec3 deepIce = vec3(0.08, 0.28, 0.52);
-    vec3 brightCyan = vec3(0.32, 0.88, 1.0);
+    vec3 deepCyan = vec3(0.12, 0.55, 0.85);
+    vec3 brightCyan = vec3(0.45, 0.92, 1.0);
     vec3 hotGlint = vec3(0.92, 0.98, 1.0);
 
-    vec3 fluid = mix(deepIce, brightCyan, surface);
-    fluid = mix(fluid, brightCyan * 1.2, totalBubbleBody);
-    fluid = mix(fluid, deepIce * 0.6, totalBubbleRing);
-    fluid = mix(fluid, hotGlint, totalBubbleSpec);
+    vec3 fluid = mix(deepCyan, brightCyan, surface);
+    fluid = mix(fluid, hotGlint, microTotal * 0.85);
 
-    vec3 vaporCol = mix(brightCyan, hotGlint, vaporNoise);
-    col = mix(fluid, vaporCol, vaporAlpha * 0.55);
-    alpha = clamp((surface * 0.52 + totalBubbleBody * 0.75 + vaporAlpha) * poolMask, 0.0, 0.88);
+    col = fluid;
+    alpha = clamp((0.35 + surface * 0.30 + microTotal * 0.35) * liquidMask, 0.0, 0.65);
   } else if (uStyle > 0.5) {
-    // Style 1: Rime Brine / Noxious Caustic Acid Pool (Bubbling toxic green-cyan + caustic vapor)
-    // Resurrect 64 green tones: #239063, #1ebc73, #91db69, #cdff82
-    vec3 deepBrine = vec3(0.086, 0.353, 0.298);    // #165a4c
+    // Style 1: Rime Caustic Acid Pool (Bubbling toxic emerald & lime)
     vec3 causticGreen = vec3(0.118, 0.737, 0.451); // #1ebc73
     vec3 neonAcid = vec3(0.569, 0.859, 0.412);     // #91db69
     vec3 acidSpec = vec3(0.804, 0.875, 0.424);     // #cdff82
 
-    vec3 fluid = mix(deepBrine, causticGreen, surface);
-    fluid = mix(fluid, neonAcid, totalBubbleBody);
-    fluid = mix(fluid, deepBrine * 0.7, totalBubbleRing);
-    fluid = mix(fluid, acidSpec, totalBubbleSpec);
+    vec3 fluid = mix(causticGreen, neonAcid, surface);
+    fluid = mix(fluid, acidSpec, microTotal * 0.9);
 
-    vec3 steamCol = mix(causticGreen, neonAcid, vaporNoise);
-    col = mix(fluid, steamCol, vaporAlpha * 0.5);
-
-    // Dynamic sizzle flash when player is in the pool (slow pulse)
     float sizzle = uPlayerIn * (0.5 + 0.5 * sin(uTime * 3.5)) * 0.20;
-    col += neonAcid * sizzle;
-
-    alpha = clamp((surface * 0.58 + totalBubbleBody * 0.82 + vaporAlpha + sizzle) * poolMask, 0.0, 0.92);
+    col = fluid + acidSpec * sizzle;
+    alpha = clamp((0.38 + surface * 0.30 + microTotal * 0.32 + sizzle) * liquidMask, 0.0, 0.68);
   } else {
-    // Style 0: Cinder Slag Fissure (Molten magma crust + lava-colored bubbles from Resurrect 64)
-    // Resurrect 64 lava colors:
-    // Crust/dark basalt: #2e1815 vec3(0.180, 0.094, 0.082)
-    // Deep magma fluid:  #ea4f36 vec3(0.918, 0.310, 0.212)
-    // Bubble body lava:  #fb6b1d vec3(0.984, 0.420, 0.114)
-    // Bubble magma ring: #f79617 vec3(0.969, 0.588, 0.090)
-    // Bubble hot spec:   #f9c22b vec3(0.976, 0.761, 0.169)
-    vec3 crust = vec3(0.180, 0.094, 0.082);
-    vec3 magmaDeep = vec3(0.918, 0.310, 0.212);
-    vec3 lavaBubble = vec3(0.984, 0.420, 0.114);
-    vec3 lavaRing = vec3(0.969, 0.588, 0.090);
-    vec3 lavaSpec = vec3(0.976, 0.761, 0.169);
+    // Style 0: Cinder Molten Core (Warm glowing lava veins + golden micro-sparks)
+    vec3 magmaDeep = vec3(0.918, 0.310, 0.212);  // #ea4f36
+    vec3 lavaEmber = vec3(0.969, 0.588, 0.090);  // #f79617
+    vec3 lavaGlint = vec3(0.976, 0.761, 0.169);  // #f9c22b
 
-    float heatVeins = step(0.48, surface);
-    vec3 fluid = mix(crust, magmaDeep, surface);
-    fluid = mix(fluid, lavaBubble, heatVeins * 0.65);
+    vec3 fluid = mix(magmaDeep, lavaEmber, surface);
+    fluid = mix(fluid, lavaGlint, microTotal * 0.85);
 
-    // Lava bubbles with rich orange/red body, molten ring, and gold spec
-    fluid = mix(fluid, lavaBubble, totalBubbleBody);
-    fluid = mix(fluid, lavaRing, totalBubbleRing);
-    fluid = mix(fluid, lavaSpec, totalBubbleSpec);
-
-    vec3 heatHazeCol = mix(magmaDeep, lavaBubble, vaporNoise);
-    col = mix(fluid, heatHazeCol, vaporAlpha * 0.42);
-
-    float boilSpark = uPlayerIn * (0.5 + 0.5 * sin(uTime * 3.5)) * 0.18;
-    col += lavaRing * boilSpark;
-
-    alpha = clamp((surface * 0.62 + totalBubbleBody * 0.85 + vaporAlpha + boilSpark) * poolMask, 0.0, 0.92);
+    float simmer = uPlayerIn * (0.5 + 0.5 * sin(uTime * 3.2)) * 0.18;
+    col = fluid + lavaGlint * simmer;
+    alpha = clamp((0.36 + surface * 0.32 + microTotal * 0.32 + simmer) * liquidMask, 0.0, 0.68);
   }
 
   alpha *= clamp(uFade, 0.0, 1.0);
@@ -206,6 +170,8 @@ type EnvHazardSlot = {
   playerIn: number;
   seed: number;
   fade: number;
+  frameRect: [number, number, number, number];
+  hasTex: number;
 };
 
 const HAZARD_SHADER_CAP = 16;
@@ -222,6 +188,8 @@ export class EnvHazardShaderPool {
         playerIn: 0,
         seed: i * 7.13,
         fade: 1.0,
+        frameRect: [0, 0, 1, 1],
+        hasTex: 0,
       };
 
       slot.quad = scene.add
@@ -231,11 +199,14 @@ export class EnvHazardShaderPool {
             shaderName: 'EnvHazardShader',
             fragmentSource: ENV_HAZARD_FRAG,
             setupUniforms: (setUniform: (name: string, value: unknown) => void) => {
+              setUniform('uMainSampler', 0);
               setUniform('uTime', this.time);
               setUniform('uStyle', slot.style);
               setUniform('uPlayerIn', slot.playerIn);
               setUniform('uSeed', slot.seed);
               setUniform('uFade', slot.fade);
+              setUniform('uFrameRect', slot.frameRect);
+              setUniform('uHasTex', slot.hasTex);
             },
           },
           0,
@@ -262,6 +233,7 @@ export class EnvHazardShaderPool {
         timer?: number;
       }>;
     },
+    obstacleSprites: Phaser.GameObjects.Image[],
     playerX: number,
     playerY: number,
     playerRadius: number,
@@ -288,6 +260,7 @@ export class EnvHazardShaderPool {
       if (obs.type !== 'hazard') continue;
 
       const slot = this.slots[used];
+      const sprite = obstacleSprites[i];
       used += 1;
 
       // Check if player is currently standing inside this hazard
@@ -303,9 +276,23 @@ export class EnvHazardShaderPool {
       const targetPlayerIn = isPlayerInside ? 1.0 : 0.0;
       slot.playerIn += (targetPlayerIn - slot.playerIn) * Math.min(1.0, dt * 8.0);
 
-      const size = Math.round(obs.radius * 2.85);
+      if (sprite && sprite.texture && sprite.frame) {
+        if (slot.quad.textures.length === 0 || slot.quad.textures[0] !== sprite.texture) {
+          slot.quad.setTextures([sprite.texture]);
+        }
+        slot.hasTex = 1.0;
+        slot.frameRect[0] = sprite.frame.u0;
+        slot.frameRect[1] = sprite.frame.v0;
+        slot.frameRect[2] = sprite.frame.u1;
+        slot.frameRect[3] = sprite.frame.v1;
+      } else {
+        slot.hasTex = 0.0;
+      }
+
+      // Exact match with underlying sprite diameter so no oversized overlap occurs
+      const diameter = Math.round(obs.radius * 2);
       slot.quad
-        .setSize(size, size)
+        .setSize(diameter, diameter)
         .setOrigin(0.5, 0.5)
         .setPosition(Math.round(obs.x), Math.round(obs.y))
         .setVisible(true);

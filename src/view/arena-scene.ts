@@ -89,6 +89,7 @@ import {
 } from './sprites';
 import { AmbientShader } from './shaders/ambient-shader';
 import { BossShaders } from './shaders/boss-shaders';
+import { CircleChargeShader } from './shaders/circle-charge-shader';
 import { DamageFxShaderPool } from './shaders/damage-fx-shader';
 import { EliteAffixShaderPool } from './shaders/elite-affix-shader';
 import { EnvHazardShaderPool } from './shaders/env-hazard-shader';
@@ -112,7 +113,6 @@ type Spark = {
 const GHOST_CAP = 3;
 const WAYPOINT_DIST = 80;
 const WAYPOINT_PAD = 52;
-const ORBIT_CAP = 4;
 /** Display size > mite 24 / spitter 28 so the vessel reads as the hero. */
 const PLAYER_DISPLAY = 40;
 
@@ -128,11 +128,11 @@ export class ArenaScene extends Phaser.Scene {
   private eliteSprites: Phaser.GameObjects.Sprite[] = [];
   private eliteAffixShaders!: EliteAffixShaderPool;
   private bossSprite!: Phaser.GameObjects.Sprite;
-  private bossOrbits: Phaser.GameObjects.Image[] = [];
   private obstacleSprites: Phaser.GameObjects.Image[] = [];
   private volatileGlows: Phaser.GameObjects.Image[] = [];
   private floor!: Phaser.GameObjects.Image;
   private circleSprite!: Phaser.GameObjects.Image;
+  private circleChargeShader!: CircleChargeShader;
   private circleGlowFilter?: any;
   private portalSprite!: Phaser.GameObjects.Image;
   private telGlow!: Phaser.GameObjects.Image;
@@ -203,7 +203,6 @@ export class ArenaScene extends Phaser.Scene {
   private bossMusicActive = false;
   private shownOffer: ItemDef[] | null = null;
   private walkPhase = 0;
-  private circleSparkCd = 0;
   private lastCircleKey = '';
   private lastFacing: HorizontalFacing = 'right';
   private initialUnlockedItems = new Set<string>();
@@ -331,10 +330,6 @@ export class ArenaScene extends Phaser.Scene {
     this.bossSprite = this.add.sprite(0, 0, entityTextureKey('cinder-heart')).setVisible(false).setDepth(3);
     this.bossTrail1 = this.add.sprite(0, 0, entityTextureKey('cinder-heart')).setVisible(false).setDepth(2.9);
     this.bossTrail2 = this.add.sprite(0, 0, entityTextureKey('cinder-heart')).setVisible(false).setDepth(2.8);
-    this.bossOrbits = [];
-    for (let i = 0; i < ORBIT_CAP; i += 1) {
-      this.bossOrbits.push(this.add.image(0, 0, 'px-orbit-cinder').setVisible(false).setDepth(3));
-    }
     this.obstacleSprites = [];
     this.volatileGlows = [];
     for (let i = 0; i < this.world.obstacles.cap; i += 1) {
@@ -373,6 +368,7 @@ export class ArenaScene extends Phaser.Scene {
 
     this.ambientShader = new AmbientShader(this);
     this.bossShaders = new BossShaders(this);
+    this.circleChargeShader = new CircleChargeShader(this);
     this.damageFx = new DamageFxShaderPool(this);
     this.eliteAffixShaders = new EliteAffixShaderPool(this);
     this.envHazardShaders = new EnvHazardShaderPool(this);
@@ -594,6 +590,7 @@ export class ArenaScene extends Phaser.Scene {
     this.ambientShader.sync(this.cameras.main, this.world.runTime, biome);
     this.envHazardShaders.sync(
       this.world.obstacles,
+      this.obstacleSprites,
       player.x,
       player.y,
       player.radius,
@@ -728,16 +725,19 @@ export class ArenaScene extends Phaser.Scene {
         propSuffix = 'volatile';
       }
 
-      const envId = resolveEnvThemeProp(theme, propSuffix, this);
+      const isTimedHazard = obs.type === 'hazard' && obs.timer > 0;
+      const effectiveTheme = isTimedHazard ? 'rime' : theme;
+      const effectiveBiome = isTimedHazard ? 'rime' : biome;
+      const envId = resolveEnvThemeProp(effectiveTheme, propSuffix, this);
       if (obs.type === 'hazard') {
-        const resolvedHazardId = envId ?? (hazardFrame === 1 ? resolveEnvThemeProp(theme, 'hazard-0', this) : null);
+        const resolvedHazardId = envId ?? (hazardFrame === 1 ? resolveEnvThemeProp(effectiveTheme, 'hazard-0', this) : null);
         const blendedKey = resolvedHazardId ? `env-blended-${resolvedHazardId}` : '';
         if (blendedKey && this.textures.exists(blendedKey)) {
           sprite.setTexture(blendedKey);
         } else if (resolvedHazardId && applyEnvTexture(sprite, resolvedHazardId, fallback)) {
           // applied direct env texture
         } else {
-          sprite.setTexture(fallback);
+          sprite.setTexture(hazardKey(effectiveBiome, hazardFrame));
         }
       } else if (envId) {
         applyEnvTexture(sprite, envId, fallback);
@@ -747,7 +747,9 @@ export class ArenaScene extends Phaser.Scene {
 
       sprite.setVisible(true);
       sprite.setPosition(Math.round(obs.x), Math.round(obs.y));
-      sprite.setDepth(obs.type === 'hazard' ? 1.05 : 2);
+      sprite.setDepth(
+        obs.type === 'hazard' ? 1.05 : obs.type === 'pillar' ? 6.5 : 2,
+      );
 
       if (obs.type === 'pillar') {
         if (envId) {
@@ -789,8 +791,8 @@ export class ArenaScene extends Phaser.Scene {
         glow.setVisible(true);
         glow.setPosition(obs.x, obs.y);
         glow.setTint(isTimed ? 0x28f090 : biome === 'cinder' ? 0xff4411 : 0x28f090);
-        glow.setAlpha((0.24 + 0.05 * Math.sin(this.world.runTime * 3 + i)) * fade);
-        glow.setScale((obs.radius * 2.2) / 32);
+        glow.setAlpha((0.10 + 0.03 * Math.sin(this.world.runTime * 3 + i)) * fade);
+        glow.setScale((obs.radius * 1.65) / 32);
       } else if (obs.type === 'pillar') {
         sprite.setAlpha(1.0);
         const near = Math.hypot(player.x - obs.x, player.y - obs.y) < 170;
@@ -1038,20 +1040,6 @@ export class ArenaScene extends Phaser.Scene {
           this.bossSprite.clearTint();
         }
         bossOn = true;
-        const cinder = defId === 'cinder-heart';
-        for (let o = 0; o < ORBIT_CAP; o += 1) {
-          const orbit = this.bossOrbits[o];
-          if (!cinder) {
-            orbit.setVisible(false);
-            continue;
-          }
-          const ang = this.world.runTime * 1.4 + (o * Math.PI) / 2;
-          orbit.setVisible(true);
-          orbit.setPosition(
-            Math.round(enemies.x[i] + Math.cos(ang) * 48),
-            Math.round(enemies.y[i] + Math.sin(ang) * 48),
-          );
-        }
       } else if (enemies.role[i] === ROLE_ELITE && eliteSlot < this.eliteSprites.length) {
         const sprite = this.eliteSprites[eliteSlot];
         const curSpeed = currentEnemySpeed(this.world, i);
@@ -1149,7 +1137,6 @@ export class ArenaScene extends Phaser.Scene {
       this.bossSprite.setVisible(false);
       this.bossSprite.setData('attackDone', false);
       this.bossSprite.setData('activeAttackKey', '');
-      for (const orbit of this.bossOrbits) orbit.setVisible(false);
       this.bossTrail1.setVisible(false);
       this.bossTrail2.setVisible(false);
     }
@@ -1420,45 +1407,29 @@ export class ArenaScene extends Phaser.Scene {
     const inZone =
       tel.state !== 'hidden' && Math.hypot(this.world.player.x - tel.x, this.world.player.y - tel.y) <= tel.radius;
     const t = tel.hold > 0 ? Math.min(1, tel.charge / tel.hold) : 0;
-    if (inZone && tel.state === 'charging') {
-      this.circleSparkCd -= dt;
-      if (this.circleSparkCd <= 0) {
-        this.circleSparkCd = 0.05;
-        const px = this.world.player.x;
-        const py = this.world.player.y;
-        const dx = tel.x - px;
-        const dy = tel.y - py;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 16) {
-          const nx = dx / dist;
-          const ny = dy / dist;
-          const perpX = -ny;
-          const perpY = nx;
-          const chainTint = biome === 'cinder' ? 0xffaa33 : 0x55ffff;
-          const speed = 240 + Math.random() * 80;
-          const jitter = (Math.random() - 0.5) * 40;
-          const life = Math.min(dist / speed, 0.42);
-          spawnDirectedSpark(
-            this.sparks,
-            px + nx * 8 + perpX * (Math.random() - 0.5) * 10,
-            py + ny * 8 + perpY * (Math.random() - 0.5) * 10,
-            nx * speed + perpX * jitter,
-            ny * speed + perpY * jitter,
-            chainTint,
-            life,
-            0.8 + Math.random() * 0.4,
-          );
-        }
-      }
-    }
+
+    // Smooth occult energy transfer shader from player to the transmutation circle
+    this.circleChargeShader.sync(
+      this.world.runTime,
+      tel.x,
+      tel.y,
+      tel.radius,
+      t,
+      tel.state === 'charging',
+      inZone,
+      this.world.player.x,
+      this.world.player.y,
+      biome,
+      dt,
+    );
 
     if (this.circleGlowFilter) {
       if (tel.state === 'charging') {
         this.circleGlowFilter.setActive(true);
         this.circleGlowFilter.color = biome === 'cinder' ? 0xffaa33 : 0x55ffff;
-        const pulse = 0.5 + 0.5 * Math.sin(this.world.runTime * 8);
-        this.circleGlowFilter.outerStrength = inZone ? (2 + 4 * t + pulse * 2.5) : (1 + pulse);
-        this.circleGlowFilter.innerStrength = inZone ? (0.5 + 1.2 * t) : 0;
+        const pulse = 0.5 + 0.5 * Math.sin(this.world.runTime * 4);
+        this.circleGlowFilter.outerStrength = inZone ? (1.2 + 2.0 * t + pulse * 1.2) : (0.6 + pulse * 0.4);
+        this.circleGlowFilter.innerStrength = inZone ? (0.2 + 0.6 * t) : 0;
       } else {
         this.circleGlowFilter.setActive(false);
       }
@@ -1838,31 +1809,6 @@ function spawnBurst(
     sparks[i].size = 0.7 + Math.random() * 0.6;
     sparks[i].tint = tint;
     spawned += 1;
-  }
-}
-
-function spawnDirectedSpark(
-  sparks: Spark[],
-  x: number,
-  y: number,
-  vx: number,
-  vy: number,
-  tint: number,
-  life: number,
-  size: number,
-): void {
-  if (getSettings().reduceVfx) return;
-  for (let i = 0; i < sparks.length; i += 1) {
-    if (sparks[i].life > 0) continue;
-    sparks[i].life = life;
-    sparks[i].max = life;
-    sparks[i].x = x;
-    sparks[i].y = y;
-    sparks[i].vx = vx;
-    sparks[i].vy = vy;
-    sparks[i].size = size;
-    sparks[i].tint = tint;
-    return;
   }
 }
 

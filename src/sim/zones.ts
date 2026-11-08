@@ -4,7 +4,7 @@ import { applyEnemyDamage, ROLE_FODDER } from './enemies';
 import { emitFx } from './fx';
 import { damageVolatile, hitObstaclesAoE } from './obstacles';
 import { applyEnemySlow } from './status';
-import type { World } from './world';
+import { triggerOnCrit, type World } from './world';
 
 export const ZONE_LINE = 0;
 export const ZONE_STRIKE = 1;
@@ -182,11 +182,16 @@ function detonateStrike(world: World, index: number): void {
   const isCrit = Math.random() < world.stats.critChance;
   const damage = isCrit ? zones.damage[index] * world.stats.critMul : zones.damage[index];
   emitFx(world.fx, FX_STRIKE, x, y, isCrit ? 0xff4422 : 0xffc070);
+  let hitAny = false;
   for (let e = 0; e < enemies.cap; e += 1) {
     if (enemies.alive[e] === 0) continue;
     if (!circlesOverlap(x, y, radius, enemies.x[e], enemies.y[e], enemies.radius[e])) continue;
     emitFx(world.fx, FX_HIT, enemies.x[e], enemies.y[e], isCrit ? 0xff4422 : 0xfff4c8);
     applyEnemyDamage(world, e, damage);
+    hitAny = true;
+  }
+  if (isCrit && hitAny) {
+    triggerOnCrit(world);
   }
   hitObstaclesAoE(world, x, y, radius, damage);
 }

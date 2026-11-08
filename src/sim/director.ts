@@ -69,15 +69,17 @@ function trySpawnGroup(
   hardCap?: number,
 ): boolean {
   const { loop } = world.catalog;
+  const stage = loop.stages[world.stageIndex];
   const dir = loop.director;
   const eliteCap = world.teleporter.state === 'hidden' ? 1 : loop.maxElites;
-  const canBeElite = world.counts.elite < eliteCap;
+  const eliteCost = baseCost * dir.eliteCostMul;
+  const canBeElite =
+    world.stageTime >= stage.firstEliteAt &&
+    world.counts.elite < eliteCap &&
+    world.credits >= eliteCost;
   const rollElite = canBeElite && Math.random() < currentEliteChance(world);
 
   if (rollElite) {
-    const eliteCost = baseCost * dir.eliteCostMul;
-    if (world.credits < eliteCost) return false;
-
     const remainingCap = eliteCap - world.counts.elite;
     let targetCount = randomInt(dir.eliteGroupSizeMin, dir.eliteGroupSizeMax);
     if (hardCap !== undefined) targetCount = Math.min(targetCount, hardCap);
