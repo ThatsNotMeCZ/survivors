@@ -20,13 +20,18 @@
       </div>
       <div id="hud-play" class="hidden">
         <div class="hud-corner-tl" aria-hidden="true" data-ui-sprite="hud-corner"></div>
-        <div id="hud-objective" data-ui-sprite="hud-objective">
-          <p id="hud-objective-kicker" class="objective-kicker">Transmutation</p>
-          <p id="hud-objective-label">Survive</p>
-          <div id="hud-objective-bar" aria-hidden="true">
-            <div id="hud-objective-fill"></div>
-            <span id="hud-objective-detail"></span>
+        <div id="hud-objective">
+          <div class="objective-header">
+            <p id="hud-objective-kicker" class="objective-kicker hidden"></p>
+            <p id="hud-objective-label">Survive</p>
           </div>
+          <div id="hud-objective-bar" data-ui-sprite="hud-objective" aria-hidden="true">
+            <div id="hud-objective-track">
+              <div id="hud-objective-fill"></div>
+              <span id="hud-objective-detail"></span>
+            </div>
+          </div>
+          <p id="hud-objective-sub" class="objective-sub hidden"></p>
         </div>
         <div id="hud-meta" data-ui-sprite="hud-timer">
           <div class="meta-clock" aria-hidden="true">
@@ -41,6 +46,23 @@
               <span id="hud-time">0:00</span>
             </p>
             <p id="hud-stage">--</p>
+          </div>
+        </div>
+        <div id="hud-difficulty" data-tier="1" aria-label="Difficulty Coefficient">
+          <div class="diff-header">
+            <span id="hud-diff-tier">Dormant</span>
+            <span id="hud-diff-coeff">×1.00</span>
+          </div>
+          <div class="diff-viewport" aria-hidden="true">
+            <div id="hud-diff-tape" class="diff-tape">
+              <div class="diff-seg" data-tier="1"><span>I</span></div>
+              <div class="diff-seg" data-tier="2"><span>II</span></div>
+              <div class="diff-seg" data-tier="3"><span>III</span></div>
+              <div class="diff-seg" data-tier="4"><span>IV</span></div>
+              <div class="diff-seg" data-tier="5"><span>V</span></div>
+              <div class="diff-seg diff-seg-endless" data-tier="6"><span>VI · ☠</span></div>
+            </div>
+            <div class="diff-marker"></div>
           </div>
         </div>
         <div id="hud-vitals">

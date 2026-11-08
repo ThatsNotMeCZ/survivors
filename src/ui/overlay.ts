@@ -681,6 +681,11 @@ function syncHallCommence(): void {
   if (label) {
     label.textContent = unlocked ? 'COMMENCE WORKING' : 'VESSEL SEALED';
   }
+  const spans = btn.querySelectorAll<HTMLSpanElement>('span');
+  if (spans.length >= 2) {
+    spans[0].textContent = unlocked ? 'START' : 'VESSEL';
+    spans[1].textContent = unlocked ? 'TRANSMUTATION' : 'SEALED';
+  }
 }
 
 function fillHallNav(): void {

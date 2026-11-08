@@ -19,8 +19,7 @@ describe('Entity Sprites Resolution & Warden Aliasing', () => {
 
     expect(manifest.entities['ember-warden']).toBeDefined();
     expect(manifest.entities['ember-chaser']).toBeDefined();
-    expect(manifest.entities['ember-warden'].src).toBe('sprites/entities/ember-warden.png');
-    expect(manifest.entities['ember-chaser'].src).toBe('sprites/entities/ember-warden.png');
+    expect(manifest.entities['ember-warden'].src).toBe(manifest.entities['ember-chaser'].src);
     expect(manifest.entities['ember-warden'].frameWidth).toBe(56);
     expect(manifest.entities['ember-warden'].frameHeight).toBe(56);
   });

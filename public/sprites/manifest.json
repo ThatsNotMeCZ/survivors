@@ -636,23 +636,29 @@
           "h": 92
         },
         "active": {
-          "x": 315,
+          "x": 312,
           "y": 230,
-          "w": 140,
+          "w": 141,
           "h": 92
         },
         "nineSlice": {
           "margins": {
-            "top": 45,
-            "right": 58,
-            "bottom": 27,
-            "left": 52
+            "top": 43,
+            "right": 45,
+            "bottom": 26,
+            "left": 46
           },
           "expandable": {
-            "x": 53,
-            "y": 46,
-            "w": 36,
+            "x": 46,
+            "y": 43,
+            "w": 50,
             "h": 23
+          },
+          "center": {
+            "x": 62,
+            "y": 47,
+            "w": 17,
+            "h": 15
           },
           "repeat": "stretch",
           "scale": 1
@@ -1000,6 +1006,22 @@
           "y": 500,
           "w": 243,
           "h": 101
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 0,
+            "right": 18,
+            "bottom": 0,
+            "left": 88
+          },
+          "expandable": {
+            "x": 88,
+            "y": 38,
+            "w": 137,
+            "h": 50
+          },
+          "repeat": "stretch",
+          "scale": 1
         }
       },
       "hud-objective": {
@@ -1023,16 +1045,16 @@
         },
         "nineSlice": {
           "margins": {
-            "top": 23,
+            "top": 0,
             "right": 50,
-            "bottom": 23,
+            "bottom": 0,
             "left": 50
           },
           "expandable": {
             "x": 50,
-            "y": 23,
-            "w": 50,
-            "h": 23
+            "y": 22,
+            "w": 180,
+            "h": 18
           },
           "repeat": "stretch",
           "scale": 1

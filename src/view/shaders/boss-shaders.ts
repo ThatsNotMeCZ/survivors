@@ -491,7 +491,7 @@ export class BossShaders {
         128,
         48,
       )
-      .setDepth(5)
+      .setDepth(5.5)
       .setVisible(false);
 
     this.cinderSmoke = new CinderSmokeShader(scene);

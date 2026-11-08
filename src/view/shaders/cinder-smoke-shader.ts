@@ -167,9 +167,11 @@ export class CinderSmokeShader {
     // Vents are situated right at the top perimeter of Cinder Heart
     const bx = Math.round(enemies.x[idx]);
     const by = Math.round(enemies.y[idx] - 20);
+    const bDepth = 3.2 + Math.max(0, Math.min(1, enemies.y[idx] / 2560)) * 1.6;
 
     this.quad
       .setPosition(bx, by)
+      .setDepth(bDepth + 0.0002)
       .setVisible(true);
   }
 }

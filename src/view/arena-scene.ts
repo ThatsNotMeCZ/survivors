@@ -1,6 +1,17 @@
 import Phaser from 'phaser';
 import { playSfx, setMusicScene } from '../audio';
-import { FX_DASH, FX_DEATH, FX_GEM, FX_HIT, FX_HURT, FX_MUZZLE, FX_STRIKE, SPARK_CAP } from '../config';
+import {
+  FX_CENSER_IMPACT,
+  FX_CRUCIBLE_IMPACT,
+  FX_DASH,
+  FX_DEATH,
+  FX_GEM,
+  FX_HIT,
+  FX_HURT,
+  FX_MUZZLE,
+  FX_STRIKE,
+  SPARK_CAP,
+} from '../config';
 import { catalog } from '../data/catalog';
 import type { ItemDef, SkillSlot } from '../data/schema';
 import {
@@ -95,6 +106,7 @@ import { DamageFxShaderPool } from './shaders/damage-fx-shader';
 import { EliteAffixShaderPool } from './shaders/elite-affix-shader';
 import { EnvHazardShaderPool } from './shaders/env-hazard-shader';
 import { PlayerHurtShader } from './shaders/player-hurt-shader';
+import { SkillImpactShaderPool } from './shaders/skill-impact-shader';
 
 type GpuMember = Omit<Partial<Phaser.Types.GameObjects.SpriteGPULayer.Member>, 'animation'> & {
   animation?: string | number | { base?: string | number; duration?: number; delay?: number; yoyo?: boolean };
@@ -151,6 +163,7 @@ export class ArenaScene extends Phaser.Scene {
   private damageFx!: DamageFxShaderPool;
   private envHazardShaders!: EnvHazardShaderPool;
   private playerHurtShader!: PlayerHurtShader;
+  private skillImpactShaders!: SkillImpactShaderPool;
   private playerTrail1!: Phaser.GameObjects.Sprite;
   private playerTrail2!: Phaser.GameObjects.Sprite;
   private eliteTrails1: Phaser.GameObjects.Sprite[] = [];
@@ -353,7 +366,7 @@ export class ArenaScene extends Phaser.Scene {
 
     this.shots = [];
     for (let i = 0; i < maxProjectiles; i += 1) {
-      this.shots.push(this.add.image(0, 0, 'px-bolt-player').setVisible(false).setDepth(4));
+      this.shots.push(this.add.image(0, 0, 'px-bolt-player').setVisible(false).setDepth(5.2));
     }
     this.zoneFx = [];
     for (let i = 0; i < this.world.zones.cap; i += 1) {
@@ -376,6 +389,7 @@ export class ArenaScene extends Phaser.Scene {
     this.eliteAffixShaders = new EliteAffixShaderPool(this);
     this.envHazardShaders = new EnvHazardShaderPool(this);
     this.playerHurtShader = new PlayerHurtShader(this);
+    this.skillImpactShaders = new SkillImpactShaderPool(this);
 
     this.cameras.main.setBounds(0, 0, width, height);
     this.cameras.main.setZoom(catalog.world.viewZoom);
@@ -447,10 +461,25 @@ export class ArenaScene extends Phaser.Scene {
     const stage = currentStage(this.world);
     const objective = currentObjective(this.world);
     const tel = this.world.teleporter;
+    const portal = this.world.portal;
+    const player = this.world.player;
     const holding =
       tel.state === 'charging' &&
-      Math.hypot(this.world.player.x - tel.x, this.world.player.y - tel.y) <= tel.radius;
-    const copy = objectiveCopy(objective, stage.name);
+      Math.hypot(player.x - tel.x, player.y - tel.y) <= tel.radius;
+    const outsideCircle = tel.state === 'charging' && !holding;
+    const outsidePortal =
+      portal.open &&
+      Math.hypot(player.x - portal.x, player.y - portal.y) >
+        this.world.catalog.loop.portalRadius;
+
+    let outsideWarning = '';
+    if (outsideCircle) {
+      outsideWarning = 'The seal cools · Return to the Transmutation Circle';
+    } else if (outsidePortal) {
+      outsideWarning = 'Stand in the gate to descend';
+    }
+
+    const copy = objectiveCopy(objective, outsideWarning);
     setHudCombat({
       stage: stage.name,
       biome: this.biome(),
@@ -469,6 +498,8 @@ export class ArenaScene extends Phaser.Scene {
       objective: copy.label,
       objectiveDetail: copy.detail,
       objectivePct: objective.pct,
+      objectiveSub: copy.sub,
+      outside: outsideCircle || outsidePortal,
       holding,
       boss: this.world.focus.kind === 'boss',
       skills: hudSkills(this.world),
@@ -506,6 +537,11 @@ export class ArenaScene extends Phaser.Scene {
       return;
     }
     image.setDisplaySize(fw * scale, fh * scale);
+  }
+
+  private ySortDepth(y: number, bias = 0): number {
+    const h = catalog.world.height || 2560;
+    return 3.2 + Math.max(0, Math.min(1, y / h)) * 1.6 + bias;
   }
 
   private eyesKey(biome: BiomeId): string {
@@ -605,6 +641,7 @@ export class ArenaScene extends Phaser.Scene {
       dt,
     );
     this.damageFx.sync(dt, this.world.runTime);
+    this.skillImpactShaders.sync(dt, this.world.runTime);
     this.playerHurtShader.sync(this.cameras.main, this.world.runTime, player.hp, player.maxHp, dt);
 
     for (let i = 0; i < this.shots.length; i += 1) {
@@ -639,7 +676,9 @@ export class ArenaScene extends Phaser.Scene {
     const ang = aimAngle(this.world);
     const x = Math.round(player.x);
     const y = Math.round(player.y + bob);
+    const pDepth = this.ySortDepth(player.y, 0.0002);
     this.playerSprite.setPosition(x, y);
+    this.playerSprite.setDepth(pDepth);
     this.playerSprite.setAlpha(player.iframeRemain > 0 ? 0.45 : 1);
     if (player.hurtRemain > 0) {
       this.playerSprite.setTint(0xff5566).setTintMode(Phaser.TintModes.MULTIPLY);
@@ -669,6 +708,7 @@ export class ArenaScene extends Phaser.Scene {
       );
       this.playerTrail1.setAlpha(0.38);
       this.playerTrail1.setTint(trailTint);
+      this.playerTrail1.setDepth(pDepth - 0.0002);
       this.playerTrail1.setVisible(true);
 
       this.playerTrail2.setTexture(this.playerSprite.texture.key, this.playerSprite.frame.name);
@@ -680,6 +720,7 @@ export class ArenaScene extends Phaser.Scene {
       );
       this.playerTrail2.setAlpha(0.16);
       this.playerTrail2.setTint(trailTint);
+      this.playerTrail2.setDepth(pDepth - 0.0004);
       this.playerTrail2.setVisible(true);
     } else {
       this.playerTrail1.setVisible(false);
@@ -693,6 +734,7 @@ export class ArenaScene extends Phaser.Scene {
       this.decoySprite.setFlipX(flipX);
       this.decoySprite.setVisible(true);
       this.decoySprite.setPosition(Math.round(this.world.decoy.x), Math.round(this.world.decoy.y));
+      this.decoySprite.setDepth(this.ySortDepth(this.world.decoy.y));
       this.decoySprite.setAlpha(0.3 + 0.2 * Math.sin(this.world.runTime * 8));
     } else {
       this.decoySprite.setVisible(false);
@@ -700,7 +742,9 @@ export class ArenaScene extends Phaser.Scene {
     this.playerGlow.setPosition(x, y);
     this.playerGlow.setScale(2.4 * scale);
     this.playerGlow.setAlpha(biome === 'cinder' ? 0.16 : 0.12);
+    this.playerGlow.setDepth(pDepth - 0.001);
     this.playerEyes.setScale(scale);
+    this.playerEyes.setDepth(pDepth + 0.0002);
     this.playerEyes.setPosition(
       x + Math.round(Math.cos(ang) * 2 * scale),
       y - Math.round(6 * scale) + Math.round(Math.sin(ang) * 1 * scale),
@@ -752,22 +796,24 @@ export class ArenaScene extends Phaser.Scene {
 
       sprite.setVisible(true);
       sprite.setPosition(Math.round(obs.x), Math.round(obs.y));
-      sprite.setDepth(
-        obs.type === 'hazard' ? 1.05 : obs.type === 'pillar' ? 6.5 : 2,
-      );
 
       if (obs.type === 'pillar') {
         if (envId) {
           const rect = getEnvFrame(envId);
           if (rect) {
             sprite.setDisplaySize(rect.w, rect.h);
+            const originY = rect.h > obs.radius * 2 ? (rect.h - obs.radius) / rect.h : 0.5;
+            sprite.setOrigin(0.5, originY);
           } else {
             sprite.setScale(1);
+            sprite.setOrigin(0.5, 0.5);
           }
         } else {
           const display = (obs.radius * 2) / sprite.width;
           sprite.setScale(display);
+          sprite.setOrigin(0.5, 0.5);
         }
+        sprite.setDepth(this.ySortDepth(obs.y));
       } else if (obs.type === 'volatile') {
         if (envId) {
           const rect = getEnvFrame(envId);
@@ -780,12 +826,18 @@ export class ArenaScene extends Phaser.Scene {
           const display = (obs.radius * 2) / sprite.width;
           sprite.setScale(display);
         }
+        sprite.setOrigin(0.5, 0.5);
+        sprite.setDepth(this.ySortDepth(obs.y, -0.0001));
       } else if (obs.type === 'hazard') {
         const diameter = obs.radius * 2;
         sprite.setDisplaySize(diameter, diameter);
+        sprite.setOrigin(0.5, 0.5);
+        sprite.setDepth(1.05);
       } else {
         const display = (obs.radius * 2) / sprite.width;
         sprite.setScale(display);
+        sprite.setOrigin(0.5, 0.5);
+        sprite.setDepth(this.ySortDepth(obs.y));
       }
 
       if (obs.type === 'hazard') {
@@ -811,6 +863,7 @@ export class ArenaScene extends Phaser.Scene {
         glow.setTint(0xff3322);
         glow.setAlpha(0.2);
         glow.setScale(3.2);
+        glow.setDepth(this.ySortDepth(obs.y, -0.0002));
       } else {
         sprite.setAlpha(1.0);
         sprite.clearTint();
@@ -995,7 +1048,9 @@ export class ArenaScene extends Phaser.Scene {
           attacking ? attackAnimKey : curSpeed > 0 ? 'walk' : 'idle',
           speedRatio,
         );
+        const bDepth = this.ySortDepth(enemies.y[i]);
         this.bossSprite.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i]));
+        this.bossSprite.setDepth(bDepth);
         this.bossSprite.setFlipX(enemies.facing[i] < 0);
         this.bossSprite.setVisible(true);
 
@@ -1021,6 +1076,7 @@ export class ArenaScene extends Phaser.Scene {
           );
           this.bossTrail1.setAlpha(0.38);
           this.bossTrail1.setTint(trailTint);
+          this.bossTrail1.setDepth(bDepth - 0.0002);
           this.bossTrail1.setVisible(true);
 
           this.bossTrail2.setTexture(this.bossSprite.texture.key, this.bossSprite.frame.name);
@@ -1031,6 +1087,7 @@ export class ArenaScene extends Phaser.Scene {
           );
           this.bossTrail2.setAlpha(0.16);
           this.bossTrail2.setTint(trailTint);
+          this.bossTrail2.setDepth(bDepth - 0.0004);
           this.bossTrail2.setVisible(true);
         } else {
           this.bossTrail1.setVisible(false);
@@ -1059,8 +1116,10 @@ export class ArenaScene extends Phaser.Scene {
           attacking ? attackAnimKey : curSpeed > 0 ? 'walk' : 'idle',
           speedRatio,
         );
+        const eDepth = this.ySortDepth(enemies.y[i]);
         sprite.setScale(eliteScale);
         sprite.setPosition(Math.round(enemies.x[i]), Math.round(enemies.y[i]));
+        sprite.setDepth(eDepth);
         sprite.setFlipX(enemies.facing[i] < 0);
         sprite.setVisible(true);
 
@@ -1097,6 +1156,7 @@ export class ArenaScene extends Phaser.Scene {
           );
           t1.setAlpha(0.38);
           t1.setTint(trailTint);
+          t1.setDepth(eDepth - 0.0002);
           t1.setVisible(true);
 
           t2.setTexture(sprite.texture.key, sprite.frame.name);
@@ -1108,6 +1168,7 @@ export class ArenaScene extends Phaser.Scene {
           );
           t2.setAlpha(0.16);
           t2.setTint(trailTint);
+          t2.setDepth(eDepth - 0.0004);
           t2.setVisible(true);
         } else if (t1 && t2) {
           t1.setVisible(false);
@@ -1307,39 +1368,8 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private syncHoldPrompt(): void {
-    if (isModalOpen()) {
-      setHoldPrompt({ visible: false, title: '', detail: '', pct: 0, outside: false });
-      return;
-    }
-    const tel = this.world.teleporter;
-    const portal = this.world.portal;
-    const player = this.world.player;
-    if (tel.state === 'charging') {
-      const holding = Math.hypot(player.x - tel.x, player.y - tel.y) <= tel.radius;
-      const pct = tel.hold > 0 ? Math.min(1, tel.charge / tel.hold) : 0;
-      setHoldPrompt({
-        visible: !holding,
-        title: 'The seal cools',
-        detail: 'Return to the Transmutation Circle',
-        pct,
-        outside: true,
-      });
-      return;
-    }
-    if (portal.open) {
-      const radius = this.world.catalog.loop.portalRadius;
-      const inside = Math.hypot(player.x - portal.x, player.y - portal.y) <= radius;
-      const need = this.world.catalog.loop.portalHold;
-      const pct = need > 0 ? Math.min(1, portal.hold / need) : 0;
-      setHoldPrompt({
-        visible: !inside,
-        title: 'Descend the Rift',
-        detail: 'Stand in the gate to descend',
-        pct,
-        outside: true,
-      });
-      return;
-    }
+    // The hold / portal warning is now integrated directly into #hud-objective and #hud-objective-sub,
+    // eliminating duplicate prompt bars and double progress gauges.
     setHoldPrompt({ visible: false, title: '', detail: '', pct: 0, outside: false });
   }
 
@@ -1664,16 +1694,21 @@ export class ArenaScene extends Phaser.Scene {
       const kind = fx.kind[i];
       const x = fx.x[i];
       const y = fx.y[i];
+      const radius = fx.radius[i];
       const tint = fx.tint[i] || 0xffffff;
+      const isCrit = tint === 0xff4422;
       const stillId = eventFxId(kind, tint, utilityId);
       const rotation = kind === FX_DASH ? dashRot : 0;
       const shown = stillId ? spawnFxStill(this, this.fxStills, stillId, x, y, rotation) : false;
       if (kind === FX_HIT) {
-        const isCrit = tint === 0xff4422;
         this.damageFx.spawn(x, y, isCrit ? 1 : 0);
       } else if (kind === FX_HURT) {
         this.damageFx.spawn(x, y, 2, 88);
         this.playerHurtShader.trigger(1.0);
+      } else if (kind === FX_CENSER_IMPACT) {
+        this.skillImpactShaders.spawnCenser(x, y, radius, isCrit);
+      } else if (kind === FX_CRUCIBLE_IMPACT) {
+        this.skillImpactShaders.spawnCrucible(x, y, radius, isCrit);
       }
       if (!shown) {
         if (kind === FX_HIT) spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);
@@ -1683,13 +1718,15 @@ export class ArenaScene extends Phaser.Scene {
         else if (kind === FX_DASH) spawnBurst(this.sparks, x, y, tint, 6, 110, 0.2);
         else if (kind === FX_STRIKE) spawnBurst(this.sparks, x, y, tint, 14, 160, 0.32);
         else if (kind === FX_GEM) spawnBurst(this.sparks, x, y, tint, 3, 70, 0.15);
+        else if (kind === FX_CENSER_IMPACT) spawnBurst(this.sparks, x, y, tint, 8, 120, 0.25);
+        else if (kind === FX_CRUCIBLE_IMPACT) spawnBurst(this.sparks, x, y, tint, 14, 160, 0.32);
       }
-      if (kind === FX_HIT) playSfx('hit');
+      if (kind === FX_HIT || kind === FX_CENSER_IMPACT) playSfx('hit');
       else if (kind === FX_HURT) playSfx('hurt');
       else if (kind === FX_DEATH) playSfx(tint === 0xff8844 ? 'break' : 'death');
       else if (kind === FX_MUZZLE) playSfx('muzzle');
       else if (kind === FX_DASH) playSfx('dash');
-      else if (kind === FX_STRIKE) playSfx('strike');
+      else if (kind === FX_STRIKE || kind === FX_CRUCIBLE_IMPACT) playSfx('strike');
       else if (kind === FX_GEM) playSfx('gem');
     }
     fx.count = 0;
@@ -1738,6 +1775,7 @@ export class ArenaScene extends Phaser.Scene {
         this.fitBody(ghost);
         ghost.setFlipX(this.playerSprite.flipX);
         ghost.setPosition(Math.round(player.x), Math.round(player.y));
+        ghost.setDepth(this.ySortDepth(player.y, -0.0002));
         ghost.setVisible(true);
         ghost.setAlpha(0.5);
         ghost.setTint(this.world.survivor.id === 'penitent' ? 0xffc878 : 0xb8fff8);
@@ -1991,17 +2029,38 @@ function resolveSurvivorId(): string {
   return catalog.world.defaultSurvivor;
 }
 
-function objectiveCopy(objective: Objective, stageName: string): { kicker: string; label: string; detail: string } {
+function objectiveCopy(
+  objective: Objective,
+  outsideWarning = '',
+): { kicker: string; label: string; detail: string; sub?: string } {
   if (objective.kind === 'wait') {
-    return { kicker: stageName, label: `Seal manifests in ${formatTime(objective.remaining)}`, detail: '' };
+    return {
+      kicker: '',
+      label: 'The Seal Manifests',
+      detail: `${Math.round(objective.pct * 100)}%`,
+    };
   }
   if (objective.kind === 'hold') {
-    return { kicker: stageName, label: 'Channel the Transmutation Circle', detail: `${Math.round(objective.pct * 100)}%` };
+    return {
+      kicker: '',
+      label: 'Channel the Transmutation Circle',
+      detail: `${Math.round(objective.pct * 100)}%`,
+      sub: outsideWarning,
+    };
   }
   if (objective.kind === 'boss') {
     const who = objective.name || 'Boss';
-    return { kicker: 'Seal Guardian', label: `Slay the ${who}`, detail: `${Math.round(objective.pct * 100)}%` };
+    return {
+      kicker: 'Seal Guardian',
+      label: `Slay the ${who}`,
+      detail: `${Math.round(objective.pct * 100)}%`,
+    };
   }
-  return { kicker: stageName, label: 'Descend the Rift', detail: `${Math.round(objective.pct * 100)}%` };
+  return {
+    kicker: '',
+    label: 'Descend the Rift',
+    detail: `${Math.round(objective.pct * 100)}%`,
+    sub: outsideWarning,
+  };
 }
 

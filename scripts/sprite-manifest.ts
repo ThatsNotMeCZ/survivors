@@ -220,7 +220,10 @@ function parseUiNineSlice(raw: unknown, frameW: number, frameH: number): UiNineS
 
   const rawMargins =
     rec.margins && typeof rec.margins === 'object' ? (rec.margins as Record<string, unknown>) : rec;
-  const rawExpandable = parseUiRect(rec.expandable ?? rec.center);
+  const explicitCenter = parseUiRect(
+    rec.centerPiece ?? rec.pivot ?? (rec.expandable || rawMargins.top !== undefined ? rec.center : undefined),
+  );
+  const rawExpandable = parseUiRect(rec.expandable ?? (!explicitCenter ? rec.center : undefined));
 
   const mTop = nonNegativeInt(rawMargins.top);
   const mRight = nonNegativeInt(rawMargins.right);
@@ -257,6 +260,7 @@ function parseUiNineSlice(raw: unknown, frameW: number, frameH: number): UiNineS
   return {
     margins,
     expandable,
+    ...(explicitCenter ? { center: explicitCenter } : {}),
     repeat,
     scale,
   };

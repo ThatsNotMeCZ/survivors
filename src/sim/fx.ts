@@ -7,6 +7,7 @@ export type FxPool = {
   x: Float32Array;
   y: Float32Array;
   tint: Uint32Array;
+  radius: Float32Array;
 };
 
 export function createFxPool(cap = FX_CAP): FxPool {
@@ -17,16 +18,25 @@ export function createFxPool(cap = FX_CAP): FxPool {
     x: new Float32Array(cap),
     y: new Float32Array(cap),
     tint: new Uint32Array(cap),
+    radius: new Float32Array(cap),
   };
 }
 
-export function emitFx(pool: FxPool, kind: number, x: number, y: number, tint: number): void {
+export function emitFx(
+  pool: FxPool,
+  kind: number,
+  x: number,
+  y: number,
+  tint: number,
+  radius = 0,
+): void {
   if (pool.count >= pool.cap) return;
   const i = pool.count;
   pool.kind[i] = kind;
   pool.x[i] = x;
   pool.y[i] = y;
   pool.tint[i] = tint;
+  pool.radius[i] = radius;
   pool.count += 1;
 }
 

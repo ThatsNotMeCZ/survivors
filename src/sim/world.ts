@@ -1,4 +1,4 @@
-import { FX_HIT, FX_HURT } from '../config';
+import { FX_CENSER_IMPACT, FX_HIT, FX_HURT } from '../config';
 import { catalog, type Catalog } from '../data/catalog';
 import type {
   ItemDef,
@@ -375,7 +375,7 @@ function detonateImpacts(world: World): void {
     const radius = projectiles.impactRadius[i];
     const isCrit = Math.random() < world.stats.critChance;
     const damage = isCrit ? projectiles.damage[i] * world.stats.critMul : projectiles.damage[i];
-    emitFx(world.fx, FX_HIT, x, y, isCrit ? 0xff4422 : 0xffaa55);
+    emitFx(world.fx, FX_CENSER_IMPACT, x, y, isCrit ? 0xff4422 : 0xffaa55, radius);
     let hitAny = false;
     for (let e = 0; e < enemies.cap; e += 1) {
       if (enemies.alive[e] === 0 || enemies.corpseRemain[e] > 0) continue;

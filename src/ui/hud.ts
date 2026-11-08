@@ -52,8 +52,32 @@ const objectiveKickerEl = () => document.getElementById('hud-objective-kicker');
 const objectiveLabelEl = () => document.getElementById('hud-objective-label');
 const objectiveDetailEl = () => document.getElementById('hud-objective-detail');
 const objectiveFillEl = () => document.getElementById('hud-objective-fill');
+const objectiveSubEl = () => document.getElementById('hud-objective-sub');
 const itemListEl = () => document.getElementById('hud-item-list');
 const itemsRootEl = () => document.getElementById('hud-items');
+const diffRootEl = () => document.getElementById('hud-difficulty');
+const diffTierEl = () => document.getElementById('hud-diff-tier');
+const diffCoeffEl = () => document.getElementById('hud-diff-coeff');
+const diffTapeEl = () => document.getElementById('hud-diff-tape');
+
+export type DifficultyTier = {
+  index: number;
+  name: string;
+  min: number;
+  max: number;
+};
+
+export const DIFFICULTY_TIERS: readonly DifficultyTier[] = [
+  { index: 1, name: 'Dormant', min: 1.0, max: 1.3 },
+  { index: 2, name: 'Stirring', min: 1.3, max: 1.65 },
+  { index: 3, name: 'Tempered', min: 1.65, max: 2.05 },
+  { index: 4, name: 'Calcined', min: 2.05, max: 2.55 },
+  { index: 5, name: 'Volatile', min: 2.55, max: 3.15 },
+  { index: 6, name: 'Cataclysm', min: 3.15, max: Infinity },
+];
+
+export const DIFF_SEG_WIDTH = 72;
+export const DIFF_MARKER_X = 44;
 
 let debugOn = hasQueryFlag('debug');
 let keysBound = false;
@@ -153,6 +177,8 @@ export function setHudCombat(state: {
   objective: string;
   objectiveDetail: string;
   objectivePct: number;
+  objectiveSub?: string;
+  outside?: boolean;
   holding: boolean;
   boss: boolean;
   skills: HudSkill[];
@@ -169,6 +195,7 @@ export function setHudCombat(state: {
   const objective = objectiveLabelEl();
   const detail = objectiveDetailEl();
   const objFill = objectiveFillEl();
+  const objSub = objectiveSubEl();
 
   const totalItems = state.items.reduce((acc, item) => acc + item.stacks, 0);
   lastSummary = {
@@ -186,11 +213,28 @@ export function setHudCombat(state: {
   if (hp) hp.textContent = `${Math.max(0, state.playerHp).toFixed(0)} / ${state.playerMax.toFixed(0)}`;
   if (lv) lv.textContent = `Lv ${state.level}`;
   if (time) time.textContent = formatTime(state.runTime);
-  if (kicker) kicker.textContent = state.objectiveKicker ?? state.stage;
+  if (kicker) {
+    if (state.objectiveKicker && state.objectiveKicker.trim().length > 0) {
+      kicker.textContent = state.objectiveKicker;
+      kicker.classList.remove('hidden');
+    } else {
+      kicker.textContent = '';
+      kicker.classList.add('hidden');
+    }
+  }
   if (objective) objective.textContent = state.objective;
   if (detail) {
     detail.textContent = state.objectiveDetail;
     detail.classList.toggle('hidden', state.objectiveDetail.length === 0);
+  }
+  if (objSub) {
+    if (state.objectiveSub && state.objectiveSub.trim().length > 0) {
+      objSub.textContent = state.objectiveSub;
+      objSub.classList.remove('hidden');
+    } else {
+      objSub.textContent = '';
+      objSub.classList.add('hidden');
+    }
   }
   if (objFill) {
     objFill.style.width = `${Math.round(Math.min(1, Math.max(0, state.objectivePct)) * 100)}%`;
@@ -204,11 +248,13 @@ export function setHudCombat(state: {
     hpFill.style.height = `${Math.round(pct * 100)}%`;
   }
   if (coeff) coeff.textContent = `×${state.coefficient.toFixed(2)}`;
+  renderDifficulty(state.coefficient);
   renderSkills(state.skills);
   renderItems(state.items);
   document.documentElement.dataset.biome = state.biome;
   const hud = hudEl();
   hud?.setAttribute('data-holding', state.holding ? '1' : '0');
+  hud?.setAttribute('data-outside', state.outside ? '1' : '0');
   if (state.iframe || state.holding) hud?.setAttribute('data-status', 'pass');
   else if (state.playerHp < state.playerMax * 0.35) hud?.setAttribute('data-status', 'fail');
   else if (state.boss) hud?.setAttribute('data-status', 'warmup');
@@ -288,6 +334,45 @@ function renderItems(items: HudItem[]): void {
 
 function showHud(): void {
   hudEl()?.classList.remove('hidden');
+}
+
+function renderDifficulty(coefficient: number): void {
+  const root = diffRootEl();
+  const tierLabel = diffTierEl();
+  const coeffLabel = diffCoeffEl();
+  const tape = diffTapeEl();
+  if (!root || !tierLabel || !coeffLabel || !tape) return;
+
+  const coeff = Math.max(1, coefficient);
+  let activeTier = DIFFICULTY_TIERS[0];
+  let tierIdx = 0;
+  for (let i = 0; i < DIFFICULTY_TIERS.length; i++) {
+    const t = DIFFICULTY_TIERS[i];
+    if (coeff >= t.min) {
+      activeTier = t;
+      tierIdx = i;
+    }
+  }
+
+  // Calculate pixel offset along the tape
+  let offset = 0;
+  if (tierIdx < DIFFICULTY_TIERS.length - 1) {
+    const span = activeTier.max - activeTier.min;
+    const progress = span > 0 ? Math.min(1, Math.max(0, (coeff - activeTier.min) / span)) : 0;
+    offset = tierIdx * DIFF_SEG_WIDTH + progress * DIFF_SEG_WIDTH;
+  } else {
+    // Endless tier 6 (Cataclysm): scroll continually
+    const extra = Math.max(0, coeff - activeTier.min);
+    offset = (DIFFICULTY_TIERS.length - 1) * DIFF_SEG_WIDTH + (extra / 0.6) * DIFF_SEG_WIDTH;
+  }
+
+  const tapeX = DIFF_MARKER_X - offset;
+  tape.style.transform = `translate3d(${tapeX.toFixed(1)}px, 0, 0)`;
+  tierLabel.textContent = activeTier.name;
+  coeffLabel.textContent = `×${coeff.toFixed(2)}`;
+  if (root.dataset.tier !== String(activeTier.index)) {
+    root.dataset.tier = String(activeTier.index);
+  }
 }
 
 function syncPlayAttr(): void {

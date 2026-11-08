@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import {
+  FX_CENSER_IMPACT,
+  FX_CRUCIBLE_IMPACT,
   FX_DASH,
   FX_DEATH,
   FX_HIT,
@@ -50,7 +52,7 @@ export function eventFxId(kind: number, tint: number, utilitySkillId: string): s
   if (kind === FX_DEATH) return tint === NOXIOUS_DEATH_TINT ? 'noxious-pop' : 'death';
   if (kind === FX_MUZZLE) return 'muzzle';
   if (kind === FX_DASH) return authoredFx(utilitySkillId) ? utilitySkillId : 'dash';
-  if (kind === FX_STRIKE) return 'skill-crucible-cull';
+  if (kind === FX_CENSER_IMPACT || kind === FX_CRUCIBLE_IMPACT || kind === FX_STRIKE) return null;
   return null;
 }
 

@@ -53,7 +53,7 @@ Keep-out:
 
 ## HUD
 
-HTML overlay, not Phaser text. Top center gold objective banner (Hold fills with pulsing gold). Top right biome + run clock. Bottom left alchemical flask HP + numeric + thin XP line and level. Bottom center 4 skill slots (ready / cooldown sweep / i-frame flash). Bottom right **32×32** item grid (6 columns, stack count on every chip). Biome tint is subtle (Cinder warmer, Rime colder). FPS stays behind `?debug=1` or F3. Palette tokens live in `src/ui/theme.css`.
+HTML overlay, not Phaser text. Top center gold objective banner (Hold fills with pulsing gold). Top right biome + run clock and RoR2-style scrolling difficulty slider (Dormant → Stirring → Tempered → Calcined → Volatile → Cataclysm in Resurrect 64 palette). Bottom left alchemical flask HP + numeric + thin XP line and level. Bottom center 4 skill slots (ready / cooldown sweep / i-frame flash). Bottom right **32×32** item grid (6 columns, stack count on every chip). Biome tint is subtle (Cinder warmer, Rime colder). FPS stays behind `?debug=1` or F3. Palette tokens live in `src/ui/theme.css`.
 
 ## Director (RoR2, not VS)
 

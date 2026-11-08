@@ -1,4 +1,4 @@
-import type { SpriteManifest, UiAtlasDef, UiRect, UiSpriteEntry } from '../view/sprite-types';
+import type { SpriteManifest, UiAtlasDef, UiNineSliceDef, UiRect, UiSpriteEntry } from '../view/sprite-types';
 
 type LoadedUiAssets = {
   ids: Set<string>;
@@ -10,6 +10,162 @@ type LoadedUiAssets = {
 let uiAssets: LoadedUiAssets | null = null;
 let uiLoadPromise: Promise<LoadedUiAssets> | null = null;
 const sliceUrlCache = new Map<string, string>();
+const centerSliceUrlCache = new Map<string, string>();
+
+type CenterSliceBinding = {
+  entry: UiSpriteEntry;
+  atlasImage: HTMLImageElement;
+  scale: number;
+};
+
+const centerSliceElements = new Map<HTMLElement, CenterSliceBinding>();
+let centerSliceObserver: ResizeObserver | null = null;
+
+function getCenterSliceObserver(): ResizeObserver | null {
+  if (typeof ResizeObserver === 'undefined') return null;
+  if (!centerSliceObserver) {
+    centerSliceObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const el = entry.target as HTMLElement;
+        const binding = centerSliceElements.get(el);
+        if (!binding || !el.isConnected) {
+          centerSliceObserver?.unobserve(el);
+          centerSliceElements.delete(el);
+          continue;
+        }
+        renderCenterSliceElement(el, binding);
+      }
+    });
+  }
+  return centerSliceObserver;
+}
+
+function render5BandSliceDataUrl(
+  img: HTMLImageElement,
+  rect: UiRect,
+  ns: UiNineSliceDef,
+  dstW: number,
+  dstH: number,
+): string {
+  const key = `${rect.x},${rect.y},${rect.w},${rect.h}:${dstW}x${dstH}`;
+  const cached = centerSliceUrlCache.get(key);
+  if (cached) return cached;
+
+  const frameW = rect.w;
+  const frameH = rect.h;
+  const m = ns.margins;
+  const c = ns.center ?? {
+    x: Math.round(frameW / 2),
+    y: Math.round(frameH / 2),
+    w: 0,
+    h: 0,
+  };
+
+  // Fixed source cuts
+  const sw0 = m.left;
+  const sw1 = Math.max(0, c.x - m.left);
+  const sw2 = c.w;
+  const sw3 = Math.max(0, frameW - m.right - (c.x + c.w));
+  const sw4 = m.right;
+
+  const sh0 = m.top;
+  const sh1 = Math.max(0, c.y - m.top);
+  const sh2 = c.h;
+  const sh3 = Math.max(0, frameH - m.bottom - (c.y + c.h));
+  const sh4 = m.bottom;
+
+  // Source offsets (relative to rect.x, rect.y)
+  const srcXs = [0, sw0, c.x, c.x + c.w, frameW - m.right];
+  const srcWs = [sw0, sw1, sw2, sw3, sw4];
+  const srcYs = [0, sh0, c.y, c.y + c.h, frameH - m.bottom];
+  const srcHs = [sh0, sh1, sh2, sh3, sh4];
+
+  // Destination widths
+  const dw0 = sw0;
+  const dw2 = sw2;
+  const dw4 = sw4;
+  const remW = Math.max(0, dstW - (dw0 + dw2 + dw4));
+  const dw1 = Math.floor(remW / 2);
+  const dw3 = remW - dw1;
+
+  // Destination heights
+  const dh0 = sh0;
+  const dh2 = sh2;
+  const dh4 = sh4;
+  const remH = Math.max(0, dstH - (dh0 + dh2 + dh4));
+  const dh1 = Math.floor(remH / 2);
+  const dh3 = remH - dh1;
+
+  const dstXs = [0, dw0, dw0 + dw1, dw0 + dw1 + dw2, dw0 + dw1 + dw2 + dw3];
+  const dstWs = [dw0, dw1, dw2, dw3, dw4];
+  const dstYs = [0, dh0, dh0 + dh1, dh0 + dh1 + dh2, dh0 + dh1 + dh2 + dh3];
+  const dstHs = [dh0, dh1, dh2, dh3, dh4];
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, dstW);
+  canvas.height = Math.max(1, dstH);
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.imageSmoothingEnabled = false;
+    for (let yi = 0; yi < 5; yi++) {
+      const dy = dstYs[yi];
+      const dh = dstHs[yi];
+      const sy = rect.y + srcYs[yi];
+      const sh = srcHs[yi];
+      if (dh <= 0 || sh <= 0) continue;
+
+      for (let xi = 0; xi < 5; xi++) {
+        const dx = dstXs[xi];
+        const dw = dstWs[xi];
+        const sx = rect.x + srcXs[xi];
+        const sw = srcWs[xi];
+        if (dw <= 0 || sw <= 0) continue;
+
+        ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+      }
+    }
+  }
+
+  const url = canvas.toDataURL('image/png');
+  centerSliceUrlCache.set(key, url);
+  return url;
+}
+
+function renderCenterSliceElement(el: HTMLElement, binding: CenterSliceBinding): void {
+  const rect = el.getBoundingClientRect();
+  const measuredW = Math.round(rect.width);
+  const measuredH = Math.round(rect.height);
+
+  const prevW = el.dataset.uiSliceW;
+  const prevH = el.dataset.uiSliceH;
+
+  if ((measuredW === 0 || measuredH === 0) && prevW && prevH) {
+    return;
+  }
+
+  const scale = binding.scale > 0 ? binding.scale : 1;
+  const dstW = Math.max(binding.entry.idle.w, measuredW > 0 ? Math.round(measuredW / scale) : binding.entry.idle.w);
+  const dstH = Math.max(binding.entry.idle.h, measuredH > 0 ? Math.round(measuredH / scale) : binding.entry.idle.h);
+
+  if (prevW === String(dstW) && prevH === String(dstH)) {
+    return;
+  }
+
+  const ns = binding.entry.nineSlice!;
+  const idleUrl = render5BandSliceDataUrl(binding.atlasImage, binding.entry.idle, ns, dstW, dstH);
+  const hoverUrl = render5BandSliceDataUrl(binding.atlasImage, binding.entry.hover, ns, dstW, dstH);
+  const activeUrl = render5BandSliceDataUrl(binding.atlasImage, binding.entry.active, ns, dstW, dstH);
+
+  el.style.setProperty('--ui-slice-idle', `url("${idleUrl}")`);
+  el.style.setProperty('--ui-slice-hover', `url("${hoverUrl}")`);
+  el.style.setProperty('--ui-slice-active', `url("${activeUrl}")`);
+  el.dataset.uiSliceW = String(dstW);
+  el.dataset.uiSliceH = String(dstH);
+  el.dataset.hasUiCenterSlice = '1';
+  el.dataset.hasUiSlice = '0';
+  el.dataset.hasUiStates = '1';
+  el.dataset.hasUiSprite = '1';
+}
 
 export function uiSpriteSrc(id: string): string {
   return resolveDocUrl(`sprites/ui/${id}.png`);
@@ -118,6 +274,19 @@ function applyAtlasEntry(
   if (entry.nineSlice) {
     const ns = entry.nineSlice;
     const scale = ns.scale ?? 1;
+
+    if (ns.center) {
+      const binding: CenterSliceBinding = {
+        entry,
+        atlasImage,
+        scale,
+      };
+      centerSliceElements.set(el, binding);
+      renderCenterSliceElement(el, binding);
+      getCenterSliceObserver()?.observe(el);
+      return;
+    }
+
     const m = ns.margins;
     const idleUrl = extractSliceDataUrl(atlasImage, entry.idle);
     const hoverUrl = extractSliceDataUrl(atlasImage, entry.hover);

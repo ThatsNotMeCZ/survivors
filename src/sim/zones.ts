@@ -1,4 +1,4 @@
-import { FX_HIT, FX_STRIKE } from '../config';
+import { FX_CRUCIBLE_IMPACT, FX_HIT } from '../config';
 import { circlesOverlap } from './collision';
 import { applyEnemyDamage, ROLE_FODDER } from './enemies';
 import { emitFx } from './fx';
@@ -185,7 +185,7 @@ function detonateStrike(world: World, index: number): void {
   const radius = zones.radius[index];
   const isCrit = Math.random() < world.stats.critChance;
   const damage = isCrit ? zones.damage[index] * world.stats.critMul : zones.damage[index];
-  emitFx(world.fx, FX_STRIKE, x, y, isCrit ? 0xff4422 : 0xffc070);
+  emitFx(world.fx, FX_CRUCIBLE_IMPACT, x, y, isCrit ? 0xff4422 : 0xffc070, radius);
   let hitAny = false;
   for (let e = 0; e < enemies.cap; e += 1) {
     if (enemies.alive[e] === 0) continue;

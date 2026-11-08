@@ -29,6 +29,7 @@ export type UiNineSliceMargins = {
 export type UiNineSliceDef = {
   margins: UiNineSliceMargins;
   expandable: UiRect;
+  center?: UiRect;
   repeat?: 'stretch' | 'repeat' | 'round';
   scale?: number;
 };

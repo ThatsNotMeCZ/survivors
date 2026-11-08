@@ -228,6 +228,7 @@ export class EliteAffixShaderPool {
         .setSize(quadW, quadH)
         .setOrigin(sprite.originX, sprite.originY)
         .setPosition(sprite.x, sprite.y)
+        .setDepth(sprite.depth + 0.0002)
         .setVisible(true);
     }
   }

@@ -22,3 +22,5 @@ export const FX_DASH = 3;
 export const FX_STRIKE = 4;
 export const FX_HURT = 5;
 export const FX_GEM = 6;
+export const FX_CENSER_IMPACT = 7;
+export const FX_CRUCIBLE_IMPACT = 8;
