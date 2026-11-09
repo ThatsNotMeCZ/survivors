@@ -8,6 +8,7 @@ import {
   FX_HURT,
   FX_MUZZLE,
   FX_STRIKE,
+  FX_TETHER_LATCH,
 } from '../config';
 import { FLAG_IMPACT, FLAG_PIERCE, FLAG_TETHER, TEAM_ENEMY, type ProjectilePool } from '../sim/projectiles';
 import { ZONE_LINE, ZONE_STRIKE, type ZonePool } from '../sim/zones';
@@ -52,7 +53,7 @@ export function eventFxId(kind: number, tint: number, utilitySkillId: string): s
   if (kind === FX_DEATH) return tint === NOXIOUS_DEATH_TINT ? 'noxious-pop' : 'death';
   if (kind === FX_MUZZLE) return 'muzzle';
   if (kind === FX_DASH) return authoredFx(utilitySkillId) ? utilitySkillId : 'dash';
-  if (kind === FX_CENSER_IMPACT || kind === FX_CRUCIBLE_IMPACT || kind === FX_STRIKE) return null;
+  if (kind === FX_CENSER_IMPACT || kind === FX_CRUCIBLE_IMPACT || kind === FX_STRIKE || kind === FX_TETHER_LATCH) return null;
   return null;
 }
 

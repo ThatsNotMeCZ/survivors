@@ -24,3 +24,4 @@ export const FX_HURT = 5;
 export const FX_GEM = 6;
 export const FX_CENSER_IMPACT = 7;
 export const FX_CRUCIBLE_IMPACT = 8;
+export const FX_TETHER_LATCH = 9;

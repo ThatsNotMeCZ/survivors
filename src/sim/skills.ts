@@ -105,7 +105,7 @@ function fireTether(world: World, effect: Extract<SkillEffect, { type: 'tether' 
     speed: effect.speed * world.stats.projSpeedMul,
     lifetime: effect.lifetime,
     radius: effect.radius,
-    damage: 0,
+    damage: effect.fodderDamage * world.stats.damageMul,
     team: TEAM_PLAYER,
     flags: FLAG_TETHER,
     rootDuration: effect.rootDuration * world.stats.controlDurationMul,

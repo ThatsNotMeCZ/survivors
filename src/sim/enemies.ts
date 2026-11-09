@@ -42,6 +42,7 @@ export type EnemyPool = {
   noxious: Uint8Array;
   corpseRemain: Float32Array;
   rootRemain: Float32Array;
+  rootDuration: Float32Array;
   tetherDps: Float32Array;
   attackRemain: Float32Array;
   shieldHp: Float32Array;
@@ -76,6 +77,7 @@ export function createEnemyPool(cap: number): EnemyPool {
     noxious: new Uint8Array(cap),
     corpseRemain: new Float32Array(cap),
     rootRemain: new Float32Array(cap),
+    rootDuration: new Float32Array(cap),
     tetherDps: new Float32Array(cap),
     attackRemain: new Float32Array(cap),
     shieldHp: new Float32Array(cap),
@@ -164,6 +166,7 @@ export function spawnEnemy(
 
     enemies.corpseRemain[i] = 0;
     enemies.rootRemain[i] = 0;
+    enemies.rootDuration[i] = 0;
     enemies.tetherDps[i] = 0;
     enemies.attackRemain[i] = 0;
     enemies.animName[i] = null;
@@ -630,24 +633,21 @@ function explodeNoxious(world: World, index: number): void {
 }
 
 function tickTetherBurn(world: World, dt: number): void {
-  const { enemies } = world;
+  const { enemies, player } = world;
   for (let i = 0; i < enemies.cap; i += 1) {
     if (enemies.alive[i] === 0 || enemies.rootRemain[i] <= 0 || enemies.tetherDps[i] <= 0) continue;
     if (enemies.role[i] !== ROLE_ELITE && enemies.role[i] !== ROLE_BOSS) continue;
+    const targetX = enemies.x[i];
+    const targetY = enemies.y[i];
+    const burnRadius = enemies.radius[i] + 8;
     for (let f = 0; f < enemies.cap; f += 1) {
       if (f === i || enemies.alive[f] === 0 || enemies.role[f] !== ROLE_FODDER) continue;
-      if (
-        !circlesOverlap(
-          enemies.x[i],
-          enemies.y[i],
-          enemies.radius[i],
-          enemies.x[f],
-          enemies.y[f],
-          enemies.radius[f],
-        )
-      ) {
-        continue;
-      }
+      const fx = enemies.x[f];
+      const fy = enemies.y[f];
+      const fr = enemies.radius[f];
+      const inCircle = circlesOverlap(targetX, targetY, burnRadius, fx, fy, fr);
+      const onChain = !inCircle && segmentHitsCircle(player.x, player.y, targetX, targetY, fx, fy, fr + 12);
+      if (!inCircle && !onChain) continue;
       applyEnemyDamage(world, f, enemies.tetherDps[i] * dt);
     }
   }

@@ -84,9 +84,10 @@ export function clearLores(pool: LorePool): void {
 
 export function stepGems(world: World, dt: number): void {
   const { gems, player } = world;
-  const { gemPickup, gemMagnet, gemMagnetSpeed } = world.catalog.loop;
+  const { gemPickup, gemMagnet, gemMagnetBonus = 88, gemMagnetSpeed } = world.catalog.loop;
   const pickup = gemPickup * world.stats.pickupRadiusMul;
-  const magnet = gemMagnet * world.stats.pickupRadiusMul;
+  const baseMagnet = world.stats.pickupRadiusMul > 1 ? gemMagnetBonus : gemMagnet;
+  const magnet = baseMagnet * world.stats.pickupRadiusMul;
   const magnetSpeed = gemMagnetSpeed * Math.max(1, world.stats.pickupRadiusMul);
   for (let i = 0; i < gems.cap; i += 1) {
     if (gems.alive[i] === 0) continue;
@@ -110,9 +111,10 @@ export function stepGems(world: World, dt: number): void {
 
 export function stepLores(world: World, dt: number): void {
   const { lores, player } = world;
-  const { gemPickup, gemMagnet, gemMagnetSpeed } = world.catalog.loop;
+  const { gemPickup, gemMagnet, gemMagnetBonus = 88, gemMagnetSpeed } = world.catalog.loop;
   const pickup = gemPickup * world.stats.pickupRadiusMul;
-  const magnet = gemMagnet * world.stats.pickupRadiusMul;
+  const baseMagnet = world.stats.pickupRadiusMul > 1 ? gemMagnetBonus : gemMagnet;
+  const magnet = baseMagnet * world.stats.pickupRadiusMul;
   const magnetSpeed = gemMagnetSpeed * Math.max(1, world.stats.pickupRadiusMul);
   for (let i = 0; i < lores.cap; i += 1) {
     if (lores.alive[i] === 0) continue;

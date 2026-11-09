@@ -681,11 +681,6 @@ function syncHallCommence(): void {
   if (label) {
     label.textContent = unlocked ? 'COMMENCE WORKING' : 'VESSEL SEALED';
   }
-  const spans = btn.querySelectorAll<HTMLSpanElement>('span');
-  if (spans.length >= 2) {
-    spans[0].textContent = unlocked ? 'START' : 'VESSEL';
-    spans[1].textContent = unlocked ? 'TRANSMUTATION' : 'SEALED';
-  }
 }
 
 function fillHallNav(): void {
@@ -1216,7 +1211,6 @@ function renderRunEnd(kind: RunOutcome, detail: string, recap?: RunRecap): void 
     if (recap?.unlockProgress) {
       const prog = document.createElement('span');
       prog.className = 'runend-unlock-progress';
-      prog.textContent = `Archival Codex: ${recap.unlockProgress.itemsUnlocked} / ${recap.unlockProgress.totalItems} Relics Attuned · ${recap.unlockProgress.survivorsUnlocked} / ${recap.unlockProgress.totalSurvivors} Vessels Unsealed`;
       empty.appendChild(prog);
     }
     unlocksList.appendChild(empty);

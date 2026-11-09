@@ -87,6 +87,7 @@ export type TetherEffect = {
   lifetime: number;
   radius: number;
   rootDuration: number;
+  fodderDamage: number;
   fodderContactDps: number;
 };
 
@@ -403,6 +404,7 @@ export type LoopDef = {
   xpGrowth: number;
   gemPickup: number;
   gemMagnet: number;
+  gemMagnetBonus?: number;
   gemMagnetSpeed: number;
   maxFodder: number;
   maxElites: number;

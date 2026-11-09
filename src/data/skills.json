@@ -24,7 +24,7 @@
       "name": "Phase Step",
       "slot": "utility",
       "input": "press",
-      "cooldown": 0.9,
+      "cooldown": 2.9,
       "lore": "The vessel slips between worlds for a breath.",
       "hook": "Dash swiftly forward, phasing harmlessly through foes and projectiles.",
       "effects": [
@@ -123,7 +123,7 @@
       "name": "Ash Step",
       "slot": "utility",
       "input": "press",
-      "cooldown": 1.1,
+      "cooldown": 3,
       "lore": "Leave a husk of ash. The mites chase the ghost.",
       "hook": "Dash to safety while leaving an ash effigy that lures lesser foes.",
       "effects": [
@@ -142,16 +142,17 @@
       "slot": "special",
       "input": "press",
       "cooldown": 15,
-      "lore": "A chain for the proud. Miss, and the working waits.",
-      "hook": "Hurls a binding chain that roots the first elite or boss struck and sears lesser foes.",
+      "lore": "A chain for the proud. The small are ash before the iron locks.",
+      "hook": "Pierces and incinerates lesser foes to bind the first elite or boss struck with a searing chain.",
       "effects": [
         {
           "type": "tether",
           "speed": 640,
           "lifetime": 0.7,
-          "radius": 8,
+          "radius": 10,
           "rootDuration": 2.5,
-          "fodderContactDps": 18
+          "fodderDamage": 45,
+          "fodderContactDps": 28
         }
       ]
     }

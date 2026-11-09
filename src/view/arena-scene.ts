@@ -10,6 +10,7 @@ import {
   FX_HURT,
   FX_MUZZLE,
   FX_STRIKE,
+  FX_TETHER_LATCH,
   SPARK_CAP,
 } from '../config';
 import { catalog } from '../data/catalog';
@@ -102,6 +103,7 @@ import { AmbientShader } from './shaders/ambient-shader';
 import { BossShaders } from './shaders/boss-shaders';
 import { BrimstoneLineShaderPool } from './shaders/brimstone-line-shader';
 import { CircleChargeShader } from './shaders/circle-charge-shader';
+import { CondemnTetherShaderPool } from './shaders/condemn-tether-shader';
 import { DamageFxShaderPool } from './shaders/damage-fx-shader';
 import { EliteAffixShaderPool } from './shaders/elite-affix-shader';
 import { EnvHazardShaderPool } from './shaders/env-hazard-shader';
@@ -160,6 +162,7 @@ export class ArenaScene extends Phaser.Scene {
   private ambientShader!: AmbientShader;
   private bossShaders!: BossShaders;
   private brimstoneLineShaders!: BrimstoneLineShaderPool;
+  private condemnTetherShaders!: CondemnTetherShaderPool;
   private damageFx!: DamageFxShaderPool;
   private envHazardShaders!: EnvHazardShaderPool;
   private playerHurtShader!: PlayerHurtShader;
@@ -389,6 +392,7 @@ export class ArenaScene extends Phaser.Scene {
     this.bossShaders = new BossShaders(this);
     this.brimstoneLineShaders = new BrimstoneLineShaderPool(this);
     this.circleChargeShader = new CircleChargeShader(this);
+    this.condemnTetherShaders = new CondemnTetherShaderPool(this);
     this.damageFx = new DamageFxShaderPool(this);
     this.eliteAffixShaders = new EliteAffixShaderPool(this);
     this.envHazardShaders = new EnvHazardShaderPool(this);
@@ -624,6 +628,13 @@ export class ArenaScene extends Phaser.Scene {
     this.drawZones(dt);
     this.bossShaders.sync(this.world, dt);
     this.brimstoneLineShaders.sync(this.world.zones, this.world.runTime);
+    this.condemnTetherShaders.sync(
+      this.world.runTime,
+      projectiles,
+      this.world.enemies,
+      player.x,
+      player.y,
+    );
     this.syncBrimstoneSparks(dt);
     this.drawTelegraphs(biome);
     this.syncWaypoint();
@@ -1569,7 +1580,7 @@ export class ArenaScene extends Phaser.Scene {
         g.lineStyle(2, flash ? 0xccffdd : 0x33cc66, 0.95);
         g.strokeCircle(Math.round(enemies.x[i]), Math.round(enemies.y[i]), pop);
       }
-      if (enemies.rootRemain[i] > 0) {
+      if (enemies.rootRemain[i] > 0 && getSettings().reduceVfx) {
         g.lineStyle(2, 0xc4a05a, 0.85);
         g.lineBetween(
           Math.round(this.world.player.x),
@@ -1738,6 +1749,8 @@ export class ArenaScene extends Phaser.Scene {
         this.skillImpactShaders.spawnCenser(x, y, radius, isCrit);
       } else if (kind === FX_CRUCIBLE_IMPACT) {
         this.skillImpactShaders.spawnCrucible(x, y, radius, isCrit);
+      } else if (kind === FX_TETHER_LATCH) {
+        this.skillImpactShaders.spawnTetherLatch(x, y, radius, isCrit);
       }
       if (!shown) {
         if (kind === FX_HIT) spawnBurst(this.sparks, x, y, tint, 4, 90, 0.18);

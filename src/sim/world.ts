@@ -1,4 +1,4 @@
-import { FX_CENSER_IMPACT, FX_HIT, FX_HURT } from '../config';
+import { FX_CENSER_IMPACT, FX_HIT, FX_HURT, FX_TETHER_LATCH } from '../config';
 import { catalog, type Catalog } from '../data/catalog';
 import type {
   ItemDef,
@@ -402,6 +402,54 @@ function hitEnemies(world: World): void {
     const tether = (projectiles.flags[i] & FLAG_TETHER) !== 0;
     const reach = projectiles.radius[i] + 48;
     const n = hashQuery(hash, projectiles.x[i], projectiles.y[i], reach, scratch);
+
+    if (tether) {
+      let nearestAnchor = -1;
+      let bestAnchorDist = Infinity;
+      const fodderHits: number[] = [];
+
+      for (let k = 0; k < n; k += 1) {
+        const idx = scratch[k];
+        if (enemies.alive[idx] === 0 || enemies.corpseRemain[idx] > 0) continue;
+        if (
+          !aabbOverlap(
+            projectiles.x[i],
+            projectiles.y[i],
+            projectiles.radius[i],
+            enemies.x[idx],
+            enemies.y[idx],
+            enemies.radius[idx],
+          )
+        ) {
+          continue;
+        }
+        if (projectileHasHit(projectiles, i, idx)) continue;
+
+        const dx = enemies.x[idx] - projectiles.x[i];
+        const dy = enemies.y[idx] - projectiles.y[i];
+        const dist = dx * dx + dy * dy;
+
+        if (enemies.role[idx] === ROLE_ELITE || enemies.role[idx] === ROLE_BOSS) {
+          if (dist < bestAnchorDist) {
+            bestAnchorDist = dist;
+            nearestAnchor = idx;
+          }
+        } else {
+          fodderHits.push(idx);
+        }
+      }
+
+      for (const f of fodderHits) {
+        applyPlayerHit(world, i, f, false);
+      }
+
+      if (nearestAnchor >= 0) {
+        applyPlayerHit(world, i, nearestAnchor, true);
+        killProjectile(projectiles, i);
+      }
+      continue;
+    }
+
     const hits: number[] = [];
     let nearest = -1;
     let best = Infinity;
@@ -435,27 +483,42 @@ function hitEnemies(world: World): void {
     }
     if (pierce) {
       if (hits.length === 0) continue;
-      for (const hit of hits) applyPlayerHit(world, i, hit, tether);
+      for (const hit of hits) applyPlayerHit(world, i, hit, false);
       continue;
     }
     if (nearest < 0) continue;
-    applyPlayerHit(world, i, nearest, tether);
+    applyPlayerHit(world, i, nearest, false);
     killProjectile(projectiles, i);
   }
 }
 
-function applyPlayerHit(world: World, proj: number, enemy: number, tether: boolean): void {
+function applyPlayerHit(world: World, proj: number, enemy: number, tetherAnchor: boolean): void {
   const { projectiles, enemies } = world;
   markProjectileHit(projectiles, proj, enemy);
-  if (tether) {
-    if (enemies.role[enemy] === ROLE_ELITE || enemies.role[enemy] === ROLE_BOSS) {
-      enemies.rootRemain[enemy] = Math.max(enemies.rootRemain[enemy], projectiles.rootDuration[proj]);
-      enemies.tetherDps[enemy] = projectiles.tetherDps[proj];
+  const isCrit = Math.random() < world.stats.critChance;
+  const damage = isCrit ? projectiles.damage[proj] * world.stats.critMul : projectiles.damage[proj];
+
+  if (tetherAnchor) {
+    enemies.rootRemain[enemy] = Math.max(enemies.rootRemain[enemy], projectiles.rootDuration[proj]);
+    enemies.rootDuration[enemy] = Math.max(enemies.rootDuration[enemy], projectiles.rootDuration[proj]);
+    enemies.tetherDps[enemy] = projectiles.tetherDps[proj];
+    emitFx(
+      world.fx,
+      FX_TETHER_LATCH,
+      enemies.x[enemy],
+      enemies.y[enemy],
+      isCrit ? 0xff4422 : 0xf79617,
+      enemies.radius[enemy],
+    );
+    if (damage > 0) {
+      applyEnemyDamage(world, enemy, damage);
+    }
+    if (isCrit) {
+      triggerOnCrit(world);
     }
     return;
   }
-  const isCrit = Math.random() < world.stats.critChance;
-  const damage = isCrit ? projectiles.damage[proj] * world.stats.critMul : projectiles.damage[proj];
+
   emitFx(world.fx, FX_HIT, projectiles.x[proj], projectiles.y[proj], isCrit ? 0xff4422 : 0xfff4c8);
   applyEnemyDamage(world, enemy, damage);
   if (isCrit) {

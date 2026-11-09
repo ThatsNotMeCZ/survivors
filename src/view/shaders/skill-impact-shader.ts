@@ -12,7 +12,7 @@ varying vec2 outTexCoord;
 
 uniform float uTime;
 uniform float uProgress;
-uniform float uKind;    // 0 = Censer Lob impact, 1 = Crucible Cull impact
+uniform float uKind;    // 0 = Censer Lob impact, 1 = Crucible Cull impact, 2 = Tether Latch burst
 uniform float uIsCrit;  // 0 = normal, 1 = crit
 uniform float uRadius;  // gameplay AoE radius in world pixels
 uniform float uSeed;
@@ -112,7 +112,7 @@ void main() {
   // =========================================================================
   // 1: CRUCIBLE CULL IMPACT (Alchemical sky-hammer, hexagram fissures, slag shockwave)
   // =========================================================================
-  else {
+  else if (uKind < 1.5) {
     float fade = 1.0 - smoothstep(0.72, 1.0, uProgress);
     if (fade <= 0.01) {
       gl_FragColor = vec4(0.0);
@@ -168,6 +168,46 @@ void main() {
     float intensity = ring1 * 0.95 + ring2 * 0.82 + hexFacets * 0.65 + crack * 0.88 + centerMelt * 0.95 + beam * 0.98;
     alpha = clamp(intensity * fade, 0.0, 0.96);
   }
+  // =========================================================================
+  // 2: CONDEMNATION TETHER LATCH BURST (Snapping chain lock, hermetic shackle flash)
+  // =========================================================================
+  else {
+    float fade = 1.0 - smoothstep(0.60, 1.0, uProgress);
+    if (fade <= 0.01) {
+      gl_FragColor = vec4(0.0);
+      return;
+    }
+
+    // Inward-clamping shackle ring locking onto target center
+    float shackleR = mix(0.95, 0.40, clamp(uProgress / 0.45, 0.0, 1.0));
+    float ringThickness = mix(0.12, 0.05, uProgress);
+    float shackleRing = smoothstep(ringThickness, 0.0, abs(r - shackleR));
+
+    // 8-spoke radiating chain lock teeth
+    float lockTeeth = cos(ang * 8.0);
+    float teethPattern = smoothstep(0.10, 0.0, abs(r - shackleR * (1.0 + 0.12 * lockTeeth)));
+
+    // Central flash at moment of latch (first 30% of lifetime)
+    float coreFlash = smoothstep(0.35, 0.0, r) * (1.0 - uProgress / 0.35) * step(uProgress, 0.35);
+
+    // Searing hermetic sigil embers
+    float sparkNoise = fbm(p * 8.0 + vec2(uSeed * 2.1, uTime * 3.0));
+    float sparks = smoothstep(0.55, 0.85, sparkNoise) * step(r, 0.85) * (1.0 - uProgress * 0.7);
+
+    vec3 ironGold  = vec3(0.976, 0.761, 0.169); // #f9c22b
+    vec3 sulfurMid = vec3(0.969, 0.588, 0.090); // #f79617
+    vec3 bloodDeep = vec3(0.720, 0.140, 0.180); // #b8242e
+    vec3 whiteHot  = vec3(1.000, 0.965, 0.880);
+
+    vec3 critMid  = vec3(1.000, 0.150, 0.300);
+    vec3 midColor = mix(sulfurMid, critMid, uIsCrit);
+
+    col = mix(bloodDeep, midColor, shackleRing);
+    col = mix(col, ironGold, teethPattern * 0.85);
+    col = mix(col, whiteHot, coreFlash * 1.5 + sparks * 0.7);
+
+    alpha = clamp((shackleRing * 0.95 + teethPattern * 0.85 + coreFlash * 0.95 + sparks * 0.5) * fade, 0.0, 0.95);
+  }
 
   gl_FragColor = vec4(col * alpha, alpha);
 }
@@ -187,6 +227,7 @@ type SkillImpactSlot = {
 const SKILL_IMPACT_CAP = 12;
 const CENSER_DURATION = 0.34;
 const CRUCIBLE_DURATION = 0.50;
+const TETHER_LATCH_DURATION = 0.38;
 
 export class SkillImpactShaderPool {
   private time = 0;
@@ -244,6 +285,13 @@ export class SkillImpactShaderPool {
     const effectiveRadius = Math.max(24, radius);
     const quadSize = Math.round(effectiveRadius * 2.6);
     this.spawn(x, y, 1, effectiveRadius, quadSize, CRUCIBLE_DURATION, isCrit);
+  }
+
+  spawnTetherLatch(x: number, y: number, radius = 24, isCrit = false): void {
+    if (getSettings().reduceVfx) return;
+    const effectiveRadius = Math.max(20, radius);
+    const quadSize = Math.round(effectiveRadius * 2.8);
+    this.spawn(x, y, 2, effectiveRadius, quadSize, TETHER_LATCH_DURATION, isCrit);
   }
 
   private spawn(

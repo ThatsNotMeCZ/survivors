@@ -27,7 +27,7 @@ Schema: `src/data/schema.ts`. Loader: `src/data/catalog.ts` (version check, uniq
 - `self-slow` — player speed mul for a duration
 - `delayed-strike` — telegraph, then small-radius AoE at cursor
 - `slow-line` — brimstone seam; fodder-only slow
-- `tether` — first elite/boss hit is rooted; fodder touching it burn. Fodder or miss wastes the cooldown
+- `tether` — pierces and burns lesser enemies along its path; roots first elite/boss hit with an active burning tether chain. Fodder touching the active chain also burn. Miss wastes the cooldown
 
 Unknown `type` throws at boot. To add one: variant in `schema.ts` → case in `sim/skills.ts` → this list.
 
