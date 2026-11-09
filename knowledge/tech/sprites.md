@@ -83,7 +83,7 @@ If a frame has `{ "w": 0, "h": 0 }` or is omitted, the game automatically uses t
 Themes map per stage: `cinder` (`cinder-yard`), `rime` (`rime-dock`), `glacial` (`glacial-tomb`). Glacial automatically falls back to `rime` if a `glacial-*` prop is missing from the atlas before falling back to procedural.
 
 ### Frame keys & recommended dimensions:
-- **Floor tiles** (`64×64 px` in atlas, rendered scaled down to `48×48 px` (75%) in the arena for proper character-to-tile readability):
+- **Floor tiles** (`64×64 px` in atlas, rendered at native `64×64 px` in the arena):
   - Base tiles: `{theme}-tile-0`, `{theme}-tile-1`, `{theme}-tile-2`, `{theme}-tile-3` (variant 0 serves as fallback).
   - Rune tiles: `{theme}-tile-rune-0`, `{theme}-tile-rune-1`, `{theme}-tile-rune-2`, `{theme}-tile-rune-3` (scattered ~12.5% as occult accents).
 - **Arena borders (6 pieces)**:

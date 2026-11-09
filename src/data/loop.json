@@ -87,7 +87,7 @@
       "teleporterHold": 20,
       "teleporterRadius": 160,
       "view": {
-        "grid": "#2a1814",
+        "grid": "#443436",
         "border": "#5a3020",
         "zone": "#e35d5d",
         "portal": "#ffb347"

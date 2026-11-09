@@ -92,6 +92,10 @@ export function entitySheet(id: string): EntitySpriteDef | undefined {
   return manifest.entities[resolved] ?? fallbacks.get(resolved);
 }
 
+export function getSpriteManifest(): SpriteManifest {
+  return manifest;
+}
+
 export function registerFallbackSheet(
   id: string,
   def: { frameWidth: number; frameHeight: number; anims: Record<string, SpriteAnimDef> },

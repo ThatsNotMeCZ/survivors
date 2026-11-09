@@ -232,6 +232,7 @@ export function generateAllEntityCanvases(): Map<string, HTMLCanvasElement> {
   put(out, 'px-crosshair', makePlayerCrosshair('runner'));
   put(out, 'px-waypoint', makeWaypoint());
   put(out, 'px-glow', makeGlow());
+  put(out, 'px-player-halo', makePlayerHalo());
   put(out, 'px-ash', makeSpeck('#9a8a80', 2));
   put(out, 'px-ember', makeSpeck('#ff7722', 1));
   put(out, 'px-snow', makeSpeck('#d8eef8', 2));
@@ -246,6 +247,42 @@ export interface AtlasBorderFrames {
   v1?: UiRect;
   cornerTop?: UiRect;
   cornerBottom?: UiRect;
+}
+
+function prepareCinderTileStamp(
+  source: HTMLImageElement | HTMLCanvasElement,
+  rect: UiRect,
+): HTMLCanvasElement {
+  const canvas = makeCanvas(rect.w, rect.h);
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return canvas;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(source, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h);
+  const img = ctx.getImageData(0, 0, rect.w, rect.h);
+  const { data } = img;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 16) continue;
+    let r = data[i];
+    let g = data[i + 1];
+    let b = data[i + 2];
+    const isEmber = r > 110 && r > b * 1.65;
+    if (isEmber) {
+      // Tlumení jasných lávových žil v podlaze, aby nekonkurovaly oranžovým entitám
+      r = Math.round(58 + (r - 58) * 0.68);
+      g = Math.round(42 + (g - 42) * 0.65);
+      b = Math.round(40 + (b - 40) * 0.75);
+    } else {
+      // Posun tmavého fialovo-uhlového kamene a černých spár do světlejšího popelavého odstínu
+      r = Math.min(255, Math.round(44 + r * 0.72));
+      g = Math.min(255, Math.round(35 + g * 0.70));
+      b = Math.min(255, Math.round(38 + b * 0.70));
+    }
+    data[i] = r;
+    data[i + 1] = g;
+    data[i + 2] = b;
+  }
+  ctx.putImageData(img, 0, 0);
+  return canvas;
 }
 
 export function resolveAtlasBorderFrames(
@@ -310,9 +347,19 @@ export function generateFloor(
     });
 
     const hasAtlasTiles = !!atlasSource && tileRects.some((r) => r !== null);
+    const tileStamps: (HTMLCanvasElement | null)[] = [0, 1, 2, 3].map((v) => {
+      const r = tileRects[v];
+      if (!hasAtlasTiles || !atlasSource || !r) return null;
+      return theme === 'cinder' ? prepareCinderTileStamp(atlasSource, r) : null;
+    });
+    const runeStamps: (HTMLCanvasElement | null)[] = [0, 1, 2, 3].map((v) => {
+      const r = runeRects[v];
+      if (!hasAtlasTiles || !atlasSource || !r) return null;
+      return theme === 'cinder' ? prepareCinderTileStamp(atlasSource, r) : null;
+    });
     const baseTiles = [0, 1, 2, 3].map((v) => makeFloorTile(biome, v));
     const runeTiles = [0, 1, 2, 3].map((v) => makeRuneTile(biome, v));
-    const tile = 48;
+    const tile = 64;
     const maxTx = Math.floor(width / tile);
     const maxTy = Math.floor(height / tile);
     const seed = theme === 'cinder' ? 1013 : theme === 'rime' ? 2027 : 3049;
@@ -322,12 +369,18 @@ export function generateFloor(
         const isRune = isRuneCell(tx, ty, maxTx, maxTy, seed);
         if (isRune) {
           const rVar = runeTileVariant(tx, ty, seed);
+          const rStamp = runeStamps[rVar] ?? runeStamps[0];
           const rRect = runeRects[rVar] ?? runeRects[0];
-          if (hasAtlasTiles && atlasSource && rRect) {
+          if (rStamp) {
+            ctx.drawImage(rStamp, 0, 0, rStamp.width, rStamp.height, tx * tile, ty * tile, tile, tile);
+          } else if (hasAtlasTiles && atlasSource && rRect) {
             ctx.drawImage(atlasSource, rRect.x, rRect.y, rRect.w, rRect.h, tx * tile, ty * tile, tile, tile);
           } else if (hasAtlasTiles && atlasSource) {
+            const bStamp = tileStamps[tileVariant(tx, ty, seed)] ?? tileStamps[0];
             const bRect = tileRects[tileVariant(tx, ty, seed)] ?? tileRects[0];
-            if (bRect) {
+            if (bStamp) {
+              ctx.drawImage(bStamp, 0, 0, bStamp.width, bStamp.height, tx * tile, ty * tile, tile, tile);
+            } else if (bRect) {
               ctx.drawImage(atlasSource, bRect.x, bRect.y, bRect.w, bRect.h, tx * tile, ty * tile, tile, tile);
             } else {
               ctx.drawImage(runeTiles[rVar], tx * tile, ty * tile, tile, tile);
@@ -337,8 +390,11 @@ export function generateFloor(
           }
         } else {
           const bVar = tileVariant(tx, ty, seed);
+          const bStamp = tileStamps[bVar] ?? tileStamps[0];
           const rect = tileRects[bVar] ?? tileRects[0];
-          if (hasAtlasTiles && atlasSource && rect) {
+          if (bStamp) {
+            ctx.drawImage(bStamp, 0, 0, bStamp.width, bStamp.height, tx * tile, ty * tile, tile, tile);
+          } else if (hasAtlasTiles && atlasSource && rect) {
             ctx.drawImage(atlasSource, rect.x, rect.y, rect.w, rect.h, tx * tile, ty * tile, tile, tile);
           } else {
             ctx.drawImage(baseTiles[bVar], tx * tile, ty * tile, tile, tile);
@@ -853,6 +909,21 @@ function makeGlow(): HTMLCanvasElement {
   return canvas;
 }
 
+function makePlayerHalo(): HTMLCanvasElement {
+  const canvas = makeCanvas(48, 48);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2d context missing');
+  const g = ctx.createRadialGradient(24, 24, 2, 24, 24, 23);
+  g.addColorStop(0, 'rgba(255, 244, 200, 0.95)');
+  g.addColorStop(0.35, 'rgba(255, 215, 120, 0.65)');
+  g.addColorStop(0.70, 'rgba(255, 160, 60, 0.30)');
+  g.addColorStop(1, 'rgba(255, 120, 30, 0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 48, 48);
+  cache.set('px-player-halo', canvas);
+  return canvas;
+}
+
 function makeSpeck(color: string, size: number): HTMLCanvasElement {
   const canvas = makeCanvas(4, 4);
   const ctx = canvas.getContext('2d');
@@ -867,9 +938,9 @@ function makeFloorTile(biome: BiomeId, variant: number): HTMLCanvasElement {
   const key = `px-tile-${biome}-${variant}`;
   const pal =
     biome === 'cinder'
-      ? ['#1c1113', '#231517', '#170d0f', '#2a1814']
+      ? ['#3c3034', '#46383c', '#342a2d', '#4a3c40']
       : ['#0e1722', '#121e2b', '#0a111a', '#162030'];
-  const mark = biome === 'cinder' ? '#5a3a20' : '#3a5a70';
+  const mark = biome === 'cinder' ? '#78523c' : '#3a5a70';
   return cachedPixel(key, 64, biome, (px) => {
     px.fill(0, 0, 64, 64, pal[variant % 3]);
     px.fill(2, 2, 28, 28, pal[(variant + 1) % 3]);
@@ -992,20 +1063,21 @@ export function tileVariant(tx: number, ty: number, seed = 1337): number {
   const patch = patchNoise(tx, ty, seed + 101);
   const micro = (hash2d(tx, ty, seed + 202) & 0xffff) / 0xffff;
 
-  // Dominant base paver (variant 0), with natural organic patches of wear and ash
-  if (patch > 0.65) {
-    if (micro < 0.60) return 1;
-    if (micro < 0.85) return 2;
+  // Dominant base paver (variant 0), with natural organic patches of wear and ash (variant 2)
+  // Variant 1 (cracked lava) is kept as a rare accent (~11%) so it does not compete with enemy silhouettes
+  if (patch > 0.70) {
+    if (micro < 0.35) return 1;
+    if (micro < 0.80) return 2;
     return 0;
   }
-  if (patch < 0.30) {
-    if (micro < 0.60) return 2;
-    if (micro < 0.85) return 1;
+  if (patch < 0.25) {
+    if (micro < 0.75) return 2;
+    if (micro < 0.90) return 1;
     return 0;
   }
-  if (micro < 0.68) return 0;
-  if (micro < 0.83) return 1;
-  if (micro < 0.94) return 2;
+  if (micro < 0.76) return 0;
+  if (micro < 0.87) return 2;
+  if (micro < 0.95) return 1;
   return 3;
 }
 

@@ -172,6 +172,7 @@ export class ArenaScene extends Phaser.Scene {
   private bossTrail2!: Phaser.GameObjects.Sprite;
   private fodderLayers = new Map<string, Phaser.GameObjects.SpriteGPULayer>();
   private fodderTrailLayers = new Map<string, Phaser.GameObjects.SpriteGPULayer>();
+  private enemyGlowLayer!: Phaser.GameObjects.SpriteGPULayer;
   private enemyPrevX = new Float32Array(0);
   private enemyPrevY = new Float32Array(0);
   private enemyAliveLast = new Uint8Array(0);
@@ -298,6 +299,9 @@ export class ArenaScene extends Phaser.Scene {
     for (const trailLayer of this.fodderTrailLayers.values()) {
       seedGpuLayer(trailLayer, this.world.enemies.cap * 2, this.gpuMember);
     }
+    this.enemyGlowLayer = this.add.spriteGPULayer('px-glow', this.world.enemies.cap).setDepth(1.85);
+    this.enemyGlowLayer.setBlendMode(Phaser.BlendModes.ADD);
+    seedGpuLayer(this.enemyGlowLayer, this.world.enemies.cap, this.gpuMember);
     seedGpuLayer(this.gemLayer, loop.maxGems, this.gpuMember);
     seedGpuLayer(this.sparkLayer, SPARK_CAP, this.gpuMember);
 
@@ -319,7 +323,7 @@ export class ArenaScene extends Phaser.Scene {
       this.sparks.push({ life: 0, max: 0.2, x: 0, y: 0, vx: 0, vy: 0, size: 1, tint: 0xffffff });
     }
 
-    this.playerGlow = this.add.image(0, 0, 'px-glow').setDepth(4).setAlpha(0.18).setScale(2.4);
+    this.playerGlow = this.add.image(0, 0, 'px-player-halo').setDepth(4).setAlpha(0.48).setScale(1.8);
     this.playerGlow.setBlendMode(Phaser.BlendModes.ADD);
     this.playerTrail1 = this.add.sprite(this.world.player.x, this.world.player.y, entityTextureKey(vessel)).setVisible(false).setDepth(4.8);
     this.fitBody(this.playerTrail1);
@@ -697,7 +701,7 @@ export class ArenaScene extends Phaser.Scene {
       const dirX = pvx * norm;
       const dirY = pvy * norm;
       const trailLen = Math.min(8.0, Math.max(2.5, (pspeed / 100) * 3.8));
-      const trailTint = biome === 'cinder' ? 0x24100c : 0x0e1824;
+      const trailTint = biome === 'cinder' ? 0xd89b52 : 0x78ccff;
 
       this.playerTrail1.setTexture(this.playerSprite.texture.key, this.playerSprite.frame.name);
       this.fitBody(this.playerTrail1, scale);
@@ -740,8 +744,9 @@ export class ArenaScene extends Phaser.Scene {
       this.decoySprite.setVisible(false);
     }
     this.playerGlow.setPosition(x, y);
-    this.playerGlow.setScale(2.4 * scale);
-    this.playerGlow.setAlpha(biome === 'cinder' ? 0.16 : 0.12);
+    this.playerGlow.setScale(1.8 * scale);
+    this.playerGlow.setAlpha(biome === 'cinder' ? 0.48 : 0.32);
+    this.playerGlow.setTint(biome === 'cinder' ? 0xffdf90 : 0xb8f0ff);
     this.playerGlow.setDepth(pDepth - 0.001);
     this.playerEyes.setScale(scale);
     this.playerEyes.setDepth(pDepth + 0.0002);
@@ -998,7 +1003,7 @@ export class ArenaScene extends Phaser.Scene {
               const dirX = dx * norm;
               const dirY = dy * norm;
               const trailLen = Math.min(8.0, Math.max(2.5, (curSpeed / 100) * 3.8));
-              const trailTint = biome === 'cinder' ? 0x24100c : 0x0e1824;
+              const trailTint = biome === 'cinder' ? 0x6e3826 : 0x284868;
 
               // Trail Step 1 (closer, medium alpha)
               clearGpuAnim(this.gpuMember);
@@ -1030,11 +1035,35 @@ export class ArenaScene extends Phaser.Scene {
       }
 
       if (!alive || !defId) {
+        hideGpuMember(this.enemyGlowLayer, this.gpuMember, i);
         this.enemyPrevX[i] = enemies.x[i];
         this.enemyPrevY[i] = enemies.y[i];
         this.enemyAliveLast[i] = 0;
         continue;
       }
+
+      // Ground under-glow to separate enemy silhouette from dark floor tiles
+      const isBoss = enemies.role[i] === ROLE_BOSS;
+      const isElite = enemies.role[i] === ROLE_ELITE;
+      const gScale = isBoss ? 2.4 : isElite ? 1.45 : 1.0;
+      const glowAlpha = biome === 'cinder'
+        ? (isBoss ? 0.44 : isElite ? 0.36 : 0.28)
+        : (isBoss ? 0.36 : isElite ? 0.28 : 0.20);
+      const glowTint = biome === 'cinder' ? 0xff7a33 : 0x60d0ff;
+
+      clearGpuAnim(this.gpuMember);
+      this.gpuMember.x = enemies.x[i];
+      this.gpuMember.y = enemies.y[i] + (isBoss ? 10 : 4);
+      this.gpuMember.scaleX = gScale;
+      this.gpuMember.scaleY = gScale * 0.72;
+      this.gpuMember.alpha = glowAlpha;
+      this.gpuMember.tintBlend = 0.7;
+      this.gpuMember.tintBottomLeft = glowTint;
+      this.gpuMember.tintTopLeft = glowTint;
+      this.gpuMember.tintBottomRight = glowTint;
+      this.gpuMember.tintTopRight = glowTint;
+      this.gpuMember.frame = 0;
+      this.enemyGlowLayer.editMember(i, this.gpuMember);
 
       if (enemies.role[i] === ROLE_BOSS) {
         const curSpeed = currentEnemySpeed(this.world, i);
@@ -1065,7 +1094,7 @@ export class ArenaScene extends Phaser.Scene {
           const dirX = bvx * norm;
           const dirY = bvy * norm;
           const trailLen = Math.min(10.0, Math.max(3.0, (bspeed / 80) * 4.2));
-          const trailTint = biome === 'cinder' ? 0x24100c : 0x0e1824;
+          const trailTint = biome === 'cinder' ? 0x6e3826 : 0x284868;
           const flipX = enemies.facing[i] < 0;
 
           this.bossTrail1.setTexture(this.bossSprite.texture.key, this.bossSprite.frame.name);
@@ -1144,7 +1173,7 @@ export class ArenaScene extends Phaser.Scene {
           const dirX = evx * norm;
           const dirY = evy * norm;
           const trailLen = Math.min(8.0, Math.max(2.5, (espeed / 100) * 3.8));
-          const trailTint = biome === 'cinder' ? 0x24100c : 0x0e1824;
+          const trailTint = biome === 'cinder' ? 0x6e3826 : 0x284868;
           const flipX = enemies.facing[i] < 0;
 
           t1.setTexture(sprite.texture.key, sprite.frame.name);

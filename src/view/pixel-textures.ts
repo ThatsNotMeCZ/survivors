@@ -13,6 +13,7 @@ import {
   entityTextureKey,
   getEnvAtlasDef,
   getEnvAtlasSource,
+  getSpriteManifest,
   registerFallbackSheet,
 } from './sprites';
 import type { UiRect } from './sprite-types';
@@ -36,6 +37,7 @@ export function uploadPixelTextures(scene: Phaser.Scene): void {
     );
   }
   uploadBlendedHazardTextures(scene, atlasSource, atlasDef?.frames);
+  enhanceLoadedEntitySheets(scene);
   uploadEntitySheets(scene);
 }
 
@@ -164,4 +166,100 @@ function addCanvasTexture(scene: Phaser.Scene, key: string, canvas: HTMLCanvasEl
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(canvas, 0, 0);
   texture.refresh();
+}
+
+function enhanceLoadedEntitySheets(scene: Phaser.Scene): void {
+  if (typeof document === 'undefined') return;
+  const manifest = getSpriteManifest();
+  if (!manifest?.entities) return;
+
+  for (const [id, def] of Object.entries(manifest.entities)) {
+    const texKey = entityTextureKey(id);
+    if (!scene.textures.exists(texKey)) continue;
+    const texture = scene.textures.get(texKey);
+    const source = texture.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+    if (!source || !source.width || !source.height) continue;
+
+    const fw = def.frameWidth || source.height;
+    const fh = def.frameHeight || source.height;
+    const w = source.width;
+    const h = source.height;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) continue;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(source, 0, 0);
+
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+
+    const isPlayer = id === 'runner' || id === 'penitent';
+    const isCinder = id.startsWith('cinder') || id.startsWith('ember');
+
+    // Subtle 1px rim colors on transparent border adjacent to sprite outline
+    const rimR = isPlayer ? 255 : isCinder ? 255 : 190;
+    const rimG = isPlayer ? 236 : isCinder ? 175 : 230;
+    const rimB = isPlayer ? 180 : isCinder ? 110 : 255;
+    const rimA = isPlayer ? 115 : isCinder ? 90 : 80;
+
+    const cols = Math.floor(w / fw);
+    const rows = Math.floor(h / fh);
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const startX = c * fw;
+        const startY = r * fh;
+
+        for (let fy = 0; fy < fh; fy++) {
+          for (let fx = 0; fx < fw; fx++) {
+            const px = startX + fx;
+            const py = startY + fy;
+            const idx = (py * w + px) * 4;
+            const a = data[idx + 3];
+
+            if (a > 128) {
+              // Check if pixel is internal (all 4 cardinal neighbors inside frame are opaque)
+              const hasLeft = fx > 0 && data[(py * w + (px - 1)) * 4 + 3] > 128;
+              const hasRight = fx < fw - 1 && data[(py * w + (px + 1)) * 4 + 3] > 128;
+              const hasTop = fy > 0 && data[((py - 1) * w + px) * 4 + 3] > 128;
+              const hasBot = fy < fh - 1 && data[((py + 1) * w + px) * 4 + 3] > 128;
+
+              if (hasLeft && hasRight && hasTop && hasBot) {
+                // Interior pixel: lift deep shadows so the character body doesn't crush against its 1px black outline
+                const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                if (lum < 72) {
+                  const lift = Math.round((72 - lum) * 0.35);
+                  data[idx] = Math.min(255, data[idx] + lift);
+                  data[idx + 1] = Math.min(255, data[idx + 1] + lift);
+                  data[idx + 2] = Math.min(255, data[idx + 2] + lift);
+                }
+              }
+            } else if (a < 32) {
+              // Transparent pixel: check if adjacent to an opaque pixel within the frame margins
+              if (fx > 0 && fx < fw - 1 && fy > 0 && fy < fh - 1) {
+                const adjOpaque =
+                  data[(py * w + (px - 1)) * 4 + 3] > 128 ||
+                  data[(py * w + (px + 1)) * 4 + 3] > 128 ||
+                  data[((py - 1) * w + px) * 4 + 3] > 128 ||
+                  data[((py + 1) * w + px) * 4 + 3] > 128;
+
+                if (adjOpaque) {
+                  data[idx] = rimR;
+                  data[idx + 1] = rimG;
+                  data[idx + 2] = rimB;
+                  data[idx + 3] = rimA;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+    texture.setSource(canvas);
+  }
 }
