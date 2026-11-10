@@ -404,6 +404,11 @@ export function stepBossHazards(world: World, dt: number): void {
 
     if (kind === HAZ_PULSE) {
       if (pool.state[i] === 0) {
+        const bIdx = world.boss.enemyIndex;
+        if (bIdx >= 0 && world.enemies.alive[bIdx] !== 0) {
+          pool.x[i] = world.enemies.x[bIdx];
+          pool.y[i] = world.enemies.y[bIdx];
+        }
         if (pool.elapsed[i] >= pool.duration[i]) {
           const x = pool.x[i];
           const y = pool.y[i];

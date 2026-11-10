@@ -6,6 +6,7 @@ import {
   HAZ_PRISON,
   HAZ_PULSE,
 } from '../../sim/boss-hazards';
+import { PILLAR_COVER_EXTRA_RADIUS } from '../../sim/enemies';
 import type { World } from '../../sim/world';
 import { CinderSmokeShader } from './cinder-smoke-shader';
 
@@ -636,7 +637,7 @@ export class BossShaders {
       const arr = mats[matIdx];
       arr[colOffset] = obs.x - bx;
       arr[colOffset + 1] = obs.y - by;
-      arr[colOffset + 2] = obs.radius;
+      arr[colOffset + 2] = obs.radius + PILLAR_COVER_EXTRA_RADIUS;
       arr[colOffset + 3] = 1.0;
       slot += 1;
     }

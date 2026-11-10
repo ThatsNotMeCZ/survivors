@@ -132,7 +132,7 @@ export function stepLoop(world: World, dt: number): void {
 
 function updateCoefficient(world: World): void {
   const { perSecond, stageBonus } = world.catalog.loop.difficulty;
-  world.coefficient = 1 + world.runTime * perSecond + world.stageIndex * stageBonus;
+  world.coefficient = 1 + world.runTime * perSecond + world.stageIndex * (stageBonus || 0);
 }
 
 function stepTeleporter(world: World, dt: number): void {

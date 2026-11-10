@@ -1,6 +1,6 @@
 import { FX_DEATH, FX_MUZZLE } from '../config';
 import type { BossAi, BossAttack } from '../data/schema';
-import { clamp } from './collision';
+import { clamp, pointToSegment } from './collision';
 import {
   STYLE_FROST,
   STYLE_LAVA,
@@ -215,7 +215,9 @@ export function stepBoss(
     boss.laserEndY = end.y;
 
     const distToEnd = Math.hypot(player.x - end.x, player.y - end.y);
-    if (player.iframeRemain <= 0 && distToEnd <= atk.hitRadius + player.radius) {
+    const distToBeam = pointToSegment(player.x, player.y, enemies.x[i], enemies.y[i], end.x, end.y);
+    const hitRadius = atk.hitRadius + player.radius;
+    if (player.iframeRemain <= 0 && (distToEnd <= hitRadius || distToBeam <= atk.hitRadius * 0.75 + player.radius)) {
       const dmg = atk.dps * world.coefficient * dt;
       damagePlayer(world, dmg);
     }
@@ -444,6 +446,13 @@ function finishWindup(world: World, i: number, atk: BossAttack): void {
     boss.trailTimer = 0;
     enemies.windup[i] = atk.duration;
     boss.counts.laser += 1;
+    const nx = Math.cos(baseAngle);
+    const ny = Math.sin(baseAngle);
+    boss.aimX = bx + nx * muzzle;
+    boss.aimY = by + ny * muzzle;
+    const hit = clampBeamToPillar(world, bx, by, boss.aimX, boss.aimY);
+    boss.laserEndX = hit.x;
+    boss.laserEndY = hit.y;
     return;
   }
 

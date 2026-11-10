@@ -288,7 +288,7 @@ function pushActorFromObstacle(
   apply(split.ax, split.ay);
 }
 
-function spawnObstacle(
+export function spawnObstacle(
   world: World,
   type: ObstacleKind,
   x: number,

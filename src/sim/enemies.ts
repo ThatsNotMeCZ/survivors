@@ -603,13 +603,15 @@ function deflectFromObstacles(
   return { x: outX, y: outY };
 }
 
+export const PILLAR_COVER_EXTRA_RADIUS = 8;
+
 export function pillarBlocksShot(world: World, x0: number, y0: number, x1: number, y1: number): boolean {
   const { obstacles } = world;
   for (let i = 0; i < obstacles.cap; i += 1) {
     if (obstacles.alive[i] === 0) continue;
     const obs = obstacles.items[i];
     if (obs.type !== 'pillar') continue;
-    if (segmentHitsCircle(x0, y0, x1, y1, obs.x, obs.y, obs.radius)) return true;
+    if (segmentHitsCircle(x0, y0, x1, y1, obs.x, obs.y, obs.radius + PILLAR_COVER_EXTRA_RADIUS)) return true;
   }
   return false;
 }

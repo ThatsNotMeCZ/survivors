@@ -1,4 +1,5 @@
 import { aabbOverlap, clamp } from './collision';
+import { ROLE_BOSS } from './enemies';
 import { resolveObstacleBodies } from './obstacles';
 import { hashClear, hashInsert, hashQuery } from './spatial-hash';
 import type { World } from './world';
@@ -49,6 +50,18 @@ function resolveEnemyPairs(world: World): void {
       ) {
         continue;
       }
+      const isBossI = enemies.role[i] === ROLE_BOSS;
+      const isBossJ = enemies.role[j] === ROLE_BOSS;
+      let shareI = 0.5;
+      let shareJ = 0.5;
+      if (isBossI && !isBossJ) {
+        shareI = 0;
+        shareJ = 1;
+      } else if (isBossJ && !isBossI) {
+        shareI = 1;
+        shareJ = 0;
+      }
+
       const split = separateAxis(
         enemies.x[i],
         enemies.y[i],
@@ -56,8 +69,8 @@ function resolveEnemyPairs(world: World): void {
         enemies.x[j],
         enemies.y[j],
         enemies.radius[j],
-        0.5,
-        0.5,
+        shareI,
+        shareJ,
       );
       enemies.x[i] = split.ax;
       enemies.y[i] = split.ay;

@@ -249,9 +249,10 @@ export interface AtlasBorderFrames {
   cornerBottom?: UiRect;
 }
 
-function prepareCinderTileStamp(
+function prepareFloorTileStamp(
   source: HTMLImageElement | HTMLCanvasElement,
   rect: UiRect,
+  theme: EnvThemeId,
 ): HTMLCanvasElement {
   const canvas = makeCanvas(rect.w, rect.h);
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -265,18 +266,46 @@ function prepareCinderTileStamp(
     let r = data[i];
     let g = data[i + 1];
     let b = data[i + 2];
-    const isEmber = r > 110 && r > b * 1.65;
-    if (isEmber) {
-      // Tlumení jasných lávových žil v podlaze, aby nekonkurovaly oranžovým entitám
-      r = Math.round(58 + (r - 58) * 0.68);
-      g = Math.round(42 + (g - 42) * 0.65);
-      b = Math.round(40 + (b - 40) * 0.75);
-    } else {
-      // Posun tmavého fialovo-uhlového kamene a černých spár do světlejšího popelavého odstínu
-      r = Math.min(255, Math.round(44 + r * 0.72));
-      g = Math.min(255, Math.round(35 + g * 0.70));
-      b = Math.min(255, Math.round(38 + b * 0.70));
+
+    if (theme === 'cinder') {
+      const isEmber = r > 110 && r > b * 1.65;
+      if (isEmber) {
+        // Tlumení jasných lávových žil v podlaze, aby nekonkurovaly oranžovým entitám
+        r = Math.round(58 + (r - 58) * 0.68);
+        g = Math.round(42 + (g - 42) * 0.65);
+        b = Math.round(40 + (b - 40) * 0.75);
+      } else {
+        // Posun tmavého fialovo-uhlového kamene a černých spár do popelavého odstínu
+        r = Math.min(255, Math.round(44 + r * 0.72));
+        g = Math.min(255, Math.round(35 + g * 0.70));
+        b = Math.min(255, Math.round(38 + b * 0.70));
+      }
+    } else if (theme === 'rime') {
+      // Rime Dock: ztmavení světlé břidlice a tlumení bílých ledových prasklin
+      const isIceRune = b > 160 && (g > 130 || b > r * 1.5);
+      if (isIceRune) {
+        r = Math.round(r * 0.45);
+        g = Math.min(130, Math.round(g * 0.50));
+        b = Math.min(150, Math.round(b * 0.56));
+      } else {
+        r = Math.round(r * 0.48);
+        g = Math.round(g * 0.52);
+        b = Math.round(b * 0.58);
+      }
+    } else if (theme === 'glacial') {
+      // Glacial Tomb: původně zářivě bílý led (luminance ~200) ztmavit na temný hlubinný permafrost
+      const isBrightIce = b > 190 && g > 150;
+      if (isBrightIce) {
+        r = Math.round(r * 0.38);
+        g = Math.min(125, Math.round(g * 0.44));
+        b = Math.min(145, Math.round(b * 0.50));
+      } else {
+        r = Math.round(r * 0.42);
+        g = Math.round(g * 0.46);
+        b = Math.round(b * 0.52);
+      }
     }
+
     data[i] = r;
     data[i + 1] = g;
     data[i + 2] = b;
@@ -350,12 +379,12 @@ export function generateFloor(
     const tileStamps: (HTMLCanvasElement | null)[] = [0, 1, 2, 3].map((v) => {
       const r = tileRects[v];
       if (!hasAtlasTiles || !atlasSource || !r) return null;
-      return theme === 'cinder' ? prepareCinderTileStamp(atlasSource, r) : null;
+      return prepareFloorTileStamp(atlasSource, r, theme as EnvThemeId);
     });
     const runeStamps: (HTMLCanvasElement | null)[] = [0, 1, 2, 3].map((v) => {
       const r = runeRects[v];
       if (!hasAtlasTiles || !atlasSource || !r) return null;
-      return theme === 'cinder' ? prepareCinderTileStamp(atlasSource, r) : null;
+      return prepareFloorTileStamp(atlasSource, r, theme as EnvThemeId);
     });
     const baseTiles = [0, 1, 2, 3].map((v) => makeFloorTile(biome, v));
     const runeTiles = [0, 1, 2, 3].map((v) => makeRuneTile(biome, v));

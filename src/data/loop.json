@@ -57,7 +57,7 @@
   },
   "difficulty": {
     "perSecond": 0.0032,
-    "stageBonus": 0.20,
+    "stageBonus": 0,
     "speedPerCoeff": 0.035
   },
   "rarityWeight": {
