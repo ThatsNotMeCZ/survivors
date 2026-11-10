@@ -295,13 +295,26 @@ export function stepWorld(world: World, input: InputFrame, dt: number): void {
   world.player.hurtRemain = Math.max(0, world.player.hurtRemain - dt);
 }
 
+export const ONE_SHOT_PROTECTION_THRESHOLD = 0.9;
+export const ONE_SHOT_PROTECTION_IFRAME = 0.25;
+
 export function damagePlayer(world: World, rawDamage: number, isHazard = false): void {
-  if (rawDamage <= 0 || world.player.iframeRemain > 0) return;
+  if (rawDamage <= 0 || world.player.iframeRemain > 0 || world.player.hp <= 0) return;
   let finalDamage = rawDamage * (1 - world.stats.armor);
   if (isHazard) {
     finalDamage *= (1 - world.stats.hazardResist);
   }
   finalDamage = Math.max(0, finalDamage);
+
+  // One-Shot Protection (OSP):
+  // When at or above 90% max HP, a lethal or sub-1HP hit cannot kill the player, leaving 1 HP
+  // and granting a brief invulnerability window for the next tick.
+  const ospThreshold = world.player.maxHp * ONE_SHOT_PROTECTION_THRESHOLD;
+  if (world.player.hp >= ospThreshold && world.player.hp - finalDamage < 1) {
+    finalDamage = Math.max(0, world.player.hp - 1);
+    world.player.iframeRemain = Math.max(world.player.iframeRemain, ONE_SHOT_PROTECTION_IFRAME);
+  }
+
   world.player.hp -= finalDamage;
   world.damageTaken += finalDamage;
 }

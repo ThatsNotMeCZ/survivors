@@ -2839,23 +2839,25 @@ select:focus-visible,
 
 .runend-actions {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   align-items: center;
   justify-content: center;
   margin-top: 12px;
+  flex-wrap: wrap;
 }
 
 .runend-cta {
   position: relative;
   right: auto;
   bottom: auto;
-  min-width: 220px;
-  min-height: 96px;
+  min-width: 200px;
+  min-height: 84px;
   height: auto;
 }
 
+.runend-copy-btn,
 .runend-quit-btn {
-  min-width: 220px;
+  min-width: 190px;
   height: 52px;
 }
 

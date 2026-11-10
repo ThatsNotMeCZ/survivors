@@ -426,7 +426,7 @@ function buildControlsTable(survivor: SurvivorDef): HTMLElement {
     ],
     ['1 / 2 / 3', 'Bind Augmentation', 'Select a tablet during vessel ascension (or use Arrow keys + Enter).'],
     ['Stand in Ring', 'Channel / Descend', 'Hold inside the Transmutation Circle or Rift portal until charged.'],
-    ['Esc', 'Pause Working', 'Pause simulation, inspect inventory, or open The Archives.'],
+    ['Esc / P', 'Pause Working', 'Pause simulation, inspect inventory, or open The Archives.'],
   ];
 
   for (const [k, rite, desc] of rows) {

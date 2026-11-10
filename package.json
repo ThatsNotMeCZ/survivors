@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:itch": "bun run smoke:loop && bun run build && bun scripts/package-itch.ts",
     "preview": "vite preview",
     "smoke:loop": "bun scripts/loop-smoke.ts"
   },

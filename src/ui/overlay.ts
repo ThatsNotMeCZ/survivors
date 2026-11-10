@@ -115,12 +115,112 @@ let cinderCircleCtrl: CinderCircleController | null = null;
 let hallBackdropCtrl: HallBackdropController | null = null;
 let lastSfxPreview = 0;
 let hallInspectedId = '';
+let currentRunRecap: RunRecap | undefined = undefined;
+let currentRunOutcome: RunOutcome | undefined = undefined;
+
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fallback for iframe restrictions
+    }
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '-9999px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+export function formatRunSummaryText(kind: RunOutcome = currentRunOutcome ?? 'defeat', recap: RunRecap | undefined = currentRunRecap): string {
+  const outcomeTitle = kind === 'victory'
+    ? 'TRANSMUTATION COMPLETE 🜂'
+    : kind === 'defeat'
+      ? 'VESSEL SHATTERED 🜍'
+      : 'VESSEL DISSOLVED ☿';
+
+  if (!recap) {
+    return `⚗️ HERMETIC RIFTS — ${outcomeTitle}`;
+  }
+
+  const itemsStr = recap.items.length > 0
+    ? recap.items.map((i) => `${i.name}${i.stacks > 1 ? ` ×${i.stacks}` : ''}`).join(', ')
+    : 'None';
+
+  return [
+    `⚗️ HERMETIC RIFTS — ${outcomeTitle}`,
+    `Vessel: ${recap.survivor} · Chamber: ${recap.stage}`,
+    `Time: ${formatTime(recap.time)} · Lv ${recap.level} · Coeff: ×${recap.coefficient.toFixed(2)}`,
+    `Dross Slain: ${(recap.kills ?? 0).toLocaleString()} · Bosses Slain: ${recap.bosses}`,
+    `Damage Dealt: ${Math.round(recap.damageDealt ?? 0).toLocaleString()} · Essence: ${recap.gemsCollected ?? 0}`,
+    `Relics: ${itemsStr}`,
+  ].join('\n');
+}
+
+export function copyRunSummary(): void {
+  const text = formatRunSummaryText();
+  const copyBtn = document.getElementById('runend-copy');
+  const label = copyBtn?.querySelector('.plaque-label');
+  void copyTextToClipboard(text).then((success) => {
+    if (success) {
+      playSfx('confirm');
+      if (label) {
+        const orig = label.textContent;
+        label.textContent = 'COPIED TO LEDGER ✓';
+        window.setTimeout(() => {
+          if (label && label.textContent === 'COPIED TO LEDGER ✓') {
+            label.textContent = orig;
+          }
+        }, 2200);
+      }
+    } else {
+      playSfx('error');
+    }
+  });
+}
+
+export function toggleFullscreen(): void {
+  if (typeof document === 'undefined') return;
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => undefined);
+  } else {
+    document.exitFullscreen().catch(() => undefined);
+  }
+}
 
 export function bindOverlay(next: Partial<OverlayHandlers>): void {
   handlers = { ...handlers, ...next };
   if (!keysBound) {
     keysBound = true;
     window.addEventListener('keydown', onOverlayKey, true);
+    window.addEventListener('blur', () => {
+      if (mode === 'hidden' && !runPaused) {
+        handlers.onPause();
+      }
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && mode === 'hidden' && !runPaused) {
+        handlers.onPause();
+      }
+    });
+    window.addEventListener('pointerdown', () => {
+      if (typeof window !== 'undefined' && document.activeElement !== document.body) {
+        window.focus();
+      }
+    });
     document.getElementById('settings-close')?.addEventListener('click', () => settingsDialog()?.close());
     applySettingsToDom();
     hydrateUiSprites(document);
@@ -430,29 +530,42 @@ function isEscape(event: KeyboardEvent): boolean {
   return event.code === 'Escape' || event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27;
 }
 
+function isPauseKey(event: KeyboardEvent): boolean {
+  return event.code === 'KeyP' || event.key === 'p' || event.key === 'P';
+}
+
 function onOverlayKey(event: KeyboardEvent): void {
-  if (isEscape(event)) {
+  // Prevent page scroll inside itch iframe during gameplay
+  if (mode === 'hidden' && (event.code === 'Space' || event.key === ' ' || event.key.startsWith('Arrow'))) {
     event.preventDefault();
-    if (event.repeat) return;
-    const dialog = settingsDialog();
-    if (dialog?.open) {
-      dialog.close();
+  }
+
+  if (isEscape(event) || isPauseKey(event)) {
+    if (isPauseKey(event) && (mode === 'menu' || mode === 'lobby' || mode === 'levelup')) {
+      // Don't intercept P in menu, vessel selection, or levelup
+    } else {
+      event.preventDefault();
+      if (event.repeat) return;
+      const dialog = settingsDialog();
+      if (dialog?.open) {
+        dialog.close();
+        return;
+      }
+      if (mode === 'pause') {
+        handlers.onResume();
+      } else if (mode === 'lobby') {
+        playSfx('close');
+        showMainMenu();
+      } else if (mode === 'howto' || mode === 'survivor' || mode === 'abandon') {
+        goBack();
+      } else if (mode === 'runend') {
+        playSfx('close');
+        handlers.onQuit();
+      } else if (mode === 'hidden') {
+        handlers.onPause();
+      }
       return;
     }
-    if (mode === 'pause') {
-      handlers.onResume();
-    } else if (mode === 'lobby') {
-      playSfx('close');
-      showMainMenu();
-    } else if (mode === 'howto' || mode === 'survivor' || mode === 'abandon') {
-      goBack();
-    } else if (mode === 'runend') {
-      playSfx('close');
-      handlers.onQuit();
-    } else if (mode === 'hidden') {
-      handlers.onPause();
-    }
-    return;
   }
   if (event.key === 'Enter') {
     if (settingsDialog()?.open) return;
@@ -483,6 +596,11 @@ function onOverlayKey(event: KeyboardEvent): void {
       event.preventDefault();
       handlers.onRestart();
     }
+    return;
+  }
+  if (mode === 'runend' && (event.key === 'c' || event.key === 'C')) {
+    event.preventDefault();
+    copyRunSummary();
     return;
   }
   if (mode !== 'levelup') return;
@@ -1010,6 +1128,11 @@ function fillPauseInventory(items: HudItem[]): void {
 function settingsForm(settings: GameSettings): HTMLElement {
   const wrap = document.createElement('div');
   wrap.appendChild(
+    actionRow('Fullscreen Chamber', 'Expand working to fill the entire monitor.', () => {
+      toggleFullscreen();
+    }),
+  );
+  wrap.appendChild(
     rangeRow('Master Volume', 'Overall resonance of the chamber.', settings.masterVolume, (value) => {
       patchSettings({ masterVolume: value });
     }),
@@ -1100,6 +1223,36 @@ function checkRow(label: string, hint: string, value: boolean, onChange: (value:
   return row;
 }
 
+function actionRow(label: string, hint: string, onClick: () => void): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'setting-row';
+  const copy = document.createElement('span');
+  const title = document.createElement('span');
+  title.textContent = label;
+  const note = document.createElement('span');
+  note.className = 'hint';
+  note.textContent = hint;
+  copy.append(title, note);
+  const control = document.createElement('span');
+  control.className = 'setting-control';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'plaque-btn';
+  btn.dataset.uiSprite = 'btn-plaque';
+  btn.style.padding = '4px 12px';
+  const span = document.createElement('span');
+  span.className = 'plaque-label';
+  span.textContent = 'Toggle Fullscreen';
+  btn.appendChild(span);
+  btn.addEventListener('click', () => {
+    playSfx('click');
+    onClick();
+  });
+  control.appendChild(btn);
+  row.append(copy, control);
+  return row;
+}
+
 function pct(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
@@ -1115,7 +1268,11 @@ function renderRunEnd(kind: RunOutcome, detail: string, recap?: RunRecap): void 
   const invList = document.getElementById('runend-inv-list');
   const tooltip = document.getElementById('runend-item-tooltip');
   const restartBtn = document.getElementById('runend-restart');
+  const copyBtn = document.getElementById('runend-copy');
   const quitBtn = document.getElementById('runend-quit');
+
+  currentRunRecap = recap;
+  currentRunOutcome = kind;
 
   if (
     !root ||
@@ -1308,6 +1465,11 @@ function renderRunEnd(kind: RunOutcome, detail: string, recap?: RunRecap): void 
     playSfx('confirm');
     handlers.onRestart();
   };
+  if (copyBtn) {
+    copyBtn.onclick = () => {
+      copyRunSummary();
+    };
+  }
   quitBtn.onclick = () => {
     playSfx('close');
     handlers.onQuit();
