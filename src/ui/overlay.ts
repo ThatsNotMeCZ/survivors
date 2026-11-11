@@ -12,6 +12,7 @@ import { mountVesselArt } from './vessel-art';
 import { mountMenuCinderCircle, type CinderCircleController } from './cinder-circle';
 import { mountHallBackdrop, type HallBackdropController } from './hall-backdrop';
 import { applySettingsToDom, getSettings, patchSettings, skipShell, type GameSettings } from './settings';
+import type { WebGlFail } from './webgl-gate';
 
 export type OverlayMode =
   | 'hidden'
@@ -23,7 +24,8 @@ export type OverlayMode =
   | 'pause'
   | 'abandon'
   | 'levelup'
-  | 'runend';
+  | 'runend'
+  | 'webgl';
 
 export type OverlayHandlers = {
   onStart: () => void;
@@ -317,6 +319,63 @@ export function showPause(): void {
   renderPauseScreen();
 }
 
+const WEBGL_COPY: Record<WebGlFail, { kicker: string; title: string; sub: string }> = {
+  missing: {
+    kicker: 'The vessel cannot ignite',
+    title: 'WebGL required',
+    sub: 'This working needs a GPU that speaks WebGL. The chamber could not open a graphics context.',
+  },
+  software: {
+    kicker: 'The vessel cannot ignite',
+    title: 'WebGL required',
+    sub: 'The browser offered only a software renderer. That cannot carry a swarm.',
+  },
+  incomplete: {
+    kicker: 'The vessel cannot ignite',
+    title: 'WebGL required',
+    sub: 'This GPU is missing extensions the chamber needs (instanced arrays).',
+  },
+  lost: {
+    kicker: 'The aether tore',
+    title: 'GPU context lost',
+    sub: 'The graphics context was seized mid-working. Relics in this run are gone.',
+  },
+};
+
+const WEBGL_TIPS = [
+  'Enable hardware acceleration in the browser (Chrome: chrome://settings/system).',
+  'Update the graphics driver, then restart the browser.',
+  'Close other GPU-heavy tabs and reload.',
+];
+
+export function showWebglBlocker(reason: WebGlFail): void {
+  hideHud();
+  runPaused = true;
+  const copy = WEBGL_COPY[reason];
+  const body = document.createElement('ul');
+  body.className = 'webgl-gate-tips';
+  for (const tip of WEBGL_TIPS) {
+    const li = document.createElement('li');
+    li.textContent = tip;
+    body.appendChild(li);
+  }
+  renderScreen({
+    screen: 'webgl',
+    kicker: copy.kicker,
+    title: copy.title,
+    sub: copy.sub,
+    body,
+    actions: [
+      {
+        label: 'Reload Chamber',
+        onClick: () => window.location.reload(),
+        primary: true,
+        sfx: 'confirm',
+      },
+    ],
+  });
+}
+
 export function showAbandon(): void {
   runPaused = true;
   origin = 'pause';
@@ -572,6 +631,11 @@ function onOverlayKey(event: KeyboardEvent): void {
     }
   }
   if (event.key === 'Enter') {
+    if (mode === 'webgl') {
+      event.preventDefault();
+      window.location.reload();
+      return;
+    }
     if (settingsDialog()?.open) return;
     if (mode === 'menu') {
       event.preventDefault();

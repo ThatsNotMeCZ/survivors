@@ -14,7 +14,7 @@ Not the combat loop. Dots are not entities. Do not collide them, pool them as en
 
 ## If it fails
 
-1. Confirm WebGL (HUD renderer). Canvas cannot run SpriteGPULayer.
+1. Confirm WebGL (HUD renderer). Canvas cannot run SpriteGPULayer. Missing/software WebGL shows the HTML gate overlay instead of a black screen (`knowledge/tech/stack.md`).
 2. Do not "fix" it by switching to N `this.add.sprite` calls.
 3. Only then profile; the architecture is the test.
 

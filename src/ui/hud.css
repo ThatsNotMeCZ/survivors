@@ -2942,6 +2942,17 @@ select:focus-visible,
   margin-bottom: 18px;
 }
 
+.webgl-gate-tips {
+  margin: 0;
+  padding-left: 1.15em;
+  color: #2e2014;
+  line-height: 1.45;
+}
+
+.webgl-gate-tips li + li {
+  margin-top: 6px;
+}
+
 #overlay-actions:not(:empty) {
   display: flex;
   flex-direction: column;
@@ -4463,20 +4474,8 @@ select:focus-visible,
   z-index: 22;
 }
 
-html[data-promo='cover'] .promo-title,
 html[data-promo='banner'] .promo-title {
   display: flex;
-}
-
-html[data-promo='cover'] .promo-title {
-  position: fixed;
-  top: 24%;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: clamp(42px, 5vw, 72px);
-}
-
-html[data-promo='banner'] .promo-title {
   position: fixed;
   inset: 0;
   align-items: center;
@@ -4491,8 +4490,99 @@ html[data-promo='banner'] #overlay {
 
 html[data-promo='cover'] #hud,
 html[data-promo='cover'] #prompt,
-html[data-promo='cover'] #sting {
+html[data-promo='cover'] #sting,
+html[data-promo='cover'] #overlay,
+html[data-promo='cover'] #promo-title,
+html[data-promo='cover'] #game-container,
+html[data-promo='cover'] #settings-dialog {
   display: none !important;
+}
+
+.cover-compose {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+}
+
+.cover-stage {
+  position: relative;
+  width: 630px;
+  height: 500px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--ink);
+}
+
+.cover-spr {
+  position: absolute;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+}
+
+.cover-afterimage {
+  filter: brightness(1.45) saturate(0.35);
+}
+
+.cover-glow {
+  position: absolute;
+  right: -40px;
+  top: 70px;
+  width: 460px;
+  height: 460px;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(255, 106, 26, 0.55) 0%,
+    rgba(212, 84, 42, 0.28) 36%,
+    rgba(139, 30, 30, 0.12) 58%,
+    transparent 72%
+  );
+}
+
+.cover-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 40% 58%, transparent 26%, rgba(12, 10, 13, 0.5) 70%, rgba(12, 10, 13, 0.9) 100%),
+    linear-gradient(180deg, rgba(12, 10, 13, 0.55) 0%, transparent 22%, transparent 76%, rgba(12, 10, 13, 0.72) 100%);
+}
+
+.cover-title {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  z-index: 22;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.cover-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 28px 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 1.02;
+  letter-spacing: 0.12em;
+  color: var(--gold-molten);
+  text-align: center;
+  background: radial-gradient(ellipse at center, rgba(12, 10, 13, 0.88) 10%, rgba(12, 10, 13, 0.55) 48%, transparent 74%);
+  text-shadow:
+    0 2px 0 #3a1a0e,
+    0 4px 12px rgba(0, 0, 0, 0.9),
+    0 0 22px rgba(212, 130, 60, 0.55);
 }
 
 html[data-promo='banner'] .hall-header,

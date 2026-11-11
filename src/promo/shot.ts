@@ -10,7 +10,7 @@ export const PROMO_SHOTS = [
 
 export type PromoShot = (typeof PROMO_SHOTS)[number];
 
-const PLAY_SHOTS: ReadonlySet<PromoShot> = new Set(['circle', 'boss', 'tablets', 'cover']);
+const PLAY_SHOTS: ReadonlySet<PromoShot> = new Set(['circle', 'boss', 'tablets']);
 
 export function getPromoShot(): PromoShot | null {
   if (typeof window === 'undefined') return null;

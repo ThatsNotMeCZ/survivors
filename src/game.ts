@@ -20,6 +20,7 @@ export function startGame(parent: string, smoke: boolean): Phaser.Game {
     },
     render: {
       antialias: false,
+      failIfMajorPerformanceCaveat: true,
     },
     scene: smoke ? [SmokeScene] : [ArenaScene],
   });

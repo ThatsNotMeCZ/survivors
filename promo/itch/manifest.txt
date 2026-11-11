@@ -1,9 +1,8 @@
-cover.gif: 1.48 MB
-cover.png: 0.16 MB
+cover.png: 0.24 MB
 banner.png: 0.26 MB
 01-circle.png: 0.91 MB
 02-boss.png: 0.87 MB
-03-tablets.png: 0.73 MB
+03-tablets.png: 0.71 MB
 04-archives.png: 0.47 MB
 gif-circle.gif: 2.79 MB
 gif-boss.gif: 2.90 MB

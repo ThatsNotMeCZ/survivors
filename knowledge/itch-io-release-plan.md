@@ -82,9 +82,9 @@ bun run capture:itch
 ```
 
 1. **Cover Image (`630 × 500 px`) — NEJDŮLEŽITĚJŠÍ ASSET:**
-   - **Proč rozhoduje o všem:** V katalogu *New & Popular* lidé scrollují přes desítky her za vteřinu. Statický screenshot z dálky tam zanikne.
-   - **Doporučení:** Udělej **animovaný GIF cover** (`< 3 MB`, 630×500 px).
-   - **Co na něm musí být:** Záběr v zoomu na *Homuncula* nebo *The Penitent*, jak dělá *Phase Step* (s afterimage) skrz smečku *Noxious* (zelený shader) a *Shielder* (modrá kontura) elit přímo na svítícím *Transmutation Circle*, zatímco zespoda vylétávají projektily bosse (*Cinder Heart* / *Frost Sovereign*), a přes vršek výrazný nápis **HERMETIC RIFTS** v mosazném písmu Cinzel.
+   - **Proč rozhoduje o všem:** V katalogu *New & Popular* lidé scrollují přes desítky her za vteřinu. Statický screenshot z dálky tam zanikne. Katalog itch.io cover GIFy téměř nepoužívá — listing bere **statický PNG**.
+   - **Doporučení:** Složený still z authored sprite (`promo/itch/cover.png`, 630×500). Ne gameplay crop, ne GIF. Motion nech v page GIFech (`gif-circle.gif`, `gif-boss.gif`).
+   - **Co na něm musí být:** Velký *The Penitent* (idle + Phase Step afterimage) proti *Cinder Heart* (attack frame) na *Transmutation Circle*, mosazný nápis **HERMETIC RIFTS** v BillJilly. Silueta musí číst i v náhledu ~315×250. Přegenerování: `bun scripts/capture-itch.ts cover`.
 2. **Banner na vršek stránky (`960 × 240 px`):**
    - Tmavé pozadí z *The Hall* (fialovo-kouřový shader + transmutační pečeť) a uprostřed logo **HERMETIC RIFTS**.
 3. **3–5 Screenshotů + 2 GIFy přímo v textu stránky (Pravidlo 3 sekund):**
@@ -103,58 +103,52 @@ Na itch.io je naprostým standardem **angličtina** (95 % publika). Níže máš
 - **Title:** `Hermetic Rifts (Demo)`
 - **Project URL:** `https://tvoje-jmeno.itch.io/hermetic-rifts`
 - **Short description / Tagline (max 140 znaků — zobrazuje se pod coverem v katalogu):**
-  > *Aimed dark-alchemy roguelite. Channel the seal, bind the tablets, survive what the Magisterium left ???.*
-  *(Alternativa údernější:)*
-  > *No AFK orbitals. Aimed hermetic roguelite — the horde gets meaner, not denser. Some names remain ???.*
+  > *Dark-alchemy action roguelite. Aim every rite, hold the seal, survive what the Magisterium left ???.*
 - **Genre:** `Action` (Primary), `Shooter` / `Roguelike`
 - **Tags (využij všech 10 povolených slotů — přesně podle toho, co hráči na itch.io filtrují):**
   `roguelite`, `bullet-heaven`, `survivors-like`, `action-roguelike`, `twin-stick-shooter`, `pixel-art`, `dark-fantasy`, `alchemy`, `top-down`, `singleplayer`
 
 ### 3.2 Hlavní text stránky (Description — vlož přímo do HTML režimu `<>` v editoru na itch.io)
 
-Hlas popisu = hlas **The Archives**: recovered folio, Dark Hermetic, bez jmen cizích her. `???` jsou redacted pečetě (stejně jako Hall / Bestiary / Reliquary), ne UI hláška „locked“. Commons/uncommons jsou čisté grafty; jen rare a lunar tablety řežou oběma směry.
+Hlas popisu = Steam About This Game, Dark Hermetic. Krátký hook, pak čitelné feature bullets. Lehké `???` (redacted pečetě jako Hall / Bestiary / Reliquary, ne UI hláška „locked“). Žádné design-doc seznamy (coefficient ladder, skill ids, elite mechanics, prop lists). Nezmiňovat jiné hry. Druhou Vessel nepojmenovávat.
 
 V itch.io editoru klikni v liště popisu na ikonu **`<>` (Edit HTML)** a vlož následující čisté HTML (používá pouze tagy povolené itch.io sanitizerem):
 
 ```html
-<h3><em>You are fighting your way through a failed transmutation.</em></h3>
+<h3><em>The Magisterium burned. You are what walked out of the ash.</em></h3>
 <p>
-  <strong>Hermetic Rifts</strong> is a dark-alchemy action roguelite. You kite failed transmutations through sealed chambers, aim every rite, and bind Hermetic Tablets into a Vessel that was never meant to live. The Magisterium burned. The Archives survived &mdash; most of them still stamped <em>???</em>.
+  <strong>Hermetic Rifts</strong> is a dark-alchemy action roguelite. You pilot a Vessel through the sealed chambers of a failed Great Work: aim every rite, slip through the swarm, and stand in the Transmutation Circle when the seal finally shows itself.
 </p>
 <p>
-  No full-auto orbitals. No standing still while the lawn dies. Every primary shot is <strong>aimed</strong>. Every dash carries <strong>i-frames</strong>. Time calcines the chamber: the horde gets <strong>meaner</strong>, not merely denser.
+  Time does not merely fill the floor with bodies. The chamber hardens. Elites hunt. A Guardian wakes to keep the Rift shut. Names you have not earned still print as <em>???</em>.
 </p>
 <hr>
-<h2>THIS WORKING &mdash; DEMO</h2>
+<h2>About this demo</h2>
 <ul>
   <li>
-    <strong>Aimed Rites:</strong> Kite with <code>WASD</code>, fire along the cursor, weave cooldowns, and time your dash through lethal telegraphs.
+    <strong>You aim.</strong> Move with WASD, fire along the cursor, dash through the blow. Standing still is how a Vessel dies.
   </li>
   <li>
-    <strong>The Coefficient:</strong> The chamber climbs <em>Dormant → Stirring → Tempered → Calcined → Volatile → Cataclysm</em>. Late workings field fewer mindless bodies and deadlier <strong>Shielder</strong> (regenerating Aether Shield) and <strong>Noxious</strong> (contact slow, corpse acid) elites. <strong>Astral Watchers</strong> pin a laser on the step you already took.
+    <strong>Hold the seal.</strong> When the Transmutation Circle opens, channel it while the horde converges. Then you fight the Seal Guardian alone.
   </li>
   <li>
-    <strong>Channel the Transmutation Circle:</strong> When the seal manifests, stand inside the hexagram and charge it while the swarm converges. Director spawns halt. A dedicated <strong>1v1 Seal Guardian</strong> takes the arena &mdash; unique ranged kit, summons, telegraphs. This folio names the <em>Cinder Heart</em>. The rest remain <em>???</em> until you meet them.
+    <strong>Two Vessels.</strong> The Homunculus is clay and quicksilver, already waiting. A second name stays <em>??? · SEALED</em> until you earn it.
   </li>
   <li>
-    <strong>Vessels:</strong>
-    <ul>
-      <li><strong>The Homunculus</strong> &mdash; clay and quicksilver. Precision aetheric kit: <em>Ignis Bolt, Piercing Aether, Phase Step, Crucible Cull</em>.</li>
-      <li><strong><em>??? · SEALED</em></strong> &mdash; <em>"A monk who walked into the kiln and did not burn. He draws circles the horde must not cross."</em> Unseal: <em>Slay the ??? in the ???</em>.</li>
-    </ul>
+    <strong>Hermetic Tablets.</strong> Graft them into your frame as you level. The kind ones help. The rare ones cut both ways.
   </li>
   <li>
-    <strong>13 Hermetic Tablets:</strong> Commons and uncommons are clean grafts &mdash; stride, shell, magnet, vitae. Rare and lunar tablets are the volatile ones: they <strong>cut both ways</strong>. Several Reliquary entries stay <em>???</em> until recovered in the Rifts.
+    <strong>Two chambers, and a third still sealed.</strong> Scorched Cinder Yard. Frozen Rime Dock. What lies below remains <em>???</em>.
   </li>
   <li>
-    <strong>Chambers:</strong> Scorched <strong>Cinder Yard</strong> (Nigredo &amp; Calcination &mdash; Obsidian Kilns, Slag Fissures, Brimstone Urns) and frozen <strong>Rime Dock</strong> (Albedo &amp; Fixation &mdash; Frozen Bollards, Brine Pools, Pressurized Rime Casks). A third seal is still <em>???</em> &mdash; treatise unrecovered until you descend.
-  </li>
-  <li>
-    <strong>The Archives:</strong> Codex and personal ledger. Bestiary, Reliquary, Chronicles. Unseen names print as <em>???</em> until the Rifts return them.
+    <strong>The Archives.</strong> A codex of what you have killed, bound, and not yet recovered.
   </li>
 </ul>
+<p>
+  A full descent is a handful of minutes, right in the browser. No download.
+</p>
 <hr>
-<h2>CONTROLS</h2>
+<h2>Controls</h2>
 <table>
   <thead>
     <tr>
@@ -164,52 +158,42 @@ V itch.io editoru klikni v liště popisu na ikonu **`<>` (Edit HTML)** a vlož 
   </thead>
   <tbody>
     <tr>
-      <td><strong>WASD / Arrow Keys</strong></td>
-      <td>Move Vessel</td>
+      <td><strong>WASD / Arrows</strong></td>
+      <td>Move</td>
     </tr>
     <tr>
-      <td><strong>Mouse Cursor + Left Click (Hold)</strong></td>
-      <td>Aim &amp; Fire Primary Rite</td>
+      <td><strong>Mouse + Left Click</strong></td>
+      <td>Aim and fire</td>
     </tr>
     <tr>
-      <td><strong>Right Click (RMB)</strong></td>
-      <td>Secondary Rite</td>
+      <td><strong>Right Click</strong></td>
+      <td>Secondary rite</td>
     </tr>
     <tr>
       <td><strong>Space / Shift</strong></td>
-      <td>Utility Dash (i-frames)</td>
+      <td>Dash</td>
     </tr>
     <tr>
       <td><strong>Q</strong></td>
-      <td>Ultimate Rite</td>
+      <td>Ultimate</td>
     </tr>
     <tr>
-      <td><strong>1 / 2 / 3</strong> (or click)</td>
-      <td>Select Hermetic Tablet on Level-Up</td>
+      <td><strong>1 / 2 / 3</strong></td>
+      <td>Pick a tablet on level-up</td>
     </tr>
     <tr>
       <td><strong>P / Esc</strong></td>
-      <td>Pause Simulation / Open Archives <em>(use <strong>P</strong> in Fullscreen)</em></td>
+      <td>Pause (use <strong>P</strong> in fullscreen)</td>
     </tr>
     <tr>
-      <td><strong>C</strong> (on Run End screen)</td>
-      <td>Copy Run Summary to Clipboard</td>
+      <td><strong>C</strong> (run recap)</td>
+      <td>Copy run summary</td>
     </tr>
   </tbody>
 </table>
 <hr>
-<h2>THE LEDGER WANTS YOUR HAND</h2>
 <p>
-  This playable browser working uses compressed clocks, so a full descent is a handful of minutes &mdash; enough to test vessels, tablets, and Seal Guardians without a twenty-minute vigil.
-</p>
-<p><strong>Drop a comment below and let the Archives know:</strong></p>
-<ol>
-  <li>Which Vessel (<em>Homunculus</em> vs. <em>??? · SEALED</em>) felt better to pilot, and why?</li>
-  <li>Which Hermetic Tablet combination carried your best run?</li>
-  <li>Did the Seal Guardian duels feel fair and readable?</li>
-</ol>
-<p>
-  <em>(Tip: Hit <strong>COPY SUMMARY [C]</strong> on the <strong>Transmutation Complete</strong> or <strong>Vessel Shattered</strong> recap screen and paste your working directly into the comments!)</em>
+  If a working goes well, or if it shatters, paste the run summary in the comments. The Archives are listening.
 </p>
 ```
 
@@ -313,7 +297,7 @@ zvyšuje míru prokliku z Redditu a Discordu **5× až 10×**. Tuto větu dávej
 - [ ] Zkontrolována hlasitost hudby a SFX při prvním spuštění (aby výchozí hlasitost v prohlížeči neodpálila uši).
 - [ ] Nahrán `hermetic-rifts-itch.zip` (s `index.html` v kořeni) a otestován v režimu *Restricted* v Chrome i Firefoxu (včetně Fullscreen přepnutí, klávesy `P` / `Esc` a tlačítka `COPY SUMMARY [C]`).
 - [ ] Nastaveny barvy stránky podle `src/ui/theme.css` (`#0c0a0d`, `#140e12`, `#c4a35a`, `#e8dcc8`, font `Cinzel`).
-- [x] Vizuální pack v `promo/itch/` (`bun run capture:itch`): cover GIF 630×500, banner 960×240, 4 screenshoty (circle / boss / tablets / archives) + 2 page GIFy. Zbývá nahrát do itch dashboardu.
+- [x] Vizuální pack v `promo/itch/` (`bun run capture:itch`): cover PNG 630×500 (Penitent vs Cinder Heart), banner 960×240, 4 screenshoty (circle / boss / tablets / archives) + 2 page GIFy. Zbývá nahrát do itch dashboardu.
 - [ ] Vyplněno všech 10 tagů + HTML popis stránky (přes `<>` v editoru) s tabulkou ovládání a výzvou ke komentářům.
 - [ ] Připraveno 25s nativní gameplay video pro Reddit (`r/roguelites`, `r/SurvivorsLike`, `r/WebGames`).
 - [ ] Publikováno v **Úterý / Středu / Čtvrtek mezi 16:00–18:00 CET** + do 15 minut vydán úvodní Devlog post.

@@ -32,21 +32,22 @@ function selectedShots(): Shot[] {
 }
 
 async function main(): Promise<void> {
-  requireFfmpeg();
+  const shots = selectedShots();
+  if (needsFfmpeg(shots)) requireFfmpeg();
   mkdirSync(OUT_DIR, { recursive: true });
   if (existsSync(FRAME_DIR)) rmSync(FRAME_DIR, { recursive: true, force: true });
   mkdirSync(FRAME_DIR, { recursive: true });
 
   const started = ensureDevServer();
   try {
-    await awaitCapture(started);
+    await awaitCapture(started, shots);
   } catch (err) {
     if (started) started.kill('SIGTERM');
     throw err;
   }
 }
 
-async function awaitCapture(started: ChildProcess | null): Promise<void> {
+async function awaitCapture(started: ChildProcess | null, shots: Shot[]): Promise<void> {
   const browser = await chromium.launch({
     headless: true,
     args: ['--ignore-gpu-blocklist', '--use-gl=angle', '--enable-webgl', '--mute-audio'],
@@ -75,10 +76,14 @@ async function awaitCapture(started: ChildProcess | null): Promise<void> {
     }
   });
 
-  const shots = selectedShots();
   try {
     for (const shot of shots) {
       console.log(`📷 ${shot}`);
+      if (shot === 'cover') {
+        await page.setViewportSize({ width: 630, height: 500 });
+      } else {
+        await page.setViewportSize({ width: VIEW_W, height: VIEW_H });
+      }
       await openShot(page, shot);
       await warmup(shot);
       if (shot === 'circle') {
@@ -92,7 +97,9 @@ async function awaitCapture(started: ChildProcess | null): Promise<void> {
       } else if (shot === 'archives') {
         await page.screenshot({ path: join(OUT_DIR, '04-archives.png'), type: 'png' });
       } else if (shot === 'cover') {
-        await dumpFrames(page, 'cover');
+        await page.screenshot({ path: join(OUT_DIR, 'cover.png'), type: 'png' });
+        const gif = join(OUT_DIR, 'cover.gif');
+        if (existsSync(gif)) rmSync(gif);
       } else if (shot === 'banner') {
         const raw = join(FRAME_DIR, 'banner-full.png');
         await page.screenshot({ path: raw, type: 'png' });
@@ -113,21 +120,6 @@ async function awaitCapture(started: ChildProcess | null): Promise<void> {
         join(OUT_DIR, 'gif-boss.gif'),
         'scale=1280:720:flags=neighbor',
       );
-    }
-    if (shots.includes('cover')) {
-      encodeGif(
-        join(FRAME_DIR, 'cover'),
-        join(OUT_DIR, 'cover.gif'),
-        'crop=788:625:(in_w-788)/2:(in_h-625)/2,scale=630:500:flags=neighbor',
-      );
-      const coverStill = firstFrame(join(FRAME_DIR, 'cover'));
-      if (coverStill) {
-        encodeStill(
-          coverStill,
-          join(OUT_DIR, 'cover.png'),
-          'crop=788:625:(in_w-788)/2:(in_h-625)/2,scale=630:500:flags=neighbor',
-        );
-      }
     }
     writeManifest();
     console.log(`\n✅ itch.io pack written to ${OUT_DIR}`);
@@ -151,11 +143,13 @@ async function openShot(page: Page, shot: Shot): Promise<void> {
   if (shot === 'banner') {
     await page.waitForSelector('#hall:not(.hidden)', { timeout: 15_000 });
   }
+  if (shot === 'cover') {
+    await page.waitForSelector('#cover-stage', { timeout: 15_000 });
+  }
 }
 
 async function warmup(shot: Shot): Promise<void> {
-  const extra =
-    shot === 'boss' ? 2400 : shot === 'banner' || shot === 'cover' ? 1200 : WARMUP_MS;
+  const extra = shot === 'boss' ? 2400 : shot === 'banner' ? 1200 : shot === 'cover' ? 400 : WARMUP_MS;
   await sleep(extra);
 }
 
@@ -244,14 +238,8 @@ function listFrames(dir: string): string[] {
     .sort();
 }
 
-function firstFrame(dir: string): string | null {
-  const frames = listFrames(dir);
-  return frames[0] ? join(dir, frames[0]) : null;
-}
-
 function writeManifest(): void {
   const files = [
-    'cover.gif',
     'cover.png',
     'banner.png',
     '01-circle.png',
@@ -269,6 +257,10 @@ function writeManifest(): void {
   });
   writeFileSync(join(OUT_DIR, 'manifest.txt'), `${lines.join('\n')}\n`);
   console.log(lines.join('\n'));
+}
+
+function needsFfmpeg(shots: Shot[]): boolean {
+  return shots.some((shot) => shot === 'circle' || shot === 'boss' || shot === 'banner');
 }
 
 function requireFfmpeg(): void {

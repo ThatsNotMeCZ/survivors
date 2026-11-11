@@ -35,7 +35,7 @@ export function poseWorld(world: World, shot: PromoShot): void {
 
 export function applyPromoInput(world: World, input: InputFrame, timeSec: number): void {
   const shot = getPromoShot();
-  if (shot !== 'circle' && shot !== 'boss' && shot !== 'cover') return;
+  if (shot !== 'circle' && shot !== 'boss') return;
   if (world.phase !== 'play') return;
 
   if (world.player.hp < world.player.maxHp * 0.4) {

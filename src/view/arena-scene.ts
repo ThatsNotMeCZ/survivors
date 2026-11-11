@@ -30,7 +30,7 @@ import { currentObjective, currentStage, type Objective } from '../sim/loop';
 import { playerSpeedMul } from '../sim/obstacles';
 import { ZONE_LINE, ZONE_STRIKE } from '../sim/zones';
 import { MAX_RADIUS_RATIO, MIN_RADIUS_RATIO } from '../sim/stats';
-import { applyPromoInput, mountPromoTitle, poseWorld } from '../promo/pose';
+import { applyPromoInput, poseWorld } from '../promo/pose';
 import { getPromoShot, isPromoPlayShot, markPromoReady } from '../promo/shot';
 import { aimAngle, createWorld, stepWorld, type World } from '../sim/world';
 import { formatTime, initArenaHud, setHudCombat, setHudFps } from '../ui/hud';
@@ -127,7 +127,7 @@ type Spark = {
   tint: number;
 };
 
-const GHOST_CAP = 6;
+const GHOST_CAP = 10;
 const WAYPOINT_DIST = 80;
 const WAYPOINT_PAD = 52;
 /** Display size > mite 24 / spitter 28 so the vessel reads as the hero. */
@@ -158,7 +158,7 @@ export class ArenaScene extends Phaser.Scene {
   private shots: Phaser.GameObjects.Image[] = [];
   private zoneFx: Phaser.GameObjects.Image[] = [];
   private fxStills!: FxStillPool;
-  private ghosts: Phaser.GameObjects.Image[] = [];
+  private ghosts: Phaser.GameObjects.Sprite[] = [];
   private ghostLife: Float32Array = new Float32Array(GHOST_CAP);
   private ghostMaxLife: Float32Array = new Float32Array(GHOST_CAP);
   private ghostInitAlpha: Float32Array = new Float32Array(GHOST_CAP);
@@ -374,7 +374,7 @@ export class ArenaScene extends Phaser.Scene {
     this.ghostMaxLife = new Float32Array(GHOST_CAP);
     this.ghostInitAlpha = new Float32Array(GHOST_CAP);
     for (let i = 0; i < GHOST_CAP; i += 1) {
-      const ghost = this.add.image(0, 0, entityTextureKey(vessel)).setVisible(false).setDepth(4).setAlpha(0).setTint(0xb8fff8);
+      const ghost = this.add.sprite(0, 0, entityTextureKey(vessel)).setVisible(false).setDepth(4.7).setAlpha(0);
       this.fitBody(ghost);
       this.ghosts.push(ghost);
     }
@@ -452,7 +452,6 @@ export class ArenaScene extends Phaser.Scene {
     const webgl = this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer;
     initArenaHud(webgl ? 'webgl' : 'canvas');
     setMusicScene({ kind: 'stage', stageId: currentStage(this.world).id });
-    if (promo === 'cover') mountPromoTitle();
     if (promo && isPromoPlayShot()) markPromoReady();
   }
 
@@ -733,8 +732,6 @@ export class ArenaScene extends Phaser.Scene {
     this.playerTrail1.setVisible(false);
     this.playerTrail2.setVisible(false);
 
-    this.playerPrevX = player.x;
-    this.playerPrevY = player.y;
     if (this.world.decoy.active) {
       playEntity(this.decoySprite, vessel, 'idle');
       this.fitBody(this.decoySprite, scale);
@@ -1689,33 +1686,34 @@ export class ArenaScene extends Phaser.Scene {
     this.ghostCd = Math.max(0, this.ghostCd - dt);
     const shouldSpawnTrail =
       !reduceVfx &&
-      ((isDashing && this.ghostCd <= 0) || (moving && pspeed > 70 && this.ghostCd <= 0));
+      ((isDashing && this.ghostCd <= 0) || (moving && (pspeed > 18 || isDashing) && this.ghostCd <= 0));
 
     if (shouldSpawnTrail) {
-      this.ghostCd = isDashing ? 0.045 : 0.065;
+      this.ghostCd = isDashing ? 0.04 : 0.055;
       const slot = nextGhost(this.ghostLife);
       if (slot >= 0) {
-        const duration = isDashing ? 0.22 : 0.14;
-        const initialAlpha = isDashing ? 0.48 : Math.min(0.24, 0.12 + (pspeed / 200) * 0.12);
+        const duration = isDashing ? 0.24 : 0.16;
+        const initialAlpha = isDashing ? 0.55 : 0.38;
         this.ghostLife[slot] = duration;
         this.ghostMaxLife[slot] = duration;
         this.ghostInitAlpha[slot] = initialAlpha;
 
         const ghost = this.ghosts[slot];
         ghost.setTexture(this.playerSprite.texture.key, this.playerSprite.frame.name);
-        this.fitBody(ghost);
+        this.fitBody(ghost, this.playerScale());
         ghost.setFlipX(this.playerSprite.flipX);
-        ghost.setPosition(player.x, player.y);
-        ghost.setDepth(this.ySortDepth(player.y, -0.0002));
+        ghost.setPosition(this.playerSprite.x, this.playerSprite.y);
+        ghost.setDepth(this.playerSprite.depth - 0.0002);
         ghost.setVisible(true);
         ghost.setAlpha(initialAlpha);
+
         const biome = this.biome();
         const baseTint =
           this.world.survivor.id === 'penitent'
             ? 0xffc878
             : biome === 'cinder'
-              ? 0xffb070
-              : 0xb8fff8;
+              ? 0xffa060
+              : 0x78ccff;
         ghost.setTint(baseTint);
       }
     }
@@ -1730,6 +1728,9 @@ export class ArenaScene extends Phaser.Scene {
       this.ghosts[i].setAlpha(progress * this.ghostInitAlpha[i]);
       if (this.ghostLife[i] <= 0) this.ghosts[i].setVisible(false);
     }
+
+    this.playerPrevX = player.x;
+    this.playerPrevY = player.y;
   }
 
   private syncBrimstoneSparks(dt: number): void {
