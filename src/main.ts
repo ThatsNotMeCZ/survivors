@@ -1,14 +1,24 @@
-import Phaser from 'phaser';
 import { bootAudio } from './audio';
 import { startGame } from './game';
+import { mountPromoTitle } from './promo/pose';
+import { applyPromoAttr, getPromoShot, markPromoReady } from './promo/shot';
 import { hideHud } from './ui/hud';
-import { bindOverlay, hideOverlay, hideSting, setHoldPrompt, showMainMenu } from './ui/overlay';
+import {
+  bindOverlay,
+  hideOverlay,
+  hideSting,
+  setHoldPrompt,
+  showArchives,
+  showLobby,
+  showMainMenu,
+} from './ui/overlay';
 import { applySettingsToDom, hasQueryFlag, skipShell } from './ui/settings';
 
 let game: Phaser.Game | null = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   applySettingsToDom();
+  applyPromoAttr();
   bindOverlay({
     onStart: startRun,
     onResume: hideOverlay,
@@ -24,8 +34,20 @@ document.addEventListener('DOMContentLoaded', () => {
   bootAudio();
 
   hideHud();
+  const promo = getPromoShot();
   if (skipShell()) {
     startRun();
+    return;
+  }
+  if (promo === 'hall' || promo === 'banner') {
+    showLobby();
+    if (promo === 'banner') mountPromoTitle();
+    markPromoReady();
+    return;
+  }
+  if (promo === 'archives') {
+    showArchives('menu', 'entities');
+    markPromoReady();
     return;
   }
   showMainMenu();

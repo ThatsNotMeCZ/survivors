@@ -30,6 +30,8 @@ import { currentObjective, currentStage, type Objective } from '../sim/loop';
 import { playerSpeedMul } from '../sim/obstacles';
 import { ZONE_LINE, ZONE_STRIKE } from '../sim/zones';
 import { MAX_RADIUS_RATIO, MIN_RADIUS_RATIO } from '../sim/stats';
+import { applyPromoInput, mountPromoTitle, poseWorld } from '../promo/pose';
+import { getPromoShot, isPromoPlayShot, markPromoReady } from '../promo/shot';
 import { aimAngle, createWorld, stepWorld, type World } from '../sim/world';
 import { formatTime, initArenaHud, setHudCombat, setHudFps } from '../ui/hud';
 import {
@@ -241,10 +243,12 @@ export class ArenaScene extends Phaser.Scene {
     this.initialUnlockedSurvivors = new Set(
       catalog.survivors.filter((s) => isSurvivorUnlocked(s, initialRec)).map((s) => s.id),
     );
-    this.world = createWorld(resolveSurvivorId(), {
+    const promo = getPromoShot();
+    this.world = createWorld(isPromoPlayShot() ? 'runner' : resolveSurvivorId(), {
       unlockedItems: this.initialUnlockedItems,
       collectedLores: getCollectedLoreIds(initialRec),
     });
+    if (promo && isPromoPlayShot()) poseWorld(this.world, promo);
     commitWorldProgress(this.world);
     const { width, height, maxProjectiles } = catalog.world;
     const loop = catalog.loop;
@@ -461,11 +465,14 @@ export class ArenaScene extends Phaser.Scene {
     const webgl = this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer;
     initArenaHud(webgl ? 'webgl' : 'canvas');
     setMusicScene({ kind: 'stage', stageId: currentStage(this.world).id });
+    if (promo === 'cover') mountPromoTitle();
+    if (promo && isPromoPlayShot()) markPromoReady();
   }
 
   update(_time: number, delta: number): void {
     const dt = delta / 1000;
     this.readInput();
+    applyPromoInput(this.world, this.inputFrame, this.time.now / 1000);
     const paused = isSimPaused();
     if (!paused) {
       stepWorld(this.world, this.inputFrame, dt);

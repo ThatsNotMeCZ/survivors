@@ -152,7 +152,7 @@ function stepTeleporter(world: World, dt: number): void {
   }
 }
 
-function spawnStageBoss(world: World): void {
+export function spawnStageBoss(world: World): void {
   if (world.bossSpawned) return;
   const stage = currentStage(world);
   const def = world.catalog.entity(stage.boss);

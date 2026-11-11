@@ -74,6 +74,13 @@ h1, h2, h3 {
 ```
 
 ### 2.4 Vizuální assety stránky (Co musíš vyexportovat)
+
+Hotový balík: [`promo/itch/`](../promo/itch/) (mapa nahrání v [`promo/itch/README.md`](../promo/itch/README.md)). Přegenerování:
+
+```bash
+bun run capture:itch
+```
+
 1. **Cover Image (`630 × 500 px`) — NEJDŮLEŽITĚJŠÍ ASSET:**
    - **Proč rozhoduje o všem:** V katalogu *New & Popular* lidé scrollují přes desítky her za vteřinu. Statický screenshot z dálky tam zanikne.
    - **Doporučení:** Udělej **animovaný GIF cover** (`< 3 MB`, 630×500 px).
@@ -306,7 +313,7 @@ zvyšuje míru prokliku z Redditu a Discordu **5× až 10×**. Tuto větu dávej
 - [ ] Zkontrolována hlasitost hudby a SFX při prvním spuštění (aby výchozí hlasitost v prohlížeči neodpálila uši).
 - [ ] Nahrán `hermetic-rifts-itch.zip` (s `index.html` v kořeni) a otestován v režimu *Restricted* v Chrome i Firefoxu (včetně Fullscreen přepnutí, klávesy `P` / `Esc` a tlačítka `COPY SUMMARY [C]`).
 - [ ] Nastaveny barvy stránky podle `src/ui/theme.css` (`#0c0a0d`, `#140e12`, `#c4a35a`, `#e8dcc8`, font `Cinzel`).
-- [ ] Nahrán animovaný GIF Cover (`630 × 500 px`), vrchní Banner a 4 screenshoty vč. *The Archives* a *Boss Duelu*.
+- [x] Vizuální pack v `promo/itch/` (`bun run capture:itch`): cover GIF 630×500, banner 960×240, 4 screenshoty (circle / boss / tablets / archives) + 2 page GIFy. Zbývá nahrát do itch dashboardu.
 - [ ] Vyplněno všech 10 tagů + HTML popis stránky (přes `<>` v editoru) s tabulkou ovládání a výzvou ke komentářům.
 - [ ] Připraveno 25s nativní gameplay video pro Reddit (`r/roguelites`, `r/SurvivorsLike`, `r/WebGames`).
 - [ ] Publikováno v **Úterý / Středu / Čtvrtek mezi 16:00–18:00 CET** + do 15 minut vydán úvodní Devlog post.

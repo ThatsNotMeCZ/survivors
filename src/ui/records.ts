@@ -1,5 +1,6 @@
 import { catalog } from '../data/catalog';
 import type { ItemDef, SurvivorDef, UnlockCondition } from '../data/schema';
+import { isPromoShot } from '../promo/shot';
 import { currentStage } from '../sim/loop';
 import type { World } from '../sim/world';
 import { hasQueryFlag } from './settings';
@@ -126,6 +127,51 @@ function emptyRecords(): ArchiveRecords {
   };
 }
 
+/** Cinder Yard recovered, later chambers still ???. Never written to localStorage. */
+function promoArchiveSeed(): ArchiveRecords {
+  const rec = emptyRecords();
+  rec.totalRuns = 4;
+  rec.victories = 1;
+  rec.defeats = 3;
+  rec.totalKills = 640;
+  rec.fodderKills = 580;
+  rec.eliteKills = 52;
+  rec.bossKills = 8;
+  rec.stageVisits['cinder-yard'] = 4;
+  rec.stageClears['cinder-yard'] = 2;
+  rec.furthestStageIndex = 0;
+  rec.entityEncounters['ember-mite'] = 220;
+  rec.entityKills['ember-mite'] = 180;
+  rec.entityLores['ember-mite'] = 1;
+  rec.entityEncounters['ember-spitter'] = 48;
+  rec.entityKills['ember-spitter'] = 31;
+  rec.entityEncounters['ember-chaser'] = 18;
+  rec.entityKills['ember-chaser'] = 11;
+  rec.entityLores['ember-chaser'] = 1;
+  rec.entityEncounters['cinder-heart'] = 2;
+  rec.entityKills['cinder-heart'] = 1;
+  rec.entityLores['cinder-heart'] = 1;
+  rec.entityEncounters['enemy-astral-sniper'] = 14;
+  rec.entityKills['enemy-astral-sniper'] = 9;
+  rec.itemPicks['goat-hoof'] = 3;
+  rec.itemPicks['brittle-plate'] = 2;
+  rec.itemPicks['glass-cannon'] = 1;
+  rec.bySurvivor.runner = {
+    ...emptySurvivorRecord(),
+    runs: 4,
+    victories: 1,
+    defeats: 3,
+    kills: 640,
+    bossesDefeated: 2,
+    bestTime: 268,
+    fastestVictory: 312,
+    highestLevel: 11,
+    totalPlayTime: 980,
+    totalDamageDealt: 42000,
+  };
+  return rec;
+}
+
 function emptySurvivorRecord(): SurvivorRecord {
   return {
     runs: 0,
@@ -144,6 +190,10 @@ function emptySurvivorRecord(): SurvivorRecord {
 
 export function getRecords(): ArchiveRecords {
   if (cached) return cached;
+  if (isPromoShot()) {
+    cached = promoArchiveSeed();
+    return cached;
+  }
   cached = normalizeRecords(readStored());
   return cached;
 }
@@ -156,7 +206,7 @@ export function resetRecords(): ArchiveRecords {
 }
 
 export function recordItemPick(itemId: string): void {
-  if (hasQueryFlag('smoke')) return;
+  if (hasQueryFlag('smoke') || isPromoShot()) return;
   const rec = getRecords();
   rec.totalItemsCollected += 1;
   rec.itemPicks[itemId] = (rec.itemPicks[itemId] ?? 0) + 1;
@@ -164,7 +214,7 @@ export function recordItemPick(itemId: string): void {
 }
 
 export function recordLorePickup(entityId: string): boolean {
-  if (hasQueryFlag('smoke')) return false;
+  if (hasQueryFlag('smoke') || isPromoShot()) return false;
   const rec = getRecords();
   const already = (rec.entityLores[entityId] ?? 0) > 0;
   rec.entityLores[entityId] = (rec.entityLores[entityId] ?? 0) + 1;
@@ -174,7 +224,7 @@ export function recordLorePickup(entityId: string): boolean {
 
 export function commitWorldProgress(world: World): ArchiveRecords {
   const rec = getRecords();
-  if (hasQueryFlag('smoke')) return rec;
+  if (hasQueryFlag('smoke') || isPromoShot()) return rec;
 
   let snap = committedSnapshots.get(world);
   if (!snap) {
@@ -379,7 +429,7 @@ export function hasRecordedWorld(world: World): boolean {
 
 export function recordRunEnd(world: World, outcome: RunOutcome): ArchiveRecords {
   const rec = getRecords();
-  if (hasQueryFlag('smoke') || recordedWorlds.has(world)) {
+  if (hasQueryFlag('smoke') || isPromoShot() || recordedWorlds.has(world)) {
     return rec;
   }
   if (outcome === 'abandon' && world.runTime < 1 && world.kills.total === 0) {

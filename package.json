@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "build:itch": "bun run smoke:loop && bun run build && bun scripts/package-itch.ts",
     "preview": "vite preview",
-    "smoke:loop": "bun scripts/loop-smoke.ts"
+    "smoke:loop": "bun scripts/loop-smoke.ts",
+    "capture:itch": "bun scripts/capture-itch.ts"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.3.0",
@@ -17,6 +18,7 @@
     "phaser": "4.2.1"
   },
   "devDependencies": {
+    "playwright": "^1.65.0",
     "typescript": "~5.7.2",
     "vite": "^6.3.1"
   }

@@ -4436,3 +4436,65 @@ select:focus-visible,
   cursor: not-allowed;
 }
 
+/* ==========================================================================
+   PROMO / ITCH.IO CAPTURE OVERLAYS (`?promo=cover|banner`)
+   ========================================================================== */
+
+.promo-title {
+  display: none;
+  flex-direction: column;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.02;
+  color: var(--gold-molten);
+  text-shadow:
+    0 2px 0 #3a1a0e,
+    0 4px 12px rgba(0, 0, 0, 0.9),
+    0 0 22px rgba(212, 130, 60, 0.55);
+  text-align: center;
+  z-index: 22;
+}
+
+html[data-promo='cover'] .promo-title,
+html[data-promo='banner'] .promo-title {
+  display: flex;
+}
+
+html[data-promo='cover'] .promo-title {
+  position: fixed;
+  top: 24%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(42px, 5vw, 72px);
+}
+
+html[data-promo='banner'] .promo-title {
+  position: fixed;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(48px, 6vw, 88px);
+  z-index: 30;
+}
+
+html[data-promo='banner'] #overlay {
+  background: transparent;
+}
+
+html[data-promo='cover'] #hud,
+html[data-promo='cover'] #prompt,
+html[data-promo='cover'] #sting {
+  display: none !important;
+}
+
+html[data-promo='banner'] .hall-header,
+html[data-promo='banner'] .hall-sidebar,
+html[data-promo='banner'] .hall-dossier,
+html[data-promo='banner'] .hall-preview,
+html[data-promo='banner'] .magma-cta,
+html[data-promo='banner'] .hall-nav-arrow {
+  visibility: hidden !important;
+}
+

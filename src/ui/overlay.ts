@@ -1,6 +1,7 @@
 import { playSfx, setMusicOverlay, setMusicScene, type SfxId } from '../audio';
 import { catalog } from '../data/catalog';
 import type { ItemDef, ItemHook, SkillDef, SkillSlot, StatId, SurvivorDef } from '../data/schema';
+import { isPromoPlayShot } from '../promo/shot';
 import { renderArchivesView, type ArchiveTab } from './archives';
 import { formatTime, getHudItems, getHudSummary, hideHud, type HudItem } from './hud';
 import { ITEM_CHOICE_PX, makeItemChip, makeItemIcon } from './item-art';
@@ -207,11 +208,13 @@ export function bindOverlay(next: Partial<OverlayHandlers>): void {
     keysBound = true;
     window.addEventListener('keydown', onOverlayKey, true);
     window.addEventListener('blur', () => {
+      if (isPromoPlayShot()) return;
       if (mode === 'hidden' && !runPaused) {
         handlers.onPause();
       }
     });
     document.addEventListener('visibilitychange', () => {
+      if (isPromoPlayShot()) return;
       if (document.hidden && mode === 'hidden' && !runPaused) {
         handlers.onPause();
       }

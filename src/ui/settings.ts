@@ -1,5 +1,6 @@
 import { applyAudioSettings, getAudioBus } from '../audio/bus';
 import { retryMusicPlay } from '../audio/music';
+import { isPromoPlayShot } from '../promo/shot';
 
 export type GameSettings = {
   masterVolume: number;
@@ -66,9 +67,9 @@ export function hasQueryFlag(name: string): boolean {
   return new URLSearchParams(window.location.search).has(name);
 }
 
-/** GPU smoke (`?smoke=1`) and `?dev=1` skip the hall and auto-start. */
+/** GPU smoke (`?smoke=1`), `?dev=1`, and playable promo shots skip the hall and auto-start. */
 export function skipShell(): boolean {
-  return hasQueryFlag('smoke') || hasQueryFlag('dev');
+  return hasQueryFlag('smoke') || hasQueryFlag('dev') || isPromoPlayShot();
 }
 
 function readStored(): Partial<GameSettings> {
