@@ -81,7 +81,7 @@ export function spawnFxStill(
     const sprite = pool.sprites[i];
     if (sprite.texture.key !== key) sprite.setTexture(key);
     fitFxNative(sprite);
-    sprite.setPosition(Math.round(x), Math.round(y));
+    sprite.setPosition(x, y);
     sprite.setRotation(rotation);
     sprite.setAlpha(1);
     sprite.setVisible(true);
@@ -120,7 +120,7 @@ export function applyShotVisual(
     fitFxNative(sprite);
     sprite.setRotation(Math.atan2(pool.vy[index], pool.vx[index]));
     sprite.setVisible(true);
-    sprite.setPosition(Math.round(pool.x[index]), Math.round(pool.y[index]));
+    sprite.setPosition(pool.x[index], pool.y[index]);
     return;
   }
   const fallback = fallbackBoltKey(pool.team[index], biome);
@@ -128,7 +128,7 @@ export function applyShotVisual(
   sprite.setRotation(0);
   applyProceduralShotStyle(sprite, pool.team[index], pool.flags[index]);
   sprite.setVisible(true);
-  sprite.setPosition(Math.round(pool.x[index]), Math.round(pool.y[index]));
+  sprite.setPosition(pool.x[index], pool.y[index]);
 }
 
 export function syncZoneFx(scene: Phaser.Scene, sprites: Phaser.GameObjects.Image[], zones: ZonePool): void {
@@ -147,7 +147,7 @@ export function syncZoneFx(scene: Phaser.Scene, sprites: Phaser.GameObjects.Imag
     if (sprite.texture.key !== key) sprite.setTexture(key);
     sprite.clearTint();
     sprite.setVisible(true);
-    sprite.setPosition(Math.round(zones.x[i]), Math.round(zones.y[i]));
+    sprite.setPosition(zones.x[i], zones.y[i]);
     if (zones.kind[i] === ZONE_STRIKE) {
       const grow = Math.max(0.25, 1 - zones.remain[i] / STRIKE_TELEGRAPH);
       fitFxNative(sprite, grow);

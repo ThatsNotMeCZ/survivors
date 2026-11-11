@@ -363,6 +363,7 @@ export function showLevelUp(items: ItemDef[]): void {
     btn.type = 'button';
     btn.className = `choice aug-card rarity-${item.rarity}`;
     btn.dataset.uiSprite = `card-${item.rarity}`;
+    btn.dataset.hooks = String(item.hooks.length);
 
     const name = document.createElement('span');
     name.className = 'aug-card-name';
@@ -386,7 +387,7 @@ export function showLevelUp(items: ItemDef[]): void {
 
     const hooks = document.createElement('div');
     hooks.className = 'aug-card-hooks';
-    hooks.append(...hookLines(item, true));
+    hooks.append(...hookLines(item, false));
 
     const divider = document.createElement('hr');
     divider.className = 'aug-card-divider';

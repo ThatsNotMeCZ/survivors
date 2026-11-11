@@ -7,7 +7,7 @@ import { xpForLevel, syncStats } from '../sim/level';
 import type { World } from '../sim/world';
 import { getPromoShot, type PromoShot } from './shot';
 
-export const TABLET_IDS = ['goat-hoof', 'glass-cannon', 'lunar-tithe'] as const;
+export const TABLET_IDS = ['goat-hoof', 'glass-cannon', 'calcined-lens'] as const;
 
 const RING_MITES = 10;
 const ORBIT_PULL = 90;

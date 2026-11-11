@@ -63,8 +63,7 @@ void main() {
   vec2 uv = vec2(outTexCoord.x, 1.0 - outTexCoord.y);
   vec2 worldPos = uViewOrigin + uv * uViewSize;
 
-  // Quantize slightly to match pixel-art aesthetic
-  vec2 qWorld = floor(worldPos * 0.5) * 2.0;
+  vec2 qWorld = worldPos;
 
   // Ground mist / kiln smoke (FBM)
   vec2 mistDrift = uBiome < 0.5 ? vec2(-14.0, -9.0) : vec2(18.0, 11.0);

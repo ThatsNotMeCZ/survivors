@@ -38,5 +38,6 @@ Promo poses never write `survivors.records.v1`. Do not ship `?promo=` as the itc
 
 ```bash
 bunx playwright install chromium   # once
-bun run capture:itch
+bun run capture:itch               # full pack
+bun scripts/capture-itch.ts tablets
 ```

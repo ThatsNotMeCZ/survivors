@@ -16,7 +16,20 @@ const WARMUP_MS = 1800;
 
 type Shot = 'circle' | 'boss' | 'tablets' | 'archives' | 'cover' | 'banner';
 
-const SHOTS: Shot[] = ['circle', 'boss', 'tablets', 'archives', 'cover', 'banner'];
+const ALL_SHOTS: Shot[] = ['circle', 'boss', 'tablets', 'archives', 'cover', 'banner'];
+
+function selectedShots(): Shot[] {
+  const args = process.argv.slice(2).filter((arg) => !arg.startsWith('-'));
+  if (args.length === 0) return ALL_SHOTS;
+  const shots: Shot[] = [];
+  for (const arg of args) {
+    if (!(ALL_SHOTS as string[]).includes(arg)) {
+      throw new Error(`Unknown shot "${arg}". Use: ${ALL_SHOTS.join(', ')}`);
+    }
+    shots.push(arg as Shot);
+  }
+  return shots;
+}
 
 async function main(): Promise<void> {
   requireFfmpeg();
@@ -62,8 +75,9 @@ async function awaitCapture(started: ChildProcess | null): Promise<void> {
     }
   });
 
+  const shots = selectedShots();
   try {
-    for (const shot of SHOTS) {
+    for (const shot of shots) {
       console.log(`📷 ${shot}`);
       await openShot(page, shot);
       await warmup(shot);
@@ -86,28 +100,34 @@ async function awaitCapture(started: ChildProcess | null): Promise<void> {
       }
     }
 
-    encodeGif(
-      join(FRAME_DIR, 'circle'),
-      join(OUT_DIR, 'gif-circle.gif'),
-      'scale=1280:720:flags=neighbor',
-    );
-    encodeGif(
-      join(FRAME_DIR, 'boss'),
-      join(OUT_DIR, 'gif-boss.gif'),
-      'scale=1280:720:flags=neighbor',
-    );
-    encodeGif(
-      join(FRAME_DIR, 'cover'),
-      join(OUT_DIR, 'cover.gif'),
-      'crop=788:625:(in_w-788)/2:(in_h-625)/2,scale=630:500:flags=neighbor',
-    );
-    const coverStill = firstFrame(join(FRAME_DIR, 'cover'));
-    if (coverStill) {
-      encodeStill(
-        coverStill,
-        join(OUT_DIR, 'cover.png'),
+    if (shots.includes('circle')) {
+      encodeGif(
+        join(FRAME_DIR, 'circle'),
+        join(OUT_DIR, 'gif-circle.gif'),
+        'scale=1280:720:flags=neighbor',
+      );
+    }
+    if (shots.includes('boss')) {
+      encodeGif(
+        join(FRAME_DIR, 'boss'),
+        join(OUT_DIR, 'gif-boss.gif'),
+        'scale=1280:720:flags=neighbor',
+      );
+    }
+    if (shots.includes('cover')) {
+      encodeGif(
+        join(FRAME_DIR, 'cover'),
+        join(OUT_DIR, 'cover.gif'),
         'crop=788:625:(in_w-788)/2:(in_h-625)/2,scale=630:500:flags=neighbor',
       );
+      const coverStill = firstFrame(join(FRAME_DIR, 'cover'));
+      if (coverStill) {
+        encodeStill(
+          coverStill,
+          join(OUT_DIR, 'cover.png'),
+          'crop=788:625:(in_w-788)/2:(in_h-625)/2,scale=630:500:flags=neighbor',
+        );
+      }
     }
     writeManifest();
     console.log(`\n✅ itch.io pack written to ${OUT_DIR}`);

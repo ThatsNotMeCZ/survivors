@@ -13,7 +13,7 @@ export function startGame(parent: string, smoke: boolean): Phaser.Game {
     banner: false,
     audio: { noAudio: true },
     pixelArt: true,
-    roundPixels: true,
+    roundPixels: false,
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
