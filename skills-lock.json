@@ -1,0 +1,157 @@
+{
+  "version": 2,
+  "skills": {
+    "audio-design": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/audio-design/SKILL.md",
+      "computedHash": "4ee009a23afb910b3224c9e02eaab272b08b1a654b0e9645ca49f63ff6860e25",
+      "installMode": "copy"
+    },
+    "camera-systems": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/camera-systems/SKILL.md",
+      "computedHash": "45c1a667a3d1f50537c6891a747bff19ad82153f33ab746cf1c40b5063d200fd",
+      "installMode": "copy"
+    },
+    "game-ai": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/game-ai/SKILL.md",
+      "computedHash": "ac347252bb3c538779bec75502c1371a9b8f0a75d419549585d34c972941030f",
+      "installMode": "copy"
+    },
+    "game-feel": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/game-feel/SKILL.md",
+      "computedHash": "b186666fcc325c00a2096e5b6d845e812dcac5ee3e9875511fe96a2b7eca2429",
+      "installMode": "copy"
+    },
+    "game-ui-ux": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/game-ui-ux/SKILL.md",
+      "computedHash": "ab2788a74d52cafffc37790e3743f6d219f439eca414f22db6441f630f207314",
+      "installMode": "copy"
+    },
+    "godot-2d-movement": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-2d-movement/SKILL.md",
+      "computedHash": "ab6b81af31d2f4dd27f024b6b6a3b66377c39f1fd59b705b793b07fa43855194",
+      "installMode": "copy"
+    },
+    "godot-animation": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-animation/SKILL.md",
+      "computedHash": "2b6ea992002da2800d0be6ae56f1cafe93b2037b223d2f5007aae253889b12e3",
+      "installMode": "copy"
+    },
+    "godot-audio": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-audio/SKILL.md",
+      "computedHash": "046e8c45172cab7af6553b7819fcd92d127ea4295e4263a8a52b0bdeb672f9a2",
+      "installMode": "copy"
+    },
+    "godot-csharp": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-csharp/SKILL.md",
+      "computedHash": "be1847129042e56c4e488f23fde42da693493adcec3ef0b9813df72ae978d8f9",
+      "installMode": "copy"
+    },
+    "godot-export": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-export/SKILL.md",
+      "computedHash": "b8409b2b7ed5ae6144ebc4a96e706768828f135afb13299a056240288026cb05",
+      "installMode": "copy"
+    },
+    "godot-nodes-scenes": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-nodes-scenes/SKILL.md",
+      "computedHash": "a622f73e9c90a88d9b7863bd41a70d1f020e9682169b55f0e71e0a723f35bd89",
+      "installMode": "copy"
+    },
+    "godot-physics": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-physics/SKILL.md",
+      "computedHash": "d67059a9dd729f06039d8c534f39b4a4df11930f5d01f43a562b4119df5a59d3",
+      "installMode": "copy"
+    },
+    "godot-resources": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-resources/SKILL.md",
+      "computedHash": "566626ca04264551e809bc48e6fdc1e688d93d1b883dae39bbcaa86b2b8dd8c4",
+      "installMode": "copy"
+    },
+    "godot-shaders": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-shaders/SKILL.md",
+      "computedHash": "39ea8d858079f924fcc1eba60c1613779fe3c45b18a31c38ec20cf65290daa23",
+      "installMode": "copy"
+    },
+    "godot-signals-groups": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-signals-groups/SKILL.md",
+      "computedHash": "dbb6b6f6b142d976a82f341d3cbc9c8e6f77d3a4eb6194d9400896e77a63cbd7",
+      "installMode": "copy"
+    },
+    "godot-ui-control": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-ui-control/SKILL.md",
+      "computedHash": "5e9581a8ecdfd033679b1f7d9246a6a525fb9bf5d3ee44563b11516e3627f171",
+      "installMode": "copy"
+    },
+    "input-systems": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/input-systems/SKILL.md",
+      "computedHash": "7cefe4d06c416038e87a9639d306f5e019509ca64beb5f1dc1faab78ac03de93",
+      "installMode": "copy"
+    },
+    "performance-optimization": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/performance-optimization/SKILL.md",
+      "computedHash": "0070bce5504ffbd420ae6efbfca7b9de76692b748a29539cfea764f0ad6969d1",
+      "installMode": "copy"
+    },
+    "save-systems": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/save-systems/SKILL.md",
+      "computedHash": "e3f5bf5ea5c51251a75f51b63c05b78d8cf51e53609be6a11fafa5ec703f3a6e",
+      "installMode": "copy"
+    },
+    "shader-programming": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/shader-programming/SKILL.md",
+      "computedHash": "d04a55f76eb5ce783073fbdc6471751a021446187dfd704f1fd6bd9e32a82fb4",
+      "installMode": "copy"
+    },
+    "technical-writing": {
+      "source": "riekelt/technical-writer",
+      "sourceType": "github",
+      "skillPath": "plugins/technical-writer/skills/technical-writing/SKILL.md",
+      "computedHash": "1887649c89f345364dc4d0cb58f0f6fa1b4b6fd52286eecdc2823585d3109015"
+    },
+    "writing-changelogs": {
+      "source": "riekelt/technical-writer",
+      "sourceType": "github",
+      "skillPath": "plugins/technical-writer/skills/writing-changelogs/SKILL.md",
+      "computedHash": "5fb7a00c2f2d118f216dc29f7d815786b947e48bf83da2dede883c539890972a"
+    }
+  }
+}

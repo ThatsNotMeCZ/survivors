@@ -3503,8 +3503,17 @@ select:focus-visible,
   flex-shrink: 0;
   display: grid;
   place-items: center;
+  overflow: hidden;
   background: radial-gradient(circle at 50% 50%, rgba(74, 56, 44, 0.35), #100d12 80%);
   border: 1px solid rgba(196, 163, 90, 0.28);
+}
+
+.info-card-art .vessel-art,
+.info-card-art .portrait-art {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 .info-card-copy {
@@ -3512,6 +3521,7 @@ select:focus-visible,
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  min-width: 0;
 }
 
 .info-card-kicker {
@@ -4052,6 +4062,46 @@ select:focus-visible,
 .rarity-text-lunar { color: #62e0ff; }
 
 /* Ledger of Workings */
+.ledger-vessel-card.archives-info-card.with-art {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 10px;
+}
+
+.ledger-vessel-card .info-card-art {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.ledger-vessel-card .info-card-copy {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.ledger-vessel-stats {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  align-items: stretch;
+}
+
+.ledger-vessel-stats .archives-stat-chip {
+  min-width: 0;
+  justify-content: space-between;
+}
+
+.ledger-vessel-stats .chip-k {
+  white-space: nowrap;
+}
+
+.ledger-vessel-stats .chip-v {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .ledger-metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));

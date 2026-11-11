@@ -74,7 +74,7 @@
       "rarity": "rare",
       "stack": "linear",
       "hooks": [
-        { "op": "add", "stat": "hpRegen", "value": 2.5 },
+        { "op": "add", "stat": "hpRegen", "value": 1.0 },
         { "op": "pct", "stat": "controlDuration", "value": 0.35 },
         { "op": "pct", "stat": "radius", "value": 0.25 }
       ],

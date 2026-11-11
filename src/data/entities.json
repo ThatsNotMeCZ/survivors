@@ -101,7 +101,7 @@
       "id": "frost-mite",
       "name": "Frost Mite",
       "title": "Rime-Bitten Husk",
-      "lore": "Shards of alchemical salt and frozen mercury thatitters across the dockside stone. Quicker and harder than kiln mites, they hunt in tight, unforgiving packs.",
+      "lore": "Shards of alchemical salt and frozen mercury that skitter across the dockside stone. Quicker and harder than kiln mites, they hunt in tight, unforgiving packs.",
       "role": "fodder",
       "tags": ["fodder", "chaser"],
       "stats": { "speed": 104, "maxHp": 18, "radius": 10 },

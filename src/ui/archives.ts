@@ -32,7 +32,7 @@ export type ArchiveTab = 'howto' | 'lore' | 'entities' | 'reliquary' | 'stats';
 type LoreSubTab = 'work' | 'vessels' | 'chambers' | 'exchange';
 
 const TAB_SPECS: { id: ArchiveTab; label: string; sub: string; glyph: string }[] = [
-  { id: 'howto', label: 'RITES OF MOTION', sub: 'Controls & Mechanics', glyph: '⚶' },
+  { id: 'howto', label: 'RITES OF MOTION', sub: 'Stride, Aim, Survive', glyph: '⚶' },
   { id: 'lore', label: 'CHRONICLES', sub: 'World, Vessels & Chambers', glyph: '☉' },
   { id: 'entities', label: 'BESTIARY', sub: 'Dross, Elites & Guardians', glyph: '🜂' },
   { id: 'reliquary', label: 'RELIQUARY', sub: 'Augmentations & Relics', glyph: '🜍' },
@@ -266,22 +266,22 @@ function buildHowToView(): HTMLElement {
     {
       step: '01 · DISTILLATION',
       title: 'Harvest Mercury Drops & Ascend',
-      body: `Slay lesser dross to release Mercury Drops (Essence). Every ascension pauses the chamber and offers 1 of ${catalog.loop.levelChoices} alchemical augmentations. Common and Uncommon relics fortify your baseline; Rare and Lunar covenants demand a severe trade-off.`,
+      body: `Slay the lesser dross. Mercury Drops rise from the husks. Each ascent pauses the chamber and offers one of ${catalog.loop.levelChoices} tablets. Common and Uncommon grafts only fortify you. Rare and Lunar covenants cut both ways.`,
     },
     {
       step: '02 · CONVERGENCE',
       title: 'Channel the Transmutation Circle',
-      body: 'Once the chamber clock expires, the Transmutation Circle manifests. An off-screen chevron guides you to the ring. The seal only charges while you stand within its perimeter—leaving cools the seal until you return.',
+      body: 'When the chamber has run its course, the Transmutation Circle appears. A chevron points you to the ring. Stand inside to charge it. Leave, and the seal cools until you return.',
     },
     {
       step: '03 · THE GUARDIAN',
       title: 'Shatter the Seal Guardian & Descend',
-      body: 'Completing the hold summons the chamber’s Seal Guardian. Slaying the Guardian tears open the Rift at the point of its death (or completes the Great Work in the final chamber). Stand in the Rift for 1.4s to descend.',
+      body: 'A full seal wakes the chamber’s Guardian. Slay it to tear open the Rift, or to finish the Great Work in the last chamber. Stand in the Rift until you descend.',
     },
     {
       step: '04 · RISING PRESSURE',
-      title: 'Outpace the Stage Director',
-      body: 'The chamber’s Difficulty Coefficient rises relentlessly with time and stage depth. The Director spends its growing credit budget on shielded Noxious Elites and Astral Watchers rather than mindless fodder.',
+      title: 'The Chamber Grows Meaner',
+      body: 'The longer you linger, the worse the chamber becomes: Aether-warded elites, Noxious blights, and Astral Watchers. The swarm does not grow denser. It grows meaner.',
     },
   ];
   for (const beat of beats) {
@@ -310,10 +310,6 @@ function buildHowToView(): HTMLElement {
   mechTitle.textContent = 'III. CHAMBER PROPS, HAZARDS & ELITE WARDS';
   mechSec.appendChild(mechTitle);
 
-  const obsCfg = catalog.obstacles;
-  const noxCfg = catalog.loop.noxious;
-  const shieldCfg = catalog.loop.shielder;
-
   const mechGrid = document.createElement('div');
   mechGrid.className = 'archives-cards-grid cols-2';
 
@@ -325,27 +321,27 @@ function buildHowToView(): HTMLElement {
   }[] = [
     {
       kind: 'pillar',
-      kicker: 'SOLID COVER · 14 PER CHAMBER',
+      kicker: 'SOLID COVER',
       title: 'Kilns, Bollards & Monoliths',
-      body: 'Impassable stone and iron structures. Use them to break enemy sightlines, intercept ranged spitters, and block the lethal laser beams of Astral Watchers.',
+      body: 'Impassable stone and iron. Break a Watcher’s gaze, catch a spitter’s bolt, and cut a sightline when the horde closes.',
     },
     {
       kind: 'hazard',
-      kicker: 'GROUND HAZARD · 8 + ACID POOLS',
+      kicker: 'GROUND HAZARD',
       title: 'Slag Fissures & Brine Pools',
-      body: `Corrosive ground zones that reduce vessel stride to ${Math.round(obsCfg.hazard.playerSpeedMul * 100)}% (enemies to ${Math.round(obsCfg.hazard.enemySpeedMul * 100)}%) and sear for ${obsCfg.hazard.dps} base DPS. Use Phase Step or Ash Step to cross unscathed.`,
+      body: 'Corrosive ground that burns and slows you. Phase Step or Ash Step carries you across unharmed.',
     },
     {
       kind: 'volatile',
-      kicker: 'VOLATILE VESSELS · 9 PER CHAMBER',
+      kicker: 'VOLATILE VESSELS',
       title: 'Brimstone Urns & Rime Casks',
-      body: `Strike with ${obsCfg.volatile.hp} base damage to prime a ${obsCfg.volatile.prime}s fuse. Detonates in a ${obsCfg.volatile.explosionRadius}px blast dealing ${obsCfg.volatile.enemyDamage}× damage to foes (${obsCfg.volatile.playerDamage} to you). Rime Casks also chill caught targets.`,
+      body: 'Strike an urn or cask, then step back. The blast hits dross and you alike. Rime casks also chill. Phase through the blast to skip the wound; the frost still bites.',
     },
     {
       kind: 'elite',
-      kicker: 'ELITE AFFLICTIONS · SHIELDER & NOXIOUS',
-      title: 'Aether Wards & Caustic Blights',
-      body: `Elites emerge with one of two distinct affixes: Shielder elites are encircled by an azure Aether Ward (+${Math.round(shieldCfg.percentHp * 100)}% shield, recharges after ${shieldCfg.delay}s unharmed). Noxious elites radiate a viridian caustic haze, slowing your stride by ${Math.round((1 - noxCfg.contactSlowMul) * 100)}% on contact and detonating ${noxCfg.corpseDelay}s after death into a temporary acid pool (${noxCfg.poolDuration}s).`,
+      kicker: 'ELITE AFFLICTIONS',
+      title: 'Aether Wards & Noxious Blights',
+      body: 'Elites wear one of two marks. An Aether Ward is an azure shell you must break before the flesh. A Noxious blight is a viridian haze that slows your stride on contact and leaves an acid pool when the husk dies.',
     },
   ];
 
@@ -417,7 +413,7 @@ function buildControlsTable(survivor: SurvivorDef): HTMLElement {
     [
       'Shift / Space',
       utility ? `${utility.name} (III · ${utility.cooldown}s)` : 'Utility Dash (III)',
-      utility?.hook ?? 'Dash with brief invulnerability frames through foes and hazards.',
+      utility?.hook ?? 'Dash through foes and hazards unharmed.',
     ],
     [
       'Press Q',
@@ -426,7 +422,7 @@ function buildControlsTable(survivor: SurvivorDef): HTMLElement {
     ],
     ['1 / 2 / 3', 'Bind Augmentation', 'Select a tablet during vessel ascension (or use Arrow keys + Enter).'],
     ['Stand in Ring', 'Channel / Descend', 'Hold inside the Transmutation Circle or Rift portal until charged.'],
-    ['Esc / P', 'Pause Working', 'Pause simulation, inspect inventory, or open The Archives.'],
+    ['Esc / P', 'Pause Working', 'Pause the working, inspect tablets, or open The Archives.'],
   ];
 
   for (const [k, rite, desc] of rows) {
@@ -601,8 +597,7 @@ function buildVesselsLore(): HTMLElement {
     const pills: [string, string][] = unlocked
       ? [
           ['Vitality', `${survivor.stats.maxHp} HP`],
-          ['Stride', `${survivor.stats.speed} px/s`],
-          ['Radius', `${survivor.stats.radius} px`],
+          ['Stride', String(survivor.stats.speed)],
           ['Workings', String(sRec?.runs ?? 0)],
           ['Victories', String(sRec?.victories ?? 0)],
         ]
@@ -707,8 +702,6 @@ function buildChambersLore(): HTMLElement {
       chips.append(
         makeStatChip('Visited', String(visits)),
         makeStatChip('Cleared', String(clears)),
-        makeStatChip('Seal At', formatTime(stage.teleporterAt)),
-        makeStatChip('Hold Duration', `${stage.teleporterHold}s`),
       );
     } else {
       chips.append(makeStatChip('Status', 'UNENCOUNTERED'));
@@ -729,18 +722,26 @@ function buildChambersLore(): HTMLElement {
     denizens.dataset.seen = visited ? '1' : '0';
     const dKick = document.createElement('p');
     dKick.className = 'info-card-kicker';
-    dKick.textContent = 'NATIVE DENIZENS';
+    dKick.textContent = 'WHO WALKS HERE';
     const dList = document.createElement('p');
     dList.className = 'info-card-body';
     if (visited) {
-      const fodderName = isEntitySeen(stage.fodder, rec) ? catalog.entity(stage.fodder).name : '???';
-      const rangedName = stage.ranged ? (isEntitySeen(stage.ranged, rec) ? catalog.entity(stage.ranged).name : '???') : 'None';
-      const sniperName = stage.sniper ? (isEntitySeen(stage.sniper, rec) ? catalog.entity(stage.sniper).name : '???') : 'None';
-      const wardenName = isEntitySeen(stage.elite, rec) ? catalog.entity(stage.elite).name : '???';
-      const bossName = isEntitySeen(stage.boss, rec) ? catalog.entity(stage.boss).name : '???';
-      dList.textContent = `Swarm: ${fodderName} & ${rangedName} · Sightline: ${sniperName} · Warden: ${wardenName} · Seal Guardian: ${bossName}.`;
+      const hunts = isEntitySeen(stage.fodder, rec) ? catalog.entity(stage.fodder).name : '???';
+      const spits = stage.ranged
+        ? isEntitySeen(stage.ranged, rec)
+          ? catalog.entity(stage.ranged).name
+          : '???'
+        : 'None';
+      const lances = stage.sniper
+        ? isEntitySeen(stage.sniper, rec)
+          ? catalog.entity(stage.sniper).name
+          : '???'
+        : 'None';
+      const warden = isEntitySeen(stage.elite, rec) ? catalog.entity(stage.elite).name : '???';
+      const guardian = isEntitySeen(stage.boss, rec) ? catalog.entity(stage.boss).name : '???';
+      dList.textContent = `Hunts you: ${hunts}. Spits from afar: ${spits}. Lances from the rim: ${lances}. Warden: ${warden}. Guards the seal: ${guardian}.`;
     } else {
-      dList.textContent = 'Swarm: ??? · Sightline: ??? · Seal Guardian: ???';
+      dList.textContent = 'Hunts you: ??? · Spits from afar: ??? · Guards the seal: ???';
     }
     denizens.append(dKick, dList);
 
@@ -749,16 +750,16 @@ function buildChambersLore(): HTMLElement {
     propsBox.dataset.seen = visited ? '1' : '0';
     const pKick = document.createElement('p');
     pKick.className = 'info-card-kicker';
-    pKick.textContent = 'CHAMBER ARCHITECTURE';
+    pKick.textContent = 'IN THE CHAMBER';
     const pList = document.createElement('p');
     pList.className = 'info-card-body';
     if (visited) {
       const biomeProps = catalog.obstacles.biomes[stage.id];
       pList.textContent = biomeProps
-        ? `Cover: ${biomeProps.pillar} · Ground Hazard: ${biomeProps.hazard} · Volatile Vessel: ${biomeProps.volatile}.`
-        : 'Standard alchemical foundry obstacles.';
+        ? `${biomeProps.pillar}. ${biomeProps.hazard}. ${biomeProps.volatile}.`
+        : 'Stone, slag, and vessels waiting to burst.';
     } else {
-      pList.textContent = 'Cover: ??? · Ground Hazard: ??? · Volatile Vessel: ???';
+      pList.textContent = '???. ???. ???.';
     }
     propsBox.append(pKick, pList);
 
@@ -773,32 +774,27 @@ function buildChambersLore(): HTMLElement {
 function buildExchangeLore(): HTMLElement {
   const grid = document.createElement('div');
   grid.className = 'archives-cards-grid cols-2';
-  const weights = catalog.loop.rarityWeight;
 
-  const tiers: { rarity: ItemRarity; title: string; weight: number; desc: string }[] = [
+  const tiers: { rarity: ItemRarity; title: string; desc: string }[] = [
     {
       rarity: 'common',
       title: 'Common Tablets · Base Matter',
-      weight: weights.common,
-      desc: 'Pure, foundational alchemical grafts—tendons, slag plating, lead plumbum, and cinnabar leeches. They carry no anatomical drawback and form the backbone of every working.',
+      desc: 'Pure grafts: tendons, slag plating, lead plumbum, and cinnabar leeches. They carry no drawback and form the backbone of every working.',
     },
     {
       rarity: 'uncommon',
       title: 'Uncommon Tablets · Refined Humors',
-      weight: weights.uncommon,
-      desc: 'Quicksilver draughts, spasmodic nerves, and bellows hearts. Scarcer distillations that accelerate your cooldowns and sharpen critical detonations without corrupting the vessel.',
+      desc: 'Quicksilver draughts, spasmodic nerves, and bellows hearts. Scarcer distillations that hasten your rites without corrupting the vessel.',
     },
     {
       rarity: 'rare',
       title: 'Rare Tablets · Volatile Bargains',
-      weight: weights.rare,
-      desc: 'Double-edged masterworks such as Vitriol Veins, Parasitic Alembic, and the Astrologer’s Ocular. They grant dramatic surges in offensive power or haste at the direct cost of vitality, stride, or vessel size.',
+      desc: 'Double-edged masterworks such as Vitriol Veins, Parasitic Alembic, and the Astrologer’s Ocular. Power or haste, paid in vitality, stride, or a swollen frame.',
     },
     {
       rarity: 'lunar',
       title: 'Lunar Covenants · Forbidden Heresy',
-      weight: weights.lunar,
-      desc: 'The Pale Moon Covenant (+75% Damage, +50% Crit Damage, −40% Max HP, +20% Vessel Size). An unforgiven heresy against the Great Work that turns the vessel into a fragile, cataclysmic conduit.',
+      desc: 'The Pale Moon Covenant. An unforgiven heresy against the Great Work: ruin against guardians and elite horrors, a brittle shell, and insight that will not take.',
     },
   ];
 
@@ -807,7 +803,7 @@ function buildExchangeLore(): HTMLElement {
     card.className = `archives-info-card rarity-border-${t.rarity}`;
     const kicker = document.createElement('p');
     kicker.className = `info-card-kicker rarity-text-${t.rarity}`;
-    kicker.textContent = `${t.rarity.toUpperCase()} · DROP WEIGHT ${Math.round(t.weight * 100)}%`;
+    kicker.textContent = t.rarity.toUpperCase();
     const title = document.createElement('h4');
     title.className = 'info-card-title';
     title.textContent = t.title;
@@ -873,7 +869,7 @@ function buildBestiaryView(): HTMLElement {
     const kills = rec.entityKills[entity.id] ?? 0;
     const seen = (rec.entityEncounters[entity.id] ?? 0) > 0 || kills > 0;
     const hasLore = (rec.entityLores[entity.id] ?? 0) > 0;
-    const archetype = getEntityArchetype(entity);
+    const kind = entityKind(entity);
 
     const card = document.createElement('button');
     card.type = 'button';
@@ -887,8 +883,8 @@ function buildBestiaryView(): HTMLElement {
     mountEntityArt(artWrap, entity.id, 'entity-card-canvas', seen ? entity.name : 'Unencountered Entity');
 
     const roleTag = document.createElement('span');
-    roleTag.className = `entity-role-badge archetype-badge-${archetype.toLowerCase()}`;
-    roleTag.textContent = archetype.toUpperCase();
+    roleTag.className = `entity-role-badge archetype-badge-${kind.key}`;
+    roleTag.textContent = seen ? kind.label.toUpperCase() : '???';
 
     const name = document.createElement('span');
     name.className = 'entity-card-name';
@@ -918,11 +914,16 @@ function buildBestiaryView(): HTMLElement {
   return layout;
 }
 
-function getEntityArchetype(entity: EntityDef): string {
-  if (entity.role === 'boss') return 'Guardian';
-  if (entity.ai.type === 'sniper') return 'Sniper';
-  if (entity.ai.type === 'ranged') return 'Ranged';
-  return 'Chaser';
+function entityKind(entity: EntityDef): {
+  key: 'chaser' | 'ranged' | 'sniper' | 'guardian';
+  label: string;
+} {
+  if (entity.role === 'boss' || entity.ai.type === 'boss') {
+    return { key: 'guardian', label: 'Guards the seal' };
+  }
+  if (entity.ai.type === 'sniper') return { key: 'sniper', label: 'Lances from the rim' };
+  if (entity.ai.type === 'ranged') return { key: 'ranged', label: 'Spits from afar' };
+  return { key: 'chaser', label: 'Hunts you' };
 }
 
 function filteredEntities(): EntityDef[] {
@@ -970,11 +971,10 @@ function fillEntityDossier(root: HTMLElement, entity: EntityDef, rec: ArchiveRec
   const lore = document.createElement('p');
   if (!seen) {
     lore.className = 'hall-lore is-locked-lore';
-    lore.textContent = 'Encounter this entity in the Rifts to chart its anatomy and combat behavior.';
+    lore.textContent = 'Encounter it in the Rifts.';
   } else if (!hasLore) {
     lore.className = 'hall-lore is-locked-lore';
-    lore.textContent =
-      'Treatise Unrecovered — Slay this entity in the Rifts for a chance to recover its apocryphal lore scroll.';
+    lore.textContent = 'Slay it to recover its treatise.';
   } else {
     lore.className = 'hall-lore';
     lore.textContent = entity.lore;
@@ -983,22 +983,17 @@ function fillEntityDossier(root: HTMLElement, entity: EntityDef, rec: ArchiveRec
   const statsGrid = document.createElement('div');
   statsGrid.className = 'hall-stats-grid';
   const habitats = entityHabitats(entity.id, rec);
+  const kind = entityKind(entity);
   const statRows: [string, string][] = seen
     ? [
         ['♥', `VITALITY: ${entity.stats.maxHp}`],
-        ['🥾', `STRIDE: ${entity.stats.speed}`],
-        ['⚔', `CONTACT: ${entity.contact.dps} DPS`],
-        ['☿', `ESSENCE: +${entity.rewards.xp} XP`],
         ['◎', `CHAMBER: ${habitats}`],
-        ['⟁', `AI: ${describeAiShort(entity)}`],
+        ['⟁', `KIND: ${kind.label.toUpperCase()}`],
       ]
     : [
         ['♥', 'VITALITY: ???'],
-        ['🥾', 'STRIDE: ???'],
-        ['⚔', 'CONTACT: ???'],
-        ['☿', 'ESSENCE: ???'],
         ['◎', 'CHAMBER: ???'],
-        ['⟁', 'AI: ???'],
+        ['⟁', 'KIND: ???'],
       ];
   for (const [icon, text] of statRows) {
     const cell = document.createElement('div');
@@ -1017,7 +1012,7 @@ function fillEntityDossier(root: HTMLElement, entity: EntityDef, rec: ArchiveRec
   behaviorNote.className = 'archives-dossier-note';
   behaviorNote.textContent = seen
     ? describeEntityBehavior(entity)
-    : 'Behavior unknown until encountered in the Rifts.';
+    : 'Unknown until encountered in the Rifts.';
 
   root.replaceChildren(header, name, subTitle, stageWrap, ledgerStrip, lore, statsGrid, behaviorNote);
 }
@@ -1045,33 +1040,21 @@ function entityHabitats(entityId: string, rec: ArchiveRecords): string {
   return hits.length > 0 ? hits.join(', ').toUpperCase() : 'THE RIFTS';
 }
 
-function describeAiShort(entity: EntityDef): string {
-  if (entity.ai.type === 'ranged') return 'RANGED SPIT';
-  if (entity.ai.type === 'sniper') return 'ASTRAL BEAM';
-  return 'RELENTLESS CHASE';
-}
-
 function describeEntityBehavior(entity: EntityDef): string {
-  const parts: string[] = [];
-  if (entity.ai.type === 'chase') {
-    parts.push('Pursues the vessel directly across the flagstones.');
-  } else if (entity.ai.type === 'ranged') {
-    parts.push(
-      `Maintains ${entity.ai.keep}–${entity.ai.range}px distance, telegraphs for ${entity.ai.windup}s, and fires a ${entity.ai.projectile.damage}-damage bolt every ${entity.ai.cooldown}s.`,
-    );
-  } else if (entity.ai.type === 'sniper') {
-    parts.push(
-      `Keeps ${entity.ai.keep}px distance and locks a sightline for ${entity.ai.windup}s before firing a ${entity.ai.damage}-damage beam. Solid pillars block the shot.`,
-    );
+  if (entity.ai.type === 'boss') {
+    const names = entity.ai.attacks
+      .map((atk) => atk.name)
+      .filter((name): name is string => Boolean(name));
+    const rites = names.length > 0 ? `Its rites: ${names.join(', ')}. ` : '';
+    return `${rites}Wakes when the Transmutation Circle is full. Slaying it opens the Rift, or completes the Great Work in the last chamber.`;
   }
-  if (entity.role === 'boss') {
-    parts.push('Manifests when the Transmutation Circle is fully charged. Slaying it opens the Rift.');
-  } else {
-    parts.push(
-      'Can spawn as an Elite affliction (azure Aether Shield or viridian Noxious aura) as chamber pressure mounts.',
-    );
+  if (entity.ai.type === 'ranged') {
+    return 'Keeps its distance and spits. Do not stand still.';
   }
-  return parts.join(' ');
+  if (entity.ai.type === 'sniper') {
+    return 'Draws a beam from the rim. Hide behind kilns, bollards, or monoliths.';
+  }
+  return 'Runs straight at you.';
 }
 
 /* ==========================================================================
@@ -1218,7 +1201,7 @@ function fillItemDossier(root: HTMLElement, item: ItemDef, rec: ArchiveRecords):
 
   const ledgerStrip = document.createElement('div');
   ledgerStrip.className = 'archives-dossier-ledger';
-  const statusLabel = seen ? item.stack.toUpperCase() : unlockState.unlocked ? 'UNBOUND' : 'SEALED';
+  const statusLabel = seen ? 'BOUND' : unlockState.unlocked ? 'UNBOUND' : 'SEALED';
   ledgerStrip.innerHTML = `
     <div class="archives-dossier-ledger-item"><span>TIMES BOUND:</span><strong>×${picks.toLocaleString()}</strong></div>
     <div class="archives-dossier-ledger-item"><span>STATUS:</span><strong>${statusLabel}</strong></div>
@@ -1344,7 +1327,7 @@ function buildLedgerView(): HTMLElement {
     [
       'Total Dross Slain',
       rec.totalKills.toLocaleString(),
-      `${rec.fodderKills.toLocaleString()} Fodder · ${rec.eliteKills.toLocaleString()} Elites · ${rec.bossKills.toLocaleString()} Bosses`,
+      `${rec.fodderKills.toLocaleString()} Dross · ${rec.eliteKills.toLocaleString()} Elites · ${rec.bossKills.toLocaleString()} Guardians`,
     ],
     [
       'Most Slain (Single Run)',
@@ -1367,9 +1350,9 @@ function buildLedgerView(): HTMLElement {
       `${rec.totalGemsCollected.toLocaleString()} Mercury Drops Harvested`,
     ],
     [
-      'Peak Difficulty',
-      `×${rec.highestCoefficient.toFixed(2)}`,
-      `${rec.totalLevelsGained.toLocaleString()} Total Ascensions`,
+      'Total Ascensions',
+      rec.totalLevelsGained.toLocaleString(),
+      'Bound across every working',
     ],
   ];
 
@@ -1408,7 +1391,7 @@ function buildLedgerView(): HTMLElement {
     const runs = sRec?.runs ?? 0;
     const wins = sRec?.victories ?? 0;
     const sCard = document.createElement('div');
-    sCard.className = 'archives-info-card with-art';
+    sCard.className = 'archives-info-card with-art ledger-vessel-card';
     sCard.dataset.seen = unlocked ? '1' : '0';
 
     const pBox = document.createElement('div');
@@ -1424,9 +1407,10 @@ function buildLedgerView(): HTMLElement {
     const name = document.createElement('h4');
     name.className = 'info-card-title';
     name.textContent = unlocked ? survivor.name : '???';
+    copy.append(kicker, name);
 
     const chips = document.createElement('div');
-    chips.className = 'archives-stat-chips';
+    chips.className = 'archives-stat-chips ledger-vessel-stats';
     if (unlocked) {
       chips.append(
         makeStatChip('Workings', String(runs)),
@@ -1442,8 +1426,7 @@ function buildLedgerView(): HTMLElement {
         makeStatChip('Rite', unlockState.label),
       );
     }
-    copy.append(kicker, name, chips);
-    sCard.append(pBox, copy);
+    sCard.append(pBox, copy, chips);
     vesselGrid.appendChild(sCard);
   }
   vesselSec.appendChild(vesselGrid);
@@ -1486,7 +1469,7 @@ function buildLedgerView(): HTMLElement {
       const mainLine = document.createElement('strong');
       mainLine.textContent = `${survivorName} · ${run.stageName}`;
       const subLine = document.createElement('span');
-      subLine.textContent = `Duration ${formatTime(run.runTime)} · Lv ${run.level} · ×${run.coefficient.toFixed(2)} · ${run.kills} Slain · ${run.damageDealt.toLocaleString()} Dmg`;
+      subLine.textContent = `Duration ${formatTime(run.runTime)} · Lv ${run.level} · ${run.kills} Slain · ${run.damageDealt.toLocaleString()} Dmg`;
       summary.append(mainLine, subLine);
 
       const itemsStrip = document.createElement('div');
