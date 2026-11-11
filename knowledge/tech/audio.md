@@ -14,7 +14,7 @@ Files live in `public/audio/`. Phaser stays `audio.noAudio: true` — the hall b
 | `music/boss/{boss-id}/` | Boss playlist. Ids match `entities.json` boss id (`cinder-heart`, etc.). Crossfades with stage bed. |
 | `music/overlay/` | Shared chill playlist. Pause (and nested pause screens) only. |
 
-Slice maps: `cinder-yard`, `rime-dock`, `glacial-tomb`. A new stage gets a new `music/maps/{id}/` folder with the same id. Boss tracks live in `music/boss/{boss-id}/`.
+Live maps: `cinder-yard`, `rime-dock`, `glacial-tomb`. Live bosses: `cinder-heart`, `frost-sovereign`, `frost-emperor`. A new stage gets a new `music/maps/{id}/` folder with the same id. Boss tracks live in `music/boss/{boss-id}/`.
 
 ## Playlist
 

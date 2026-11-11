@@ -1,6 +1,6 @@
 # Stack
 
-**Phaser 4.2 + TypeScript + Vite + Bun.** Agent-first, 60 fps within the performance budget.
+**Phaser 4.2.1 + TypeScript + Vite + Bun.** Agent-first, 60 fps within the performance budget.
 
 Package manager is Bun (`bun.lock`). Never npm.
 

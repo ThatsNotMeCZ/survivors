@@ -10,27 +10,27 @@ Verb: **A — player aims primary.**
 | RMB | secondary (aimed press) |
 | Shift / Space | utility dash with i-frames |
 | Q | ultimate (aimed press) |
-| Esc | pause (HTML overlay; sim frozen) |
+| Esc / P | pause (HTML overlay; sim frozen). Use **P** in itch fullscreen so Esc does not drop fullscreen first |
 
 Primary never auto-aims and never fires without a held/pressed input. Screen-clear and orbital weapons are banned on primary.
 
 Dash is a press skill: i-frames skip **contact damage and enemy projectiles**. Direction = move vector, or aim if standing. During dash the player is **not** body-separated, so the dash still cuts through a pack.
 
-Homunculus: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull. The Penitent: Censer Lob / Brimstone Line / Ash Step / Condemnation Tether. Numbers: `src/data/skills.json`.
+Homunculus: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull. The Penitent: Censer Lob / Brimstone Line / Ash Step / Condemnation Tether. The Penitent starts sealed; unseal by slaying the Frost Sovereign in Rime Dock. Numbers: `src/data/skills.json`.
 
 ## Bodies
 
-CPU AABB + spatial hash. Enemies separate from each other; the player and enemies push apart while walking (player heavier). No Arcade/Matter on swarms. Contact DPS still applies on remaining overlap.
+CPU AABB + spatial hash. Enemies separate from each other; the player and enemies push apart while walking (player heavier). Bosses shove fodder aside. No Arcade/Matter on swarms. Contact DPS still applies on remaining overlap.
 
-Obstacles use **circle vs circle** push-out in sim (not Arcade). Numbers: `src/data/obstacles.json`.
+Obstacles use **circle vs circle** push-out in sim (not Arcade). Numbers: `src/data/obstacles.json`. **Bosses collide with pillars** (they are pushed out — no phase-through). Pillar r=28, volatile r=14, hazard r=68.
 
-| Type | Display (Cinder / Rime) | Collision |
+| Type | Display (Cinder / Rime / Glacial) | Collision |
 |---|---|---|
-| `pillar` | Obsidian Kiln / Frozen Bollard | Solid vs player, fodder, elites. **Bosses phase through** (Cinder Heart, Frost Sovereign) so they never soft-lock. Blocks player Bolt and enemy Spitter bolts; hit spark on impact. |
-| `hazard` | Slag Fissure / Brine Pool | No projectile collision (bolts fly over). Player walking: ×0.65 speed and `4 * difficultyCoefficient` DPS. Player **dashing** (`dashRemain > 0` or `iframeRemain > 0`): clean pass, no slow, no damage. Phase Step 210 vs diameter 136. Fodder/elites: ×0.85 speed while overlapping. |
-| `volatile` | Brimstone Urn / Pressurized Rime Cask | Slight movement block (r=22) and projectile block. HP `25 * coefficient`, damaged **only** by player skills (Bolt/Pierce direct hits, Censer Lob impact AoE, Crucible Cull, Brimstone Line, Condemnation Tether; enemies cannot damage volatiles). At 0 HP → `primed` 0.4s telegraph, then `45 * coefficient` AoE r=110 to all enemies and 18 flat to the player if inside without i-frames. Rime Dock also applies 2.0s ×0.7 move slow. Removed after detonation. |
+| `pillar` | Obsidian Kiln / Frozen Bollard / Glacial Monolith | Solid vs player, fodder, elites, **and bosses**. Blocks player Bolt and enemy Spitter bolts; hit spark on impact. Astral Watcher lasers die on stone. |
+| `hazard` | Slag Fissure / Brine Pool / Permafrost Crevasse | No projectile collision (bolts fly over). Player walking: ×0.65 speed and `4 * difficultyCoefficient` DPS. Player **dashing** (`dashRemain > 0` or `iframeRemain > 0`): clean pass, no slow, no damage. Phase Step 210 vs diameter 136. Fodder/elites: ×0.85 speed while overlapping. Noxious death also spawns a 6s acid pool of this type. |
+| `volatile` | Brimstone Urn / Pressurized Rime Cask / Volatile Ice Chunk | Slight movement block (r=14) and projectile block. HP `25 * coefficient`, damaged **only** by player skills (Bolt/Pierce direct hits, Censer Lob impact AoE, Crucible Cull, Brimstone Line, Condemnation Tether; enemies cannot damage volatiles). At 0 HP → `primed` 0.4s telegraph, then `45 * coefficient` AoE r=110 to all enemies and 18 flat to the player if inside without i-frames. **Rime Dock only** also applies 2.0s ×0.7 move slow. Removed after detonation. |
 
-Volatiles are a skill-shot, not an AFK farm. Pillars break edge-kiting; they are not hide spots (fodder path around, bosses crush through, spitters still shoot lines of sight that die on stone).
+Volatiles are a skill-shot, not an AFK farm. Pillars break edge-kiting; they are not hide spots (fodder path around, spitters still shoot lines of sight that die on stone).
 
 ## Ranged
 
@@ -38,6 +38,15 @@ Fodder spitters keep distance, telegraph a line (view aims at player position at
 
 **Astral Watcher** (`enemy-astral-sniper`): off-ring sniper. 1.5s red/blue laser locked at windup start, then hitscan. Pillars block the line. I-frames or stepping off the line negate it. Low HP, high director credit.
 
-**Noxious elites** (`elite-poison-slow`): every elite. Contact applies a slow. On death, 0.5s corpse telegraph, then a pop and a **permanent acid pool** (`hazard`). Kill them outside the Transmutation Circle or the Hold loses floor.
+## Elites
 
-Run (`ArenaScene`): director-spawned fodder + spitters + snipers + noxious elites, teleporter hold, stage boss, arena obstacles. Primary never auto-aims.
+Any non-boss spawn can mutate. The elite then rolls **50/50**:
+
+- **Shielder** — regenerating Aether Shield (30% max HP, recharges after 5s unharmed). Azure silhouette outline.
+- **Noxious** — contact slow. On death, 0.5s corpse telegraph, then a pop and a **6s acid pool** (`hazard`). Kill them outside the Transmutation Circle or the Hold loses floor for the pool duration.
+
+## Boss duel
+
+Director credit spawns halt the moment the Seal Guardian appears. Unique `ai.type: "boss"` kits + summons; see `knowledge/tech/catalog.md`. Enrage at 50% HP. Custom GLSL hazards in `src/view/shaders/boss-shaders.ts`.
+
+Run (`ArenaScene`): director-spawned fodder + spitters + snipers + Shielder/Noxious elites, teleporter hold, stage boss, arena obstacles. Primary never auto-aims.

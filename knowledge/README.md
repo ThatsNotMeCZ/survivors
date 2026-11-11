@@ -2,13 +2,15 @@
 
 Canonical notes for humans and agents. Update these when a design decision lands. Do not keep lore only in chat.
 
+Live slice (2026-11): **3 compressed stages**, 2 vessels, 13 items (6 locked), Shielder + Noxious elites, dedicated boss duels. Numbers live in `src/data/*.json`.
+
 ## Design
 
 | File | What it answers |
 |---|---|
 | [design/concept.md](design/concept.md) | What the game is |
 | [design/anti-idle.md](design/anti-idle.md) | Why VS goes idle and how we don't |
-| [design/gameloop.md](design/gameloop.md) | One run, two-stage slice |
+| [design/gameloop.md](design/gameloop.md) | One run, three-stage slice |
 | [design/style.md](design/style.md) | Art and readability |
 | [design/combat.md](design/combat.md) | Aimed primary (locked A) |
 | [design/open-questions.md](design/open-questions.md) | Settled decisions |
@@ -23,6 +25,12 @@ Canonical notes for humans and agents. Update these when a design decision lands
 | [tech/catalog.md](tech/catalog.md) | Items, skills, entities JSON |
 | [tech/sprites.md](tech/sprites.md) | Drop-in spritesheets, icons, env later |
 | [tech/audio.md](tech/audio.md) | Playlists, SFX, pause overlay |
+
+## Release
+
+| File | What it answers |
+|---|---|
+| [itch-io-release-plan.md](itch-io-release-plan.md) | itch.io demo publish, copy, promo |
 
 ## Phaser
 

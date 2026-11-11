@@ -20,15 +20,16 @@
 
 ## Current milestone
 
-GPU smoke **passed**. Combat verb **A locked**. Homunculus kit complete (Bolt / Piercing Aether / Phase Step / Crucible Cull). **The Penitent** live. Astral Watcher + Noxious elites. Boss fight rework live: director paused during boss duel, unique boss ranged kits + summons (Cinder Heart / Frost Sovereign / Frost Emperor), variable per-attack animations & durations, custom GLSL boss hazard + ambient shaders. HTML hall/HUD in `src/ui/`. Run slice: leveling, **13 items**, 2 stages, teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Art = drop-in spritesheets (`knowledge/tech/sprites.md`). Smoke: `/?smoke=1`. Skip hall: `/?dev=1`. Theme: Dark Hermetic (display strings, not ids).
+GPU smoke **passed**. Combat verb **A locked**. Homunculus kit complete (Bolt / Piercing Aether / Phase Step / Crucible Cull). **The Penitent** unlockable (Frost Sovereign in Rime Dock). Astral Watcher + **Shielder / Noxious** elites (50/50). Boss fight rework live: director paused during boss duel, unique boss ranged kits + summons (Cinder Heart / Frost Sovereign / Frost Emperor), variable per-attack animations & durations, custom GLSL boss hazard + ambient shaders. HTML main menu / Hall / HUD / Archives in `src/ui/`. Run slice: leveling, **13 items** (6 locked), lore drops, persistent ledger, **3 stages** (Cinder Yard → Rime Dock → Glacial Tomb), teleporter, bosses. Content = `src/data/*.json` (`knowledge/tech/catalog.md`). Art = drop-in spritesheets (`knowledge/tech/sprites.md`). Smoke: `/?smoke=1`. Skip hall: `/?dev=1`. Theme: Dark Hermetic (display strings, not ids).
 
 ## Commands
 
 ```bash
 bun install
 bun run dev           # http://127.0.0.1:8080
-bun run smoke:loop    # 2 stages + boss, no browser
+bun run smoke:loop    # 3 stages + bosses, no browser
 bun run build
+bun run build:itch    # smoke + build + hermetic-rifts-itch.zip
 ```
 
 ## Do not

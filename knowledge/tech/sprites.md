@@ -14,7 +14,7 @@ Drop finished art into `public/sprites/`. Vite rewrites `manifest.json` on `dev`
 | `env/` | Future authored stage blocks (not random tile stamps). |
 | `fx/` | Optional VFX stills. Id matches a skill, a biome spit, or a sim FX kind (`hit`, `dash`, …). |
 
-Do not put biome in the filename. The same Homunculus / mite ships in Cinder and Rime. A different look is a new catalog id with its own sheet.
+Do not put biome in the filename. The same Homunculus / mite ships in Cinder, Rime, and Glacial. A different look is a new catalog id with its own sheet.
 
 ## Entity sheets
 
@@ -90,9 +90,9 @@ Themes map per stage: `cinder` (`cinder-yard`), `rime` (`rime-dock`), `glacial` 
   - Horizontal edges: `{theme}-border-h-0`, `{theme}-border-h-1` (`64×16 px` or `64×32 px` or `64×64 px`).
   - Vertical edges: `{theme}-border-v-0`, `{theme}-border-v-1` (`16×64 px` or `32×64 px` or `64×64 px`).
   - Corners: `{theme}-border-corner-top` (TL & TR), `{theme}-border-corner-bottom` (BL & BR) (`16×16 px` or `32×32 px` or `64×64 px`).
-- **Pillars** (`radius: 52` -> `64×64 px` or `104×104 px`): `{theme}-pillar` (`cinder-pillar`, `rime-pillar`, `glacial-pillar`).
+- **Pillars** (`radius: 28` -> `64×64 px` or `104×104 px`): `{theme}-pillar` (`cinder-pillar`, `rime-pillar`, `glacial-pillar`).
 - **Hazards** (`radius: 68` -> `64×64 px` or `128×128 px`): `{theme}-hazard-0`, `{theme}-hazard-1` (frame 1 falls back to frame 0).
-- **Volatiles** (`radius: 22` -> `32×32 px` or `24×24 px`): `{theme}-volatile` (`cinder-volatile`, `rime-volatile`, `glacial-volatile`).
+- **Volatiles** (`radius: 14` -> `32×32 px` or `24×24 px`): `{theme}-volatile` (`cinder-volatile`, `rime-volatile`, `glacial-volatile`).
 - **Objectives**: `{theme}-circle` (Transmutation Circle, `160×160 px` or `320×320 px`), `{theme}-portal` (The Rift, `96×96 px` or `140×140 px`).
 - **Ambient specks** (`8×8 px` / `16×16 px`): `ambient-ash`, `ambient-ember`, `ambient-snow`, `ambient-mist`.
 

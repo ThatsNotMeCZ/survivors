@@ -11,9 +11,9 @@ Title: **Hermetic Rifts**. Hybrid of Vampire Survivors **pacing** and Risk of Ra
 
 ## Fantasy
 
-Dark hermetic alchemy. You are a **Homunculus** (the Vessel) kiting failed transmutations. Primary is **Ignis Bolt**. Utility is **Phase Step**. XP pickups are **Mercury Drops** (Essence). The hold is a Transmutation Circle; the exit is a Rift. The hall (main menu) and all HUD copy use these names, never raw ids.
+Dark hermetic alchemy. You are a **Homunculus** (the Vessel) kiting failed transmutations. Primary is **Ignis Bolt**. Utility is **Phase Step**. XP pickups are **Mercury Drops** (Essence). The hold is a Transmutation Circle; the exit is a Rift. The hall (vessel lobby) and all HUD copy use these names, never raw ids.
 
-Cinder Yard props: Obsidian Kiln, Slag Fissure, Brimstone Urn. Rime Dock: Frozen Bollard, Brine Pool, Pressurized Rime Cask. The teleporter is always the **Transmutation Circle** in player-facing copy.
+Cinder Yard props: Obsidian Kiln, Slag Fissure, Brimstone Urn. Rime Dock: Frozen Bollard, Brine Pool, Pressurized Rime Cask. Glacial Tomb: Glacial Monolith, Permafrost Crevasse, Volatile Ice Chunk. The teleporter is always the **Transmutation Circle** in player-facing copy.
 
 You are not watching a build win. You **move through** a horde that gets *meaner*, not just denser. Late run = fewer bodies, scarier elites, a point you must hold.
 
@@ -21,10 +21,8 @@ You are not watching a build win. You **move through** a horde that gets *meaner
 
 Mouse-aimed primary (locked **A**). WASD move. You win by kiting and hitting elites, not by standing in an orbital.
 
-## v1 scope
+## Live slice vs production stretch
 
-- 2 survivors (4 skills each: primary, secondary, dash, ultimate)
-- 13 items, all with a hook (no pure +damage win)
-- 4 enemy archetypes + 3 elite modifiers
-- 2 biomes, 3 stages + finale
-- ~20 minute run
+Live now: 2 vessels, 13 items (6 locked), 4 fodder archetypes (chase mite, ranged spitter, sniper, warden) + 2 elite affixes (Shielder / Noxious), 3 chambers (Cinder Yard → Rime Dock → Glacial Tomb) with unique Seal Guardians, compressed clocks.
+
+Still production, not live: uncompressed ~20 minute clocks (~6 min/stage, hold ~60s). Extra elite affixes beyond Shielder/Noxious stay future content — do not invent them in the slice.
