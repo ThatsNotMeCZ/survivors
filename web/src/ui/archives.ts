@@ -23,6 +23,7 @@ import {
   type ArchiveRecords,
 } from './records';
 import { getSettings } from './settings';
+import { cycleNumeral } from '../sim/rng';
 import { SKILL_SLOT_PX, makeSkillIcon } from './skill-art';
 import { hydrateUiSprites } from './ui-art';
 import { mountVesselArt } from './vessel-art';
@@ -276,7 +277,7 @@ function buildHowToView(): HTMLElement {
     {
       step: '03 · THE GUARDIAN',
       title: 'Shatter the Seal Guardian & Descend',
-      body: 'A full seal wakes the chamber’s Guardian. Slay it to tear open the Rift, or to finish the Great Work in the last chamber. Stand in the Rift until you descend.',
+      body: 'A full seal wakes the chamber’s Guardian. Slay it to tear open the Rift. After the Frost Emperor, a gold Ouroboros gate remains: stand in it to begin Cycle II, or press F (or pause → Seal the Working) to complete the transmutation.',
     },
     {
       step: '04 · RISING PRESSURE',
@@ -422,6 +423,7 @@ function buildControlsTable(survivor: SurvivorDef): HTMLElement {
     ],
     ['1 / 2 / 3', 'Bind Augmentation', 'Select a tablet during vessel ascension (or use Arrow keys + Enter).'],
     ['Stand in Ring', 'Channel / Descend', 'Hold inside the Transmutation Circle or Rift portal until charged.'],
+    ['F', 'Seal the Working', 'After the Frost Emperor, complete the transmutation instead of entering Cycle II.'],
     ['Esc / P', 'Pause Working', 'Pause the working, inspect tablets, or open The Archives.'],
   ];
 
@@ -528,7 +530,7 @@ function buildGreatWorkLore(): HTMLElement {
       title: 'Nigredo, Albedo, Rubedo',
       paragraphs: [
         'The descent follows the three classical stages of hermetic transmutation: first Nigredo in the blackened ash of the Cinder Yard; second Albedo in the white salt-frost of the Rime Dock; and finally Rubedo in the deep Glacial Tomb.',
-        'Only by slaying the Frost Emperor at the bottom of the third seal is the Great Work stabilized and the transmutation made whole.',
+        'Slaying the Frost Emperor at the bottom of the third seal opens the gold Ouroboros gate. Seal the working there, or descend into Cycle II — Cinder Yard again, inventory intact, the coefficient still climbing with time.',
       ],
     },
   ];
@@ -1467,9 +1469,12 @@ function buildLedgerView(): HTMLElement {
       const summary = document.createElement('div');
       summary.className = 'history-summary';
       const mainLine = document.createElement('strong');
-      mainLine.textContent = `${survivorName} · ${run.stageName}`;
+      const cycleBit =
+        typeof run.cycleIndex === 'number' ? `Cycle ${cycleNumeral(run.cycleIndex)} · ` : '';
+      mainLine.textContent = `${survivorName} · ${cycleBit}${run.stageName}`;
       const subLine = document.createElement('span');
-      subLine.textContent = `Duration ${formatTime(run.runTime)} · Lv ${run.level} · ${run.kills} Slain · ${run.damageDealt.toLocaleString()} Dmg`;
+      const seedBit = run.seedTag ? ` · ${run.seedTag}` : '';
+      subLine.textContent = `Duration ${formatTime(run.runTime)} · Lv ${run.level} · ${run.kills} Slain · ${run.damageDealt.toLocaleString()} Dmg${seedBit}`;
       summary.append(mainLine, subLine);
 
       const itemsStrip = document.createElement('div');

@@ -1,12 +1,14 @@
+import { ROLE_BOSS, killEnemy } from '../src/sim/enemies';
 import { emptyInput } from '../src/sim/input-frame';
 import { applyLevelChoice } from '../src/sim/level';
+import { canSealWorking, completeWorking, isLastStage } from '../src/sim/loop';
 import { countObstacles, overlappingHazard } from '../src/sim/obstacles';
 import { TEAM_ENEMY } from '../src/sim/projectiles';
 import { resolveStats } from '../src/sim/stats';
 import { stepWorld, createWorld, type World } from '../src/sim/world';
 
 const DT = 1 / 60;
-const LIMIT = 400;
+const LIMIT = 520;
 const log: string[] = [];
 
 const world = createWorld();
@@ -20,10 +22,23 @@ let lastLevel = world.level;
 let lastBoss = world.bossSpawned;
 const encountersAtBossSpawn: Record<string, number> = {};
 
-for (let t = 0; t < LIMIT; t += DT) {
+for (let t = 0; world.runTime < LIMIT; t += DT) {
   if (world.phase === 'levelup') {
     applyLevelChoice(world, safestOffer(world));
     continue;
+  }
+  if (isLastStage(world) && world.bossSpawned && world.counts.boss > 0) {
+    for (let i = 0; i < world.enemies.cap; i += 1) {
+      if (world.enemies.alive[i] === 0 || world.enemies.role[i] !== ROLE_BOSS) continue;
+      killEnemy(world, i);
+      log.push(`${world.runTime.toFixed(1)}s smoke-slew last seal guardian`);
+      break;
+    }
+  }
+  if (canSealWorking(world)) {
+    completeWorking(world);
+    log.push(`${world.runTime.toFixed(1)}s sealed Ouroboros gate cycle=${world.cycleIndex}`);
+    break;
   }
   if (world.phase === 'victory' || world.phase === 'defeat') break;
 
@@ -87,6 +102,7 @@ console.log(
     items: world.inventory,
     hp: Number(world.player.hp.toFixed(1)),
     won: world.won,
+    cycleIndex: world.cycleIndex,
     fodder: world.counts.fodder,
     elite: world.counts.elite,
     boss: world.counts.boss,
@@ -97,8 +113,10 @@ console.log(
     },
   }),
 );
-if (false) {
-  throw new Error(`loop-smoke failed: ${world.phase} at ${world.runTime.toFixed(1)}s`);
+if (world.phase !== 'victory' || !world.won || world.cycleIndex !== 0) {
+  throw new Error(
+    `loop-smoke failed: ${world.phase} won=${world.won} cycle=${world.cycleIndex} at ${world.runTime.toFixed(1)}s`,
+  );
 }
 
 function safestOffer(world: ReturnType<typeof createWorld>): number {
@@ -311,6 +329,15 @@ function steer(world: ReturnType<typeof createWorld>, input: ReturnType<typeof e
   if (Math.hypot(avoidX, avoidY) > 0.2) {
     tx = player.x + avoidX * 200;
     ty = player.y + avoidY * 200;
+  }
+
+  if (portal.open) {
+    tx = portal.x;
+    ty = portal.y;
+  } else if (teleporter.state === 'charging') {
+    const orbit = teleporter.radius * 0.35;
+    tx = teleporter.x + Math.cos(t * 2.2) * orbit;
+    ty = teleporter.y + Math.sin(t * 2.2) * orbit;
   }
 
   input.moveX = tx - player.x;

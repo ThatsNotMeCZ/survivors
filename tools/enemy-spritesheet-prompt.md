@@ -1,6 +1,6 @@
 # Gemini Prompts — Enemy Entity Spritesheets (jeden po druhém)
 
-Prompty pro vygenerování spritesheetů 10 nepřátelských entit z [`src/data/entities.json`](../src/data/entities.json) podle [`knowledge/design/style.md`](../knowledge/design/style.md) a [`knowledge/tech/sprites.md`](../knowledge/tech/sprites.md).
+Prompty pro vygenerování spritesheetů 10 nepřátelských entit z [`web/src/data/entities.json`](../web/src/data/entities.json) podle [`knowledge/design/style.md`](../knowledge/design/style.md) a [`knowledge/tech/sprites.md`](../knowledge/tech/sprites.md).
 
 Každý blok níže je **samostatný** — zkopíruj jeden, pošli, ulož výsledek, pak další. Každý prompt generuje **jeden horizontální strip 6 framů** (= přímo formát `entities/{id}.png`: idle = frame 0).
 
@@ -239,17 +239,17 @@ FRAMES: 1 hovering idle, 3 drifting / rotating astrolabe-ring frames, 2 pupil-co
 
 ---
 
-## Cílové soubory v projektu (`public/sprites/entities/`)
+## Cílové soubory v projektu (`web/public/sprites/entities/`)
 
 | # | Catalog ID | Název souboru | Doporučený frame size |
 |---|---|---|---|
-| 1 | `ember-mite` | `public/sprites/entities/ember-mite.png` | `24×24` |
-| 2 | `ember-spitter` | `public/sprites/entities/ember-spitter.png` | `28×28` |
-| 3 | `ember-chaser` | `public/sprites/entities/ember-chaser.png` | `40×40` nebo `48×48` |
-| 4 | `cinder-heart` | `public/sprites/entities/cinder-heart.png` | `64×64` nebo `72×72` |
-| 5 | `frost-mite` | `public/sprites/entities/frost-mite.png` | `24×24` |
-| 6 | `frost-spitter` | `public/sprites/entities/frost-spitter.png` | `28×28` |
-| 7 | `frost-warden` | `public/sprites/entities/frost-warden.png` | `40×40` nebo `52×52` |
-| 8 | `frost-sovereign` | `public/sprites/entities/frost-sovereign.png` | `64×64` nebo `80×80` |
-| 9 | `frost-emperor` | `public/sprites/entities/frost-emperor.png` | `64×64` nebo `90×90` |
-| 10 | `enemy-astral-sniper` | `public/sprites/entities/enemy-astral-sniper.png` | `28×28` |
+| 1 | `ember-mite` | `web/public/sprites/entities/ember-mite.png` | `24×24` |
+| 2 | `ember-spitter` | `web/public/sprites/entities/ember-spitter.png` | `28×28` |
+| 3 | `ember-chaser` | `web/public/sprites/entities/ember-chaser.png` | `40×40` nebo `48×48` |
+| 4 | `cinder-heart` | `web/public/sprites/entities/cinder-heart.png` | `64×64` nebo `72×72` |
+| 5 | `frost-mite` | `web/public/sprites/entities/frost-mite.png` | `24×24` |
+| 6 | `frost-spitter` | `web/public/sprites/entities/frost-spitter.png` | `28×28` |
+| 7 | `frost-warden` | `web/public/sprites/entities/frost-warden.png` | `40×40` nebo `52×52` |
+| 8 | `frost-sovereign` | `web/public/sprites/entities/frost-sovereign.png` | `64×64` nebo `80×80` |
+| 9 | `frost-emperor` | `web/public/sprites/entities/frost-emperor.png` | `64×64` nebo `90×90` |
+| 10 | `enemy-astral-sniper` | `web/public/sprites/entities/enemy-astral-sniper.png` | `28×28` |

@@ -26,7 +26,14 @@ import {
 import { MAX_LORE_DROPS } from '../sim/gems';
 import { emptyInput, type InputFrame } from '../sim/input-frame';
 import { applyLevelChoice } from '../sim/level';
-import { currentObjective, currentStage, type Objective } from '../sim/loop';
+import {
+  canSealWorking,
+  completeWorking,
+  currentObjective,
+  currentStage,
+  type Objective,
+} from '../sim/loop';
+import { cycleNumeral, dailySeed, formatSeedTag, randomRunSeed, utcYmd } from '../sim/rng';
 import { playerSpeedMul } from '../sim/obstacles';
 import { ZONE_LINE, ZONE_STRIKE } from '../sim/zones';
 import { MAX_RADIUS_RATIO, MIN_RADIUS_RATIO } from '../sim/stats';
@@ -47,6 +54,7 @@ import {
   showRunEnd,
   showSting,
   stingActive,
+  setSealAvailable,
   type RunRecapUnlock,
 } from '../ui/overlay';
 import {
@@ -243,9 +251,14 @@ export class ArenaScene extends Phaser.Scene {
       catalog.survivors.filter((s) => isSurvivorUnlocked(s, initialRec)).map((s) => s.id),
     );
     const promo = getPromoShot();
+    const settings = getSettings();
+    const dailyDate = settings.dailyRite ? utcYmd() : null;
+    const runSeed = dailyDate ? dailySeed(dailyDate) : randomRunSeed();
     this.world = createWorld(isPromoPlayShot() ? 'runner' : resolveSurvivorId(), {
       unlockedItems: this.initialUnlockedItems,
       collectedLores: getCollectedLoreIds(initialRec),
+      runSeed,
+      dailyDate,
     });
     if (promo && isPromoPlayShot()) poseWorld(this.world, promo);
     commitWorldProgress(this.world);
@@ -445,7 +458,15 @@ export class ArenaScene extends Phaser.Scene {
       onPause: () => {
         if (this.world.phase !== 'play') return;
         commitWorldProgress(this.world);
-        if (getOverlayMode() === 'hidden') showPause();
+        if (getOverlayMode() === 'hidden') {
+          setSealAvailable(canSealWorking(this.world));
+          showPause();
+        }
+      },
+      onSealWorking: () => {
+        if (!canSealWorking(this.world)) return;
+        hideOverlay();
+        completeWorking(this.world);
       },
     });
 
@@ -486,16 +507,23 @@ export class ArenaScene extends Phaser.Scene {
       Math.hypot(player.x - portal.x, player.y - portal.y) >
         this.world.catalog.loop.portalRadius;
 
+    const ouroboros = canSealWorking(this.world);
     let outsideWarning = '';
     if (outsideCircle) {
       outsideWarning = 'The seal cools · Return to the Transmutation Circle';
+    } else if (ouroboros) {
+      outsideWarning = outsidePortal
+        ? `Stand in the gate for Cycle ${cycleNumeral(this.world.cycleIndex + 1)} · Press F to seal the working`
+        : 'Press F to seal the working';
     } else if (outsidePortal) {
       outsideWarning = 'Stand in the gate to descend';
     }
 
-    const copy = objectiveCopy(objective, outsideWarning);
+    const copy = objectiveCopy(objective, outsideWarning, ouroboros);
+    const stageLabel =
+      this.world.cycleIndex > 0 ? `${stage.name} · Cycle ${cycleNumeral(this.world.cycleIndex)}` : stage.name;
     setHudCombat({
-      stage: stage.name,
+      stage: stageLabel,
       biome: this.biome(),
       playerHp: this.world.player.hp,
       playerMax: this.world.player.maxHp,
@@ -521,6 +549,7 @@ export class ArenaScene extends Phaser.Scene {
         const def = this.world.catalog.item(inst.id);
         return { id: inst.id, name: def.name, stacks: inst.stacks, rarity: def.rarity };
       }),
+      cycleIndex: this.world.cycleIndex,
     });
   }
 
@@ -1228,9 +1257,12 @@ export class ArenaScene extends Phaser.Scene {
       setMusicScene({ kind: 'stage', stageId: stage.id });
       showSting(
         {
-          kicker: 'The Rift yields',
+          kicker: this.world.cycleIndex > 0 ? `Ouroboros Cycle ${cycleNumeral(this.world.cycleIndex)}` : 'The Rift yields',
           title: stage.name,
-          sub: 'A colder chamber. The working continues.',
+          sub:
+            this.world.cycleIndex > 0
+              ? 'The serpent swallows its tail. The working continues.'
+              : 'A colder chamber. The working continues.',
         },
         1400,
       );
@@ -1301,6 +1333,9 @@ export class ArenaScene extends Phaser.Scene {
       survivor: this.world.survivor.name,
       survivorId: this.world.survivor.id,
       stage: currentStage(this.world).name,
+      cycleIndex: this.world.cycleIndex,
+      seedTag: formatSeedTag(this.world.runSeed),
+      dailyDate: this.world.dailyDate,
       time: this.world.runTime,
       level: this.world.level,
       coefficient: this.world.coefficient,
@@ -1379,7 +1414,8 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     const portalId = resolveEnvThemeProp(theme, 'portal', this);
-    const hasAuthoredPortal = !!portalId && this.world.portal.open;
+    const ouroborosGate = canSealWorking(this.world);
+    const hasAuthoredPortal = !!portalId && this.world.portal.open && !ouroborosGate;
     if (hasAuthoredPortal && portalId) {
       applyEnvTexture(this.portalSprite, portalId);
       const radius = this.world.catalog.loop.portalRadius;
@@ -1411,7 +1447,7 @@ export class ArenaScene extends Phaser.Scene {
       this.telGlow.setAlpha(0);
     }
     if (this.world.portal.open && !hasAuthoredPortal) {
-      const color = biome === 'cinder' ? 0xffb347 : 0xdff6ff;
+      const color = ouroborosGate || biome === 'cinder' ? 0xffb347 : 0xdff6ff;
       const radius = this.world.catalog.loop.portalRadius;
       const hold = this.world.catalog.loop.portalHold;
       const pct = hold > 0 ? Math.min(1, this.world.portal.hold / hold) : 0;
@@ -1973,6 +2009,7 @@ function resolveSurvivorId(): string {
 function objectiveCopy(
   objective: Objective,
   outsideWarning = '',
+  ouroboros = false,
 ): { kicker: string; label: string; detail: string; sub?: string } {
   if (objective.kind === 'wait') {
     return {
@@ -1998,8 +2035,8 @@ function objectiveCopy(
     };
   }
   return {
-    kicker: '',
-    label: 'Descend the Rift',
+    kicker: ouroboros ? 'The Ouroboros Loop' : '',
+    label: ouroboros ? 'Descend the Ouroboros' : 'Descend the Rift',
     detail: `${Math.round(objective.pct * 100)}%`,
     sub: outsideWarning,
   };

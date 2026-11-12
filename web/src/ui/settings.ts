@@ -10,6 +10,7 @@ export type GameSettings = {
   screenshake: boolean;
   reduceVfx: boolean;
   survivorId: string;
+  dailyRite: boolean;
 };
 
 const STORAGE_KEY = 'survivors.settings.v1';
@@ -22,6 +23,7 @@ const DEFAULTS: GameSettings = {
   screenshake: true,
   reduceVfx: false,
   survivorId: 'runner',
+  dailyRite: false,
 };
 
 let cached: GameSettings | null = null;
@@ -32,6 +34,7 @@ export function getSettings(): GameSettings {
   cached.masterVolume = clamp01(cached.masterVolume);
   cached.sfxVolume = clamp01(cached.sfxVolume ?? DEFAULTS.sfxVolume);
   cached.musicVolume = clamp01(cached.musicVolume ?? DEFAULTS.musicVolume);
+  cached.dailyRite = Boolean(cached.dailyRite);
   return cached;
 }
 

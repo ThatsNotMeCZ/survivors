@@ -194,6 +194,16 @@
         </aside>
         <div id="hall-preview" class="hall-preview"></div>
         <div id="hall-dossier" class="hall-dossier" data-ui-sprite="parchment-panel"></div>
+        <div id="hall-rite" class="hall-rite">
+          <button type="button" id="hall-rite-toggle" class="hall-rite-toggle" aria-pressed="false">
+            <span class="hall-rite-copy">
+              <span class="hall-rite-kicker">ALCHEMICAL SEED</span>
+              <span class="hall-rite-label">DAILY RITE</span>
+            </span>
+            <span class="hall-rite-switch" aria-hidden="true"></span>
+          </button>
+          <p id="hall-rite-seed" class="hall-rite-seed">Random seed at commence</p>
+        </div>
         <button type="button" id="hall-commence" class="magma-cta" data-ui-sprite="btn-cta">
           <span>START</span>
           <span>TRANSMUTATION</span>
@@ -264,6 +274,10 @@
               <button type="button" id="pause-settings" class="plaque-btn plaque-glyph-btn" data-ui-sprite="btn-plaque">
                 <span class="plaque-label">SETTINGS</span>
                 <span class="plaque-glyph" aria-hidden="true">⟁</span>
+              </button>
+              <button type="button" id="pause-seal" class="plaque-btn plaque-glyph-btn hidden" data-ui-sprite="btn-plaque">
+                <span class="plaque-label">SEAL THE WORKING</span>
+                <span class="plaque-glyph" aria-hidden="true">🜂</span>
               </button>
               <button type="button" id="pause-abandon" class="plaque-btn plaque-glyph-btn" data-ui-sprite="btn-plaque">
                 <span class="plaque-label">ABANDON VESSEL</span>

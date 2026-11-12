@@ -1,6 +1,6 @@
 # Sprites
 
-Drop finished art into `public/sprites/`. Vite rewrites `manifest.json` on `dev` / `build` by scanning folders. Missing entity sheets fall back to procedural canvases in `src/view/procedural-pixel-art.ts`.
+Drop finished art into `web/public/sprites/`. Vite rewrites `manifest.json` on `dev` / `build` by scanning folders. Missing entity sheets fall back to procedural canvases in `web/src/view/procedural-pixel-art.ts`.
 
 ## Layout
 
@@ -51,9 +51,9 @@ Walk animation playback speed is dynamically linked to real movement speed (`spe
 
 Procedural fallback sizes: vessel 40, mite 24, spitter 28, elite 40, boss 64, icons 24.
 
-## UI Atlas (`public/sprites/ui/atlas.png` + `atlas.json`)
+## UI Atlas (`web/public/sprites/ui/atlas.png` + `atlas.json`)
 
-UI elements are loaded from a single texture atlas (`public/sprites/ui/atlas.png` + `public/sprites/ui/atlas.json`) into `manifest.uiAtlas`.
+UI elements are loaded from a single texture atlas (`web/public/sprites/ui/atlas.png` + `web/public/sprites/ui/atlas.json`) into `manifest.uiAtlas`.
 - **Static elements** (`logo`, `hud-flask`, etc.) define `{ "x", "y", "w", "h" }`.
 - **Buttons** (`btn-plaque`, `btn-cta`, etc.) define 3 states (`idle`, `hover`, `active`) either via `states: { idle, hover, active }` or `states: "strip-v"` / `"strip-h"`.
 - **9-slice elements** include `nineSlice` with both `margins` (`{ top, right, bottom, left }`) and `expandable` (`{ x, y, w, h }` inner stretch region), rendered via CSS `border-image` so corners stay pixel-sharp at any element size.
@@ -74,11 +74,11 @@ Authored FX is drawn **facing +X**. Projectiles rotate with `atan2(vy, vx)` and 
 
 `reduceVfx` skips stills and spark bursts. No additive blend on the projectile pool.
 
-## Environment Atlas (`public/sprites/env/atlas.png` + `atlas.json`)
+## Environment Atlas (`web/public/sprites/env/atlas.png` + `atlas.json`)
 
-Environment art can be authored either via a shared texture atlas (`public/sprites/env/atlas.png` + `public/sprites/env/atlas.json`) or standalone files in `public/sprites/env/{id}.png`.
+Environment art can be authored either via a shared texture atlas (`web/public/sprites/env/atlas.png` + `web/public/sprites/env/atlas.json`) or standalone files in `web/public/sprites/env/{id}.png`.
 
-If a frame has `{ "w": 0, "h": 0 }` or is omitted, the game automatically uses the procedural fallback in `src/view/procedural-pixel-art.ts`.
+If a frame has `{ "w": 0, "h": 0 }` or is omitted, the game automatically uses the procedural fallback in `web/src/view/procedural-pixel-art.ts`.
 
 Themes map per stage: `cinder` (`cinder-yard`), `rime` (`rime-dock`), `glacial` (`glacial-tomb`). Glacial automatically falls back to `rime` if a `glacial-*` prop is missing from the atlas before falling back to procedural.
 

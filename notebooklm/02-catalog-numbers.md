@@ -1,13 +1,13 @@
 # survivors — katalog čísel (LIVE JSON)
 
 Snapshot: **2026-11-05**.  
-Zdroj pravdy: `src/data/*.json`. Když tento soubor nesedí s JSON, věř JSON.
+Zdroj pravdy: `web/src/data/*.json`. Když tento soubor nesedí s JSON, věř JSON.
 
 Tyto hodnoty jsou **LIVE**. Neměň je v návrhu, aniž bys označil, že jde o retune.
 
 ---
 
-## World (`src/data/world.json`)
+## World (`web/src/data/world.json`)
 
 | Klíč | Hodnota |
 |---|---|
@@ -21,7 +21,7 @@ Tyto hodnoty jsou **LIVE**. Neměň je v návrhu, aniž bys označil, že jde o 
 
 ---
 
-## Survivors (`src/data/survivors.json`)
+## Survivors (`web/src/data/survivors.json`)
 
 ### Homunculus (`runner`) — Skirmisher
 - **Titul:** The Runner
@@ -59,7 +59,7 @@ Tyto hodnoty jsou **LIVE**. Neměň je v návrhu, aniž bys označil, že jde o 
 
 ---
 
-## Skills (`src/data/skills.json`)
+## Skills (`web/src/data/skills.json`)
 
 LIVE effect typy: `projectile`, `dash`, `self-slow`, `delayed-strike`, `slow-line`, `tether`.
 
@@ -114,7 +114,7 @@ LIVE effect typy: `projectile`, `dash`, `self-slow`, `delayed-strike`, `slow-lin
 
 ---
 
-## Loop, XP & Limity (`src/data/loop.json`)
+## Loop, XP & Limity (`web/src/data/loop.json`)
 
 | Klíč | Hodnota | Poznámka |
 |---|---|---|
@@ -138,7 +138,7 @@ LIVE effect typy: `projectile`, `dash`, `self-slow`, `delayed-strike`, `slow-lin
 
 ---
 
-## Director & Obtížnost (`src/data/loop.json`)
+## Director & Obtížnost (`web/src/data/loop.json`)
 
 | Klíč | Hodnota |
 |---|---|
@@ -198,7 +198,7 @@ Každá elita má v aktuální verzi **oba** modifiery:
 
 ---
 
-## Enemies — Běžní a Elity (`src/data/entities.json`)
+## Enemies — Běžní a Elity (`web/src/data/entities.json`)
 
 Hodnoty jsou **base** (ve hře se škálují difficulty coefficientem).
 
@@ -225,7 +225,7 @@ Hodnoty jsou **base** (ve hře se škálují difficulty coefficientem).
 
 ---
 
-## Bosses — Unikátní Kity (`src/data/entities.json`)
+## Bosses — Unikátní Kity (`web/src/data/entities.json`)
 
 Všichni bossové mají enrage mechaniku při 50 % HP (`cooldownMul` zkracuje cooldowny o 25–28 %) a vyvolávají své přisluhovače.
 
@@ -264,7 +264,7 @@ Všichni bossové mají enrage mechaniku při 50 % HP (`cooldownMul` zkracuje co
 
 ---
 
-## Augmentace / Itemy (13) (`src/data/items.json`)
+## Augmentace / Itemy (13) (`web/src/data/items.json`)
 
 Stackování: `linear`.  
 Podporované statistiky: `speed`, `maxHp`, `radius` (velikost hurtboxu hráče), `damage`, `cooldown`, `critChance`, `critDamage`.  
@@ -292,7 +292,7 @@ Vzorec: `(base + add) * (1 + pct)`. `on-kill` léčí přímo životy při zabit
 
 ---
 
-## Obstacles / Překážky (`src/data/obstacles.json`)
+## Obstacles / Překážky (`web/src/data/obstacles.json`)
 
 Počty vygenerované při startu stage: **14 pilířů, 8 hazardů, 9 volatilních překážek** = 31 umístěných + až 8 dynamických louží kyseliny (Noxious) = pool max **39**.
 

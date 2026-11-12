@@ -1,6 +1,6 @@
 # Catalog
 
-Content lives in `src/data/*.json`. Numbers do not belong in `src/sim/` classes.
+Content lives in `web/src/data/*.json`. Numbers do not belong in `web/src/sim/` classes.
 
 | File | Contains |
 |---|---|
@@ -12,7 +12,7 @@ Content lives in `src/data/*.json`. Numbers do not belong in `src/sim/` classes.
 | `entities.json` | fodder / elite-host / boss, tags, AI (`chase`, `ranged`, `sniper`, `boss`), contact DPS, rewards, view, `title` + `lore` |
 | `items.json` | stackable hooks (`add` / `pct` / `on-kill` / `on-crit`) plus display `name` / `lore` / optional `unlock` |
 
-Schema: `src/data/schema.ts`. Loader: `src/data/catalog.ts` (version check, unique ids, skill refs, stage entity roles, unlock refs).
+Schema: `web/src/data/schema.ts`. Loader: `web/src/data/catalog.ts` (version check, unique ids, skill refs, stage entity roles, unlock refs).
 
 ## Skill slots
 
@@ -60,7 +60,7 @@ Locked items (`unlock`) stay out of the level-up offer until `records.ts` says t
 | `lunar-tithe` | Pale Moon Covenant | lunar (weight 0.08) | +60% elite & boss damage, +75% crit damage, −25% armor, −25% essence XP | Clear the Rime Dock |
 | `cinnabar-leech` | Cinnabar Leech | common | +0.3 HP on kill | Slay 100 Dross |
 
-`unlock` types: `stage-clear` · `boss-kill` · `total-kills` · `elite-kills` · `victories`. Schema in `schema.ts`; progress in `src/ui/records.ts`.
+`unlock` types: `stage-clear` · `boss-kill` · `total-kills` · `elite-kills` · `victories`. Schema in `schema.ts`; progress in `web/src/ui/records.ts`.
 
 Display names elsewhere: survivor `runner` → **Homunculus**; `penitent` → **The Penitent**; skill `bolt` → **Ignis Bolt**; skill `dash` → **Phase Step**; XP gems → **Mercury Drops** / Essence.
 
@@ -114,13 +114,13 @@ Kills may drop a treatise orb (`sim/gems.ts` lore pool, cap 8). Chance in `loop.
 
 ## View
 
-`src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor) for anything without a PNG. Entity art is a spritesheet per catalog id (`public/sprites/entities/{id}.png`), not per biome. `ArenaScene.preload` loads `sprites/manifest.json` sheets as `entity-{id}` and plays `idle` / `walk` plus per-attack boss anims. Arena `flipX` for left. Fodder uses one GPU layer per entity id. Hall crops the idle frame (`src/ui/vessel-art.ts`). HUD icons: `sprites/items/{id}.png` (24px source, 32px chips), `sprites/skills/{id}.png`. See `knowledge/tech/sprites.md`.
+`web/src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor) for anything without a PNG. Entity art is a spritesheet per catalog id (`web/public/sprites/entities/{id}.png`), not per biome. `ArenaScene.preload` loads `sprites/manifest.json` sheets as `entity-{id}` and plays `idle` / `walk` plus per-attack boss anims. Arena `flipX` for left. Fodder uses one GPU layer per entity id. Hall crops the idle frame (`web/src/ui/vessel-art.ts`). HUD icons: `sprites/items/{id}.png` (24px source, 32px chips), `sprites/skills/{id}.png`. See `knowledge/tech/sprites.md`.
 
-Arena GLSL (view only): elite affix, boss hazards + Cinder smoke, ambient biome, env hazards, circle charge, brimstone line, condemn tether, skill impact, player hurt, damage FX, motion smear. Hall/menu WebGL lives in `src/ui/` (`hall-backdrop.ts`, `cinder-circle.ts`).
+Arena GLSL (view only): elite affix, boss hazards + Cinder smoke, ambient biome, env hazards, circle charge, brimstone line, condemn tether, skill impact, player hurt, damage FX, motion smear. Hall/menu WebGL lives in `web/src/ui/` (`hall-backdrop.ts`, `cinder-circle.ts`).
 
 ## UI (HTML overlay)
 
-Menus and HUD are `src/ui/`, not Phaser text. Overlay stack: HUD < prompts < pause/level-up/recap < hall/archives.
+Menus and HUD are `web/src/ui/`, not Phaser text. Overlay stack: HUD < prompts < pause/level-up/recap < hall/archives.
 
 | Module | Role |
 |---|---|

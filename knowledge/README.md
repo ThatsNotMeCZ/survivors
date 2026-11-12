@@ -2,7 +2,7 @@
 
 Canonical notes for humans and agents. Update these when a design decision lands. Do not keep lore only in chat.
 
-Live slice (2026-11): **3 compressed stages**, 2 vessels, 13 items (6 locked), Shielder + Noxious elites, dedicated boss duels. Numbers live in `src/data/*.json`.
+Live slice (2026-11): **3 compressed stages**, 2 vessels, 13 items (6 locked), Shielder + Noxious elites, dedicated boss duels. Numbers live in `web/src/data/*.json`.
 
 ## Design
 
@@ -31,8 +31,9 @@ Live slice (2026-11): **3 compressed stages**, 2 vessels, 13 items (6 locked), S
 | File | What it answers |
 |---|---|
 | [itch-io-release-plan.md](itch-io-release-plan.md) | itch.io demo publish, copy, promo |
+| [../changelog/README.md](../changelog/README.md) | Player-facing updates → itch.io Devlog source |
 
 ## Phaser
 
-Official skills ship with the package: `node_modules/phaser/skills/`.
+Official skills ship with the package: `web/node_modules/phaser/skills/`.
 Do not vendor copies. Read them when touching renderer, input, or scenes.

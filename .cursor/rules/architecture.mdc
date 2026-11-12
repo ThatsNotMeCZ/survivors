@@ -1,15 +1,16 @@
 ---
 description: Sim/view split, pooling, and physics limits
-alwaysApply: true
+globs: web/**
+alwaysApply: false
 ---
 
 # Architecture
 
-- `src/sim/` is CPU gameplay. It must not import Phaser.
-- `src/view/` only draws sim state. No combat rules in scenes.
-- `src/data/` holds JSON balance. Do not hardcode item/enemy numbers in classes.
+- `web/src/sim/` is CPU gameplay. It must not import Phaser.
+- `web/src/view/` only draws sim state. No combat rules in scenes.
+- `web/src/data/` holds JSON balance. Do not hardcode item/enemy numbers in classes.
 - New content is JSON. New skill *behaviors* need a sim effect case.
-- HUD, pause, level-up, menus = HTML/CSS in `src/ui/`. Not Phaser text.
+- HUD, pause, level-up, menus = HTML/CSS in `web/src/ui/`. Not Phaser text.
 
 Pools and collision:
 

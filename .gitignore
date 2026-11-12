@@ -1,12 +1,14 @@
-node_modules
-dist
 .DS_Store
 *.log
-.vite
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-.xdp-*
+.playwright-mcp
 
-hermetic-rifts-demo.zip
+/node_modules
+/dist
+/hermetic-rifts-demo.zip
+/hermetic-rifts-itch.zip
+
 promo/itch/.frames/
+
+Godot/.godot/
+Godot/android/
+Godot/.godot/export_credentials.cfg

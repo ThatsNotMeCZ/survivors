@@ -25,6 +25,36 @@ export function currentStage(world: World) {
   return world.catalog.loop.stages[world.stageIndex];
 }
 
+export function isLastStage(world: World): boolean {
+  return world.stageIndex >= world.catalog.loop.stages.length - 1;
+}
+
+export function canSealWorking(world: World): boolean {
+  return world.portal.open && isLastStage(world) && !world.won;
+}
+
+export function collectPendingLores(world: World): void {
+  for (let i = 0; i < world.lores.cap; i += 1) {
+    if (world.lores.alive[i] === 0) continue;
+    const entityId = world.lores.entityId[i];
+    world.lores.alive[i] = 0;
+    world.lores.entityId[i] = null;
+    if (entityId && !world.collectedLores.has(entityId)) {
+      world.collectedLores.add(entityId);
+      world.newlyCollectedLores.push(entityId);
+    }
+  }
+}
+
+export function completeWorking(world: World): boolean {
+  if (world.won) return false;
+  collectPendingLores(world);
+  world.won = true;
+  world.stagesCleared += 1;
+  if (world.phase === 'play' || world.phase === 'levelup') world.phase = 'victory';
+  return true;
+}
+
 export function currentObjective(world: World): Objective {
   if (world.portal.open) {
     const need = world.catalog.loop.portalHold;
@@ -167,23 +197,6 @@ export function spawnStageBoss(world: World): void {
 
 function stepPortal(world: World, dt: number): void {
   if ((world.bossDefeated || (world.bossSpawned && world.counts.boss === 0)) && !world.portal.open && !world.won) {
-    const last = world.stageIndex >= world.catalog.loop.stages.length - 1;
-    if (last) {
-      for (let i = 0; i < world.lores.cap; i += 1) {
-        if (world.lores.alive[i] === 0) continue;
-        const entityId = world.lores.entityId[i];
-        world.lores.alive[i] = 0;
-        world.lores.entityId[i] = null;
-        if (entityId && !world.collectedLores.has(entityId)) {
-          world.collectedLores.add(entityId);
-          world.newlyCollectedLores.push(entityId);
-        }
-      }
-      world.won = true;
-      world.stagesCleared += 1;
-      if (world.phase === 'play') world.phase = 'victory';
-      return;
-    }
     world.portal.open = true;
     world.portal.hold = 0;
     if (world.portal.x === 0 && world.portal.y === 0) {
@@ -198,7 +211,13 @@ function stepPortal(world: World, dt: number): void {
     world.portal.hold += dt;
     if (world.portal.hold >= portalHold) {
       world.stagesCleared += 1;
-      beginStage(world, world.stageIndex + 1);
+      if (isLastStage(world)) {
+        collectPendingLores(world);
+        world.cycleIndex += 1;
+        beginStage(world, 0);
+      } else {
+        beginStage(world, world.stageIndex + 1);
+      }
     }
   } else {
     world.portal.hold = 0;
@@ -208,7 +227,10 @@ function stepPortal(world: World, dt: number): void {
 function reserveTeleporter(world: World): void {
   const stage = currentStage(world);
   const rng = mulberry32(
-    hashString(stage.id) ^ ((world.stageIndex + 3) * 0x9e3779b9) ^ (world.stageGen * 0x27d4eb2d),
+    world.runSeed ^
+      hashString(stage.id) ^
+      ((world.stageIndex + 3) * 0x9e3779b9) ^
+      (world.stageGen * 0x27d4eb2d),
   );
   const bounds = world.catalog.world;
   const pad = stage.teleporterRadius + 48;

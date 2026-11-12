@@ -79,7 +79,12 @@ export function placeStageObstacles(world: World): void {
   clearObstacles(world.obstacles);
   const stage = world.catalog.loop.stages[world.stageIndex];
   const names = cfg.biomes[stage.id];
-  const rng = mulberry32(hashString(stage.id) ^ ((world.stageIndex + 1) * 0x9e3779b9) ^ (world.stageGen * 0x85ebca6b));
+  const rng = mulberry32(
+    world.runSeed ^
+      hashString(stage.id) ^
+      ((world.stageIndex + 1) * 0x9e3779b9) ^
+      (world.stageGen * 0x85ebca6b),
+  );
   const order: ObstacleKind[] = [
     ...repeatKind('pillar', cfg.counts.pillar),
     ...repeatKind('hazard', cfg.counts.hazard),

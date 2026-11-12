@@ -2,6 +2,7 @@ import { catalog } from '../data/catalog';
 import type { ItemDef, SurvivorDef, UnlockCondition } from '../data/schema';
 import { isPromoShot } from '../promo/shot';
 import { currentStage } from '../sim/loop';
+import { formatSeedTag } from '../sim/rng';
 import type { World } from '../sim/world';
 import { hasQueryFlag } from './settings';
 
@@ -38,6 +39,9 @@ export type RunHistoryEntry = {
   bossesDefeated: number;
   damageDealt: number;
   items: { id: string; stacks: number }[];
+  cycleIndex?: number;
+  seedTag?: string;
+  dailyDate?: string | null;
 };
 
 export type ArchiveRecords = {
@@ -499,6 +503,9 @@ export function recordRunEnd(world: World, outcome: RunOutcome): ArchiveRecords 
     bossesDefeated: world.bossesDefeated,
     damageDealt: Math.round(world.damageDealt),
     items: world.inventory.map((inst) => ({ id: inst.id, stacks: inst.stacks })),
+    cycleIndex: world.cycleIndex,
+    seedTag: formatSeedTag(world.runSeed),
+    dailyDate: world.dailyDate,
   };
   rec.recentRuns = [historyEntry, ...rec.recentRuns].slice(0, MAX_RECENT_RUNS);
 

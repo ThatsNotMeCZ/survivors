@@ -4,7 +4,7 @@ import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { chromium, type Page } from 'playwright';
 
 const ROOT = process.cwd();
-const OUT_DIR = join(ROOT, 'promo', 'itch');
+const OUT_DIR = join(ROOT, '..', 'promo', 'itch');
 const FRAME_DIR = join(OUT_DIR, '.frames');
 const BASE = process.env.ITCH_CAPTURE_URL ?? 'http://127.0.0.1:8080';
 const VIEW_W = 1920;

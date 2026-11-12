@@ -1,22 +1,23 @@
 # Plán publikace a propagace demo verze na itch.io — *Hermetic Rifts*
 
-Tento dokument slouží jako kompletní checklist, stylistický manuál (napojený přímo na paletu z `src/ui/theme.css`), copywritingový balíček a marketingový playbook pro vydání hratelného HTML5 dema **Hermetic Rifts** na itch.io.
+Tento dokument slouží jako kompletní checklist, stylistický manuál (napojený přímo na paletu z `web/src/ui/theme.css`), copywritingový balíček a marketingový playbook pro vydání hratelného HTML5 dema **Hermetic Rifts** na itch.io.
 
 ---
 
 ## 1. Technická příprava HTML5 buildu (Před nahráním)
 
-Itch.io hostuje webové hry v `<iframe>` na subdoméně `html.itch.zone`. Protože hra běží na **Phaser 4 (WebGL)** + **HTML UI overlay** (`src/ui/`) a využívá `localStorage` (`survivors.records.v1`), je potřeba ohlídat následující:
+Itch.io hostuje webové hry v `<iframe>` na subdoméně `html.itch.zone`. Protože hra běží na **Phaser 4 (WebGL)** + **HTML UI overlay** (`web/src/ui/`) a využívá `localStorage` (`survivors.records.v1`), je potřeba ohlídat následující:
 
 ### 1.1 Build & Balíček
-1. **Relativní cesty:** V `vite.config.ts` už je nastaveno `base: './'`, takže assety (`public/sprites/`, `public/audio/`) se v subdoménovém iframe načtou správně.
+1. **Relativní cesty:** V `web/vite.config.ts` už je nastaveno `base: './'`, takže assety (`web/public/sprites/`, `web/public/audio/`) se v subdoménovém iframe načtou správně.
 2. **Jednokrokový produkční build + zabalení pro itch.io:**
    ```bash
+   cd web
    bun run build:itch
    ```
-   Tento skript automaticky spustí headless smoke test (`bun run smoke:loop`), provede čistý TypeScript + Vite build (`bun run build`), zkontroluje přítomnost manifestů a zabalí **obsah** složky `dist/` přímo do kořene archivu **`hermetic-rifts-itch.zip`** (takže `index.html` leží na nejvyšší úrovni ZIPu, jak vyžaduje itch.io).
+   Tento skript automaticky spustí headless smoke test (`bun run smoke:loop`), provede čistý TypeScript + Vite build (`bun run build`), zkontroluje přítomnost manifestů a zabalí **obsah** složky `web/dist/` přímo do kořene archivu **`web/hermetic-rifts-itch.zip`** (takže `index.html` leží na nejvyšší úrovni ZIPu, jak vyžaduje itch.io).
 3. **Alternativa přes itch.io Butler CLI:**
-   - Pokud nahráváš časté hotfixy, můžeš použít `butler push dist uzivatel/hermetic-rifts:html5`, který nahrává pouze změněné bloky a nerozbije URL ani statistiky.
+   - Pokud nahráváš časté hotfixy, můžeš použít `butler push web/dist uzivatel/hermetic-rifts:html5`, který nahrává pouze změněné bloky a nerozbije URL ani statistiky.
 
 ### 1.2 Nastavení v itch.io Dashboardu (Edit Game → Uploads / Embed Options)
 - **Kind of project:** `HTML` (Playable in browser) — **Kritické!** Na itch.io má HTML5 verze oproti `.exe` ke stažení **8× až 15× vyšší konverzi** z návštěvníka na hráče, protože odpadá tření se stahováním a SmartScreen varováním.
@@ -38,10 +39,10 @@ Itch.io hostuje webové hry v `<iframe>` na subdoméně `html.itch.zone`. Proto�
 
 ## 2. Stylizace stránky na itch.io (Dark Hermetic Theme)
 
-Vzhled stránky musí plynule navazovat na atmosféru **The Hall** (`src/ui/theme.css`). Vyhni se výchozí bílé šabloně itch.io.
+Vzhled stránky musí plynule navazovat na atmosféru **The Hall** (`web/src/ui/theme.css`). Vyhni se výchozí bílé šabloně itch.io.
 
 ### 2.1 Barvy v editoru tématu (Edit Theme)
-Použij přesné hex kódy z tvého `src/ui/theme.css`:
+Použij přesné hex kódy z tvého `web/src/ui/theme.css`:
 
 | Prvek v itch.io Theme Editoru | Hex kód | Token v `theme.css` | Poznámka |
 |---|---|---|---|
@@ -78,13 +79,14 @@ h1, h2, h3 {
 Hotový balík: [`promo/itch/`](../promo/itch/) (mapa nahrání v [`promo/itch/README.md`](../promo/itch/README.md)). Přegenerování:
 
 ```bash
+cd web
 bun run capture:itch
 ```
 
 1. **Cover Image (`630 × 500 px`) — NEJDŮLEŽITĚJŠÍ ASSET:**
    - **Proč rozhoduje o všem:** V katalogu *New & Popular* lidé scrollují přes desítky her za vteřinu. Statický screenshot z dálky tam zanikne. Katalog itch.io cover GIFy téměř nepoužívá — listing bere **statický PNG**.
    - **Doporučení:** Složený still z authored sprite (`promo/itch/cover.png`, 630×500). Ne gameplay crop, ne GIF. Motion nech v page GIFech (`gif-circle.gif`, `gif-boss.gif`).
-   - **Co na něm musí být:** Velký *The Penitent* (idle + Phase Step afterimage) proti *Cinder Heart* (attack frame) na *Transmutation Circle*, mosazný nápis **HERMETIC RIFTS** v BillJilly. Silueta musí číst i v náhledu ~315×250. Přegenerování: `bun scripts/capture-itch.ts cover`.
+   - **Co na něm musí být:** Velký *The Penitent* (idle + Phase Step afterimage) proti *Cinder Heart* (attack frame) na *Transmutation Circle*, mosazný nápis **HERMETIC RIFTS** v BillJilly. Silueta musí číst i v náhledu ~315×250. Přegenerování: `cd web && bun scripts/capture-itch.ts cover`.
 2. **Banner na vršek stránky (`960 × 240 px`):**
    - Tmavé pozadí z *The Hall* (fialovo-kouřový shader + transmutační pečeť) a uprostřed logo **HERMETIC RIFTS**.
 3. **3–5 Screenshotů + 2 GIFy přímo v textu stránky (Pravidlo 3 sekund):**
@@ -276,11 +278,12 @@ zvyšuje míru prokliku z Redditu a Discordu **5× až 10×**. Tuto větu dávej
    - Na obrazovkách **Transmutation Complete** (výhra) a **Vessel Shattered** (smrt) je tlačítko **`COPY SUMMARY [C]`**, které zkopíruje do schránky textový přepis runu s emoji ikonami:
      ```text
      ⚗️ HERMETIC RIFTS — TRANSMUTATION COMPLETE 🜂
-     Vessel: The Homunculus · Chamber: Rime Dock
-     Time: 04:42 · Lv 11 · Coeff: ×2.35
-     Dross Slain: 312 · Bosses Slain: 2
-     Damage Dealt: 48,920 · Essence: 184
+     Vessel: The Homunculus · Cycle: II · Chamber: Rime Dock
+     Time: 08:12 · Lv 14 · Coeff: ×2.81
+     Dross Slain: 512 · Bosses Slain: 4
+     Damage Dealt: 72,100 · Essence: 240
      Relics: Cinnabar Leech ×2, Lead Core ×3
+     Seed: #A4F9 · Daily Rite 2026-11-11
      ```
    - Hráči na itch.io milují vkládat svoje vítězné recap texty do komentářů pod hrou — a každý takový komentář dál krmí algoritmus itch.io!
 
@@ -292,12 +295,12 @@ zvyšuje míru prokliku z Redditu a Discordu **5× až 10×**. Tuto větu dávej
 
 ## 6. Rychlý předstartovní Checklist
 
-- [ ] Spuštěn `bun run build:itch` (proběhl smoke test, build i vygenerování `hermetic-rifts-itch.zip`).
+- [ ] Spuštěn `cd web && bun run build:itch` (proběhl smoke test, build i vygenerování `web/hermetic-rifts-itch.zip`).
 - [ ] Ověřeno, že v produkčním buildu není zapnutý `?dev=1` ani `?smoke=1` jako default a hra startuje v **Main Menu / The Hall**.
 - [ ] Zkontrolována hlasitost hudby a SFX při prvním spuštění (aby výchozí hlasitost v prohlížeči neodpálila uši).
 - [ ] Nahrán `hermetic-rifts-itch.zip` (s `index.html` v kořeni) a otestován v režimu *Restricted* v Chrome i Firefoxu (včetně Fullscreen přepnutí, klávesy `P` / `Esc` a tlačítka `COPY SUMMARY [C]`).
-- [ ] Nastaveny barvy stránky podle `src/ui/theme.css` (`#0c0a0d`, `#140e12`, `#c4a35a`, `#e8dcc8`, font `Cinzel`).
-- [x] Vizuální pack v `promo/itch/` (`bun run capture:itch`): cover PNG 630×500 (Penitent vs Cinder Heart), banner 960×240, 4 screenshoty (circle / boss / tablets / archives) + 2 page GIFy. Zbývá nahrát do itch dashboardu.
+- [ ] Nastaveny barvy stránky podle `web/src/ui/theme.css` (`#0c0a0d`, `#140e12`, `#c4a35a`, `#e8dcc8`, font `Cinzel`).
+- [x] Vizuální pack v `promo/itch/` (`cd web && bun run capture:itch`): cover PNG 630×500 (Penitent vs Cinder Heart), banner 960×240, 4 screenshoty (circle / boss / tablets / archives) + 2 page GIFy. Zbývá nahrát do itch dashboardu.
 - [ ] Vyplněno všech 10 tagů + HTML popis stránky (přes `<>` v editoru) s tabulkou ovládání a výzvou ke komentářům.
 - [ ] Připraveno 25s nativní gameplay video pro Reddit (`r/roguelites`, `r/SurvivorsLike`, `r/WebGames`).
 - [ ] Publikováno v **Úterý / Středu / Čtvrtek mezi 16:00–18:00 CET** + do 15 minut vydán úvodní Devlog post.

@@ -117,7 +117,7 @@ Hra se skládá ze **3 komor (stages)** Velkého díla (The Great Work):
 
 ## 6. Shell a uživatelské rozhraní
 
-Veškeré rozhraní je postaveno v HTML/CSS (`src/ui/`) přes canvas rendereru.
+Veškeré rozhraní je postaveno v HTML/CSS (`web/src/ui/`) přes canvas rendereru.
 
 - **Hlavní sál (The Hall):** Titul **Hermetic Rifts**. Třísloupcové rozhraní zasazené do aetherického WebGL fragment shaderu (kouř a rotující transmutační sigilie).
   - Levý sloupec: Volba schránky (Vessel Selection), Archiv (The Archives), Alchymistův stůl (Settings).

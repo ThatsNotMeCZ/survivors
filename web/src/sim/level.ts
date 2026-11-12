@@ -34,12 +34,14 @@ export function rollChoices(world: World): ItemDef[] {
     unlockedPool.length > 0
       ? unlockedPool
       : world.catalog.items.filter((item) => !noneOwned.has(item.id));
+  const sorted = [...pool].sort((a, b) => a.id.localeCompare(b.id));
   const picked: ItemDef[] = [];
   const used = new Set<string>();
   for (let n = 0; n < count; n += 1) {
     const item = weightedPick(
-      pool.filter((entry) => !used.has(entry.id)),
+      sorted.filter((entry) => !used.has(entry.id)),
       world.catalog.loop.rarityWeight,
+      world.offerRng,
     );
     if (!item) break;
     used.add(item.id);
@@ -86,11 +88,15 @@ function addItem(world: World, id: string): void {
   }
 }
 
-function weightedPick(pool: ItemDef[], weights: Record<ItemRarity, number>): ItemDef | null {
+function weightedPick(
+  pool: ItemDef[],
+  weights: Record<ItemRarity, number>,
+  rng: () => number,
+): ItemDef | null {
   if (pool.length === 0) return null;
   let total = 0;
   for (const item of pool) total += weights[item.rarity] ?? 1;
-  let roll = Math.random() * total;
+  let roll = rng() * total;
   for (const item of pool) {
     roll -= weights[item.rarity] ?? 1;
     if (roll <= 0) return item;

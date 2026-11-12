@@ -16,13 +16,13 @@ Primary never auto-aims and never fires without a held/pressed input. Screen-cle
 
 Dash is a press skill: i-frames skip **contact damage and enemy projectiles**. Direction = move vector, or aim if standing. During dash the player is **not** body-separated, so the dash still cuts through a pack.
 
-Homunculus: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull. The Penitent: Censer Lob / Brimstone Line / Ash Step / Condemnation Tether. The Penitent starts sealed; unseal by slaying the Frost Sovereign in Rime Dock. Numbers: `src/data/skills.json`.
+Homunculus: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull. The Penitent: Censer Lob / Brimstone Line / Ash Step / Condemnation Tether. The Penitent starts sealed; unseal by slaying the Frost Sovereign in Rime Dock. Numbers: `web/src/data/skills.json`.
 
 ## Bodies
 
 CPU AABB + spatial hash. Enemies separate from each other; the player and enemies push apart while walking (player heavier). Bosses shove fodder aside. No Arcade/Matter on swarms. Contact DPS still applies on remaining overlap.
 
-Obstacles use **circle vs circle** push-out in sim (not Arcade). Numbers: `src/data/obstacles.json`. **Bosses collide with pillars** (they are pushed out — no phase-through). Pillar r=28, volatile r=14, hazard r=68.
+Obstacles use **circle vs circle** push-out in sim (not Arcade). Numbers: `web/src/data/obstacles.json`. **Bosses collide with pillars** (they are pushed out — no phase-through). Pillar r=28, volatile r=14, hazard r=68.
 
 | Type | Display (Cinder / Rime / Glacial) | Collision |
 |---|---|---|
@@ -47,6 +47,6 @@ Any non-boss spawn can mutate. The elite then rolls **50/50**:
 
 ## Boss duel
 
-Director credit spawns halt the moment the Seal Guardian appears. Unique `ai.type: "boss"` kits + summons; see `knowledge/tech/catalog.md`. Enrage at 50% HP. Custom GLSL hazards in `src/view/shaders/boss-shaders.ts`.
+Director credit spawns halt the moment the Seal Guardian appears. Unique `ai.type: "boss"` kits + summons; see `knowledge/tech/catalog.md`. Enrage at 50% HP. Custom GLSL hazards in `web/src/view/shaders/boss-shaders.ts`.
 
 Run (`ArenaScene`): director-spawned fodder + spitters + snipers + Shielder/Noxious elites, teleporter hold, stage boss, arena obstacles. Primary never auto-aims.

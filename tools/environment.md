@@ -1,4 +1,4 @@
-# Environment Atlas (`public/sprites/env/atlas.json` + `atlas.png`)
+# Environment Atlas (`web/public/sprites/env/atlas.json` + `atlas.png`)
 
 Přehled rozměrů a mapování všech herních objektů prostředí pro Dark Hermetic survivor hru.
 
@@ -7,7 +7,7 @@ Přehled rozměrů a mapování všech herních objektů prostředí pro Dark He
 - **Výchozí zoom kamery**: `viewZoom = 2.5` (renderuje s pixelovou ostrostí)
 - **Základní mřížka podlahy**: dlaždice `64 × 64 px` (plocha 40 × 40 dlaždic)
 - **Chování fallbacků**:
-  - Pokud má objekt v `atlas.json` nulové rozměry (`"w": 0, "h": 0`) nebo chybí, hra automaticky použije procedurální vykreslování z `src/view/procedural-pixel-art.ts`.
+  - Pokud má objekt v `atlas.json` nulové rozměry (`"w": 0, "h": 0`) nebo chybí, hra automaticky použije procedurální vykreslování z `web/src/view/procedural-pixel-art.ts`.
   - Objekty s předponou `glacial-*` při nevyplnění automaticky zkouší odpovídající `rime-*` objekt a až poté procedurální fallback.
   - Snímek `*-hazard-1` při nevyplnění automaticky použije statický snímek `*-hazard-0`.
 
@@ -95,11 +95,11 @@ Přehled rozměrů a mapování všech herních objektů prostředí pro Dark He
 
 1. Vygenerovaný nebo nakreslený spritesheet ulož do:
    ```text
-   public/sprites/env/atlas.png
+   web/public/sprites/env/atlas.png
    ```
 2. Otevři soubor:
    ```text
-   public/sprites/env/atlas.json
+   web/public/sprites/env/atlas.json
    ```
 3. U každého objektu, který v atlasu máš, nahraď nulové souřadnice přesnými hodnotami (`x, y, w, h`) z obrázku.
    *Příklad:*

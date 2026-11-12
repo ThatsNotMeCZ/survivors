@@ -2,23 +2,23 @@
 
 Target run: 15–20 minutes. Production clocks stay ~6 min/stage. **Live slice: 3 stages + finale boss**, clocks compressed for playtests.
 
-Difficulty coefficient rises with time, not with a flat spawn-more curve. Numbers live in `src/data/loop.json`.
+Difficulty coefficient rises with time, not with a flat spawn-more curve. Numbers live in `web/src/data/loop.json`.
 
 ## Shell
 
-HTML overlays in `src/ui/` (not Phaser text). Phaser starts after **Start Transmutation** from The Hall. `/?smoke=1` is the GPU smoke scene (no hall). `/?dev=1` skips the hall and auto-starts a run. Headless loop smoke (`bun run smoke:loop`) never opens a menu.
+HTML overlays in `web/src/ui/` (not Phaser text). Phaser starts after **Start Transmutation** from The Hall. `/?smoke=1` is the GPU smoke scene (no hall). `/?dev=1` skips the hall and auto-starts a run. Headless loop smoke (`bun run smoke:loop`) never opens a menu.
 
 Two menu screens, then the run:
 
-- **Main menu** (`#main-menu`): title **Hermetic Rifts**. Left pillar (Archives / Alchemist's Desk), center authored Transmutation Circle (`src/ui/cinder-circle.ts`), **Commence Transmutation**. Enter opens The Hall.
-- **The Hall** (`#hall`): vessel lobby — left vessel portraits (locked vessels print **??? · SEALED**), center WebGL hall backdrop (`src/ui/hall-backdrop.ts`) + 32px vessel preview, right dossier + 4 skill tooltips. CTA: **Commence Working** (or **Vessel Sealed** if the inspected vessel is locked). Hall back returns to the main menu.
+- **Main menu** (`#main-menu`): title **Hermetic Rifts**. Left pillar (Archives / Alchemist's Desk), center authored Transmutation Circle (`web/src/ui/cinder-circle.ts`), **Commence Transmutation**. Enter opens The Hall.
+- **The Hall** (`#hall`): vessel lobby — left vessel portraits (locked vessels print **??? · SEALED**), center WebGL hall backdrop (`web/src/ui/hall-backdrop.ts`) + 32px vessel preview, right dossier + 4 skill tooltips. CTA: **Commence Working** (or **Vessel Sealed** if the inspected vessel is locked). **Daily Rite** toggle (UTC `YYYY-MM-DD` seed) sits above the CTA. Hall back returns to the main menu.
 - **The Archives** (`#archives`): standalone full-screen codex & ledger from the Main Menu and Pause Screen. 5 tabs: **I. Rites of Motion**, **II. Chronicles** (Great Work / Vessels & Arts / The Three Chambers / Law of Exchange), **III. Bestiary** (10 entities), **IV. Reliquary** (13 items, rarity filters, unlock gates), **V. Ledger** (`localStorage` `'survivors.records.v1'`, personal bests, per-vessel & per-stage breakdowns, recent **10** runs, 2-step Purge Ledger). Unseen names print as **???**.
 - Vessel dossier: display name, title, lore, skill icons with hover hooks. Locked vessels show the unsealing rite instead of lore. No raw ids.
-- Pause: Esc **or P** during `phase === 'play'` while the overlay is hidden. Copy: **Simulation Paused** · Resume Sequence · The Archives · Settings · Abandon Vessel. Body shows run summary + inventory strip (32px icons + stack counts; empty copy **No augmentations bound yet.**). HTML `window` capture keydown owns Escape and P (`key`/`code`); Phaser does not bind them. `preventDefault` so the browser does not consume Esc / Space / arrows (itch iframe). Nested pause screens (settings dialog, archives, abandon confirm) back out first. Level-up and recaps swallow Esc. Resume with Esc, P, or Resume Sequence. Sim does not step, including nested pause screens. Music: map bed keeps playing (ducked) plus the shared chill overlay — `knowledge/tech/audio.md`. Tab blur / `visibilitychange` auto-pauses an unpaused run. Settings: **Fullscreen Chamber**.
+- Pause: Esc **or P** during `phase === 'play'` while the overlay is hidden. Copy: **Simulation Paused** · Resume Sequence · The Archives · Settings · Abandon Vessel. After Frost Emperor, pause also shows **Seal the Working**. Body shows run summary + inventory strip (32px icons + stack counts; empty copy **No augmentations bound yet.**). HTML `window` capture keydown owns Escape and P (`key`/`code`); Phaser does not bind them. `preventDefault` so the browser does not consume Esc / Space / arrows (itch iframe). Nested pause screens (settings dialog, archives, abandon confirm) back out first. Level-up and recaps swallow Esc. Resume with Esc, P, or Resume Sequence. Sim does not step, including nested pause screens. Music: map bed keeps playing (ducked) plus the shared chill overlay — `knowledge/tech/audio.md`. Tab blur / `visibilitychange` auto-pauses an unpaused run. Settings: **Fullscreen Chamber**.
 - Cursor: OS pointer is `cursor: none` during an unpaused run (`data-play=1` + overlay hidden). Shown again on hall, pause, settings, archives, vessel, level-up, abandon, and recaps. Aim uses mouse position with a hero-specific world crosshair cursor (quicksilver/aether precision brackets for Homunculus, consecrated liturgical ring for The Penitent); no orbiting weapon sprite around the player. No pointer lock.
 - Level-up: 3 hermetic tablets (rust/copper/silver/cyan rarity) as **96px** pixel icons + key 1–3. Name, green/red hooks, rarity, and lore live **on the card**. Keys 1–3 still pick. Backdrop `blur(4px) brightness(35%)`. Same pick pipeline. Locked items never appear in the offer.
 - Boss intro sting + stage interstitial: HTML title cards, do **not** pause combat. Skipped when `smoke` or `dev` is set.
-- Death: **Vessel Shattered**. Victory: **Transmutation Complete**. Recap: time, level, coefficient, kills, bosses, damage, essence, inventory, **Discoveries & Archives** (new unlocks this run). **Copy Summary [C]** dumps a pasteable ledger line. Run again [Enter] or Return to Hall [Esc].
+- Death: **Vessel Shattered**. Victory: **Transmutation Complete** (opt-in after Frost Emperor via **F** / Seal the Working). Recap: time, level, coefficient, kills, bosses, damage, essence, **Cycle**, inventory, **Discoveries & Archives** (new unlocks this run). **Copy Summary [C]** dumps a pasteable ledger line including `Cycle: II · Chamber: …` and `Seed: #A4F9`. Run again [Enter] or Return to Hall [Esc].
 
 ## Slice clocks (v1 demo)
 
@@ -27,7 +27,7 @@ Two menu screens, then the run:
 | First elite | 25s | 18s | 14s |
 | Teleporter on | 55s | 50s | 50s |
 | Hold | 20s (r=160) | 22s (r=150) | 25s (r=140) |
-| Boss | Cinder Heart | Frost Sovereign | Frost Emperor (run end) |
+| Boss | Cinder Heart | Frost Sovereign | Frost Emperor (Ouroboros gate) |
 
 Production clocks stay ~6 min/stage, teleporter ~minute 4, hold ~60s. Change JSON only.
 
@@ -37,11 +37,15 @@ Production clocks stay ~6 min/stage, teleporter ~minute 4, hold ~60s. Change JSO
 2. Level-ups: HTML overlay, pick 1 of 3 item hooks plus lore. Pause sim. Offer is filtered to **unlocked** items.
 3. Director spends credits on fodder packs, snipers, and (after `firstEliteAt`) elite mutations. ~22% of fodder spawns are ranged spitters (`stage.ranged`; Glacial Tomb 0.28).
 4. Teleporter on (player-facing: Transmutation Circle). Coords are **reserved at stage start** so obstacle keep-out can run. Charge only while inside the circle. Swarm walks into the zone. HUD: `Channel the Transmutation Circle`. Off-screen chevron points at the zone.
-5. Stage boss duel. Spawning the boss immediately halts Director credit spawns (no new fodder, spitters, snipers, or elites). Living enemies finish naturally. The boss commands the arena via unique ranged kits and summons its own brood. HUD: `Slay the [Boss Name]`. Slaying the boss opens **Descend the Rift** (stand in the portal 1.4s, r=70) to the next biome, or grants victory on the final stage. Leftover lore drops auto-collect on victory.
+5. Stage boss duel. Spawning the boss immediately halts Director credit spawns (no new fodder, spitters, snipers, or elites). Living enemies finish naturally. The boss commands the arena via unique ranged kits and summons its own brood. HUD: `Slay the [Boss Name]`. Slaying the boss opens **Descend the Rift** (stand in the portal 1.4s, r=70) to the next biome. After Frost Emperor the gate is gold (**Descend the Ouroboros**): hold to enter **Cycle II** (Cinder Yard, inventory / XP / `runTime` kept, `stageGen` continues) or press **F** / pause **Seal the Working** for victory. Leftover lore drops auto-collect on seal and on cycle wrap. Coefficient stays `1 + runTime * perSecond` (`stageBonus` stays 0).
+
+## Daily Rite
+
+Hall toggle. On: `runSeed = hash('daily:' + UTC YYYY-MM-DD)` — same day, same obstacle layout, Transmutation Circle, and level-up offer order. Off: random seed, still printed on the recap. Director/combat RNG is not seeded.
 
 ## Obstacle placement (stage init)
 
-Seeded placer (`src/sim/obstacles.ts`). Fail by skipping leftovers, never overlap.
+Seeded placer (`web/src/sim/obstacles.ts`). Fail by skipping leftovers, never overlap.
 
 Keep-out:
 
@@ -56,7 +60,7 @@ Keep-out:
 
 ## HUD
 
-HTML overlay, not Phaser text. Top center gold objective banner (Hold fills with pulsing gold). Top right biome + run clock and RoR2-style scrolling difficulty slider (Dormant → Stirring → Tempered → Calcined → Volatile → Cataclysm in Resurrect 64 palette). Bottom left alchemical flask HP + numeric + thin XP line and level. Bottom center 4 skill slots (ready / cooldown sweep / i-frame flash). Bottom right **32×32** item grid (6 columns, stack count on every chip). Biome tint is subtle (Cinder warmer, Rime/Glacial colder). FPS stays behind `?debug=1` or F3. Palette tokens live in `src/ui/theme.css`.
+HTML overlay, not Phaser text. Top center gold objective banner (Hold fills with pulsing gold). Top right biome + run clock and RoR2-style scrolling difficulty slider (Dormant → Stirring → Tempered → Calcined → Volatile → Cataclysm in Resurrect 64 palette). Bottom left alchemical flask HP + numeric + thin XP line and level. Bottom center 4 skill slots (ready / cooldown sweep / i-frame flash). Bottom right **32×32** item grid (6 columns, stack count on every chip). Biome tint is subtle (Cinder warmer, Rime/Glacial colder). FPS stays behind `?debug=1` or F3. Palette tokens live in `web/src/ui/theme.css`.
 
 ## Director (RoR2, not VS)
 
@@ -68,4 +72,4 @@ XP gems (Mercury Drops). Pause via **HTML overlay**, pick 1 of 3. Fast dopamine 
 
 ## Death / win
 
-HP to 0 → **Vessel Shattered** overlay, restart or menu. Last boss dead → **Transmutation Complete**. Recap also lists unlocks earned this run.
+HP to 0 → **Vessel Shattered** overlay, restart or menu. Frost Emperor dead → gold Ouroboros gate. Seal the working → **Transmutation Complete**. Recap also lists unlocks earned this run.

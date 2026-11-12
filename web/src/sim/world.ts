@@ -43,6 +43,7 @@ import type { InputFrame } from './input-frame';
 import { emptyCds } from './input-frame';
 import { xpForLevel } from './level';
 import { beginStage, stepLoop } from './loop';
+import { mulberry32, randomRunSeed } from './rng';
 import {
   createObstaclePool,
   hitObstacleProjectiles,
@@ -169,11 +170,17 @@ export type World = {
   healingDone: number;
   gemsCollected: number;
   stagesCleared: number;
+  cycleIndex: number;
+  runSeed: number;
+  dailyDate: string | null;
+  offerRng: () => number;
 };
 
 export type WorldOptions = {
   unlockedItems?: Iterable<string>;
   collectedLores?: Iterable<string>;
+  runSeed?: number;
+  dailyDate?: string | null;
 };
 
 export function createWorld(
@@ -190,6 +197,8 @@ export function createWorld(
     ? new Set(options.unlockedItems)
     : new Set(catalog.items.map((item) => item.id));
   const collectedLores = new Set(options?.collectedLores ?? []);
+  const runSeed = options?.runSeed ?? randomRunSeed();
+  const dailyDate = options?.dailyDate ?? null;
   const world: World = {
     catalog,
     survivor,
@@ -247,6 +256,10 @@ export function createWorld(
     healingDone: 0,
     gemsCollected: 0,
     stagesCleared: 0,
+    cycleIndex: 0,
+    runSeed,
+    dailyDate,
+    offerRng: mulberry32(runSeed ^ 0x51ed),
   };
   beginStage(world, 0);
   return world;

@@ -12,6 +12,7 @@ import { mountVesselArt } from './vessel-art';
 import { mountMenuCinderCircle, type CinderCircleController } from './cinder-circle';
 import { mountHallBackdrop, type HallBackdropController } from './hall-backdrop';
 import { applySettingsToDom, getSettings, patchSettings, skipShell, type GameSettings } from './settings';
+import { cycleNumeral, dailySeed, formatSeedTag, utcYmd } from '../sim/rng';
 import type { WebGlFail } from './webgl-gate';
 
 export type OverlayMode =
@@ -35,6 +36,7 @@ export type OverlayHandlers = {
   onPause: () => void;
   onPick: (index: number) => void;
   onRestart: () => void;
+  onSealWorking: () => void;
 };
 
 export type RunRecapItem = {
@@ -68,6 +70,9 @@ export type RunRecap = {
   items: RunRecapItem[];
   survivor: string;
   survivorId?: string;
+  cycleIndex?: number;
+  seedTag?: string;
+  dailyDate?: string | null;
   newUnlocks?: RunRecapUnlock[];
   unlockProgress?: {
     itemsUnlocked: number;
@@ -104,6 +109,7 @@ let handlers: OverlayHandlers = {
   onPause: () => undefined,
   onPick: () => undefined,
   onRestart: () => undefined,
+  onSealWorking: () => undefined,
 };
 let keysBound = false;
 let menuBound = false;
@@ -163,14 +169,23 @@ export function formatRunSummaryText(kind: RunOutcome = currentRunOutcome ?? 'de
     ? recap.items.map((i) => `${i.name}${i.stacks > 1 ? ` ×${i.stacks}` : ''}`).join(', ')
     : 'None';
 
+  const cycle = cycleNumeral(recap.cycleIndex ?? 0);
+  const seedTag = recap.seedTag ?? '';
+  const seedLine = seedTag
+    ? recap.dailyDate
+      ? `Seed: ${seedTag} · Daily Rite ${recap.dailyDate}`
+      : `Seed: ${seedTag}`
+    : '';
+
   return [
     `⚗️ HERMETIC RIFTS — ${outcomeTitle}`,
-    `Vessel: ${recap.survivor} · Chamber: ${recap.stage}`,
+    `Vessel: ${recap.survivor} · Cycle: ${cycle} · Chamber: ${recap.stage}`,
     `Time: ${formatTime(recap.time)} · Lv ${recap.level} · Coeff: ×${recap.coefficient.toFixed(2)}`,
     `Dross Slain: ${(recap.kills ?? 0).toLocaleString()} · Bosses Slain: ${recap.bosses}`,
     `Damage Dealt: ${Math.round(recap.damageDealt ?? 0).toLocaleString()} · Essence: ${recap.gemsCollected ?? 0}`,
     `Relics: ${itemsStr}`,
-  ].join('\n');
+    seedLine,
+  ].filter((line) => line.length > 0).join('\n');
 }
 
 export function copyRunSummary(): void {
@@ -671,6 +686,12 @@ function onOverlayKey(event: KeyboardEvent): void {
     copyRunSummary();
     return;
   }
+  if (mode === 'hidden' && (event.code === 'KeyF' || event.key === 'f' || event.key === 'F')) {
+    event.preventDefault();
+    if (event.repeat) return;
+    handlers.onSealWorking();
+    return;
+  }
   if (mode !== 'levelup') return;
   if (event.key === '1' || event.key === '2' || event.key === '3') {
     event.preventDefault();
@@ -833,6 +854,7 @@ function renderHall(): void {
   fillHallPreview();
   fillHallDossier();
   syncHallCommence();
+  syncHallRite();
   hydrateUiSprites(hall);
   showRoot(root);
   setMusicScene({ kind: 'menu' });
@@ -855,6 +877,11 @@ function bindHall(): void {
     playSfx('confirm');
     handlers.onStart();
   });
+  document.getElementById('hall-rite-toggle')?.addEventListener('click', () => {
+    playSfx('click');
+    patchSettings({ dailyRite: !getSettings().dailyRite });
+    syncHallRite();
+  });
 }
 
 function syncHallCommence(): void {
@@ -866,6 +893,24 @@ function syncHallCommence(): void {
   const label = btn.querySelector<HTMLElement>('.plaque-label');
   if (label) {
     label.textContent = unlocked ? 'COMMENCE WORKING' : 'VESSEL SEALED';
+  }
+}
+
+function syncHallRite(): void {
+  const on = getSettings().dailyRite;
+  const btn = document.getElementById('hall-rite-toggle');
+  const seedEl = document.getElementById('hall-rite-seed');
+  if (btn) {
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.dataset.on = on ? '1' : '0';
+  }
+  if (seedEl) {
+    if (on) {
+      const date = utcYmd();
+      seedEl.textContent = `Seed: ${formatSeedTag(dailySeed(date))} · ${date}`;
+    } else {
+      seedEl.textContent = 'Random seed at commence';
+    }
   }
 }
 
@@ -1069,6 +1114,16 @@ function bindPauseActions(): void {
     playSfx('click');
     showAbandon();
   });
+  document.getElementById('pause-seal')?.addEventListener('click', () => {
+    playSfx('confirm');
+    handlers.onSealWorking();
+  });
+}
+
+export function setSealAvailable(available: boolean): void {
+  const btn = document.getElementById('pause-seal');
+  if (!btn) return;
+  btn.classList.toggle('hidden', !available);
 }
 
 function fillPauseSummary(): void {
@@ -1076,6 +1131,7 @@ function fillPauseSummary(): void {
   if (!rowsEl) return;
   const summary = getHudSummary();
   const rows: [string, string][] = [
+    ['Cycle:', cycleNumeral(summary.cycleIndex ?? 0)],
     ['Run Time:', formatTime(summary.runTime)],
     ['Level:', String(summary.level)],
     ['Dross Slain:', String(summary.kills)],

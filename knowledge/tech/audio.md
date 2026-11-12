@@ -1,6 +1,6 @@
 # Audio
 
-Files live in `public/audio/`. Phaser stays `audio.noAudio: true` — the hall boots before Phaser, so playback is a Web Audio bus in `src/audio/`. Settings (master / SFX / music / mute) drive that bus live.
+Files live in `web/public/audio/`. Phaser stays `audio.noAudio: true` — the hall boots before Phaser, so playback is a Web Audio bus in `web/src/audio/`. Settings (master / SFX / music / mute) drive that bus live.
 
 ## Layout
 
@@ -18,7 +18,7 @@ Live maps: `cinder-yard`, `rime-dock`, `glacial-tomb`. Live bosses: `cinder-hear
 
 ## Playlist
 
-A folder is a playlist, not a single `bed.ogg`. Vite writes `public/audio/manifest.json` on `dev` / `build` by scanning those folders. SFX `volume` values already in the file survive a rescan.
+A folder is a playlist, not a single `bed.ogg`. Vite writes `web/public/audio/manifest.json` on `dev` / `build` by scanning those folders. SFX `volume` values already in the file survive a rescan.
 
 - 1 track → loop
 - 2+ → shuffle bag, no immediate repeat, ~1.2s crossfade on `ended`
@@ -55,4 +55,4 @@ Each clip in `manifest.json` is `{ src, volume }`. `volume` is linear gain **0�
 
 Kenney CC0 packs in `sources/kenney_*` are the current placeholders. Hits/deaths/muzzle/gems are rate-limited.
 
-Sim emits FX only (`FX_HIT`, `FX_HURT`, `FX_GEM`, …). `ArenaScene.consumeFx` plays the sting. `src/sim/` does not import audio.
+Sim emits FX only (`FX_HIT`, `FX_HURT`, `FX_GEM`, …). `ArenaScene.consumeFx` plays the sting. `web/src/sim/` does not import audio.

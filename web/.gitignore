@@ -1,0 +1,10 @@
+node_modules
+dist
+.vite
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.xdp-*
+
+hermetic-rifts-demo.zip
+hermetic-rifts-itch.zip

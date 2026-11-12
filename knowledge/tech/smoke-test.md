@@ -10,7 +10,7 @@ Pass: **≥ 55 fps** after 3s warmup, renderer **webgl**.
 
 ## What it is not
 
-Not the combat loop. Dots are not entities. Do not collide them, pool them as enemies, or drive them from `src/sim/`.
+Not the combat loop. Dots are not entities. Do not collide them, pool them as enemies, or drive them from `web/src/sim/`.
 
 ## If it fails
 

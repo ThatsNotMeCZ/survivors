@@ -33,6 +33,7 @@ export type HudSummary = {
   damageDealt: number;
   coefficient: number;
   totalItems: number;
+  cycleIndex: number;
 };
 
 const statusEl = () => document.getElementById('hud-status');
@@ -94,6 +95,7 @@ let lastSummary: HudSummary = {
   damageDealt: 0,
   coefficient: 1,
   totalItems: 0,
+  cycleIndex: 0,
 };
 
 export function getHudItems(): HudItem[] {
@@ -183,6 +185,7 @@ export function setHudCombat(state: {
   boss: boolean;
   skills: HudSkill[];
   items: HudItem[];
+  cycleIndex?: number;
 }): void {
   const stage = stageEl();
   const hp = hpEl();
@@ -207,6 +210,7 @@ export function setHudCombat(state: {
     damageDealt: state.damageDealt ?? 0,
     coefficient: state.coefficient,
     totalItems,
+    cycleIndex: state.cycleIndex ?? 0,
   };
 
   if (stage) stage.textContent = state.stage;

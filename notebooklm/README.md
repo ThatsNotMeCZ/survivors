@@ -3,7 +3,7 @@
 Snapshot herního designu pro **NotebookLM** a Gemini chat mimo Cursor.
 
 `knowledge/` zůstává kanonickým zdrojem pravdy pro agenty v repozitáři.  
-Tato složka je **kompletní export pro herního konzultanta**. Čísla v návrzích ber z JSON v `src/data/`, ne z halucinací chatu.
+Tato složka je **kompletní export pro herního konzultanta**. Čísla v návrzích ber z JSON v `web/src/data/`, ne z halucinací chatu.
 
 **Datum snapshotu:** 2026-11-05  
 **Playable stav:** **3 komory (stages)** + finále, **3 unikátní bossové** s autorskými sadami útoků a vyvoláváním přisluhovačů, **2 schránky (vessels)** po 4 dovednostech, **13 vyvážených augmentací** se systémem kritických zásahů, **systém odemykání obsahu**, **The Archives** s trvalou účetní knihou (Ledger), elitní nepřátelé s afixy **Noxious + Shielder**, překážky ve 3 biomech.
@@ -26,7 +26,7 @@ Nahraj těchto **pět souborů** (ne README):
 
 ## Jak aktualizovat
 
-1. Po změnách v kódu, JSON datech nebo pravidlech nejprve uprav `knowledge/` a `src/data/*.json`.
+1. Po změnách v kódu, JSON datech nebo pravidlech nejprve uprav `knowledge/` a `web/src/data/*.json`.
 2. Aktualizuj soubory v `notebooklm/` (hlavně tabulky v `02-catalog-numbers.md` a sekce ve specifikaci).
 3. V NotebookLM **odstraň staré sources** a nahraj těchto pět souborů znovu.
 4. Aktualizuj datum snapshotu nahoře v souborech.
