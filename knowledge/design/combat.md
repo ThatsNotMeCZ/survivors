@@ -2,17 +2,19 @@
 
 Verb: **A — player aims primary.**
 
-| Input | Action |
-|---|---|
-| WASD | move |
-| Mouse | aim (character faces cursor) |
-| Hold LMB | fire primary along aim |
-| RMB | secondary (aimed press) |
-| Shift / Space | utility dash with i-frames |
-| Q | ultimate (aimed press) |
-| Esc / P | pause (HTML overlay; sim frozen). Use **P** in itch fullscreen so Esc does not drop fullscreen first |
+Gameplay reads **actions** (`move`, `aim`, `fire_primary`, `fire_secondary`, `utility`, `special`, `pause`). `aim` is a vector (mouse cursor or right stick). Default keyboard/mouse binds for the web client:
 
-Primary never auto-aims and never fires without a held/pressed input. Screen-clear and orbital weapons are banned on primary.
+| Bind | Action |
+|---|---|
+| WASD | `move` |
+| Mouse | `aim` (character faces aim) |
+| Hold LMB | `fire_primary` along aim |
+| RMB | `fire_secondary` (aimed press) |
+| Shift / Space | `utility` dash with i-frames |
+| Q | `special` (aimed press) |
+| Esc / P | `pause` (web: HTML overlay; sim frozen). Use **P** in itch fullscreen so Esc does not drop fullscreen first |
+
+Primary never auto-aims and never fires without a held/pressed input. Screen-clear and orbital weapons are banned on primary. Godot maps devices onto the same actions ([future.md](future.md)).
 
 Dash is a press skill: i-frames skip **contact damage and enemy projectiles**. Direction = move vector, or aim if standing. During dash the player is **not** body-separated, so the dash still cuts through a pack.
 

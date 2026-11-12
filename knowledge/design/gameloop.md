@@ -6,7 +6,7 @@ Difficulty coefficient rises with time, not with a flat spawn-more curve. Number
 
 ## Shell
 
-HTML overlays in `web/src/ui/` (not Phaser text). Phaser starts after **Start Transmutation** from The Hall. `/?smoke=1` is the GPU smoke scene (no hall). `/?dev=1` skips the hall and auto-starts a run. Headless loop smoke (`bun run smoke:loop`) never opens a menu.
+Web HUD, pause, level-up, and menus are HTML overlays in `web/src/ui/` (not Phaser text). Godot rebuilds the same screens as Control nodes plus loc keys ([future.md](future.md)); it does not load this HTML. Phaser starts after **Start Transmutation** from The Hall. `/?smoke=1` is the GPU smoke scene (no hall). `/?dev=1` skips the hall and auto-starts a run. Headless loop smoke (`bun run smoke:loop`) never opens a menu.
 
 Two menu screens, then the run:
 

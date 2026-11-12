@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "godot-mcp-pro": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["${workspaceFolder}/tools/godot-mcp-bridge/src/index.ts"],
+      "env": {
+        "GODOT_MCP_PORT": "6505"
+      }
+    }
+  }
+}

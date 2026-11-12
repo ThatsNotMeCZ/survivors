@@ -1,6 +1,8 @@
 # Catalog
 
-Content lives in `web/src/data/*.json`. Numbers do not belong in `web/src/sim/` classes.
+Content lives in `web/src/data/*.json`. Numbers do not belong in `web/src/sim/` classes or in Godot scripts. Godot deserializes this schema (or a byte-identical copy). Do not fork stats.
+
+Phaser reads JSON `name` / `lore` / `title` as English display. Godot looks up `item.{id}.name` (and the sibling keys in [design/future.md](../design/future.md)) via `tr()`. Keep the JSON fields for the web client.
 
 | File | Contains |
 |---|---|

@@ -6,6 +6,8 @@ Tento dokument slouží jako kompletní checklist, stylistický manuál (napojen
 
 ## 1. Technická příprava HTML5 buildu (Před nahráním)
 
+Itch.io demo zůstává **Phaser HTML5**. Godot 4.7 GDScript umí web export, ale itch ship path to není — native Godot je Steam/desktop track, viz `knowledge/tech/clients.md`.
+
 Itch.io hostuje webové hry v `<iframe>` na subdoméně `html.itch.zone`. Protože hra běží na **Phaser 4 (WebGL)** + **HTML UI overlay** (`web/src/ui/`) a využívá `localStorage` (`survivors.records.v1`), je potřeba ohlídat následující:
 
 ### 1.1 Build & Balíček

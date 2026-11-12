@@ -1,17 +1,22 @@
 # Stack
 
-**Phaser 4.2.1 + TypeScript + Vite + Bun.** Agent-first, 60 fps within the performance budget.
+Two clients, one design ([clients.md](clients.md)).
 
-Package manager is Bun (`web/bun.lock`). Never npm. Live client lives in `web/`.
+| Client | Stack | Ships |
+|---|---|---|
+| `web/` | Phaser 4.2.1 + TypeScript + Vite + Bun | itch.io HTML5 (live) |
+| `Godot/` | Godot **4.7** + typed GDScript | Native desktop (Steam later). itch stays Phaser. |
+
+Web package manager is Bun (`web/bun.lock`). Never npm. Godot rules: [godot.md](godot.md).
 
 | Option | Why not (now) |
 |---|---|
 | Phaser 3 + Arcade | Physics bodies die around a few hundred |
 | Bare Pixi v8 | Agent would invent camera/input/scenes |
-| Godot 4 | Sibling client in `Godot/`. Native ceiling; slower Cursor loop than the Phaser client. |
+| Godot C# / .NET | Typed GDScript is locked. Faster editor loop, matches engine skills. |
+| Godot HTML5 as a second web ship | itch stays the Phaser client. |
+| Wrap Phaser in Tauri | Desktop is the Godot client, not a web wrapper. |
 | Bevy | Best ECS, compile loop kills vibe |
-
-Desktop later: wrap the same web build in Tauri. Do not rewrite.
 
 ## WebGL gate
 
@@ -21,4 +26,4 @@ Gameplay is WebGL-only (`Phaser.WEBGL` + `SpriteGPULayer`). There is no Canvas f
 
 ## Why this wins for agents
 
-The whole game is text. HMR in ~1s. Phaser 4 skills live in `web/node_modules/phaser/skills/`.
+The web game is text. HMR in ~1s. Phaser 4 skills live in `web/node_modules/phaser/skills/`. Godot is typed GDScript + one boot scene. The Cursor loop is still slower than Phaser, which is why itch stays on Phaser.

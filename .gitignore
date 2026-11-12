@@ -9,6 +9,11 @@
 
 promo/itch/.frames/
 
-Godot/.godot/
+Godot/**/.godot/
 Godot/android/
-Godot/.godot/export_credentials.cfg
+Godot/**/bin/
+Godot/**/obj/
+Godot/**/export_credentials.cfg
+
+tools/godot-mcp-pro/server/
+tools/godot-mcp-bridge/node_modules/
