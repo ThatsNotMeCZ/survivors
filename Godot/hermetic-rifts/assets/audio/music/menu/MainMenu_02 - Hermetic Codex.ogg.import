@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://kjrp23rru8jq"
+path="res://.godot/imported/MainMenu_02 - Hermetic Codex.ogg-fff2a1a09b5e27e94ed32fdb4bf6042f.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/menu/MainMenu_02 - Hermetic Codex.ogg"
+dest_files=["res://.godot/imported/MainMenu_02 - Hermetic Codex.ogg-fff2a1a09b5e27e94ed32fdb4bf6042f.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

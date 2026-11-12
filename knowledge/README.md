@@ -2,7 +2,7 @@
 
 Canonical notes for humans and agents. Update these when a design decision lands. Do not keep lore only in chat.
 
-Live slice (2026-11): **3 compressed stages**, 2 vessels, 13 items (6 locked), Shielder + Noxious elites, dedicated boss duels. Numbers live in `web/src/data/*.json`. itch.io ships the Phaser client in `web/`. Godot 4.7 typed GDScript in `Godot/` is the native sibling ([tech/clients.md](tech/clients.md)).
+Live slice (2026-11): **3 compressed stages**, 2 vessels, 13 items (6 locked), Shielder + Noxious elites, dedicated boss duels. Numbers live in `web/src/data/*.json`. itch.io ships the Phaser client in `web/`. Godot 4.7 typed GDScript in `Godot/hermetic-rifts/` is the native sibling ([tech/clients.md](tech/clients.md)).
 
 ## Design
 

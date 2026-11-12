@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://cj8hm8ouv0hn"
+path="res://.godot/imported/Rime_02 - Cold Harbor.ogg-881844eb85af12bcc24546206d4fc45f.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/maps/rime-dock/Rime_02 - Cold Harbor.ogg"
+dest_files=["res://.godot/imported/Rime_02 - Cold Harbor.ogg-881844eb85af12bcc24546206d4fc45f.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

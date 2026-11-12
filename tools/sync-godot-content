@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Byte-identical copy of web catalog, sprites, and audio into the Godot project.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+DEST="$ROOT/Godot/hermetic-rifts"
+WEB="$ROOT/web"
+
+mkdir -p "$DEST/data/catalog" "$DEST/assets/sprites" "$DEST/assets/audio"
+cp "$WEB/src/data/"*.json "$DEST/data/catalog/"
+rm -f "$DEST/data/catalog/schema.ts" "$DEST/data/catalog/catalog.ts"
+rsync -a --delete --exclude '.DS_Store' "$WEB/public/sprites/" "$DEST/assets/sprites/"
+rsync -a --delete --exclude '.DS_Store' "$WEB/public/audio/" "$DEST/assets/audio/"
+
+python3 - "$DEST/data/catalog" "$WEB/src/data" <<'PY'
+import hashlib, pathlib, sys
+godot, web = map(pathlib.Path, sys.argv[1:])
+mismatch = False
+for src in sorted(web.glob("*.json")):
+    dst = godot / src.name
+    a = hashlib.sha256(src.read_bytes()).hexdigest()
+    b = hashlib.sha256(dst.read_bytes()).hexdigest() if dst.exists() else ""
+    if a != b:
+        print(f"MISMATCH {src.name}")
+        mismatch = True
+if mismatch:
+    raise SystemExit(1)
+print("catalog hashes match")
+PY

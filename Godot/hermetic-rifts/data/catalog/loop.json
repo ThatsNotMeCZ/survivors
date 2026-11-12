@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "xpBase": 32,
+  "xpGrowth": 1.30,
+  "gemPickup": 36,
+  "gemMagnet": 0,
+  "gemMagnetBonus": 88,
+  "gemMagnetSpeed": 320,
+  "maxFodder": 24,
+  "maxElites": 6,
+  "maxGems": 999,
+  "hashCell": 128,
+  "fodderContactCap": 4,
+  "levelChoices": 3,
+  "portalRadius": 70,
+  "portalHold": 1.4,
+  "director": {
+    "creditRate": 3.0,
+    "fodderCost": 6,
+    "eliteCost": 18,
+    "sniperCost": 18,
+    "fodderInterval": 1.6,
+    "eliteInterval": 14,
+    "sniperInterval": 9,
+    "maxSnipers": 3,
+    "spawnMin": 460,
+    "spawnMax": 900,
+    "spawnSafeRadius": 460,
+    "groupSizeMin": 3,
+    "groupSizeMax": 6,
+    "eliteGroupSizeMin": 1,
+    "eliteGroupSizeMax": 1,
+    "groupSpreadRadius": 56,
+    "eliteChanceBase": 0.02,
+    "eliteChancePerCoeff": 0.12,
+    "eliteChanceMax": 0.40,
+    "eliteCostMul": 3.0
+  },
+  "elite": {
+    "hpMul": 2.4,
+    "damageMul": 1.5,
+    "xpMul": 2.5,
+    "creditsMul": 2.5,
+    "radiusMul": 1.25
+  },
+  "noxious": {
+    "contactSlowMul": 0.5,
+    "contactSlowDuration": 1.1,
+    "corpseDelay": 0.5,
+    "popRadius": 40,
+    "popDamage": 8,
+    "poolDuration": 6.0
+  },
+  "shielder": {
+    "delay": 5,
+    "percentHp": 0.3
+  },
+  "difficulty": {
+    "perSecond": 0.0032,
+    "stageBonus": 0,
+    "speedPerCoeff": 0.035
+  },
+  "rarityWeight": {
+    "common": 1,
+    "uncommon": 0.55,
+    "rare": 0.22,
+    "lunar": 0.08
+  },
+  "loreDropChance": {
+    "fodder": 0.025,
+    "elite": 0.25,
+    "boss": 0.6
+  },
+  "stages": [
+    {
+      "id": "cinder-yard",
+      "name": "Cinder Yard",
+      "kicker": "First Chamber · Nigredo & Calcination",
+      "lore": "The outer foundry where raw matter was burned to black ash. Obsidian kilns still vent superheated slag, and volatile brimstone urns litter the cracked flagstones.",
+      "fodder": "ember-mite",
+      "ranged": "ember-spitter",
+      "rangedChance": 0.22,
+      "sniper": "enemy-astral-sniper",
+      "elite": "ember-chaser",
+      "boss": "cinder-heart",
+      "firstEliteAt": 25,
+      "teleporterAt": 55,
+      "teleporterHold": 20,
+      "teleporterRadius": 160,
+      "view": {
+        "grid": "#443436",
+        "border": "#5a3020",
+        "zone": "#e35d5d",
+        "portal": "#ffb347"
+      }
+    },
+    {
+      "id": "rime-dock",
+      "name": "Rime Dock",
+      "kicker": "Second Chamber · Albedo & Fixation",
+      "lore": "A subterranean canal where alchemical salts and quicksilver were quenched in freezing brine. Frozen bollards block stray bolts while pressurized rime casks threaten to shatter in a numbing frost.",
+      "fodder": "frost-mite",
+      "ranged": "frost-spitter",
+      "rangedChance": 0.22,
+      "sniper": "enemy-astral-sniper",
+      "elite": "frost-warden",
+      "boss": "frost-sovereign",
+      "firstEliteAt": 18,
+      "teleporterAt": 50,
+      "teleporterHold": 22,
+      "teleporterRadius": 150,
+      "view": {
+        "grid": "#142033",
+        "border": "#3a5a7a",
+        "zone": "#5ad4ff",
+        "portal": "#dff6ff"
+      }
+    },
+    {
+      "id": "glacial-tomb",
+      "name": "Glacial Tomb",
+      "kicker": "Final Chamber · Rubedo & The Great Seal",
+      "lore": "The deepest vault beneath the canal, sealed in eternal permafrost to contain the Frost Emperor. Here the Transmutation Circle demands the longest vigil before the Great Work is decided.",
+      "fodder": "frost-mite",
+      "ranged": "frost-spitter",
+      "rangedChance": 0.28,
+      "sniper": "enemy-astral-sniper",
+      "elite": "frost-warden",
+      "boss": "frost-emperor",
+      "firstEliteAt": 14,
+      "teleporterAt": 50,
+      "teleporterHold": 25,
+      "teleporterRadius": 140,
+      "view": {
+        "grid": "#101826",
+        "border": "#2a4a6a",
+        "zone": "#4ac4ef",
+        "portal": "#cff0ff"
+      }
+    }
+  ]
+}

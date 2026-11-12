@@ -1,6 +1,6 @@
 # Clients
 
-Two clients share one design. **Phaser in `web/`** ships itch.io HTML5. **Godot 4.7 typed GDScript in `Godot/`** is the native Steam/desktop sibling. Do not rewrite the web client in Godot. Godot web export is possible; itch is not that build.
+Two clients share one design. **Phaser in `web/`** ships itch.io HTML5. **Godot 4.7 typed GDScript in `Godot/hermetic-rifts/`** is the native Steam/desktop sibling. Do not rewrite the web client in Godot. Godot web export is possible; itch is not that build.
 
 Numbers live in `web/src/data/*.json`. Godot deserializes that schema (or a byte-identical copy). A second balance sheet is a fork.
 

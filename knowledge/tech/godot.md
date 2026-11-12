@@ -11,22 +11,25 @@ Every `.gd` file uses static types (`var x: int`, `-> void`, `Array[InputFrame]`
 ```
 Godot/
   AGENTS.md
-  project.godot          # human creates once
-  addons/godot_mcp/      # symlink → tools/godot-mcp-pro/addons/godot_mcp
-  scenes/
-    boot.tscn            # main scene
-    player.tscn          # MCP-authored packed scenes
-  locale/en.csv
-  src/
-    app.gd               # autoload
-    sim/                 # CPU tick; no Node, no Input.*
-    view/                # draws sim state (may attach to scene nodes)
-    ui/                  # Control scripts + tr()
-    data/                # JSON catalog loader
-    input/               # device → InputFrame
-    net/                 # host-authority stubs only until co-op ships
-    workshop/            # IModSource; local folder first
-    loc/                 # TranslationServer helpers
+  hermetic-rifts/            # Godot project root (keep nested)
+    project.godot
+    addons/godot_mcp/        # symlink → tools/godot-mcp-pro/addons/godot_mcp
+    scenes/
+      boot.tscn              # main scene
+      arena.tscn
+      ui/main_menu.tscn      # title screen (web #main-menu)
+    locale/en.csv
+    data/catalog/            # byte-identical copy of web/src/data/*.json
+    src/
+      app.gd                 # autoload
+      sim/                   # CPU tick; no Node, no Input.*
+      view/                  # draws sim state (may attach to scene nodes)
+      ui/                    # Control scripts + tr()
+      data/                  # JSON catalog loader
+      input/                 # device → InputFrame
+      net/                   # host-authority stubs only until co-op ships
+      workshop/              # IModSource; local folder first
+      loc/                   # TranslationServer helpers
 ```
 
 `sim` takes `frames: Array[InputFrame]` and `dt: float`. It does not read `Input`, `randi()`, or node paths. View and UI sit outside the tick. Future netcode and Workshop contracts are in [design/future.md](../design/future.md).
@@ -44,7 +47,7 @@ Scenes: MCP `create_scene` / `add_node` / `save_scene` / `attach_script` / `upda
 
 `.gd` scripts live under `src/` or next to a scene under `scenes/`. Prefer Cursor file tools for script bodies (types). MCP `create_script` / `edit_script` only for `res://src/**` or `res://scenes/**`.
 
-Register autoload `App` (`src/app.gd`) via MCP `add_autoload` once the project exists.
+Register autoload `App` (`src/app.gd`) via MCP `add_autoload`. Persistence is `user://records.v1.json` and `user://settings.v1.json`. Native fullscreen lives in settings, not a browser API.
 
 Default renderer: **Compatibility** (2D, Steam Deck, later mobile). Viewport 1920×1080. Texture filter **Nearest**. Stretch: `canvas_items` / `expand` / `integer`.
 
@@ -70,7 +73,7 @@ Vendor `skills.md` in the addon may still say "prefer inspector"; that is fine *
 Agents print this list and wait. They do not click the editor for the human. Once MCP is connected, use MCP for steps 3–4.
 
 1. Install **Godot 4.7** (standard build, not .NET).
-2. Project Manager → New. Path: this repo's `Godot/` folder (the project root is `Godot/`, not `Godot/<name>/`). Renderer: Compatibility. Version-control metadata: Git **files only** (no nested `.git`).
+2. Project Manager → Open `Godot/hermetic-rifts/` (nested project root). Renderer: Compatibility. Version-control metadata: Git **files only** (no nested `.git`).
 3. Enable plugin **Godot MCP Pro**. Keep the editor open.
 4. MCP: `create_scene` `res://scenes/boot.tscn`, set Main Scene, `add_autoload` `App`.
 5. Later, not now: export templates, signing, Android SDK, Steam app ID.
@@ -92,7 +95,8 @@ Commit `project.godot`, `locale/`, `.gd` scripts, MCP-saved `.tscn`, and `export
 ## Smoke (once the project exists)
 
 ```bash
-godot --headless --path Godot --quit-after 60
+godot --headless --path Godot/hermetic-rifts -s res://src/smoke/loop_smoke.gd
+godot --headless --path Godot/hermetic-rifts --quit-after 60
 ```
 
-Headless quit-after is the native equivalent of `bun run smoke:loop`.
+Loop-smoke is the native equivalent of `bun run smoke:loop` (victory, obstacles 14/8/9, no director during boss). Quit-after only checks the editor project loads.

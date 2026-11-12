@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://bhxjew5gpaghj"
+path="res://.godot/imported/BossCinder - Dark Crucible.ogg-ce3dec35c3c9a622b16cdacaa0d54b83.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/boss/cinder-heart/BossCinder - Dark Crucible.ogg"
+dest_files=["res://.godot/imported/BossCinder - Dark Crucible.ogg-ce3dec35c3c9a622b16cdacaa0d54b83.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

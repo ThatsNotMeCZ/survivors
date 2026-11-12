@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dwel8v70pi0vb"
+path="res://.godot/imported/BossEmperor - Climactic Dark Gothic.ogg-c8a8d5fbd29008799086e931faa923c7.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/boss/frost-emperor/BossEmperor - Climactic Dark Gothic.ogg"
+dest_files=["res://.godot/imported/BossEmperor - Climactic Dark Gothic.ogg-c8a8d5fbd29008799086e931faa923c7.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

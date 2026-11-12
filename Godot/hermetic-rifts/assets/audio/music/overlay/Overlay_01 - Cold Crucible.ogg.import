@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://br0gi0rss2s52"
+path="res://.godot/imported/Overlay_01 - Cold Crucible.ogg-729f94483675f98203ef9b154c914889.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/overlay/Overlay_01 - Cold Crucible.ogg"
+dest_files=["res://.godot/imported/Overlay_01 - Cold Crucible.ogg-729f94483675f98203ef9b154c914889.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

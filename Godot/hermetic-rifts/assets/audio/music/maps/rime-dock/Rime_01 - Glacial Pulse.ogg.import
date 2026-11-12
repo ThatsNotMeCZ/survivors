@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://d35elpnjtf8t7"
+path="res://.godot/imported/Rime_01 - Glacial Pulse.ogg-27c90285859d91cb14fca1ca5699d864.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/maps/rime-dock/Rime_01 - Glacial Pulse.ogg"
+dest_files=["res://.godot/imported/Rime_01 - Glacial Pulse.ogg-27c90285859d91cb14fca1ca5699d864.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

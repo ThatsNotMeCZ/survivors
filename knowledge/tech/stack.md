@@ -5,7 +5,7 @@ Two clients, one design ([clients.md](clients.md)).
 | Client | Stack | Ships |
 |---|---|---|
 | `web/` | Phaser 4.2.1 + TypeScript + Vite + Bun | itch.io HTML5 (live) |
-| `Godot/` | Godot **4.7** + typed GDScript | Native desktop (Steam later). itch stays Phaser. |
+| `Godot/hermetic-rifts/` | Godot **4.7** + typed GDScript | Native desktop (Steam later). itch stays Phaser. |
 
 Web package manager is Bun (`web/bun.lock`). Never npm. Godot rules: [godot.md](godot.md).
 

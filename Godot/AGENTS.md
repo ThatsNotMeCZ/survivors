@@ -1,6 +1,6 @@
 # AGENTS — Godot client
 
-Native sibling of the Phaser itch client. Godot **4.7** + typed GDScript. Canon project root is `Godot/` (`Godot/project.godot`), not a nested `Godot/<name>/`. Checklist: `knowledge/tech/godot.md`.
+Native sibling of the Phaser itch client. Godot **4.7** + typed GDScript. Canon project root is `Godot/hermetic-rifts/` (`Godot/hermetic-rifts/project.godot`). Checklist: `knowledge/tech/godot.md`.
 
 ## Read first
 
@@ -11,7 +11,9 @@ Native sibling of the Phaser itch client. Godot **4.7** + typed GDScript. Canon 
 5. `../.cursor/rules/godot.mdc` — hard constraints
 6. `../tools/godot-mcp-bridge/` — Cursor MCP stdio → plugin WS 6505
 
-## Layout (once scaffolded)
+## Layout
+
+Paths are relative to `Godot/hermetic-rifts/`.
 
 | Path | Role |
 |---|---|
@@ -40,5 +42,6 @@ Native sibling of the Phaser itch client. Godot **4.7** + typed GDScript. Canon 
 ## Commands (once the project exists)
 
 ```bash
-godot --headless --path Godot --quit-after 60
+godot --headless --path Godot/hermetic-rifts -s res://src/smoke/loop_smoke.gd
+godot --headless --path Godot/hermetic-rifts --quit-after 60
 ```

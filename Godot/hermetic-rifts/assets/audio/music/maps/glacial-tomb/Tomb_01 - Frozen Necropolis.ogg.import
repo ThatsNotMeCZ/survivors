@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://crwpihsti1t21"
+path="res://.godot/imported/Tomb_01 - Frozen Necropolis.ogg-680b7e6fa0b46980b126580a8a8a6a14.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/maps/glacial-tomb/Tomb_01 - Frozen Necropolis.ogg"
+dest_files=["res://.godot/imported/Tomb_01 - Frozen Necropolis.ogg-680b7e6fa0b46980b126580a8a8a6a14.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

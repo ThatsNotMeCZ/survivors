@@ -1,0 +1,299 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "ember-mite",
+      "name": "Ember Mite",
+      "title": "Scorched Dross",
+      "lore": "Clots of ash and failed calcination that skitter out of cracked retorts. Individually brittle, they swarm any warm vessel to strip its mercury.",
+      "role": "fodder",
+      "tags": ["fodder", "chaser"],
+      "stats": { "speed": 92, "maxHp": 14, "radius": 10 },
+      "contact": { "dps": 3 },
+      "rewards": { "xp": 3, "credits": 1 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 18, "inner": "#ffe8e8", "mid": "#c94a4a" }
+    },
+    {
+      "id": "ember-spitter",
+      "name": "Ember Spitter",
+      "title": "Slag Bile Vessel",
+      "lore": "Distended husks engorged on boiling sulfur. They circle the outer kiln perimeter, hurling globules of molten slag whenever a vessel slows its stride.",
+      "role": "fodder",
+      "tags": ["fodder", "ranged"],
+      "stats": { "speed": 68, "maxHp": 12, "radius": 11 },
+      "contact": { "dps": 2 },
+      "rewards": { "xp": 4, "credits": 1 },
+      "ai": {
+        "type": "ranged",
+        "range": 280,
+        "keep": 200,
+        "cooldown": 2.1,
+        "windup": 0.4,
+        "projectile": { "speed": 240, "lifetime": 1.35, "radius": 6, "damage": 5 }
+      },
+      "view": { "kind": "dot", "size": 20, "inner": "#fff0c8", "mid": "#ff7a3a" }
+    },
+    {
+      "id": "ember-chaser",
+      "name": "Ember Warden",
+      "title": "Furnace Overseer",
+      "lore": "A heavy amalgam of cast-iron ribs and stoked furnace slag built to herd failed transmutations. It charges across the flagstones with crushing momentum.",
+      "role": "fodder",
+      "tags": ["fodder", "chaser"],
+      "stats": { "speed": 102, "maxHp": 52, "radius": 18 },
+      "contact": { "dps": 16 },
+      "rewards": { "xp": 8, "credits": 4 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 48, "inner": "#ffe8e8", "mid": "#e35d5d" }
+    },
+    {
+      "id": "cinder-heart",
+      "name": "Cinder Heart",
+      "title": "Core of the First Kiln",
+      "lore": "The living furnace heart that consumed its own alchemists. It awakens only when the Transmutation Circle is charged, determined to melt every vessel back into raw clay.",
+      "role": "boss",
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 60, "maxHp": 1650, "radius": 36 },
+      "contact": { "dps": 22 },
+      "rewards": { "xp": 50, "credits": 0 },
+      "ai": {
+        "type": "boss",
+        "keep": 230,
+        "enrage": { "hpPct": 0.5, "cooldownMul": 0.75 },
+        "attacks": [
+          {
+            "type": "fan",
+            "name": "Slag Spray",
+            "anim": "attack-fan",
+            "cooldown": 3.2,
+            "windup": 0.6,
+            "count": 5,
+            "spread": 50,
+            "projectile": { "speed": 230, "lifetime": 2.0, "radius": 9, "damage": 9 }
+          },
+          {
+            "type": "meteor",
+            "name": "Falling Clinker",
+            "anim": "attack-meteor",
+            "cooldown": 5.0,
+            "windup": 0.4,
+            "delay": 1.2,
+            "radius": 58,
+            "damage": 24,
+            "pool": { "duration": 4.0, "radius": 50, "dps": 8, "slowMul": 0.6 }
+          },
+          {
+            "type": "summon",
+            "name": "Kiln Brood",
+            "anim": "summon",
+            "cooldown": 9.0,
+            "windup": 0.35,
+            "entity": "ember-mite",
+            "count": 3,
+            "maxAlive": 6
+          }
+        ]
+      },
+      "view": { "kind": "dot", "size": 72, "inner": "#fff0c8", "mid": "#ff7a3a" }
+    },
+    {
+      "id": "frost-mite",
+      "name": "Frost Mite",
+      "title": "Rime-Bitten Husk",
+      "lore": "Shards of alchemical salt and frozen mercury that skitter across the dockside stone. Quicker and harder than kiln mites, they hunt in tight, unforgiving packs.",
+      "role": "fodder",
+      "tags": ["fodder", "chaser"],
+      "stats": { "speed": 104, "maxHp": 18, "radius": 10 },
+      "contact": { "dps": 4 },
+      "rewards": { "xp": 4, "credits": 1 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 18, "inner": "#e8f6ff", "mid": "#4aa0d4" }
+    },
+    {
+      "id": "frost-spitter",
+      "name": "Frost Spitter",
+      "title": "Brine Condenser",
+      "lore": "Hollowed alembic creatures that siphon freezing brine from the dock fissures and spit high-velocity needles of rime across the chamber.",
+      "role": "fodder",
+      "tags": ["fodder", "ranged"],
+      "stats": { "speed": 76, "maxHp": 16, "radius": 11 },
+      "contact": { "dps": 2 },
+      "rewards": { "xp": 5, "credits": 1 },
+      "ai": {
+        "type": "ranged",
+        "range": 300,
+        "keep": 210,
+        "cooldown": 1.9,
+        "windup": 0.38,
+        "projectile": { "speed": 260, "lifetime": 1.4, "radius": 6, "damage": 5 }
+      },
+      "view": { "kind": "dot", "size": 20, "inner": "#f4fbff", "mid": "#7ad4ff" }
+    },
+    {
+      "id": "frost-warden",
+      "name": "Frost Warden",
+      "title": "Cryo-Bound Sentinel",
+      "lore": "Heavy dockside hulks armored in glacier-thick salt plate and quenched iron. Their relentless charge shatters brittle vessels that linger along the canal.",
+      "role": "fodder",
+      "tags": ["fodder", "chaser"],
+      "stats": { "speed": 90, "maxHp": 80, "radius": 20 },
+      "contact": { "dps": 20 },
+      "rewards": { "xp": 10, "credits": 5 },
+      "ai": { "type": "chase" },
+      "view": { "kind": "dot", "size": 52, "inner": "#e8f6ff", "mid": "#3d8ad4" }
+    },
+    {
+      "id": "frost-sovereign",
+      "name": "Frost Sovereign",
+      "title": "Regent of the Frozen Dock",
+      "lore": "An ancient transmutation frozen mid-ascension when the sea-locks broke. Crowned in pale rime, it crushes any vessel that dares open the deeper Rift.",
+      "role": "boss",
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 66, "maxHp": 2100, "radius": 40 },
+      "contact": { "dps": 26 },
+      "rewards": { "xp": 75, "credits": 0 },
+      "ai": {
+        "type": "boss",
+        "keep": 260,
+        "enrage": { "hpPct": 0.5, "cooldownMul": 0.75 },
+        "attacks": [
+          {
+            "type": "bolt",
+            "name": "Cryo Lance",
+            "anim": "attack-bolt",
+            "cooldown": 2.2,
+            "windup": 0.45,
+            "projectile": { "speed": 360, "lifetime": 1.8, "radius": 9, "damage": 14 }
+          },
+          {
+            "type": "cone",
+            "name": "Glacial Sweep",
+            "anim": "attack-sweep",
+            "cooldown": 6.5,
+            "windup": 0.75,
+            "lingering": 0.55,
+            "range": 320,
+            "angle": 75,
+            "damage": 12,
+            "slowMul": 0.22,
+            "slowDuration": 2.8
+          },
+          {
+            "type": "prison",
+            "name": "Rime Prison",
+            "anim": "attack-prison",
+            "cooldown": 8.5,
+            "windup": 0.35,
+            "delay": 1.15,
+            "radius": 64,
+            "damage": 16,
+            "rootDuration": 1.6
+          },
+          {
+            "type": "summon",
+            "name": "Rime Brood",
+            "anim": "summon",
+            "cooldown": 9.0,
+            "windup": 0.35,
+            "entity": "frost-mite",
+            "count": 3,
+            "maxAlive": 6
+          }
+        ]
+      },
+      "view": { "kind": "dot", "size": 80, "inner": "#f4fbff", "mid": "#7ad4ff" }
+    },
+    {
+      "id": "frost-emperor",
+      "name": "Frost Emperor",
+      "title": "Monarch of Absolute Zero",
+      "lore": "Entombed at the bottom of the Great Work where heat and motion cease. It is the final seal-keeper; to shatter its glacial hull is to complete the transmutation.",
+      "role": "boss",
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 70, "maxHp": 2800, "radius": 45 },
+      "contact": { "dps": 30 },
+      "rewards": { "xp": 120, "credits": 0 },
+      "ai": {
+        "type": "boss",
+        "keep": 280,
+        "enrage": { "hpPct": 0.5, "cooldownMul": 0.72 },
+        "attacks": [
+          {
+            "type": "bolt",
+            "name": "Glacial Spear",
+            "anim": "attack-bolt",
+            "cooldown": 2.4,
+            "windup": 0.4,
+            "projectile": { "speed": 400, "lifetime": 1.9, "radius": 10, "damage": 18 }
+          },
+          {
+            "type": "pulse",
+            "name": "Absolute Zero Pulse",
+            "anim": "attack-pulse",
+            "cooldown": 12.0,
+            "windup": 1.8,
+            "radius": 620,
+            "damage": 48,
+            "slowMul": 0.35,
+            "slowDuration": 2.5
+          },
+          {
+            "type": "laser",
+            "name": "Aether Laser",
+            "anim": "attack-laser",
+            "cooldown": 9.5,
+            "windup": 0.8,
+            "duration": 2.4,
+            "trackSpeed": 220,
+            "hitRadius": 28,
+            "dps": 28,
+            "trailInterval": 0.22,
+            "trailPool": { "duration": 3.5, "radius": 34, "dps": 7, "slowMul": 0.55 }
+          },
+          {
+            "type": "summon",
+            "name": "Imperial Guard",
+            "anim": "summon",
+            "cooldown": 10.0,
+            "windup": 0.35,
+            "entity": "frost-mite",
+            "count": 3,
+            "maxAlive": 6
+          },
+          {
+            "type": "summon",
+            "name": "Brine Retinue",
+            "anim": "summon",
+            "cooldown": 14.0,
+            "windup": 0.35,
+            "entity": "frost-spitter",
+            "count": 2,
+            "maxAlive": 3
+          }
+        ]
+      },
+      "view": { "kind": "dot", "size": 90, "inner": "#ffffff", "mid": "#3d8ad4" }
+    },
+    {
+      "id": "enemy-astral-sniper",
+      "name": "Astral Watcher",
+      "title": "Ocular of the Void",
+      "lore": "A disembodied brass-and-aether eye that drifts at the edge of sight. It traces a thin celestial sightline before lancing the arena—only solid pillars can break its gaze.",
+      "role": "fodder",
+      "tags": ["fodder", "sniper"],
+      "stats": { "speed": 36, "maxHp": 8, "radius": 10 },
+      "contact": { "dps": 1 },
+      "rewards": { "xp": 6, "credits": 2 },
+      "ai": {
+        "type": "sniper",
+        "keep": 480,
+        "cooldown": 3.2,
+        "windup": 1.5,
+        "damage": 28,
+        "lineWidth": 10
+      },
+      "view": { "kind": "dot", "size": 22, "inner": "#f0e8ff", "mid": "#7a3aff" }
+    }
+  ]
+}

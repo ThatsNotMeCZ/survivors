@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "bolt",
+      "name": "Ignis Bolt",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.28,
+      "lore": "A needle of fire. It only flies where you point.",
+      "hook": "Fires searing bolts of flame toward your cursor.",
+      "effects": [
+        {
+          "type": "projectile",
+          "speed": 780,
+          "lifetime": 0.85,
+          "radius": 5,
+          "damage": 10
+        }
+      ]
+    },
+    {
+      "id": "dash",
+      "name": "Phase Step",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 2.9,
+      "lore": "The vessel slips between worlds for a breath.",
+      "hook": "Dash swiftly forward, phasing harmlessly through foes and projectiles.",
+      "effects": [
+        {
+          "type": "dash",
+          "distance": 210,
+          "duration": 0.16,
+          "iframe": 0.22
+        }
+      ]
+    },
+    {
+      "id": "skill-aether-pierce",
+      "name": "Piercing Aether",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 4,
+      "lore": "A thin ray of stolen sky. Line them up or waste the breath.",
+      "hook": "Lances through every foe in a line, briefly steadying your stride.",
+      "effects": [
+        {
+          "type": "projectile",
+          "speed": 1400,
+          "lifetime": 0.45,
+          "radius": 6,
+          "damage": 22,
+          "pierce": true
+        },
+        {
+          "type": "self-slow",
+          "mul": 0.5,
+          "duration": 0.25
+        }
+      ]
+    },
+    {
+      "id": "skill-crucible-cull",
+      "name": "Crucible Cull",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 12,
+      "lore": "A hammer of the Great Work, dropped where you will it.",
+      "hook": "Calls down a concentrated alchemical strike at the cursor after a brief delay.",
+      "effects": [
+        {
+          "type": "delayed-strike",
+          "delay": 0.7,
+          "radius": 45,
+          "damage": 95
+        }
+      ]
+    },
+    {
+      "id": "skill-censer-lob",
+      "name": "Censer Lob",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.42,
+      "lore": "Heavy glass, thrown in an arc. The air between you and the stain is empty.",
+      "hook": "Lobs a heavy censer over the horde that shatters on impact, scorching nearby foes.",
+      "effects": [
+        {
+          "type": "projectile",
+          "speed": 420,
+          "lifetime": 1.1,
+          "radius": 7,
+          "damage": 14,
+          "flyOver": true,
+          "impactRadius": 30
+        }
+      ]
+    },
+    {
+      "id": "skill-brimstone-line",
+      "name": "Brimstone Line",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 5,
+      "lore": "A seam of sulfur drawn across the yard. The small ones fear it.",
+      "hook": "Draws a burning seam of sulfur that slows lesser foes crossing it.",
+      "effects": [
+        {
+          "type": "slow-line",
+          "length": 150,
+          "width": 18,
+          "duration": 2.4,
+          "slowMul": 0.2,
+          "damage": 2,
+          "fodderOnly": true,
+          "offset": 56
+        }
+      ]
+    },
+    {
+      "id": "dash-ash-step",
+      "name": "Ash Step",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 3,
+      "lore": "Leave a husk of ash. The mites chase the ghost.",
+      "hook": "Dash to safety while leaving an ash effigy that lures lesser foes.",
+      "effects": [
+        {
+          "type": "dash",
+          "distance": 210,
+          "duration": 0.16,
+          "iframe": 0.22,
+          "decoyDuration": 1.5
+        }
+      ]
+    },
+    {
+      "id": "skill-condemn-tether",
+      "name": "Condemnation Tether",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 15,
+      "lore": "A chain for the proud. The small are ash before the iron locks.",
+      "hook": "Pierces and incinerates lesser foes to bind the first elite or boss struck with a searing chain.",
+      "effects": [
+        {
+          "type": "tether",
+          "speed": 640,
+          "lifetime": 0.7,
+          "radius": 10,
+          "rootDuration": 2.5,
+          "fodderDamage": 45,
+          "fodderContactDps": 28
+        }
+      ]
+    }
+  ]
+}

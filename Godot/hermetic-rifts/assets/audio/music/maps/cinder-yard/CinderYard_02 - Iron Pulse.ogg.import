@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dfgacvkm28i01"
+path="res://.godot/imported/CinderYard_02 - Iron Pulse.ogg-7be0916c1a4ab37776a0a3731775ee33.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/maps/cinder-yard/CinderYard_02 - Iron Pulse.ogg"
+dest_files=["res://.godot/imported/CinderYard_02 - Iron Pulse.ogg-7be0916c1a4ab37776a0a3731775ee33.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

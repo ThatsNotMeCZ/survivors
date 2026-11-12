@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://cblu7d8m64tsa"
+path="res://.godot/imported/CinderYard_01 - Hermetic Protocol.ogg-5bf8abbf248fe1f21bed4b35710c7b8e.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/maps/cinder-yard/CinderYard_01 - Hermetic Protocol.ogg"
+dest_files=["res://.godot/imported/CinderYard_01 - Hermetic Protocol.ogg-5bf8abbf248fe1f21bed4b35710c7b8e.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

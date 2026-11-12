@@ -1,5 +1,14 @@
 [gd_scene format=3 uid="uid://vu1m1s6h4abv"]
 
+[ext_resource type="Script" uid="uid://c3yktgx3wiaqh" path="res://src/view/arena_view.gd" id="1_e05a3"]
+
 [node name="Arena" type="Node2D" unique_id=739898426]
+script = ExtResource("1_e05a3")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1084681180]
+
+[node name="WorldRoot" type="Node2D" parent="." unique_id=1544102057]
+
+[node name="Player" type="Sprite2D" parent="WorldRoot" unique_id=1261687323]
+
+[node name="Crosshair" type="Sprite2D" parent="WorldRoot" unique_id=2018279231]

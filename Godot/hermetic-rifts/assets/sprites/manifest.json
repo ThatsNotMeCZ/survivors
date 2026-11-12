@@ -1,0 +1,1498 @@
+{
+  "entities": {
+    "cinder-heart": {
+      "src": "sprites/entities/cinder-heart.png",
+      "frameWidth": 86,
+      "frameHeight": 86,
+      "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 2,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 2,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 2,
+          "repeat": 0
+        }
+      }
+    },
+    "ember-chaser": {
+      "src": "sprites/entities/ember-chaser.png",
+      "frameWidth": 56,
+      "frameHeight": 56,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 4,
+          "repeat": 0
+        }
+      }
+    },
+    "ember-mite": {
+      "src": "sprites/entities/ember-mite.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
+    "ember-spitter": {
+      "src": "sprites/entities/ember-spitter.png",
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        }
+      }
+    },
+    "enemy-astral-sniper": {
+      "src": "sprites/entities/enemy-astral-sniper.png",
+      "frameWidth": 28,
+      "frameHeight": 28,
+      "anims": {
+        "idle": {
+          "frames": [
+            0,
+            1
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            0,
+            1
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
+    "frost-emperor": {
+      "src": "sprites/entities/frost-emperor.png",
+      "frameWidth": 79,
+      "frameHeight": 96,
+      "anims": {
+        "idle": {
+          "frames": [
+            0,
+            1
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack-bolt": {
+          "frames": [
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        },
+        "attack-laser": {
+          "frames": [
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        },
+        "attack-pulse": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
+    "frost-mite": {
+      "src": "sprites/entities/frost-mite.png",
+      "frameWidth": 24,
+      "frameHeight": 24,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
+    "frost-sovereign": {
+      "src": "sprites/entities/frost-sovereign.png",
+      "frameWidth": 56,
+      "frameHeight": 64,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        },
+        "attack-bolt": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "attack-sweep": {
+          "frames": [
+            6,
+            7
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "attack-prison": {
+          "frames": [
+            8,
+            9
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        }
+      }
+    },
+    "frost-spitter": {
+      "src": "sprites/entities/frost-spitter.png",
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 5.99,
+          "repeat": 0
+        }
+      }
+    },
+    "frost-warden": {
+      "src": "sprites/entities/frost-warden.png",
+      "frameWidth": 42,
+      "frameHeight": 45,
+      "anims": {
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        }
+      }
+    },
+    "penitent": {
+      "src": "sprites/entities/penitent.png",
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "anims": {
+        "walk": {
+          "frames": [
+            0,
+            1,
+            2
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            3,
+            4
+          ],
+          "frameRate": 5.99,
+          "repeat": -1
+        }
+      }
+    },
+    "runner": {
+      "src": "sprites/entities/runner.png",
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "anims": {
+        "walk": {
+          "frames": [
+            0,
+            1,
+            2
+          ],
+          "frameRate": 2.5,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            3,
+            4
+          ],
+          "frameRate": 2.5,
+          "repeat": -1
+        }
+      }
+    },
+    "ember-warden": {
+      "src": "sprites/entities/ember-chaser.png",
+      "frameWidth": 56,
+      "frameHeight": 56,
+      "anims": {
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 4,
+          "repeat": 0
+        }
+      }
+    },
+    "frost-chaser": {
+      "src": "sprites/entities/frost-warden.png",
+      "frameWidth": 42,
+      "frameHeight": 45,
+      "anims": {
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "walk": {
+          "frames": [
+            1,
+            2,
+            3
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        },
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        }
+      }
+    }
+  },
+  "items": [
+    "brittle-plate",
+    "calcined-lens",
+    "cinnabar-leech",
+    "glass-cannon",
+    "goat-hoof",
+    "hair-trigger",
+    "hungry-clip",
+    "lead-core",
+    "lunar-tithe",
+    "mercury-vial",
+    "overclock",
+    "salt-ward",
+    "wax-wings"
+  ],
+  "skills": [
+    "bolt",
+    "dash-ash-step",
+    "dash",
+    "skill-aether-pierce",
+    "skill-brimstone-line",
+    "skill-censer-lob",
+    "skill-condemn-tether",
+    "skill-crucible-cull"
+  ],
+  "env": [
+    "ambient-ash",
+    "ambient-ember",
+    "cinder-border-corner-bottom",
+    "cinder-border-corner-top",
+    "cinder-border-h-0",
+    "cinder-border-h-1",
+    "cinder-border-v-0",
+    "cinder-border-v-1",
+    "cinder-circle",
+    "cinder-hazard-0",
+    "cinder-pillar",
+    "cinder-portal",
+    "cinder-tile-0",
+    "cinder-tile-1",
+    "cinder-tile-2",
+    "cinder-tile-rune-0",
+    "cinder-tile-rune-1",
+    "cinder-tile-rune-2",
+    "cinder-tile-rune-3",
+    "cinder-volatile",
+    "glacial-tile-0",
+    "glacial-tile-1",
+    "glacial-tile-2",
+    "glacial-tile-rune-0",
+    "glacial-tile-rune-1",
+    "glacial-tile-rune-2",
+    "glacial-tile-rune-3",
+    "rime-border-corner-bottom",
+    "rime-border-corner-top",
+    "rime-border-h-0",
+    "rime-border-h-1",
+    "rime-border-v-0",
+    "rime-border-v-1",
+    "rime-circle",
+    "rime-hazard-0",
+    "rime-pillar",
+    "rime-portal",
+    "rime-tile-0",
+    "rime-tile-1",
+    "rime-tile-2",
+    "rime-tile-rune-0",
+    "rime-tile-rune-1",
+    "rime-tile-rune-2",
+    "rime-tile-rune-3",
+    "rime-volatile"
+  ],
+  "fx": [
+    "bolt",
+    "cinder-spit",
+    "dash",
+    "death",
+    "frost-spit",
+    "gem",
+    "hit",
+    "hurt",
+    "muzzle",
+    "noxious-pop",
+    "skill-aether-pierce",
+    "skill-brimstone-line",
+    "skill-censer-lob",
+    "skill-condemn-tether",
+    "skill-crucible-cull"
+  ],
+  "ui": [
+    "btn-cta",
+    "btn-plaque",
+    "card-common",
+    "card-lunar",
+    "card-rare",
+    "card-uncommon",
+    "hall-banner",
+    "hall-medailon",
+    "hall-medallion",
+    "hud-corner",
+    "hud-flask",
+    "hud-inventory",
+    "hud-objective",
+    "hud-skill-dock",
+    "hud-timer",
+    "logo",
+    "nav-arrow",
+    "parchment-panel",
+    "pause-inventory",
+    "pause-tablet",
+    "portrait-penitent",
+    "portrait-runner",
+    "screen-corner",
+    "skill-slot-frame",
+    "sting-banner"
+  ],
+  "uiAtlas": {
+    "src": "sprites/ui/atlas.png",
+    "width": 1366,
+    "height": 1992,
+    "frames": {
+      "logo": {
+        "idle": {
+          "x": 0,
+          "y": 0,
+          "w": 260,
+          "h": 160
+        },
+        "hover": {
+          "x": 0,
+          "y": 0,
+          "w": 260,
+          "h": 160
+        },
+        "active": {
+          "x": 0,
+          "y": 0,
+          "w": 260,
+          "h": 160
+        }
+      },
+      "btn-plaque": {
+        "idle": {
+          "x": 0,
+          "y": 170,
+          "w": 146,
+          "h": 52
+        },
+        "hover": {
+          "x": 160,
+          "y": 170,
+          "w": 146,
+          "h": 52
+        },
+        "active": {
+          "x": 315,
+          "y": 170,
+          "w": 146,
+          "h": 52
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 21,
+            "right": 48,
+            "bottom": 21,
+            "left": 52
+          },
+          "expandable": {
+            "x": 52,
+            "y": 22,
+            "w": 48,
+            "h": 32
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      },
+      "btn-cta": {
+        "idle": {
+          "x": 0,
+          "y": 230,
+          "w": 141,
+          "h": 92
+        },
+        "hover": {
+          "x": 160,
+          "y": 230,
+          "w": 141,
+          "h": 92
+        },
+        "active": {
+          "x": 312,
+          "y": 230,
+          "w": 141,
+          "h": 92
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 43,
+            "right": 45,
+            "bottom": 26,
+            "left": 46
+          },
+          "expandable": {
+            "x": 46,
+            "y": 43,
+            "w": 50,
+            "h": 23
+          },
+          "center": {
+            "x": 62,
+            "y": 47,
+            "w": 17,
+            "h": 15
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      },
+      "hall-banner": {
+        "idle": {
+          "x": 0,
+          "y": 330,
+          "w": 224,
+          "h": 64
+        },
+        "hover": {
+          "x": 0,
+          "y": 330,
+          "w": 224,
+          "h": 64
+        },
+        "active": {
+          "x": 0,
+          "y": 330,
+          "w": 224,
+          "h": 64
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 16,
+            "right": 84,
+            "bottom": 25,
+            "left": 111
+          },
+          "expandable": {
+            "x": 111,
+            "y": 17,
+            "w": 22,
+            "h": 25
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      },
+      "portrait-runner": {
+        "idle": {
+          "x": 5,
+          "y": 400,
+          "w": 96,
+          "h": 96
+        },
+        "hover": {
+          "x": 5,
+          "y": 400,
+          "w": 96,
+          "h": 96
+        },
+        "active": {
+          "x": 5,
+          "y": 400,
+          "w": 96,
+          "h": 96
+        }
+      },
+      "portrait-penitent": {
+        "idle": {
+          "x": 110,
+          "y": 400,
+          "w": 96,
+          "h": 96
+        },
+        "hover": {
+          "x": 110,
+          "y": 400,
+          "w": 96,
+          "h": 96
+        },
+        "active": {
+          "x": 110,
+          "y": 400,
+          "w": 96,
+          "h": 96
+        }
+      },
+      "parchment-panel": {
+        "idle": {
+          "x": 5,
+          "y": 500,
+          "w": 336,
+          "h": 440
+        },
+        "hover": {
+          "x": 5,
+          "y": 500,
+          "w": 336,
+          "h": 440
+        },
+        "active": {
+          "x": 5,
+          "y": 500,
+          "w": 336,
+          "h": 440
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 68,
+            "right": 68,
+            "bottom": 68,
+            "left": 68
+          },
+          "expandable": {
+            "x": 68,
+            "y": 68,
+            "w": 200,
+            "h": 304
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      },
+      "hud-skill-dock": {
+        "idle": {
+          "x": 360,
+          "y": 500,
+          "w": 315,
+          "h": 96
+        },
+        "hover": {
+          "x": 360,
+          "y": 500,
+          "w": 315,
+          "h": 96
+        },
+        "active": {
+          "x": 360,
+          "y": 500,
+          "w": 315,
+          "h": 96
+        }
+      },
+      "hud-inventory": {
+        "idle": {
+          "x": 360,
+          "y": 620,
+          "w": 132,
+          "h": 132
+        },
+        "hover": {
+          "x": 360,
+          "y": 620,
+          "w": 132,
+          "h": 132
+        },
+        "active": {
+          "x": 360,
+          "y": 620,
+          "w": 132,
+          "h": 132
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 42,
+            "right": 42,
+            "bottom": 42,
+            "left": 42
+          },
+          "expandable": {
+            "x": 42,
+            "y": 42,
+            "w": 40,
+            "h": 40
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      },
+      "card-common": {
+        "idle": {
+          "x": 5,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        },
+        "hover": {
+          "x": 5,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        },
+        "active": {
+          "x": 5,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        }
+      },
+      "card-uncommon": {
+        "idle": {
+          "x": 300,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        },
+        "hover": {
+          "x": 300,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        },
+        "active": {
+          "x": 300,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        }
+      },
+      "card-rare": {
+        "idle": {
+          "x": 600,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        },
+        "hover": {
+          "x": 600,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        },
+        "active": {
+          "x": 600,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        }
+      },
+      "card-lunar": {
+        "idle": {
+          "x": 900,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        },
+        "hover": {
+          "x": 900,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        },
+        "active": {
+          "x": 900,
+          "y": 950,
+          "w": 273,
+          "h": 390
+        }
+      },
+      "pause-tablet": {
+        "idle": {
+          "x": 5,
+          "y": 1350,
+          "w": 370,
+          "h": 390
+        },
+        "hover": {
+          "x": 5,
+          "y": 1350,
+          "w": 370,
+          "h": 390
+        },
+        "active": {
+          "x": 5,
+          "y": 1350,
+          "w": 370,
+          "h": 390
+        }
+      },
+      "pause-inventory": {
+        "idle": {
+          "x": 400,
+          "y": 1350,
+          "w": 268,
+          "h": 268
+        },
+        "hover": {
+          "x": 400,
+          "y": 1350,
+          "w": 268,
+          "h": 268
+        },
+        "active": {
+          "x": 400,
+          "y": 1350,
+          "w": 268,
+          "h": 268
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 70,
+            "right": 70,
+            "bottom": 70,
+            "left": 70
+          },
+          "expandable": {
+            "x": 70,
+            "y": 70,
+            "w": 144,
+            "h": 144
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      },
+      "hud-flask": {
+        "idle": {
+          "x": 700,
+          "y": 1350,
+          "w": 179,
+          "h": 208
+        },
+        "hover": {
+          "x": 700,
+          "y": 1350,
+          "w": 179,
+          "h": 208
+        },
+        "active": {
+          "x": 700,
+          "y": 1350,
+          "w": 179,
+          "h": 208
+        }
+      },
+      "hud-timer": {
+        "idle": {
+          "x": 700,
+          "y": 500,
+          "w": 243,
+          "h": 101
+        },
+        "hover": {
+          "x": 700,
+          "y": 500,
+          "w": 243,
+          "h": 101
+        },
+        "active": {
+          "x": 700,
+          "y": 500,
+          "w": 243,
+          "h": 101
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 0,
+            "right": 18,
+            "bottom": 0,
+            "left": 88
+          },
+          "expandable": {
+            "x": 88,
+            "y": 38,
+            "w": 137,
+            "h": 50
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      },
+      "hud-objective": {
+        "idle": {
+          "x": 530,
+          "y": 620,
+          "w": 280,
+          "h": 62
+        },
+        "hover": {
+          "x": 530,
+          "y": 620,
+          "w": 280,
+          "h": 62
+        },
+        "active": {
+          "x": 530,
+          "y": 620,
+          "w": 280,
+          "h": 62
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 0,
+            "right": 50,
+            "bottom": 0,
+            "left": 50
+          },
+          "expandable": {
+            "x": 50,
+            "y": 22,
+            "w": 180,
+            "h": 18
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      },
+      "hud-corner": {
+        "idle": {
+          "x": 960,
+          "y": 500,
+          "w": 96,
+          "h": 96
+        },
+        "hover": {
+          "x": 960,
+          "y": 500,
+          "w": 96,
+          "h": 96
+        },
+        "active": {
+          "x": 960,
+          "y": 500,
+          "w": 96,
+          "h": 96
+        }
+      },
+      "screen-corner": {
+        "idle": {
+          "x": 960,
+          "y": 500,
+          "w": 96,
+          "h": 96
+        },
+        "hover": {
+          "x": 960,
+          "y": 500,
+          "w": 96,
+          "h": 96
+        },
+        "active": {
+          "x": 960,
+          "y": 500,
+          "w": 96,
+          "h": 96
+        }
+      },
+      "hall-medailon": {
+        "idle": {
+          "x": 840,
+          "y": 620,
+          "w": 48,
+          "h": 48
+        },
+        "hover": {
+          "x": 840,
+          "y": 620,
+          "w": 48,
+          "h": 48
+        },
+        "active": {
+          "x": 840,
+          "y": 620,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "hall-medallion": {
+        "idle": {
+          "x": 840,
+          "y": 620,
+          "w": 48,
+          "h": 48
+        },
+        "hover": {
+          "x": 840,
+          "y": 620,
+          "w": 48,
+          "h": 48
+        },
+        "active": {
+          "x": 840,
+          "y": 620,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "skill-slot-frame": {
+        "idle": {
+          "x": 1080,
+          "y": 500,
+          "w": 54,
+          "h": 54
+        },
+        "hover": {
+          "x": 1080,
+          "y": 500,
+          "w": 54,
+          "h": 54
+        },
+        "active": {
+          "x": 1080,
+          "y": 500,
+          "w": 54,
+          "h": 54
+        }
+      },
+      "sting-banner": {
+        "idle": {
+          "x": 360,
+          "y": 780,
+          "w": 320,
+          "h": 63
+        },
+        "hover": {
+          "x": 360,
+          "y": 780,
+          "w": 320,
+          "h": 63
+        },
+        "active": {
+          "x": 360,
+          "y": 780,
+          "w": 320,
+          "h": 63
+        },
+        "nineSlice": {
+          "margins": {
+            "top": 10,
+            "right": 94,
+            "bottom": 28,
+            "left": 94
+          },
+          "expandable": {
+            "x": 94,
+            "y": 10,
+            "w": 42,
+            "h": 28
+          },
+          "repeat": "stretch",
+          "scale": 1
+        }
+      },
+      "nav-arrow": {
+        "idle": {
+          "x": 900,
+          "y": 620,
+          "w": 32,
+          "h": 32
+        },
+        "hover": {
+          "x": 900,
+          "y": 620,
+          "w": 32,
+          "h": 32
+        },
+        "active": {
+          "x": 900,
+          "y": 620,
+          "w": 32,
+          "h": 32
+        }
+      }
+    }
+  },
+  "envAtlas": {
+    "src": "sprites/env/atlas.png",
+    "width": 572,
+    "height": 1603,
+    "frames": {
+      "cinder-tile-0": {
+        "x": 5,
+        "y": 5,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-1": {
+        "x": 75,
+        "y": 5,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-2": {
+        "x": 145,
+        "y": 5,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-rune-0": {
+        "x": 5,
+        "y": 75,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-rune-1": {
+        "x": 75,
+        "y": 75,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-rune-2": {
+        "x": 145,
+        "y": 75,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-tile-rune-3": {
+        "x": 215,
+        "y": 75,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-border-h-0": {
+        "x": 285,
+        "y": 5,
+        "w": 64,
+        "h": 34
+      },
+      "cinder-border-h-1": {
+        "x": 355,
+        "y": 5,
+        "w": 64,
+        "h": 34
+      },
+      "cinder-border-v-0": {
+        "x": 425,
+        "y": 5,
+        "w": 21,
+        "h": 64
+      },
+      "cinder-border-v-1": {
+        "x": 450,
+        "y": 5,
+        "w": 21,
+        "h": 64
+      },
+      "cinder-border-corner-top": {
+        "x": 285,
+        "y": 45,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-border-corner-bottom": {
+        "x": 355,
+        "y": 45,
+        "w": 64,
+        "h": 64
+      },
+      "cinder-pillar": {
+        "x": 485,
+        "y": 5,
+        "w": 58,
+        "h": 104
+      },
+      "cinder-hazard-0": {
+        "x": 5,
+        "y": 370,
+        "w": 128,
+        "h": 128
+      },
+      "cinder-volatile": {
+        "x": 5,
+        "y": 670,
+        "w": 32,
+        "h": 32
+      },
+      "cinder-circle": {
+        "x": 5,
+        "y": 720,
+        "w": 320,
+        "h": 315
+      },
+      "cinder-portal": {
+        "x": 5,
+        "y": 1430,
+        "w": 140,
+        "h": 137
+      },
+      "rime-tile-0": {
+        "x": 5,
+        "y": 145,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-1": {
+        "x": 75,
+        "y": 145,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-2": {
+        "x": 145,
+        "y": 145,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-rune-0": {
+        "x": 5,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-rune-1": {
+        "x": 75,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-rune-2": {
+        "x": 145,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "rime-tile-rune-3": {
+        "x": 145,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "rime-border-h-0": {
+        "x": 285,
+        "y": 145,
+        "w": 64,
+        "h": 34
+      },
+      "rime-border-h-1": {
+        "x": 355,
+        "y": 145,
+        "w": 64,
+        "h": 34
+      },
+      "rime-border-v-0": {
+        "x": 425,
+        "y": 145,
+        "w": 21,
+        "h": 64
+      },
+      "rime-border-v-1": {
+        "x": 425,
+        "y": 215,
+        "w": 21,
+        "h": 64
+      },
+      "rime-border-corner-top": {
+        "x": 285,
+        "y": 185,
+        "w": 64,
+        "h": 64
+      },
+      "rime-border-corner-bottom": {
+        "x": 355,
+        "y": 185,
+        "w": 64,
+        "h": 64
+      },
+      "rime-pillar": {
+        "x": 485,
+        "y": 145,
+        "w": 56,
+        "h": 104
+      },
+      "rime-hazard-0": {
+        "x": 5,
+        "y": 520,
+        "w": 128,
+        "h": 128
+      },
+      "rime-volatile": {
+        "x": 50,
+        "y": 670,
+        "w": 32,
+        "h": 32
+      },
+      "rime-circle": {
+        "x": 5,
+        "y": 1050,
+        "w": 320,
+        "h": 314
+      },
+      "rime-portal": {
+        "x": 5,
+        "y": 1430,
+        "w": 140,
+        "h": 137
+      },
+      "glacial-tile-0": {
+        "x": 5,
+        "y": 285,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-1": {
+        "x": 75,
+        "y": 285,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-2": {
+        "x": 145,
+        "y": 285,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-rune-0": {
+        "x": 5,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-rune-1": {
+        "x": 75,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-rune-2": {
+        "x": 145,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "glacial-tile-rune-3": {
+        "x": 215,
+        "y": 215,
+        "w": 64,
+        "h": 64
+      },
+      "ambient-ash": {
+        "x": 5,
+        "y": 1600,
+        "w": 8,
+        "h": 8
+      },
+      "ambient-ember": {
+        "x": 15,
+        "y": 1600,
+        "w": 8,
+        "h": 8
+      }
+    }
+  }
+}

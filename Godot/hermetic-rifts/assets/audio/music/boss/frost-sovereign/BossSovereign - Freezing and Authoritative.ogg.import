@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://u1kdtmhwb06w"
+path="res://.godot/imported/BossSovereign - Freezing and Authoritative.ogg-c3c72cadcfd200de25489e9b311842db.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/boss/frost-sovereign/BossSovereign - Freezing and Authoritative.ogg"
+dest_files=["res://.godot/imported/BossSovereign - Freezing and Authoritative.ogg-c3c72cadcfd200de25489e9b311842db.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

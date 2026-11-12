@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://cgf8ct256t3f2"
+path="res://.godot/imported/MainMenu_01 - Hermetic Alchemist.ogg-e50ed034c275e0276a29924804749197.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/music/menu/MainMenu_01 - Hermetic Alchemist.ogg"
+dest_files=["res://.godot/imported/MainMenu_01 - Hermetic Alchemist.ogg-e50ed034c275e0276a29924804749197.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

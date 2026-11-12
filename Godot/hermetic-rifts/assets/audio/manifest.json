@@ -1,0 +1,98 @@
+{
+  "music": {
+    "menu": [
+      "audio/music/menu/MainMenu_01 - Hermetic Alchemist.ogg",
+      "audio/music/menu/MainMenu_02 - Hermetic Codex.ogg"
+    ],
+    "maps": {
+      "cinder-yard": [
+        "audio/music/maps/cinder-yard/CinderYard_01 - Hermetic Protocol.ogg",
+        "audio/music/maps/cinder-yard/CinderYard_02 - Iron Pulse.ogg"
+      ],
+      "glacial-tomb": [
+        "audio/music/maps/glacial-tomb/Tomb_01 - Frozen Necropolis.ogg",
+        "audio/music/maps/glacial-tomb/Tomb_02 - Sacred Descent.ogg"
+      ],
+      "rime-dock": [
+        "audio/music/maps/rime-dock/Rime_01 - Glacial Pulse.ogg",
+        "audio/music/maps/rime-dock/Rime_02 - Cold Harbor.ogg"
+      ]
+    },
+    "boss": {
+      "cinder-heart": [
+        "audio/music/boss/cinder-heart/BossCinder - Dark Crucible.ogg"
+      ],
+      "frost-emperor": [
+        "audio/music/boss/frost-emperor/BossEmperor - Climactic Dark Gothic.ogg"
+      ],
+      "frost-sovereign": [
+        "audio/music/boss/frost-sovereign/BossSovereign - Freezing and Authoritative.ogg"
+      ]
+    },
+    "overlay": [
+      "audio/music/overlay/Overlay_01 - Cold Crucible.ogg"
+    ]
+  },
+  "sfx": {
+    "click": {
+      "src": "audio/sfx/ui/click.ogg",
+      "volume": 1
+    },
+    "close": {
+      "src": "audio/sfx/ui/close.ogg",
+      "volume": 1
+    },
+    "confirm": {
+      "src": "audio/sfx/ui/confirm.ogg",
+      "volume": 1
+    },
+    "defeat": {
+      "src": "audio/sfx/ui/defeat.ogg",
+      "volume": 1
+    },
+    "error": {
+      "src": "audio/sfx/ui/error.ogg",
+      "volume": 1
+    },
+    "open": {
+      "src": "audio/sfx/ui/open.ogg",
+      "volume": 1
+    },
+    "victory": {
+      "src": "audio/sfx/ui/victory.ogg",
+      "volume": 1
+    },
+    "dash": {
+      "src": "audio/sfx/combat/dash.ogg",
+      "volume": 1
+    },
+    "death": {
+      "src": "audio/sfx/combat/death.ogg",
+      "volume": 1
+    },
+    "hit": {
+      "src": "audio/sfx/combat/hit.ogg",
+      "volume": 1
+    },
+    "hurt": {
+      "src": "audio/sfx/combat/hurt.ogg",
+      "volume": 1
+    },
+    "muzzle": {
+      "src": "audio/sfx/combat/muzzle.ogg",
+      "volume": 1
+    },
+    "strike": {
+      "src": "audio/sfx/combat/strike.ogg",
+      "volume": 1
+    },
+    "break": {
+      "src": "audio/sfx/world/break.ogg",
+      "volume": 1
+    },
+    "gem": {
+      "src": "audio/sfx/world/gem.ogg",
+      "volume": 1
+    }
+  }
+}

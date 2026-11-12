@@ -1,0 +1,149 @@
+keys,en
+ui.game.title,Hermetic Rifts
+ui.menu.commence,Commence Transmutation
+ui.menu.brand.line1,HERMETIC
+ui.menu.brand.line2,RIFTS
+ui.menu.commence.line1,COMMENCE
+ui.menu.commence.line2,TRANSMUTATION
+ui.menu.archives,The Archives
+ui.menu.desk,Alchemist's Desk
+ui.hall.commence,Commence Working
+ui.hall.sealed,Vessel Sealed
+ui.hall.daily,Daily Rite
+ui.hall.back,Return
+ui.hall.???,??? · SEALED
+ui.pause.title,Simulation Paused
+ui.pause.resume,Resume Sequence
+ui.pause.archives,The Archives
+ui.pause.settings,Settings
+ui.pause.abandon,Abandon Vessel
+ui.pause.seal,Seal the Working
+ui.pause.empty_inv,No augmentations bound yet.
+ui.levelup.hint,Choose a tablet
+ui.recap.defeat,Vessel Shattered
+ui.recap.victory,Transmutation Complete
+ui.recap.abandon,Vessel Dissolved
+ui.recap.again,Run Again
+ui.recap.hall,Return to Hall
+ui.settings.title,Alchemist's Desk
+ui.settings.master,Master
+ui.settings.sfx,SFX
+ui.settings.music,Music
+ui.settings.mute,Mute
+ui.settings.shake,Screenshake
+ui.settings.vfx,Reduce VFX
+ui.settings.fullscreen,Fullscreen Chamber
+ui.archives.howto,I. Rites of Motion
+ui.archives.lore,II. Chronicles
+ui.archives.bestiary,III. Bestiary
+ui.archives.reliquary,IV. Reliquary
+ui.archives.ledger,V. Ledger
+ui.archives.purge,Purge Ledger
+ui.archives.purge_confirm,Confirm Purge
+ui.hud.channel,Channel the Transmutation Circle
+ui.hud.slay,Slay the {name}
+ui.hud.descend,Descend the Rift
+ui.hud.ouroboros,Descend the Ouroboros
+ui.hud.seal,The Seal Manifests
+ui.prompt.???,???
+ui.diff.dormant,Dormant
+ui.diff.stirring,Stirring
+ui.diff.tempered,Tempered
+ui.diff.calcined,Calcined
+ui.diff.volatile,Volatile
+ui.diff.cataclysm,Cataclysm
+item.glass-cannon.name,Vitriol Veins
+item.glass-cannon.lore,"Distilled volatile acid replaces your vital humors. Your strikes shatter stone with ferocious power, though your brittle shell can endure little punishment."
+item.goat-hoof.name,Cloven Sinew
+item.goat-hoof.lore,"Grafted tendon from a swift sacrificial beast, woven into the vessel's stride to grant tireless speed across the arena."
+item.brittle-plate.name,Slag Carapace
+item.brittle-plate.lore,"Cooled furnace dross fused directly to the ribs, absorbing kinetic blows and turning aside the fiercest enemy strikes."
+item.hair-trigger.name,Spasmodic Nerve
+item.hair-trigger.lore,"Refined quicksilver infused along the spinal conduit, sharpening synaptic reflexes so your arts can be invoked in rapid succession."
+item.overclock.name,Bellows Heart
+item.overclock.lore,"Alchemical bellows fitted to the core, stoking inner combustion to propel your rites swifter and engulf wider swaths of the horde."
+item.wax-wings.name,Waxen Pinions
+item.wax-wings.lore,Feathers sealed in consecrated sealing wax that insulate the vessel from boiling brimstone pools and caustic mire.
+item.hungry-clip.name,Parasitic Alembic
+item.hungry-clip.lore,"A living glass vessel engorged on distilled vitae. Steadies the vessel with ceaseless regeneration and prolongs your binding rites, but swells your frame into an easier target."
+item.lead-core.name,Lead Plumbum
+item.lead-core.lore,"A dense sphere of alchemical lead settled in the vessel, firmly anchoring the animating humors against collapse."
+item.mercury-vial.name,Quicksilver Draught
+item.mercury-vial.lore,"Purified liquid argent that resonates with spilled essence, drawing distant mercury drops to your core and transmuting them into richer insight."
+item.calcined-lens.name,Astrologer's Ocular
+item.calcined-lens.lore,"A heavy brass ocular bolted to the brow. Pinpoints fatal celestial fractures to trigger devastating critical strikes that hasten your rites, at the heavy cost of your stride."
+item.salt-ward.name,Salt Effigy
+item.salt-ward.lore,"Desiccates the vessel's silhouette into a compact, elusive form that slips cleanly between striking claws and projectiles."
+item.lunar-tithe.name,Pale Moon Covenant
+item.lunar-tithe.lore,"An unforgiven heresy against the Great Work. Ignites your arts with catastrophic ruin against guardians and elite horrors, but renders your shell fragile and rejects ambient insight."
+item.cinnabar-leech.name,Cinnabar Leech
+item.cinnabar-leech.lore,A vermilion leech sealed in amber glass. It drinks the lingering humors from slain enemies and siphons their vital essence into your vessel.
+entity.ember-mite.name,Ember Mite
+entity.ember-mite.title,Scorched Dross
+entity.ember-mite.lore,"Clots of ash and failed calcination that skitter out of cracked retorts. Individually brittle, they swarm any warm vessel to strip its mercury."
+entity.ember-spitter.name,Ember Spitter
+entity.ember-spitter.title,Slag Bile Vessel
+entity.ember-spitter.lore,"Distended husks engorged on boiling sulfur. They circle the outer kiln perimeter, hurling globules of molten slag whenever a vessel slows its stride."
+entity.ember-chaser.name,Ember Warden
+entity.ember-chaser.title,Furnace Overseer
+entity.ember-chaser.lore,A heavy amalgam of cast-iron ribs and stoked furnace slag built to herd failed transmutations. It charges across the flagstones with crushing momentum.
+entity.cinder-heart.name,Cinder Heart
+entity.cinder-heart.title,Core of the First Kiln
+entity.cinder-heart.lore,"The living furnace heart that consumed its own alchemists. It awakens only when the Transmutation Circle is charged, determined to melt every vessel back into raw clay."
+entity.frost-mite.name,Frost Mite
+entity.frost-mite.title,Rime-Bitten Husk
+entity.frost-mite.lore,"Shards of alchemical salt and frozen mercury that skitter across the dockside stone. Quicker and harder than kiln mites, they hunt in tight, unforgiving packs."
+entity.frost-spitter.name,Frost Spitter
+entity.frost-spitter.title,Brine Condenser
+entity.frost-spitter.lore,Hollowed alembic creatures that siphon freezing brine from the dock fissures and spit high-velocity needles of rime across the chamber.
+entity.frost-warden.name,Frost Warden
+entity.frost-warden.title,Cryo-Bound Sentinel
+entity.frost-warden.lore,Heavy dockside hulks armored in glacier-thick salt plate and quenched iron. Their relentless charge shatters brittle vessels that linger along the canal.
+entity.frost-sovereign.name,Frost Sovereign
+entity.frost-sovereign.title,Regent of the Frozen Dock
+entity.frost-sovereign.lore,"An ancient transmutation frozen mid-ascension when the sea-locks broke. Crowned in pale rime, it crushes any vessel that dares open the deeper Rift."
+entity.frost-emperor.name,Frost Emperor
+entity.frost-emperor.title,Monarch of Absolute Zero
+entity.frost-emperor.lore,Entombed at the bottom of the Great Work where heat and motion cease. It is the final seal-keeper; to shatter its glacial hull is to complete the transmutation.
+entity.enemy-astral-sniper.name,Astral Watcher
+entity.enemy-astral-sniper.title,Ocular of the Void
+entity.enemy-astral-sniper.lore,A disembodied brass-and-aether eye that drifts at the edge of sight. It traces a thin celestial sightline before lancing the arena—only solid pillars can break its gaze.
+survivor.runner.name,Homunculus
+survivor.runner.title,The Runner
+survivor.runner.lore,"Clay and quicksilver, stolen from a failed Great Work. You kite the dross until the seal holds."
+survivor.penitent.name,The Penitent
+survivor.penitent.title,The Caster
+survivor.penitent.lore,A monk who walked into the kiln and did not burn. He draws circles the horde must not cross.
+skill.bolt.name,Ignis Bolt
+skill.bolt.lore,A needle of fire. It only flies where you point.
+skill.bolt.hook,Fires searing bolts of flame toward your cursor.
+skill.dash.name,Phase Step
+skill.dash.lore,The vessel slips between worlds for a breath.
+skill.dash.hook,"Dash swiftly forward, phasing harmlessly through foes and projectiles."
+skill.skill-aether-pierce.name,Piercing Aether
+skill.skill-aether-pierce.lore,A thin ray of stolen sky. Line them up or waste the breath.
+skill.skill-aether-pierce.hook,"Lances through every foe in a line, briefly steadying your stride."
+skill.skill-crucible-cull.name,Crucible Cull
+skill.skill-crucible-cull.lore,"A hammer of the Great Work, dropped where you will it."
+skill.skill-crucible-cull.hook,Calls down a concentrated alchemical strike at the cursor after a brief delay.
+skill.skill-censer-lob.name,Censer Lob
+skill.skill-censer-lob.lore,"Heavy glass, thrown in an arc. The air between you and the stain is empty."
+skill.skill-censer-lob.hook,"Lobs a heavy censer over the horde that shatters on impact, scorching nearby foes."
+skill.skill-brimstone-line.name,Brimstone Line
+skill.skill-brimstone-line.lore,A seam of sulfur drawn across the yard. The small ones fear it.
+skill.skill-brimstone-line.hook,Draws a burning seam of sulfur that slows lesser foes crossing it.
+skill.dash-ash-step.name,Ash Step
+skill.dash-ash-step.lore,Leave a husk of ash. The mites chase the ghost.
+skill.dash-ash-step.hook,Dash to safety while leaving an ash effigy that lures lesser foes.
+skill.skill-condemn-tether.name,Condemnation Tether
+skill.skill-condemn-tether.lore,A chain for the proud. The small are ash before the iron locks.
+skill.skill-condemn-tether.hook,Pierces and incinerates lesser foes to bind the first elite or boss struck with a searing chain.
+stage.cinder-yard.name,Cinder Yard
+stage.cinder-yard.kicker,First Chamber · Nigredo & Calcination
+stage.cinder-yard.lore,"The outer foundry where raw matter was burned to black ash. Obsidian kilns still vent superheated slag, and volatile brimstone urns litter the cracked flagstones."
+stage.rime-dock.name,Rime Dock
+stage.rime-dock.kicker,Second Chamber · Albedo & Fixation
+stage.rime-dock.lore,A subterranean canal where alchemical salts and quicksilver were quenched in freezing brine. Frozen bollards block stray bolts while pressurized rime casks threaten to shatter in a numbing frost.
+stage.glacial-tomb.name,Glacial Tomb
+stage.glacial-tomb.kicker,Final Chamber · Rubedo & The Great Seal
+stage.glacial-tomb.lore,"The deepest vault beneath the canal, sealed in eternal permafrost to contain the Frost Emperor. Here the Transmutation Circle demands the longest vigil before the Great Work is decided."

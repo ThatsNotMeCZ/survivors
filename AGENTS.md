@@ -20,7 +20,7 @@
 | `tools/` | art pipeline (Pixelorama, WIP) |
 | `sources/` | raw audio packs |
 | `web/` | Phaser 4 + TypeScript + Vite client (itch HTML5) |
-| `Godot/` | Godot 4.7 typed GDScript client (empty until the project is created) |
+| `Godot/` | Godot 4.7 typed GDScript client. Project root: `Godot/hermetic-rifts/` |
 
 ## Commands (web)
 
@@ -33,4 +33,4 @@ bun run smoke:loop
 
 Phaser 4 skills: `web/node_modules/phaser/skills/` (`v4-new-features`, `v3-to-v4-migration`).
 
-Godot smoke (once `project.godot` exists): `godot --headless --path Godot --quit-after 60`.
+Godot smoke: `godot --headless --path Godot/hermetic-rifts -s res://src/smoke/loop_smoke.gd`.
