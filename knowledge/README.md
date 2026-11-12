@@ -43,4 +43,4 @@ Do not vendor copies. Read them when touching renderer, input, or scenes.
 
 ## Godot
 
-Read [tech/godot.md](tech/godot.md) and `Godot/AGENTS.md` before touching `Godot/`. Engine skills live in `.cursor/skills/godot-*` (nodes, physics, UI). Agents do not Write `.tscn` as text. Scenes go through the Godot MCP bridge (`tools/godot-mcp-bridge/`).
+Read [tech/godot.md](tech/godot.md) and `Godot/AGENTS.md` before touching `Godot/`. Engine skills live in `.cursor/skills/godot-*` (nodes, physics, UI). Agents do not Write `.tscn` as text. Scenes, editor jobs, and playtest go through MCP `godot-mcp-pro` (`.cursor/rules/godot-mcp.mdc`).

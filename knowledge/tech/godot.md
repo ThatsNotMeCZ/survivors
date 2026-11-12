@@ -50,19 +50,20 @@ Default renderer: **Compatibility** (2D, Steam Deck, later mobile). Viewport 192
 
 ## Godot MCP bridge
 
-Cursor talks to [tools/godot-mcp-bridge](../../tools/godot-mcp-bridge) (stdio). That process listens on `ws://127.0.0.1:6505`. The vendor plugin ([tools/godot-mcp-pro](../../tools/godot-mcp-pro)) is a **WebSocket client** and connects by itself. Config: `.cursor/mcp.json`.
+Cursor talks to [tools/godot-mcp-bridge](../../tools/godot-mcp-bridge) (stdio). That process listens on `ws://127.0.0.1:6505`. The vendor plugin ([tools/godot-mcp-pro](../../tools/godot-mcp-pro)) is a **WebSocket client** and connects by itself. Config: `.cursor/mcp.json`. Hard rule: `.cursor/rules/godot-mcp.mdc`.
 
-Godot must be **open** with plugin **Godot MCP Pro** enabled, or tools return disconnected.
+Godot must be **open** with plugin **Godot MCP Pro** enabled, or tools return disconnected. Namespace: `godot-mcp-pro`. Inspect the tool schema, then call it. Do not skip MCP because file tools are easier. Do not ask the human to click the editor for a job on this list.
 
-| MCP tools | Use |
-|---|---|
-| `create_scene`, `add_node`, `save_scene`, `open_scene`, `attach_script`, `update_property` | Author packed scenes |
-| `play_scene`, `stop_scene`, `get_game_screenshot`, `capture_frames` | Playtest |
-| `simulate_action` | Input against the action map |
-| `validate_script`, `get_editor_errors`, `get_output_log` | Compile / runtime errors |
-| `set_input_action`, `add_autoload`, `set_project_setting` | Editor jobs instead of a human click |
+| Job | MCP | Not this |
+|---|---|---|
+| Packed scenes / nodes | `create_scene`, `open_scene`, `add_node`, `save_scene`, `attach_script`, `update_property`, `get_scene_tree` | Write/StrReplace `*.tscn` |
+| Project Settings, autoload, InputMap | `set_project_setting`, `add_autoload`, `set_input_action` | Hand-edit `project.godot` for those keys unless MCP is down |
+| Playtest | `play_scene`, `stop_scene`, `get_game_screenshot`, `capture_frames`, `simulate_action` | Guess from logs only |
+| Compile / Output | `validate_script` (game scripts), `get_editor_errors`, `get_output_log` | `validate_script` on `res://addons/godot_mcp/**` while the plugin runs |
 
-Do not use Cursor Write on `*.tscn`. Vendor `skills.md` in the addon may still say "prefer inspector"; that is fine **when the mutation goes through MCP**, not when an agent patches the file.
+Cursor file tools stay for typed `.gd` bodies, `locale/*.csv`, and catalog JSON. MCP `create_script` / `edit_script` only under `res://src/` or `res://scenes/`.
+
+Vendor `skills.md` in the addon may still say "prefer inspector"; that is fine **when the mutation goes through MCP**, not when an agent patches the file.
 
 ## Human editor checklist
 

@@ -1,0 +1,18 @@
+---
+description: Route Godot scenes, editor, InputMap, and playtest through MCP godot-mcp-pro
+alwaysApply: true
+---
+
+# Godot MCP
+
+If the task touches Godot **scenes, nodes, InputMap, autoloads, Project Settings, playtest, or editor errors**, call MCP namespace `godot-mcp-pro`. Inspect the tool schema, then call it. Do not Write/StrReplace `*.tscn`. Do not ask the human to click the editor for those jobs.
+
+| Job | MCP |
+|---|---|
+| Packed scenes / nodes | `create_scene`, `open_scene`, `add_node`, `save_scene`, `attach_script`, `update_property`, `get_scene_tree` |
+| Project | `set_project_setting`, `add_autoload`, `set_input_action` |
+| Playtest / errors | `play_scene`, `stop_scene`, `get_game_screenshot`, `simulate_action`, `get_editor_errors` |
+
+Cursor file tools stay for typed `.gd` bodies, `locale/*.csv`, and catalog JSON. MCP `create_script` / `edit_script` only under `res://src/` or `res://scenes/`. Never `validate_script` on `res://addons/godot_mcp/**` while the plugin is running.
+
+Godot must stay open with plugin **Godot MCP Pro**. If tools say disconnected, print the checklist in `knowledge/tech/godot.md` and stop.

@@ -29,7 +29,7 @@ Native sibling of the Phaser itch client. Godot **4.7** + typed GDScript. Canon 
 
 ## Do not
 
-- Write or patch `.tscn` as text. Use Godot MCP (`create_scene`, `add_node`, `save_scene`). If MCP is down, print the human checklist and stop.
+- Write or patch `.tscn` as text. Use MCP namespace `godot-mcp-pro` for scenes, nodes, InputMap, autoloads, Project Settings, playtest, and editor errors. If MCP is down, print the human checklist and stop.
 - Hardcode player-facing English. Use `tr("KEY")`.
 - Ship untyped GDScript or Godot 3 APIs (`instance()`, `yield`).
 - Fork catalog numbers. Canon is `web/src/data/*.json`.

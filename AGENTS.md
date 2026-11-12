@@ -8,7 +8,7 @@
 2. `knowledge/tech/clients.md` — who ships what
 3. `.cursor/rules/` — hard constraints
 4. `web/AGENTS.md` — Phaser client
-5. `Godot/AGENTS.md` + `knowledge/tech/godot.md` — Godot client (typed GDScript, MCP scenes)
+5. `Godot/AGENTS.md` + `knowledge/tech/godot.md` — Godot client (typed GDScript, MCP `godot-mcp-pro`)
 
 ## Layout
 

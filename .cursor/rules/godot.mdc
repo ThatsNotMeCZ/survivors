@@ -1,13 +1,13 @@
 ---
 description: Agent-first Godot GDScript client constraints
-globs: Godot/**
+globs: Godot/**,tools/godot-mcp-*/**,**/*.gd,**/*.tscn
 alwaysApply: false
 ---
 
 # Godot
 
 - Typed GDScript only. Godot 4.7 standard editor. No C# / `.csproj`. No untyped `var x =`.
-- Do not Write or StrReplace `.tscn`. Packed scenes go through Godot MCP (`create_scene`, `add_node`, `save_scene`, `attach_script`, `update_property`). If MCP is down, print the checklist in `knowledge/tech/godot.md` and stop.
+- Do not Write or StrReplace `.tscn`. Scene and editor jobs go through MCP `godot-mcp-pro` (see `godot-mcp.mdc`). If MCP is down, print the checklist in `knowledge/tech/godot.md` and stop.
 - Player-facing copy is `tr("KEY")` plus `locale/*.csv`. No literal UI strings.
 - `src/sim/` does not use nodes or `Input.*`. It ticks `Array[InputFrame]`.
 - Catalog numbers come from `web/src/data/*.json` (or a byte-identical copy). Do not fork stats.
