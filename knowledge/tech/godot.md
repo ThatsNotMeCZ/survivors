@@ -17,7 +17,8 @@ Godot/
     scenes/
       boot.tscn              # main scene
       arena.tscn
-      ui/main_menu.tscn      # title screen (web #main-menu)
+      ui/main_menu.tscn      # title screen (web #main-menu); inspect this in 2D
+    assets/ui/               # baked AtlasTexture / StyleBox / Theme from atlas JSON
     locale/en.csv
     data/catalog/            # byte-identical copy of web/src/data/*.json
     src/
@@ -30,7 +31,16 @@ Godot/
       net/                   # host-authority stubs only until co-op ships
       workshop/              # IModSource; local folder first
       loc/                   # TranslationServer helpers
+      tools/bake_ui_atlas.gd # JSON atlas → res://assets/ui/*.tres
 ```
+
+Static menu chrome (textures, 9-slice buttons, shaders) lives on the packed scene so the **2D editor shows it without Play**. Runtime scripts keep `tr("KEY")`, vessel idle animation, and signals. Re-bake after `atlas.json` changes:
+
+```bash
+godot --headless --path Godot/hermetic-rifts -s res://src/tools/bake_ui_atlas.gd
+```
+
+Do not instance `main_menu.tscn` under `boot.tscn` via MCP `add_scene_instance` — that marks children editable and overrides packed textures. `overlay_ui.gd` instantiates the packed scene at runtime. Open `res://scenes/ui/main_menu.tscn` in 2D to inspect UI; `boot.tscn` mixes `Camera2D` world space with the overlay.
 
 `sim` takes `frames: Array[InputFrame]` and `dt: float`. It does not read `Input`, `randi()`, or node paths. View and UI sit outside the tick. Future netcode and Workshop contracts are in [design/future.md](../design/future.md).
 
@@ -49,7 +59,7 @@ Scenes: MCP `create_scene` / `add_node` / `save_scene` / `attach_script` / `upda
 
 Register autoload `App` (`src/app.gd`) via MCP `add_autoload`. Persistence is `user://records.v1.json` and `user://settings.v1.json`. Native fullscreen lives in settings, not a browser API.
 
-Default renderer: **Compatibility** (2D, Steam Deck, later mobile). Viewport 1920×1080. Texture filter **Nearest**. Stretch: `canvas_items` / `expand` / `integer`.
+Default renderer: **Compatibility** (2D, Steam Deck, later mobile). Viewport 1920×1080. Texture filter **Nearest**. Stretch: `viewport` / `expand` / `fractional` (`canvas_items` offsets GUI picking on macOS Retina). Overlay UI lives under a full-rect Control root, not as a CanvasLayer sibling.
 
 ## Godot MCP bridge
 

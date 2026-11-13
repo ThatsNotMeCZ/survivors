@@ -1,13 +1,28 @@
 [gd_scene format=3 uid="uid://52g1o0k7mbav"]
 
+[ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="1_ayp64"]
 [ext_resource type="Script" uid="uid://btteiwcg7c13t" path="res://src/ui/main_menu.gd" id="1_fe2o3"]
 [ext_resource type="Script" uid="uid://dmarbcsrxiphh" path="res://src/ui/pillar_ornament.gd" id="2_1g8jr"]
+[ext_resource type="Texture2D" path="res://assets/ui/frames/ui/screen-corner_idle.tres" id="3_y2j7i"]
+[ext_resource type="Material" path="res://assets/ui/materials/menu_pillar.tres" id="4_y1h5l"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/btn-plaque_idle.tres" id="5_pw24t"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/btn-plaque_active.tres" id="6_5dct7"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/btn-plaque_hover.tres" id="7_qilvv"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/focus_ring.tres" id="8_jbte4"]
+[ext_resource type="Texture2D" path="res://assets/ui/frames/ui/logo_idle.tres" id="10_e0hcc"]
+[ext_resource type="Material" path="res://assets/ui/materials/cinder_circle.tres" id="11_qch7b"]
+[ext_resource type="Texture2D" path="res://assets/ui/frames/env/cinder-circle.tres" id="12_4ovp2"]
+[ext_resource type="Texture2D" path="res://assets/ui/frames/entities/runner_idle.tres" id="13_1mexh"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/btn-cta_idle.tres" id="14_6ud2m"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/btn-cta_active.tres" id="15_qqxfm"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/btn-cta_hover.tres" id="16_ktljq"]
 
 [node name="MainMenu" type="Control" unique_id=1831846081]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+theme = ExtResource("1_ayp64")
 script = ExtResource("1_fe2o3")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1743148503]
@@ -18,7 +33,6 @@ mouse_filter = 2
 color = Color(0.050980393, 0.039215688, 0.05490196, 1)
 
 [node name="ScreenFrame" type="Control" parent="." unique_id=1139829381]
-z_index = 4
 anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -26,15 +40,20 @@ mouse_filter = 2
 
 [node name="CornerTL" type="TextureRect" parent="ScreenFrame" unique_id=1131796177]
 unique_name_in_owner = true
+texture_filter = 1
 layout_mode = 0
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 106.0
 offset_bottom = 106.0
 mouse_filter = 2
+texture = ExtResource("3_y2j7i")
+expand_mode = 1
+stretch_mode = 2
 
 [node name="CornerTR" type="TextureRect" parent="ScreenFrame" unique_id=1853662922]
 unique_name_in_owner = true
+texture_filter = 1
 layout_mode = 0
 anchor_left = 1.0
 anchor_right = 1.0
@@ -43,9 +62,14 @@ offset_top = 10.0
 offset_right = -10.0
 offset_bottom = 106.0
 mouse_filter = 2
+texture = ExtResource("3_y2j7i")
+expand_mode = 1
+stretch_mode = 2
+flip_h = true
 
 [node name="CornerBL" type="TextureRect" parent="ScreenFrame" unique_id=622197159]
 unique_name_in_owner = true
+texture_filter = 1
 layout_mode = 0
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -54,9 +78,14 @@ offset_top = -106.0
 offset_right = 106.0
 offset_bottom = -10.0
 mouse_filter = 2
+texture = ExtResource("3_y2j7i")
+expand_mode = 1
+stretch_mode = 2
+flip_v = true
 
 [node name="CornerBR" type="TextureRect" parent="ScreenFrame" unique_id=520161699]
 unique_name_in_owner = true
+texture_filter = 1
 layout_mode = 0
 anchor_left = 1.0
 anchor_top = 1.0
@@ -67,12 +96,16 @@ offset_top = -106.0
 offset_right = -10.0
 offset_bottom = -10.0
 mouse_filter = 2
+texture = ExtResource("3_y2j7i")
+expand_mode = 1
+stretch_mode = 2
+flip_h = true
+flip_v = true
 
 [node name="Content" type="MarginContainer" parent="." unique_id=1203021422]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-mouse_filter = 0
 theme_override_constants/margin_left = 48
 theme_override_constants/margin_right = 48
 
@@ -87,9 +120,11 @@ custom_minimum_size = Vector2(420, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 3
+mouse_filter = 1
 
 [node name="PillarBg" type="ColorRect" parent="Content/Row/Pillar" unique_id=1676674231]
 unique_name_in_owner = true
+material = ExtResource("4_y1h5l")
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -126,6 +161,7 @@ layout_mode = 2
 [node name="CrestBox" type="Control" parent="Content/Row/Pillar/PillarPad/PillarCol" unique_id=913448732]
 custom_minimum_size = Vector2(0, 289)
 layout_mode = 2
+mouse_filter = 2
 
 [node name="NavWrap" type="CenterContainer" parent="Content/Row/Pillar/PillarPad/PillarCol" unique_id=432102385]
 layout_mode = 2
@@ -138,11 +174,29 @@ alignment = 1
 
 [node name="ArchivesBtn" type="Button" parent="Content/Row/Pillar/PillarPad/PillarCol/NavWrap/Nav" unique_id=512562020]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 52)
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = ExtResource("5_pw24t")
+theme_override_styles/pressed = ExtResource("6_5dct7")
+theme_override_styles/hover = ExtResource("7_qilvv")
+theme_override_styles/disabled = ExtResource("5_pw24t")
+theme_override_styles/focus = ExtResource("8_jbte4")
+text = "ui.menu.archives"
+clip_text = true
 
 [node name="DeskBtn" type="Button" parent="Content/Row/Pillar/PillarPad/PillarCol/NavWrap/Nav" unique_id=568878881]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 52)
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = ExtResource("5_pw24t")
+theme_override_styles/pressed = ExtResource("6_5dct7")
+theme_override_styles/hover = ExtResource("7_qilvv")
+theme_override_styles/disabled = ExtResource("5_pw24t")
+theme_override_styles/focus = ExtResource("8_jbte4")
+text = "ui.menu.desk"
+clip_text = true
 
 [node name="Foot" type="Control" parent="Content/Row/Pillar/PillarPad/PillarCol" unique_id=1907341677]
 custom_minimum_size = Vector2(130, 76)
@@ -152,16 +206,22 @@ script = ExtResource("2_1g8jr")
 
 [node name="LogoCrest" type="TextureRect" parent="Content/Row/Pillar" unique_id=1401220822]
 unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(372, 229)
 layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -235.0
+offset_left = -186.0
 offset_top = 22.0
-offset_right = 235.0
-offset_bottom = 311.0
+offset_right = 186.0
+offset_bottom = 251.0
 mouse_filter = 2
+texture = ExtResource("10_e0hcc")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Brand" type="VBoxContainer" parent="Content/Row/Pillar" unique_id=942741900]
+visible = false
 layout_mode = 0
 anchor_left = 0.5
 anchor_right = 0.5
@@ -187,31 +247,49 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 
 [node name="Seal" type="TextureRect" parent="Content/Row/Stage" unique_id=765910882]
 unique_name_in_owner = true
+texture_filter = 2
+material = ExtResource("11_qch7b")
 custom_minimum_size = Vector2(540, 540)
 layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
+offset_left = -270.0
+offset_top = -270.0
+offset_right = 270.0
+offset_bottom = 270.0
 mouse_filter = 2
+texture = ExtResource("12_4ovp2")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Preview" type="TextureRect" parent="Content/Row/Stage" unique_id=1137755433]
 unique_name_in_owner = true
 z_index = 2
+texture_filter = 1
 custom_minimum_size = Vector2(248, 248)
 layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
+offset_left = -124.0
+offset_top = -124.0
+offset_right = 124.0
+offset_bottom = 124.0
 mouse_filter = 2
+texture = ExtResource("13_1mexh")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="CommenceBtn" type="Button" parent="." unique_id=1646866158]
 unique_name_in_owner = true
-z_index = 5
+z_index = 8
 custom_minimum_size = Vector2(240, 96)
 layout_mode = 0
 anchor_left = 1.0
@@ -222,18 +300,39 @@ offset_left = -268.0
 offset_top = -120.0
 offset_right = -28.0
 offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_styles/normal = ExtResource("14_6ud2m")
+theme_override_styles/pressed = ExtResource("15_qqxfm")
+theme_override_styles/hover = ExtResource("16_ktljq")
+theme_override_styles/disabled = ExtResource("14_6ud2m")
+theme_override_styles/focus = ExtResource("8_jbte4")
 
 [node name="CommenceCopy" type="VBoxContainer" parent="CommenceBtn" unique_id=242027413]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 36.0
+offset_right = -28.0
+offset_bottom = -22.0
 mouse_filter = 2
 alignment = 1
 
 [node name="CommenceLine1" type="Label" parent="CommenceBtn/CommenceCopy" unique_id=1711153516]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 21
+text = "ui.menu.commence.line1"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="CommenceLine2" type="Label" parent="CommenceBtn/CommenceCopy" unique_id=1432411832]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 21
+text = "ui.menu.commence.line2"
+horizontal_alignment = 1
+vertical_alignment = 1

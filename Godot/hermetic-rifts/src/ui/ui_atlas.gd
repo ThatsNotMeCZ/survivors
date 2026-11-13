@@ -86,7 +86,7 @@ static func apply_button_styles(button: Button, id: String) -> void:
 		margins = (nine as Dictionary).get("margins", {})
 	button.add_theme_stylebox_override("normal", _stylebox(id, "idle", margins))
 	button.add_theme_stylebox_override("hover", _stylebox(id, "hover", margins))
-	button.add_theme_stylebox_override("focus", _stylebox(id, "hover", margins))
+	button.add_theme_stylebox_override("focus", _focus_ring())
 	button.add_theme_stylebox_override("pressed", _stylebox(id, "active", margins))
 	button.add_theme_stylebox_override("disabled", _stylebox(id, "idle", margins))
 	if _font != null:
@@ -135,6 +135,19 @@ static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
 	atlas.region = region
 	_atlas_cache[key] = atlas
 	return atlas
+
+
+static func _focus_ring() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0, 0, 0, 0)
+	sb.draw_center = false
+	sb.border_color = GOLD_MOLTEN
+	sb.set_border_width_all(2)
+	sb.content_margin_left = 0.0
+	sb.content_margin_right = 0.0
+	sb.content_margin_top = 0.0
+	sb.content_margin_bottom = 0.0
+	return sb
 
 
 static func _stylebox(id: String, state: String, margins: Dictionary) -> StyleBoxTexture:

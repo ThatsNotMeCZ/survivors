@@ -53,7 +53,7 @@ Procedural fallback sizes: vessel 40, mite 24, spitter 28, elite 40, boss 64, ic
 
 ## UI Atlas (`web/public/sprites/ui/atlas.png` + `atlas.json`)
 
-UI elements are loaded from a single texture atlas (`web/public/sprites/ui/atlas.png` + `web/public/sprites/ui/atlas.json`) into `manifest.uiAtlas`.
+UI elements are loaded from a single texture atlas (`web/public/sprites/ui/atlas.png` + `web/public/sprites/ui/atlas.json`) into `manifest.uiAtlas`. Godot does not fork the sheets; it bakes `AtlasTexture.tres` / `StyleBoxTexture.tres` under `Godot/hermetic-rifts/assets/ui/` from the same JSON (`src/tools/bake_ui_atlas.gd`).
 - **Static elements** (`logo`, `hud-flask`, etc.) define `{ "x", "y", "w", "h" }`.
 - **Buttons** (`btn-plaque`, `btn-cta`, etc.) define 3 states (`idle`, `hover`, `active`) either via `states: { idle, hover, active }` or `states: "strip-v"` / `"strip-h"`.
 - **9-slice elements** include `nineSlice` with both `margins` (`{ top, right, bottom, left }`) and `expandable` (`{ x, y, w, h }` inner stretch region), rendered via CSS `border-image` so corners stay pixel-sharp at any element size.

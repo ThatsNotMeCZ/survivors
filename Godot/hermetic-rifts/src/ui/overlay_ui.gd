@@ -15,12 +15,14 @@ var _last_offer: int = -1
 func _ready() -> void:
 	layer = 10
 	_root = Control.new()
+	_root.name = "OverlayRoot"
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
 	_dim = ColorRect.new()
 	_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_dim.visible = false
+	_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dim.color = Color(0.05, 0.04, 0.07, 0.88)
 	_root.add_child(_dim)
 	_hud = Label.new()
@@ -83,9 +85,14 @@ func _sync(app: Node) -> void:
 	var is_menu: bool = app.overlay_mode == &"menu"
 	if _menu != null:
 		_menu.visible = is_menu
+		if is_menu:
+			_root.move_child(_menu, _root.get_child_count() - 1)
 	_chrome.visible = not is_menu and app.overlay_mode != &"hidden"
 	_dim.visible = app.overlay_mode != &"hidden" and not is_menu
 	_dim.mouse_filter = Control.MOUSE_FILTER_STOP if _dim.visible else Control.MOUSE_FILTER_IGNORE
+	_root.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE if app.overlay_mode == &"hidden" else Control.MOUSE_FILTER_STOP
+	)
 	_title.visible = _chrome.visible
 	_body.visible = _chrome.visible
 	match String(app.overlay_mode):
@@ -93,7 +100,6 @@ func _sync(app: Node) -> void:
 			_hud.visible = false
 			if _menu != null:
 				_menu.refresh_preview()
-				_menu.focus_primary()
 			return
 		"hall":
 			_hud.visible = false
@@ -329,14 +335,21 @@ func _clear_buttons() -> void:
 func _bind_main_menu() -> void:
 	_menu = get_node_or_null("MainMenu") as MainMenuView
 	if _menu == null:
+		_menu = _root.get_node_or_null("MainMenu") as MainMenuView
+	if _menu == null:
 		var packed: PackedScene = load("res://scenes/ui/main_menu.tscn")
 		if packed != null:
 			_menu = packed.instantiate() as MainMenuView
-			add_child(_menu)
 	if _menu == null:
 		return
+	if _menu.get_parent() != _root:
+		var old_parent: Node = _menu.get_parent()
+		if old_parent != null:
+			old_parent.remove_child(_menu)
+		_root.add_child(_menu)
 	_menu.visible = false
-	move_child(_menu, get_child_count() - 1)
+	_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_root.move_child(_menu, _root.get_child_count() - 1)
 	if not _menu.archives_pressed.is_connected(_on_menu_archives):
 		_menu.archives_pressed.connect(_on_menu_archives)
 	if not _menu.desk_pressed.is_connected(_on_menu_desk):

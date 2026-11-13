@@ -1,3 +1,4 @@
+@tool
 extends Control
 
 
@@ -5,6 +6,11 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(130, 76)
 	queue_redraw()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		queue_redraw()
 
 
 func _draw() -> void:
