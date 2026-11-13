@@ -10,6 +10,9 @@ var _desk_btn: Button
 var _commence_btn: Button
 var _commence_1: Label
 var _commence_2: Label
+var _brand: Control
+var _brand_1: Label
+var _brand_2: Label
 var _seal: TextureRect
 var _preview: TextureRect
 var _stage: Control
@@ -94,12 +97,19 @@ func _resolve_nodes() -> void:
 	_commence_btn = get_node_or_null("CommenceBtn") as Button
 	_commence_1 = get_node_or_null("CommenceBtn/CommenceCopy/CommenceLine1") as Label
 	_commence_2 = get_node_or_null("CommenceBtn/CommenceCopy/CommenceLine2") as Label
+	_brand = get_node_or_null("Content/Row/Pillar/Brand") as Control
+	_brand_1 = get_node_or_null("Content/Row/Pillar/Brand/BrandLine1") as Label
+	_brand_2 = get_node_or_null("Content/Row/Pillar/Brand/BrandLine2") as Label
 	_seal = get_node_or_null("Content/Row/Stage/Seal") as TextureRect
 	_preview = get_node_or_null("Content/Row/Stage/Preview") as TextureRect
 	_stage = get_node_or_null("Content/Row/Stage") as Control
 
 
 func _apply_copy() -> void:
+	if _brand != null:
+		_brand.visible = true
+	_style_brand(_brand_1, tr("ui.menu.brand.line1"))
+	_style_brand(_brand_2, tr("ui.menu.brand.line2"))
 	if _archives_btn != null:
 		_archives_btn.text = tr("ui.menu.archives").to_upper()
 	if _desk_btn != null:
@@ -118,6 +128,22 @@ func _bind() -> void:
 		_desk_btn.pressed.connect(func() -> void: desk_pressed.emit())
 	if _commence_btn != null:
 		_commence_btn.pressed.connect(func() -> void: commence_pressed.emit())
+
+
+func _style_brand(label: Label, text: String) -> void:
+	if label == null:
+		return
+	label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	label.text = text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_override("font", UiAtlas.spaced_font(8))
+	label.add_theme_font_size_override("font_size", 64)
+	label.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
+	label.add_theme_color_override("font_shadow_color", Color("3a1a0e"))
+	label.add_theme_constant_override("shadow_offset_x", 0)
+	label.add_theme_constant_override("shadow_offset_y", 2)
+	label.add_theme_constant_override("shadow_outline_size", 8)
 
 
 func _style_cta_line(label: Label, text: String) -> void:
