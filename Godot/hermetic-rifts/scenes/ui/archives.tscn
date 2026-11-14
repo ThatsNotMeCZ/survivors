@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://btfrlphsirjh5"]
 
-[ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="1_d2frs"]
+[ext_resource type="Theme" uid="uid://dc4hy7xwyjulq" path="res://assets/ui/menu_theme.tres" id="1_d2frs"]
 [ext_resource type="Script" uid="uid://dk1peoflak8eg" path="res://src/ui/archives.gd" id="2_7agfo"]
 
 [node name="Archives" type="Control" unique_id=427845411]
@@ -8,6 +8,8 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme = ExtResource("1_d2frs")
 script = ExtResource("2_7agfo")
 

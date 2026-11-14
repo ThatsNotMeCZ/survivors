@@ -22,6 +22,8 @@ Godot/
       ui/desk.tscn           # Alchemist's Desk / settings (web #settings-dialog)
       ui/archives.tscn       # The Archives (web #archives); inspect this in 2D
       ui/hud.tscn            # Play HUD (web #hud-play): objective, flask, skills, items
+      ui/pause.tscn          # Pause overlay (web #pause-view)
+      ui/levelup.tscn        # Tablet select (web #levelup-view)
     assets/ui/               # baked AtlasTexture / StyleBox / Theme from atlas JSON
     locale/en.csv
     data/catalog/            # byte-identical copy of web/src/data/*.json
@@ -38,7 +40,7 @@ Godot/
       tools/bake_ui_atlas.gd # JSON atlas → res://assets/ui/*.tres
 ```
 
-Play loop view is `src/view/arena_view.gd`: env-atlas floor stamp (same tile hash as web), `{theme}-pillar` / hazard / volatile AtlasTextures, authored `{theme}-circle` plus `circle_charge.gdshader`, skill shaders (`tether`, `brimstone_line`, `skill_impact`, `skill_cd_sweep`), elite affix, biome ambient. HUD IA matches web `#hud-play` (objective, flask HP/XP, 4 skills, RoR2 difficulty tape, 32px items).
+Play loop view is `src/view/arena_view.gd`: env-atlas floor stamp (same tile hash as web), `{theme}-pillar` / hazard / volatile AtlasTextures, authored `{theme}-circle` plus `circle_charge.gdshader`, skill shaders (`tether`, `brimstone_line`, `skill_impact`, `skill_cd_sweep`), elite affix, biome ambient (`ambient_biome.gdshader` camera-space particles), env/boss hazard shaders. Fodder MultiMesh uses Y-flipped QuadMesh and origin-preserving flip. Player sprite faces movement, not aim. HUD IA matches web `#hud-play` (objective fill inside `hud-objective`, flask HP well at 90×104, 4 skill slots space-between in `hud-skill-dock`). Pause is `scenes/ui/pause.tscn`; tablet select is `scenes/ui/levelup.tscn`.
 
 Static menu chrome (textures, 9-slice buttons, shaders) lives on the packed scene so the **2D editor shows it without Play**. Runtime scripts keep `tr("KEY")`, vessel idle animation, and signals. Re-bake after `atlas.json` changes:
 
@@ -65,7 +67,7 @@ Scenes: MCP `create_scene` / `add_node` / `save_scene` / `attach_script` / `upda
 
 Register autoload `App` (`src/app.gd`) via MCP `add_autoload`. Persistence is `user://records.v1.json` and `user://settings.v1.json`. Native fullscreen lives in settings, not a browser API.
 
-Default renderer: **Compatibility** (2D, Steam Deck, later mobile). Viewport 1920×1080. Texture filter **Nearest**. Stretch: `viewport` / `expand` / `integer` (`canvas_items` offsets GUI picking on macOS Retina and linearly blurs 1080p glyphs on HiDPI). Overlay UI lives under a full-rect Control root, not as a CanvasLayer sibling.
+Default renderer: **Compatibility** (2D, Steam Deck, later mobile). Viewport 1920×1080. Texture filter **Nearest**. Stretch: `viewport` / `expand` / `integer` when the window is ≥ 1920×1080; `App` switches to `fractional` scale-down below that so the editor Game window and windowed laptops show the full canvas instead of clipping (`canvas_items` offsets GUI picking on macOS Retina and linearly blurs 1080p glyphs on HiDPI). Overlay UI lives under a full-rect Control root, not as a CanvasLayer sibling.
 
 ## Godot MCP bridge
 

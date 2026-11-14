@@ -103,8 +103,14 @@ func sync(world: SimWorld) -> void:
 	_time.text = Loc.format_time(world.run_time)
 	_hp.text = "%d / %d" % [maxi(0, int(round(world.player.hp))), int(round(world.player.max_hp))]
 	var hp_pct: float = clampf(world.player.hp / maxf(world.player.max_hp, 1.0), 0.0, 1.0)
+	_hp_fill.anchor_left = 0.0
+	_hp_fill.anchor_right = 1.0
+	_hp_fill.anchor_bottom = 1.0
 	_hp_fill.anchor_top = 1.0 - hp_pct
+	_hp_fill.offset_left = 0.0
+	_hp_fill.offset_right = 0.0
 	_hp_fill.offset_top = 0.0
+	_hp_fill.offset_bottom = 0.0
 	if hp_pct < 0.35:
 		_hp_fill.color = Color("ff5252")
 	else:
@@ -168,36 +174,42 @@ func _build_objective() -> void:
 	_objective.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	root.add_child(_objective)
 	var bar := Control.new()
-	bar.custom_minimum_size = Vector2(360, 28)
+	bar.custom_minimum_size = Vector2(340, 62)
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(bar)
+	var bar_tex := NinePatchRect.new()
+	bar_tex.texture = UiAtlas.frame("hud-objective")
+	bar_tex.patch_margin_left = 50
+	bar_tex.patch_margin_right = 50
+	bar_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	bar_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bar.add_child(bar_tex)
 	var track := Control.new()
 	track.clip_contents = true
 	track.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	track.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	track.offset_left = 28.0
-	track.offset_right = -28.0
-	track.offset_top = 10.0
-	track.offset_bottom = -10.0
+	track.offset_left = 45.0
+	track.offset_right = -40.0
+	track.offset_top = 22.0
+	track.offset_bottom = -22.0
 	bar.add_child(track)
+	var track_bg := ColorRect.new()
+	track_bg.color = Color(0.055, 0.043, 0.055, 0.92)
+	track_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	track_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	track.add_child(track_bg)
 	_obj_fill = ColorRect.new()
 	_obj_fill.color = Color("c4a35a")
 	_obj_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_obj_fill.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
 	_obj_fill.anchor_right = 0.0
 	track.add_child(_obj_fill)
-	var bar_tex := TextureRect.new()
-	bar_tex.texture = UiAtlas.frame("hud-objective")
-	bar_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	bar_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	bar_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bar_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bar.add_child(bar_tex)
 	_obj_detail = _label(11, UiAtlas.PARCHMENT, UiAtlas.TYPE_MICRO)
 	_obj_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_obj_detail.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_obj_detail.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bar.add_child(_obj_detail)
+	track.add_child(_obj_detail)
 	_obj_sub = _label(11, Color("e8dcc8"), UiAtlas.TYPE_MICRO)
 	_obj_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_obj_sub.visible = false
@@ -328,6 +340,7 @@ func _build_vitals() -> void:
 	add_child(root)
 	var flask := Control.new()
 	flask.custom_minimum_size = Vector2(90, 104)
+	flask.clip_contents = true
 	flask.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(flask)
 	var clip := Control.new()
@@ -335,16 +348,22 @@ func _build_vitals() -> void:
 	clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip.position = Vector2(6, 35)
 	clip.size = Vector2(64, 64)
+	clip.custom_minimum_size = Vector2(64, 64)
 	flask.add_child(clip)
+	var well := ColorRect.new()
+	well.color = Color("0d0709")
+	well.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	well.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	clip.add_child(well)
 	_hp_fill = ColorRect.new()
 	_hp_fill.color = Color("9e1b24")
 	_hp_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_hp_fill.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_hp_fill.anchor_top = 0.0
+	_hp_fill.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	clip.add_child(_hp_fill)
 	var flask_tex := TextureRect.new()
 	flask_tex.texture = UiAtlas.frame("hud-flask")
-	flask_tex.stretch_mode = TextureRect.STRETCH_KEEP
+	flask_tex.stretch_mode = TextureRect.STRETCH_SCALE
+	flask_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	flask_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	flask_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	flask_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -394,22 +413,17 @@ func _build_skills() -> void:
 	dock.offset_top = -106.0
 	dock.offset_bottom = -10.0
 	add_child(dock)
-	var row := HBoxContainer.new()
-	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 45.0
-	row.offset_right = -45.0
-	row.offset_top = 28.0
-	row.offset_bottom = -28.0
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 18)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dock.add_child(row)
 	var sweep_mat_shader: Shader = load("res://assets/shaders/skill_cd_sweep.gdshader")
+	var slot_w: float = 40.0
+	var inner_w: float = 315.0 - 90.0
+	var gap: float = (inner_w - slot_w) / 3.0
 	for i: int in 4:
 		var slot := Control.new()
-		slot.custom_minimum_size = Vector2(40, 40)
+		slot.custom_minimum_size = Vector2(slot_w, slot_w)
+		slot.position = Vector2(45.0 + float(i) * gap, 28.0)
+		slot.size = Vector2(slot_w, slot_w)
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(slot)
+		dock.add_child(slot)
 		var frame := TextureRect.new()
 		frame.texture = UiAtlas.frame("skill-slot-frame")
 		frame.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

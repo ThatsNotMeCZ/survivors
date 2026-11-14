@@ -7,6 +7,7 @@ const ENV_PNG: String = "res://assets/sprites/env/atlas.png"
 const ENV_JSON: String = "res://assets/sprites/env/atlas.json"
 const MANIFEST: String = "res://assets/sprites/manifest.json"
 const FONT_PATH: String = "res://assets/fonts/BillJilly.ttf"
+const INK_FONT_PATH: String = "res://assets/fonts/source-sans-3-latin-600-normal.woff"
 
 const TYPE_DISPLAY: StringName = &"display"
 const TYPE_BODY: StringName = &"body"
@@ -43,7 +44,7 @@ static var _ui_tex: Texture2D
 static var _env_tex: Texture2D
 static var _font: FontFile
 static var _font_crisp: FontFile
-static var _font_ink: FontVariation
+static var _font_ink: FontFile
 static var _tex_cache: Dictionary = {}
 static var _atlas_cache: Dictionary = {}
 static var _sidecar_defs: Dictionary = {}
@@ -66,6 +67,11 @@ static func ensure_loaded() -> void:
 		_font_crisp = _font.duplicate() as FontFile
 		if _font_crisp != null:
 			_configure_font(_font_crisp, false)
+	if ResourceLoader.exists(INK_FONT_PATH):
+		_font_ink = load(INK_FONT_PATH) as FontFile
+		if _font_ink != null:
+			_configure_font(_font_ink, true)
+			_font_ink.force_autohinter = false
 
 
 static func display_font() -> Font:
@@ -84,16 +90,7 @@ static func ink_font() -> Font:
 	ensure_loaded()
 	if _font_ink != null:
 		return _font_ink
-	var variation := FontVariation.new()
-	var base: Font = body_font()
-	if base == null:
-		return ThemeDB.fallback_font
-	variation.base_font = base
-	# Dark-on-parchment hairlines vanish on Mac; embolden thickens stems
-	# without filling counters the way a 2–3px outline does.
-	variation.variation_embolden = 0.75
-	_font_ink = variation
-	return _font_ink
+	return body_font()
 
 
 static func _configure_font(font: FontFile, antialias: bool) -> void:
@@ -170,15 +167,11 @@ static func apply_ink_label(label: Label, role: StringName, color: Color, size_p
 		return
 	var px: int = size_for(role, size_px)
 	if role == TYPE_DISPLAY and px >= 18:
-		var variation := FontVariation.new()
-		variation.base_font = display_font()
-		variation.variation_embolden = 0.4
-		variation.spacing_glyph = _display_tracking(px)
-		label.add_theme_font_override("font", variation)
-	else:
-		label.add_theme_font_override("font", ink_font())
-	label.add_theme_color_override("font_outline_color", color)
-	label.add_theme_constant_override("outline_size", 1)
+		return
+	var font: Font = ink_font()
+	if font != null:
+		label.add_theme_font_override("font", font)
+	label.add_theme_constant_override("outline_size", 0)
 
 
 static func _display_tracking(px: int) -> int:
@@ -230,7 +223,7 @@ static func apply_button_styles(button: Button, id: String) -> void:
 		margins = (nine as Dictionary).get("margins", {})
 	button.add_theme_stylebox_override("normal", _stylebox(id, "idle", margins))
 	button.add_theme_stylebox_override("hover", _stylebox(id, "hover", margins))
-	button.add_theme_stylebox_override("focus", _focus_ring())
+	button.add_theme_stylebox_override("focus", empty_focus())
 	button.add_theme_stylebox_override("pressed", _stylebox(id, "active", margins))
 	button.add_theme_stylebox_override("disabled", _stylebox(id, "idle", margins))
 	if body_font() != null:
@@ -242,6 +235,37 @@ static func apply_button_styles(button: Button, id: String) -> void:
 	button.add_theme_color_override("font_focus_color", PARCHMENT)
 	button.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 	button.add_theme_constant_override("outline_size", 2)
+
+
+static func empty_focus() -> StyleBoxEmpty:
+	return StyleBoxEmpty.new()
+
+
+static func style_medallion_button(button: Button) -> void:
+	if button == null:
+		return
+	button.text = ""
+	apply_button_styles(button, "hall-medailon")
+	button.custom_minimum_size = Vector2(48, 48)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	button.clip_text = true
+	button.offset_transform_enabled = true
+	button.pivot_offset = Vector2(24, 24)
+	_strip_button_padding(button)
+
+
+static func tween_medallion_hover(host: Node, button: Button, on: bool) -> void:
+	if host == null or button == null:
+		return
+	button.offset_transform_enabled = true
+	var tw: Tween = host.create_tween()
+	tw.set_ease(Tween.EASE_OUT)
+	tw.set_trans(Tween.TRANS_QUAD)
+	var hover_scale: Vector2 = Vector2(1.06, 1.06) if on else Vector2.ONE
+	var tint: Color = Color("fff1d4") if on else Color.WHITE
+	tw.tween_property(button, "offset_transform_scale", hover_scale, 0.12)
+	tw.parallel().tween_property(button, "modulate", tint, 0.12)
 
 
 static func nine_slice(id: String, state: String = "idle", pad: Vector4 = Vector4(20, 8, 20, 8)) -> StyleBoxTexture:
@@ -344,17 +368,27 @@ static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
 	return atlas
 
 
-static func _focus_ring() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0, 0, 0, 0)
-	sb.draw_center = false
-	sb.border_color = GOLD_MOLTEN
-	sb.set_border_width_all(2)
-	sb.content_margin_left = 0.0
-	sb.content_margin_right = 0.0
-	sb.content_margin_top = 0.0
-	sb.content_margin_bottom = 0.0
-	return sb
+static func _strip_button_padding(button: Button) -> void:
+	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var sb: StyleBox = button.get_theme_stylebox(state)
+		if sb is StyleBoxTexture:
+			var tex := (sb as StyleBoxTexture).duplicate() as StyleBoxTexture
+			tex.content_margin_left = 0.0
+			tex.content_margin_right = 0.0
+			tex.content_margin_top = 0.0
+			tex.content_margin_bottom = 0.0
+			tex.texture_margin_left = 0.0
+			tex.texture_margin_right = 0.0
+			tex.texture_margin_top = 0.0
+			tex.texture_margin_bottom = 0.0
+			button.add_theme_stylebox_override(state, tex)
+		elif sb is StyleBoxFlat:
+			var flat := (sb as StyleBoxFlat).duplicate() as StyleBoxFlat
+			flat.content_margin_left = 0.0
+			flat.content_margin_right = 0.0
+			flat.content_margin_top = 0.0
+			flat.content_margin_bottom = 0.0
+			button.add_theme_stylebox_override(state, flat)
 
 
 static func _stylebox(id: String, state: String, margins: Dictionary) -> StyleBoxTexture:

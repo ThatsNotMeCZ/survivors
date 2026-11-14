@@ -222,6 +222,9 @@ func _check_row(title: String, hint: String, value: bool, cb: Callable) -> Contr
 	var box := CheckBox.new()
 	box.button_pressed = value
 	box.focus_mode = Control.FOCUS_ALL
+	if UiAtlas.ink_font() != null:
+		box.add_theme_font_override("font", UiAtlas.ink_font())
+	box.add_theme_font_size_override("font_size", UiAtlas.SIZE_META)
 	box.add_theme_color_override("font_color", UiAtlas.PARCHMENT_INK)
 	box.toggled.connect(func(v: bool) -> void:
 		_play_ui("click")

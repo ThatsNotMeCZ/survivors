@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://cv5lgaga3u7yb"]
+
+[ext_resource type="Script" uid="uid://bg5i3kpvgyy55" path="res://src/ui/levelup.gd" id="1_k0vw8"]
+
+[node name="LevelUp" type="Control" unique_id=1455341708]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_k0vw8")

@@ -12,6 +12,8 @@ var _archives: ArchivesView
 var _hall: HallView
 var _desk: DeskView
 var _desk_layer: CanvasLayer
+var _pause: PauseView
+var _levelup: LevelUpView
 var _last_mode: StringName = &""
 var _last_offer: int = -1
 
@@ -39,6 +41,8 @@ func _ready() -> void:
 	_bind_archives()
 	_bind_hall()
 	_bind_desk()
+	_bind_pause()
+	_bind_levelup()
 	var col := VBoxContainer.new()
 	col.custom_minimum_size = Vector2(640, 0)
 	col.add_theme_constant_override("separation", 18)
@@ -65,11 +69,32 @@ func _process(_dt: float) -> void:
 	_sync(app)
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null or event.is_echo() or not event.is_pressed():
+		return
+	if not (event.is_action("pause") or event.is_action("back")):
+		return
+	if event.is_action("pause") and (app.overlay_mode == &"menu" or app.overlay_mode == &"hall" or app.overlay_mode == &"levelup"):
+		return
+	if app.overlay_mode == &"hidden" and app.world != null:
+		app.pause_run()
+		get_viewport().set_input_as_handled()
+		return
+	if app.overlay_mode == &"pause" and (event.is_action("pause") or event.is_action("back")):
+		app.resume_run()
+		get_viewport().set_input_as_handled()
+
+
 func _input(event: InputEvent) -> void:
 	var app := get_node_or_null("/root/App")
 	if app == null or app.overlay_mode == &"hidden":
 		return
 	if event.is_echo() or not event.is_pressed():
+		return
+	if event.is_action("pause") and app.overlay_mode == &"pause":
+		app.resume_run()
+		get_viewport().set_input_as_handled()
 		return
 	if event.is_action("confirm"):
 		_activate_primary(app)
@@ -107,6 +132,8 @@ func _sync(app: Node) -> void:
 	var is_menu: bool = app.overlay_mode == &"menu"
 	var is_archives: bool = app.overlay_mode == &"archives"
 	var is_hall: bool = app.overlay_mode == &"hall"
+	var is_pause: bool = app.overlay_mode == &"pause"
+	var is_levelup: bool = app.overlay_mode == &"levelup"
 	if _menu != null:
 		_menu.visible = is_menu
 		if is_menu:
@@ -119,6 +146,14 @@ func _sync(app: Node) -> void:
 		_archives.visible = is_archives
 		if is_archives:
 			_root.move_child(_archives, _root.get_child_count() - 1)
+	if _pause != null:
+		_pause.visible = is_pause
+		if is_pause:
+			_root.move_child(_pause, _root.get_child_count() - 1)
+	if _levelup != null:
+		_levelup.visible = is_levelup
+		if is_levelup:
+			_root.move_child(_levelup, _root.get_child_count() - 1)
 	if _desk != null:
 		var keep_desk: bool = is_menu or is_hall or app.overlay_mode == &"pause" or app.overlay_mode == &"settings"
 		if not keep_desk:
@@ -127,8 +162,20 @@ func _sync(app: Node) -> void:
 				_desk_layer.visible = false
 		else:
 			_raise_desk()
-	_chrome.visible = not is_menu and not is_archives and not is_hall and app.overlay_mode != &"hidden"
-	_dim.visible = app.overlay_mode != &"hidden" and not is_menu and not is_archives and not is_hall
+	_chrome.visible = (
+		not is_menu
+		and not is_archives
+		and not is_hall
+		and not is_pause
+		and not is_levelup
+		and app.overlay_mode != &"hidden"
+	)
+	_dim.visible = (
+		app.overlay_mode != &"hidden"
+		and not is_menu
+		and not is_archives
+		and not is_hall
+	)
 	_dim.mouse_filter = Control.MOUSE_FILTER_STOP if _dim.visible else Control.MOUSE_FILTER_IGNORE
 	_root.mouse_filter = (
 		Control.MOUSE_FILTER_IGNORE if app.overlay_mode == &"hidden" else Control.MOUSE_FILTER_STOP
@@ -157,27 +204,14 @@ func _sync(app: Node) -> void:
 			_show_hud(app.world)
 		"pause":
 			_hide_hud()
-			_title.text = tr("ui.pause.title")
-			_body.text = _recap_text(app.world)
-			_add_btn(tr("ui.pause.resume"), func() -> void: app.resume_run())
-			_add_btn(tr("ui.pause.archives"), func() -> void: app.overlay_mode = &"archives")
-			_add_btn(tr("ui.pause.settings"), func() -> void: _open_desk())
-			if app.world != null and SimLoop.can_seal(app.world):
-				_add_btn(tr("ui.pause.seal"), func() -> void:
-					SimLoop.complete_working(app.world)
-					app.overlay_mode = &"recap"
-				)
-			_add_btn(tr("ui.pause.abandon"), func() -> void: app.abandon_run())
+			if _pause != null:
+				_pause.refresh(app.world)
+			return
 		"levelup":
 			_hide_hud()
-			_title.text = tr("ui.levelup.hint")
-			_body.text = ""
-			if app.world != null:
-				for i: int in app.world.offer.size():
-					var item: Dictionary = app.world.offer[i]
-					var id: String = String(item.get("id", ""))
-					var idx: int = i
-					_add_btn("%d. %s" % [i + 1, Loc.item_name(id)], func() -> void: _pick(app, idx))
+			if _levelup != null:
+				_levelup.refresh(app.world)
+			return
 		"recap":
 			_hide_hud()
 			var kind: String = "victory" if app.world != null and app.world.won else "defeat"
@@ -467,6 +501,103 @@ func _on_hall_commence() -> void:
 	app.start_run()
 
 
+func _bind_pause() -> void:
+	_pause = get_node_or_null("Pause") as PauseView
+	if _pause == null:
+		_pause = _root.get_node_or_null("Pause") as PauseView
+	if _pause == null:
+		var packed: PackedScene = load("res://scenes/ui/pause.tscn")
+		if packed != null:
+			_pause = packed.instantiate() as PauseView
+	if _pause == null:
+		_pause = PauseView.new()
+		_pause.name = "Pause"
+	if _pause.get_parent() != _root:
+		var old_parent: Node = _pause.get_parent()
+		if old_parent != null:
+			old_parent.remove_child(_pause)
+		_root.add_child(_pause)
+	_pause.visible = false
+	_pause.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if not _pause.resume_pressed.is_connected(_on_pause_resume):
+		_pause.resume_pressed.connect(_on_pause_resume)
+	if not _pause.archives_pressed.is_connected(_on_pause_archives):
+		_pause.archives_pressed.connect(_on_pause_archives)
+	if not _pause.settings_pressed.is_connected(_on_pause_settings):
+		_pause.settings_pressed.connect(_on_pause_settings)
+	if not _pause.seal_pressed.is_connected(_on_pause_seal):
+		_pause.seal_pressed.connect(_on_pause_seal)
+	if not _pause.abandon_pressed.is_connected(_on_pause_abandon):
+		_pause.abandon_pressed.connect(_on_pause_abandon)
+
+
+func _on_pause_resume() -> void:
+	var app := get_node_or_null("/root/App")
+	if app != null:
+		_play_ui("click")
+		app.resume_run()
+
+
+func _on_pause_archives() -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return
+	_play_ui("click")
+	app.overlay_mode = &"archives"
+
+
+func _on_pause_settings() -> void:
+	_play_ui("click")
+	_open_desk()
+
+
+func _on_pause_seal() -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null or app.world == null:
+		return
+	_play_ui("confirm")
+	SimLoop.complete_working(app.world)
+	app.overlay_mode = &"recap"
+
+
+func _on_pause_abandon() -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return
+	_play_ui("click")
+	app.abandon_run()
+
+
+func _bind_levelup() -> void:
+	_levelup = get_node_or_null("LevelUp") as LevelUpView
+	if _levelup == null:
+		_levelup = _root.get_node_or_null("LevelUp") as LevelUpView
+	if _levelup == null:
+		var packed: PackedScene = load("res://scenes/ui/levelup.tscn")
+		if packed != null:
+			_levelup = packed.instantiate() as LevelUpView
+	if _levelup == null:
+		_levelup = LevelUpView.new()
+		_levelup.name = "LevelUp"
+	if _levelup.get_parent() != _root:
+		var old_parent: Node = _levelup.get_parent()
+		if old_parent != null:
+			old_parent.remove_child(_levelup)
+		_root.add_child(_levelup)
+	_levelup.visible = false
+	_levelup.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if not _levelup.choice_picked.is_connected(_on_levelup_choice):
+		_levelup.choice_picked.connect(_on_levelup_choice)
+
+
+func _on_levelup_choice(index: int) -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return
+	_play_ui("confirm")
+	_pick(app, index)
+
+
 func _desk_host() -> CanvasLayer:
 	if _desk_layer != null:
 		return _desk_layer
@@ -547,5 +678,11 @@ func _focus_underlying(app: Node) -> void:
 		"archives":
 			if _archives != null:
 				_archives.focus_primary()
+		"pause":
+			if _pause != null:
+				_pause.focus_primary()
+		"levelup":
+			if _levelup != null:
+				_levelup.focus_primary()
 		_:
 			_focus_primary()

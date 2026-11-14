@@ -49,6 +49,8 @@ var _last_boss: bool = false
 var _last_overlay: StringName = &""
 var _walk_phase: float = 0.0
 var _last_facing_left: bool = false
+var _last_move_x: float = 0.0
+var _last_move_y: float = 0.0
 
 
 func _ready() -> void:
@@ -56,6 +58,7 @@ func _ready() -> void:
 		camera = Camera2D.new()
 		add_child(camera)
 	camera.make_current()
+	_ensure_debug_actions()
 	if world_root == null:
 		world_root = Node2D.new()
 		world_root.name = "WorldRoot"
@@ -140,14 +143,19 @@ func _ready() -> void:
 	_gems = MultiMeshInstance2D.new()
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_2D
+	var gem_tex: Texture2D = _fx_texture("gem")
+	if gem_tex == null:
+		gem_tex = _placeholder(Color(0.53, 0.78, 0.83), 16)
+	var gw: float = maxf(16.0, float(gem_tex.get_width()))
+	var gh: float = maxf(16.0, float(gem_tex.get_height()))
 	var quad := QuadMesh.new()
-	quad.size = Vector2(8, 8)
+	quad.size = Vector2(gw, -gh)
 	mm.mesh = quad
 	mm.instance_count = 64
 	_gems.multimesh = mm
 	_gems.z_index = 2
-	var gem_tex: Texture2D = _fx_texture("gem")
-	_gems.texture = gem_tex if gem_tex != null else _placeholder(Color(0.53, 0.78, 0.83), 8)
+	_gems.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_gems.texture = gem_tex
 	world_root.add_child(_gems)
 
 
@@ -158,11 +166,7 @@ func _process(dt: float) -> void:
 	if app.world == null:
 		_sync_menu_camera()
 		return
-	if Input.is_action_just_pressed("pause"):
-		if app.overlay_mode == &"hidden":
-			app.pause_run()
-		elif app.overlay_mode == &"pause":
-			app.resume_run()
+	_debug_editor_cheats(app)
 	if app.overlay_mode == &"hidden" and app.world.phase == &"levelup":
 		app.overlay_mode = &"levelup"
 		app.sim_paused = true
@@ -178,6 +182,8 @@ func _process(dt: float) -> void:
 	if not app.is_sim_paused():
 		var mouse: Vector2 = get_global_mouse_position()
 		var frame: InputFrame = DeviceMap.read_frame(0, mouse)
+		_last_move_x = frame.move_x
+		_last_move_y = frame.move_y
 		var frames: Array[InputFrame] = [frame]
 		app.world.step(frames, dt)
 		_consume_fx(app)
@@ -254,10 +260,8 @@ func _sync_player(world: SimWorld, dt: float, biome: String, reduce_vfx: bool) -
 	if moving and world.player.dash_remain <= 0.0:
 		_walk_phase += dt * 8.0
 	var bob: float = sin(_walk_phase) * 1.5 if moving else 0.0
-	if world.aim_x < world.player.x:
-		_last_facing_left = true
-	elif world.aim_x > world.player.x:
-		_last_facing_left = false
+	if absf(_last_move_x) >= absf(_last_move_y) and not is_zero_approx(_last_move_x):
+		_last_facing_left = _last_move_x < 0.0
 	var ptex: Texture2D = UiAtlas.entity_frame(sid, "walk" if moving else "idle", world.run_time)
 	if ptex != null:
 		player_sprite.texture = ptex
@@ -282,21 +286,20 @@ func _sync_player(world: SimWorld, dt: float, biome: String, reduce_vfx: bool) -
 
 
 func _sync_ambient(world: SimWorld, biome: String, reduce_vfx: bool) -> void:
-	var width: float = float(world.catalog.world.get("width", 2560))
-	var height: float = float(world.catalog.world.get("height", 2560))
-	_ambient.position = Vector2.ZERO
-	_ambient.scale = Vector2(width / 64.0, height / 64.0)
+	var vis: Rect2 = _view_rect()
+	var pad: float = 16.0
+	var origin: Vector2 = vis.position - Vector2(pad, pad)
+	var view_size: Vector2 = vis.size + Vector2(pad * 2.0, pad * 2.0)
+	_ambient.centered = false
+	_ambient.position = origin
+	_ambient.scale = Vector2(view_size.x / 64.0, view_size.y / 64.0)
 	_ambient.visible = not reduce_vfx
 	if _ambient.material is ShaderMaterial:
 		var mat: ShaderMaterial = _ambient.material as ShaderMaterial
-		var tint := Color(0.55, 0.22, 0.12, 0.08 if biome == "cinder" else 0.06)
-		if biome != "cinder":
-			tint = Color(0.22, 0.38, 0.55, 0.07)
-		mat.set_shader_parameter("tint", tint)
 		mat.set_shader_parameter("u_time", world.run_time)
-		mat.set_shader_parameter("density", 0.4 if biome == "cinder" else 0.28)
 		mat.set_shader_parameter("u_biome", 0.0 if biome == "cinder" else 1.0)
-		mat.set_shader_parameter("u_world_size", Vector2(width, height))
+		mat.set_shader_parameter("u_view_origin", origin)
+		mat.set_shader_parameter("u_view_size", view_size)
 
 
 func _sync_circle(world: SimWorld, biome: String, dt: float, reduce_vfx: bool) -> void:
@@ -424,10 +427,15 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 			if spr.material is ShaderMaterial:
 				var hm: ShaderMaterial = spr.material as ShaderMaterial
 				var player_in: float = 1.0 if Vector2(world.player.x, world.player.y).distance_to(Vector2(obs.x, obs.y)) <= obs.radius + world.player.radius else 0.0
+				var style: float = 2.0 if theme == "glacial" else (1.0 if biome == "rime" else 0.0)
+				if timed:
+					style = 1.0
+				var fade: float = clampf(obs.timer, 0.0, 1.0) if timed else 1.0
 				hm.set_shader_parameter("u_time", world.run_time)
-				hm.set_shader_parameter("u_style", 0.0 if biome == "cinder" else 1.0)
+				hm.set_shader_parameter("u_style", style)
 				hm.set_shader_parameter("u_player_in", player_in)
-				hm.set_shader_parameter("u_seed", float(i) * 0.17)
+				hm.set_shader_parameter("u_seed", float(i + 1) * 13.37)
+				hm.set_shader_parameter("u_fade", fade)
 		else:
 			spr.material = null
 		if obs.type == &"volatile":
@@ -468,10 +476,9 @@ func _sync_fodder(world: SimWorld) -> void:
 		mm.multimesh.instance_count = indices.size()
 		for n: int in indices.size():
 			var idx: int = int(indices[n])
-			var xf := Transform2D(0.0, Vector2(world.enemies.x[idx], world.enemies.y[idx]))
-			if world.enemies.facing[idx] == 255:
-				xf = xf.scaled(Vector2(-1, 1))
-			mm.multimesh.set_instance_transform_2d(n, xf)
+			var pos := Vector2(world.enemies.x[idx], world.enemies.y[idx])
+			var sx: float = -1.0 if world.enemies.facing[idx] == 255 else 1.0
+			mm.multimesh.set_instance_transform_2d(n, Transform2D(Vector2(sx, 0.0), Vector2(0.0, 1.0), pos))
 
 
 func _fodder_layer(id: String) -> MultiMeshInstance2D:
@@ -487,7 +494,7 @@ func _fodder_layer(id: String) -> MultiMeshInstance2D:
 		fw = float(tex.get_width())
 		fh = float(tex.get_height())
 	var quad := QuadMesh.new()
-	quad.size = Vector2(fw, fh)
+	quad.size = Vector2(fw, -fh)
 	mesh.mesh = quad
 	mesh.instance_count = 24
 	mm.multimesh = mesh
@@ -668,11 +675,17 @@ func _sync_hazards(world: SimWorld, reduce_vfx: bool) -> void:
 		spr.position = Vector2(world.boss_hazards.x[i], world.boss_hazards.y[i])
 		var span: float = maxf(world.boss_hazards.radius[i] * 2.0 / 64.0, 0.2)
 		spr.scale = Vector2(span, span)
-		var tint := Color(0.48, 0.83, 1.0, 0.45)
-		if world.boss_hazards.style[i] == BossHazardPool.STYLE_LAVA:
-			tint = Color(1.0, 0.42, 0.15, 0.5)
 		if spr.material is ShaderMaterial:
-			(spr.material as ShaderMaterial).set_shader_parameter("tint", tint)
+			var hm: ShaderMaterial = spr.material as ShaderMaterial
+			var dur: float = maxf(world.boss_hazards.duration[i], 0.001)
+			var progress: float = clampf(world.boss_hazards.elapsed[i] / dur, 0.0, 1.0)
+			hm.set_shader_parameter("u_time", world.run_time)
+			hm.set_shader_parameter("u_kind", float(world.boss_hazards.kind[i]))
+			hm.set_shader_parameter("u_style", float(world.boss_hazards.style[i]))
+			hm.set_shader_parameter("u_state", float(world.boss_hazards.state[i]))
+			hm.set_shader_parameter("u_progress", progress)
+			hm.set_shader_parameter("u_angle", world.boss_hazards.angle[i])
+			hm.set_shader_parameter("u_dir", Vector2(world.boss_hazards.dir_x[i], world.boss_hazards.dir_y[i]))
 		n += 1
 	for i: int in range(n, _hazard_sprites.size()):
 		_hazard_sprites[i].visible = false
@@ -908,6 +921,32 @@ func _fit_sprite(spr: Sprite2D, world_w: float, world_h: float) -> void:
 	var tw: float = maxf(1.0, float(spr.texture.get_width()))
 	var th: float = maxf(1.0, float(spr.texture.get_height()))
 	spr.scale = Vector2(world_w / tw, world_h / th)
+
+
+func _ensure_debug_actions() -> void:
+	if not OS.is_debug_build():
+		return
+	if not InputMap.has_action("debug_spawn_gems"):
+		InputMap.add_action("debug_spawn_gems")
+	if not InputMap.has_action("debug_force_levelup"):
+		InputMap.add_action("debug_force_levelup")
+
+
+func _debug_editor_cheats(app: Node) -> void:
+	if not OS.is_debug_build() or app.world == null:
+		return
+	if Input.is_action_just_pressed("debug_spawn_gems"):
+		app.world.player.iframe_remain = 30.0
+		var px: float = app.world.player.x
+		var py: float = app.world.player.y
+		for n: int in 8:
+			var ang: float = TAU * float(n) / 8.0
+			app.world.gems.spawn_gem(px + cos(ang) * 160.0, py + sin(ang) * 160.0, 8.0)
+	if Input.is_action_just_pressed("debug_force_levelup"):
+		app.world.player.iframe_remain = 30.0
+		if app.overlay_mode == &"pause":
+			app.resume_run()
+		SimLevel.grant_xp(app.world, app.world.xp_need)
 
 
 func _mat(path: String) -> ShaderMaterial:

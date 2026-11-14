@@ -131,7 +131,7 @@ func _save_focus_ring() -> bool:
 	sb.bg_color = Color(0, 0, 0, 0)
 	sb.draw_center = false
 	sb.border_color = Color("d4b46a")
-	sb.set_border_width_all(2)
+	sb.set_border_width_all(0)
 	sb.content_margin_left = 0.0
 	sb.content_margin_right = 0.0
 	sb.content_margin_top = 0.0

@@ -33,13 +33,29 @@ ui.hall.stat.frame,FRAME: COMPACT
 ui.hall.stat.seal,SEAL: {n}
 ui.hall.skill.empty,—
 ui.pause.title,Simulation Paused
+ui.pause.title.line1,SIMULATION
+ui.pause.title.line2,PAUSED
 ui.pause.resume,Resume Sequence
 ui.pause.archives,The Archives
 ui.pause.settings,Settings
 ui.pause.abandon,Abandon Vessel
 ui.pause.seal,Seal the Working
 ui.pause.empty_inv,No augmentations bound yet.
+ui.pause.summary,RUN SUMMARY
+ui.pause.inventory,INVENTORY
+ui.pause.row.cycle,Cycle:
+ui.pause.row.time,Run Time:
+ui.pause.row.level,Level:
+ui.pause.row.kills,Dross Slain:
+ui.pause.row.bosses,Bosses Slain:
+ui.pause.row.damage,Damage Dealt:
+ui.pause.row.items,Total Augmentations:
 ui.levelup.hint,Choose a tablet
+ui.levelup.title,SELECT AUGMENTATION
+ui.levelup.rarity.common,Common
+ui.levelup.rarity.uncommon,Uncommon
+ui.levelup.rarity.rare,Rare
+ui.levelup.rarity.lunar,Lunar
 ui.recap.defeat,Vessel Shattered
 ui.recap.victory,Transmutation Complete
 ui.recap.abandon,Vessel Dissolved

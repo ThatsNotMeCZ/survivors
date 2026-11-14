@@ -22,7 +22,6 @@ var _header: HBoxContainer
 var _header_bg: ColorRect
 var _header_rule: ColorRect
 var _ribbon_host: HBoxContainer
-var _back_hover: bool = false
 
 var _tab: StringName = &"howto"
 var _lore_sub: StringName = &"work"
@@ -154,8 +153,6 @@ func _bind() -> void:
 		_back_btn.pressed.connect(_on_back)
 		_back_btn.mouse_entered.connect(_on_back_hover.bind(true))
 		_back_btn.mouse_exited.connect(_on_back_hover.bind(false))
-		_back_btn.focus_entered.connect(_on_back_hover.bind(true))
-		_back_btn.focus_exited.connect(_on_back_hover.bind(false))
 
 
 func _on_back() -> void:
@@ -213,10 +210,11 @@ func _style_tab_buttons() -> void:
 		btn.text = ""
 		var bg := Color("3c251c") if active else Color("1a161c")
 		var border := UiAtlas.GOLD_MOLTEN if active else Color("4e4a54")
+		var hover := _tab_sb(Color("2a221c"), UiAtlas.BRASS_BRIGHT)
 		btn.add_theme_stylebox_override("normal", _tab_sb(bg, border))
-		btn.add_theme_stylebox_override("hover", _tab_sb(Color("2a221c"), UiAtlas.BRASS_BRIGHT))
+		btn.add_theme_stylebox_override("hover", hover)
 		btn.add_theme_stylebox_override("pressed", _tab_sb(Color("3c251c"), UiAtlas.GOLD_MOLTEN))
-		btn.add_theme_stylebox_override("focus", _tab_sb(bg, UiAtlas.GOLD_MOLTEN))
+		btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
 		var row := HBoxContainer.new()
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -501,50 +499,11 @@ func _sync_header_chrome() -> void:
 
 
 func _style_back_btn() -> void:
-	if _back_btn == null:
-		return
-	_back_btn.text = ""
-	UiAtlas.apply_button_styles(_back_btn, "hall-medailon")
-	_back_btn.custom_minimum_size = Vector2(48, 48)
-	_back_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_back_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_back_btn.clip_text = true
-	_back_btn.offset_transform_enabled = true
-	_back_btn.pivot_offset = Vector2(24, 24)
-	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var sb: StyleBox = _back_btn.get_theme_stylebox(state)
-		if sb is StyleBoxTexture:
-			var tex := (sb as StyleBoxTexture).duplicate() as StyleBoxTexture
-			tex.content_margin_left = 0.0
-			tex.content_margin_right = 0.0
-			tex.content_margin_top = 0.0
-			tex.content_margin_bottom = 0.0
-			tex.texture_margin_left = 0.0
-			tex.texture_margin_right = 0.0
-			tex.texture_margin_top = 0.0
-			tex.texture_margin_bottom = 0.0
-			_back_btn.add_theme_stylebox_override(state, tex)
-		elif sb is StyleBoxFlat:
-			var flat := (sb as StyleBoxFlat).duplicate() as StyleBoxFlat
-			flat.content_margin_left = 0.0
-			flat.content_margin_right = 0.0
-			flat.content_margin_top = 0.0
-			flat.content_margin_bottom = 0.0
-			_back_btn.add_theme_stylebox_override(state, flat)
+	UiAtlas.style_medallion_button(_back_btn)
 
 
 func _on_back_hover(on: bool) -> void:
-	_back_hover = on
-	if _back_btn == null:
-		return
-	_back_btn.offset_transform_enabled = true
-	var tw := create_tween()
-	tw.set_ease(Tween.EASE_OUT)
-	tw.set_trans(Tween.TRANS_QUAD)
-	var hover_scale: Vector2 = Vector2(1.06, 1.06) if on else Vector2.ONE
-	var tint: Color = Color("fff1d4") if on else Color.WHITE
-	tw.tween_property(_back_btn, "offset_transform_scale", hover_scale, 0.12)
-	tw.parallel().tween_property(_back_btn, "modulate", tint, 0.12)
+	UiAtlas.tween_medallion_hover(self, _back_btn, on)
 
 
 func _style_ribbon_pill(box: Node) -> void:

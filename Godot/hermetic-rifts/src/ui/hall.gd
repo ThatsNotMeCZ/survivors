@@ -159,10 +159,7 @@ func _apply_chrome() -> void:
 		_brand.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 1))
 		_brand.add_theme_constant_override("shadow_offset_y", 2)
 	if _back_btn != null:
-		_back_btn.text = ""
-		UiAtlas.apply_button_styles(_back_btn, "hall-medailon")
-		_back_btn.custom_minimum_size = Vector2(48, 48)
-		_strip_style_padding(_back_btn)
+		UiAtlas.style_medallion_button(_back_btn)
 	if _header != null:
 		_header.add_theme_stylebox_override("panel", UiAtlas.nine_slice("hall-banner", "idle", Vector4(6, 6, 46, 6)))
 	if _dossier != null:
@@ -265,7 +262,7 @@ func _ink_label(label: Label, size_px: int, display: bool) -> void:
 	if label == null:
 		return
 	var role: StringName = UiAtlas.TYPE_DISPLAY if display else UiAtlas.TYPE_META
-	UiAtlas.apply_label(label, role, UiAtlas.PARCHMENT_INK, size_px)
+	UiAtlas.apply_ink_label(label, role, UiAtlas.PARCHMENT_INK, size_px)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
@@ -278,28 +275,14 @@ func _style_cta_line(label: Label) -> void:
 	UiAtlas.apply_label(label, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, UiAtlas.SIZE_CTA)
 
 
-func _strip_style_padding(button: Button) -> void:
-	for state: String in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var sb: StyleBox = button.get_theme_stylebox(state)
-		if sb is StyleBoxTexture:
-			var tex := (sb as StyleBoxTexture).duplicate() as StyleBoxTexture
-			tex.content_margin_left = 0.0
-			tex.content_margin_right = 0.0
-			tex.content_margin_top = 0.0
-			tex.content_margin_bottom = 0.0
-			tex.texture_margin_left = 0.0
-			tex.texture_margin_right = 0.0
-			tex.texture_margin_top = 0.0
-			tex.texture_margin_bottom = 0.0
-			button.add_theme_stylebox_override(state, tex)
-
-
 func _bind() -> void:
 	if _bound:
 		return
 	_bound = true
 	if _back_btn != null:
 		_back_btn.pressed.connect(_on_back)
+		_back_btn.mouse_entered.connect(_on_back_hover.bind(true))
+		_back_btn.mouse_exited.connect(_on_back_hover.bind(false))
 	if _rite_toggle != null:
 		_rite_toggle.pressed.connect(_on_rite)
 	if _commence_btn != null:
@@ -309,6 +292,10 @@ func _bind() -> void:
 func _on_back() -> void:
 	_play_ui("close")
 	back_pressed.emit()
+
+
+func _on_back_hover(on: bool) -> void:
+	UiAtlas.tween_medallion_hover(self, _back_btn, on)
 
 
 func _on_rite() -> void:
@@ -405,10 +392,11 @@ func _select_vessel(sid: String, unlocked: bool) -> void:
 func _style_vessel_pick(btn: Button, active: bool, unlocked: bool) -> void:
 	var bg := Color("3a241c") if active else (Color("161319") if not unlocked else Color("1c191e"))
 	var border := UiAtlas.GOLD_MOLTEN if active else (Color("35303b") if not unlocked else Color("585c66"))
+	var hover := _pick_sb(Color("2a221c"), UiAtlas.BRASS_BRIGHT, active)
 	btn.add_theme_stylebox_override("normal", _pick_sb(bg, border, active))
-	btn.add_theme_stylebox_override("hover", _pick_sb(Color("2a221c"), UiAtlas.BRASS_BRIGHT, active))
+	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", _pick_sb(Color("3a241c"), UiAtlas.GOLD_MOLTEN, true))
-	btn.add_theme_stylebox_override("focus", _pick_sb(bg, UiAtlas.GOLD_MOLTEN, true))
+	btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
 	btn.add_theme_color_override("font_color", Color(0, 0, 0, 0))
 
 
@@ -501,11 +489,11 @@ func _fill_stats(surv: Dictionary, unlock: Dictionary) -> void:
 		cell.custom_minimum_size = Vector2(150, 22)
 		var ic := Label.new()
 		ic.text = STAT_ICONS[i]
-		UiAtlas.apply_label(ic, UiAtlas.TYPE_META, Color("6e3b1e"), 14)
+		UiAtlas.apply_ink_label(ic, UiAtlas.TYPE_META, Color("6e3b1e"), 14)
 		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var tx := Label.new()
 		tx.text = texts[i]
-		UiAtlas.apply_label(tx, UiAtlas.TYPE_META, UiAtlas.PARCHMENT_INK, 12)
+		UiAtlas.apply_ink_label(tx, UiAtlas.TYPE_META, UiAtlas.PARCHMENT_INK, 12)
 		tx.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tx.autowrap_mode = TextServer.AUTOWRAP_OFF
 		tx.clip_text = false
@@ -573,7 +561,7 @@ func _fill_skills(surv: Dictionary) -> void:
 			lab.text = Loc.skill_name(skill_id)
 		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		UiAtlas.apply_label(lab, UiAtlas.TYPE_MICRO, UiAtlas.PARCHMENT_INK, 11)
+		UiAtlas.apply_ink_label(lab, UiAtlas.TYPE_MICRO, UiAtlas.PARCHMENT_INK, 11)
 		lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		unit.add_child(cell)
 		unit.add_child(lab)
@@ -592,7 +580,7 @@ func _style_skill_cell(btn: Button, locked: bool) -> void:
 	btn.add_theme_stylebox_override("normal", sb)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", hover)
-	btn.add_theme_stylebox_override("focus", hover)
+	btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
 	btn.add_theme_stylebox_override("disabled", sb)
 	btn.add_theme_color_override("font_color", UiAtlas.PARCHMENT)
 	btn.add_theme_color_override("font_disabled_color", UiAtlas.ASH)
