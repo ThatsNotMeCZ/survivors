@@ -10,7 +10,9 @@
     "build:itch": "bun run smoke:loop && bun run build && bun scripts/package-itch.ts",
     "preview": "vite preview",
     "smoke:loop": "bun scripts/loop-smoke.ts",
-    "capture:itch": "bun scripts/capture-itch.ts"
+    "capture:itch": "bun scripts/capture-promo.ts itch",
+    "capture:gx": "bun scripts/capture-promo.ts gx",
+    "capture:kong": "bun scripts/capture-promo.ts kong"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.3.0",

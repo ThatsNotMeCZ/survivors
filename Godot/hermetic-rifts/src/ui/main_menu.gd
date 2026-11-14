@@ -112,8 +112,10 @@ func _apply_copy() -> void:
 	_style_brand(_brand_2, tr("ui.menu.brand.line2"))
 	if _archives_btn != null:
 		_archives_btn.text = tr("ui.menu.archives").to_upper()
+		_style_nav_btn(_archives_btn)
 	if _desk_btn != null:
 		_desk_btn.text = tr("ui.menu.desk").to_upper()
+		_style_nav_btn(_desk_btn)
 	_style_cta_line(_commence_1, tr("ui.menu.commence.line1"))
 	_style_cta_line(_commence_2, tr("ui.menu.commence.line2"))
 
@@ -137,13 +139,17 @@ func _style_brand(label: Label, text: String) -> void:
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_override("font", UiAtlas.spaced_font(8))
-	label.add_theme_font_size_override("font_size", 64)
-	label.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
+	UiAtlas.apply_label(label, UiAtlas.TYPE_DISPLAY, UiAtlas.GOLD_MOLTEN, UiAtlas.SIZE_DISPLAY_XL)
 	label.add_theme_color_override("font_shadow_color", Color("3a1a0e"))
 	label.add_theme_constant_override("shadow_offset_x", 0)
 	label.add_theme_constant_override("shadow_offset_y", 2)
 	label.add_theme_constant_override("shadow_outline_size", 8)
+
+
+func _style_nav_btn(button: Button) -> void:
+	if UiAtlas.body_font() != null:
+		button.add_theme_font_override("font", UiAtlas.body_font())
+	button.add_theme_font_size_override("font_size", UiAtlas.SIZE_BODY)
 
 
 func _style_cta_line(label: Label, text: String) -> void:
@@ -154,6 +160,7 @@ func _style_cta_line(label: Label, text: String) -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiAtlas.apply_label(label, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, UiAtlas.SIZE_CTA)
 
 
 func _place_cta() -> void:

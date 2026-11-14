@@ -1,6 +1,7 @@
-import { markPromoReady } from './shot';
+import { COVER_SIZE, getCoverPack, markPromoReady, type CoverPack } from './shot';
 
-const STAGE_W = 630;
+const BASE_W = 630;
+const BASE_H = 500;
 
 const ENV = '/sprites/env/atlas.png';
 const ENV_W = 572;
@@ -30,6 +31,15 @@ const FLOOR: string[][] = [
   ['t1', 't0', 't2', 't0', 'r0', 't1'],
 ];
 
+type Layout = {
+  pack: CoverPack;
+  stageW: number;
+  stageH: number;
+  scale: number;
+  ox: number;
+  oy: number;
+};
+
 type Spr = {
   src: string;
   sheetW: number;
@@ -48,8 +58,38 @@ type Spr = {
   className?: string;
 };
 
+function layoutFor(pack: CoverPack): Layout {
+  const { w: stageW, h: stageH } = COVER_SIZE[pack];
+  if (pack === 'itch') {
+    return { pack, stageW, stageH, scale: 1, ox: 0, oy: 0 };
+  }
+  if (pack === 'gx') {
+    const scale = 1.5;
+    return {
+      pack,
+      stageW,
+      stageH,
+      scale,
+      ox: (stageW - BASE_W * scale) / 2,
+      oy: stageH - BASE_H * scale - 50,
+    };
+  }
+  const scale = Math.min(stageW / BASE_W, stageH / BASE_H);
+  return {
+    pack,
+    stageW,
+    stageH,
+    scale,
+    ox: (stageW - BASE_W * scale) / 2,
+    oy: (stageH - BASE_H * scale) / 2,
+  };
+}
+
+let LAYOUT: Layout = layoutFor('itch');
+
 export function mountCoverCompose(): void {
   if (document.getElementById('cover-compose')) return;
+  LAYOUT = layoutFor(getCoverPack());
   document.body.appendChild(buildCover());
   void readyCover();
 }
@@ -59,11 +99,13 @@ function buildCover(): HTMLElement {
   const stage = el('div', 'cover-stage');
   stage.id = 'cover-stage';
   stage.setAttribute('aria-hidden', 'true');
+  stage.style.width = px(LAYOUT.stageW);
+  stage.style.height = px(LAYOUT.stageH);
 
   paintFloor(stage);
 
   stage.appendChild(
-    spr({
+    placed({
       src: ENV,
       sheetW: ENV_W,
       sheetH: ENV_H,
@@ -79,7 +121,7 @@ function buildCover(): HTMLElement {
   );
 
   stage.appendChild(
-    spr({
+    placed({
       src: ENV,
       sheetW: ENV_W,
       sheetH: ENV_H,
@@ -94,9 +136,9 @@ function buildCover(): HTMLElement {
     }),
   );
 
-  stage.appendChild(el('div', 'cover-glow'));
+  stage.appendChild(glowNode());
 
-  for (const spec of actors()) stage.appendChild(spr(spec));
+  for (const spec of actors()) stage.appendChild(placed(spec));
 
   stage.appendChild(el('div', 'cover-vignette'));
   stage.appendChild(titleBlock());
@@ -105,13 +147,18 @@ function buildCover(): HTMLElement {
 }
 
 function paintFloor(stage: HTMLElement): void {
-  const scale = 2;
-  const cell = 64 * scale;
-  for (let row = 0; row < FLOOR.length; row += 1) {
-    const line = FLOOR[row];
+  const tileScale = 2 * LAYOUT.scale;
+  const cell = 64 * tileScale;
+  const originX = LAYOUT.pack === 'itch' ? -32 : -cell * 0.25;
+  const originY = LAYOUT.pack === 'itch' ? -24 : -cell * 0.2;
+  const cols =
+    LAYOUT.pack === 'itch' ? FLOOR[0]!.length : Math.ceil((LAYOUT.stageW - originX) / cell) + 1;
+  const rows = LAYOUT.pack === 'itch' ? FLOOR.length : Math.ceil((LAYOUT.stageH - originY) / cell) + 1;
+  for (let row = 0; row < rows; row += 1) {
+    const line = FLOOR[row % FLOOR.length];
     if (!line) continue;
-    for (let col = 0; col < line.length; col += 1) {
-      const key = line[col];
+    for (let col = 0; col < cols; col += 1) {
+      const key = line[col % line.length];
       if (!key) continue;
       const tile = TILES[key];
       if (!tile) continue;
@@ -124,9 +171,9 @@ function paintFloor(stage: HTMLElement): void {
           y: tile.y,
           w: 64,
           h: 64,
-          scale,
-          left: -32 + col * cell,
-          top: -24 + row * cell,
+          scale: tileScale,
+          left: originX + col * cell,
+          top: originY + row * cell,
           z: 0,
         }),
       );
@@ -281,12 +328,34 @@ function sprEmber(left: number, top: number, scale: number): Spr {
 
 function titleBlock(): HTMLElement {
   const wrap = el('div', 'cover-title');
-  wrap.style.width = px(STAGE_W);
+  wrap.style.width = px(LAYOUT.stageW);
   const brand = el('div', 'cover-brand');
   brand.appendChild(el('span', '', 'HERMETIC'));
   brand.appendChild(el('span', '', 'RIFTS'));
   wrap.appendChild(brand);
   return wrap;
+}
+
+function glowNode(): HTMLElement {
+  const node = el('div', 'cover-glow');
+  if (LAYOUT.pack === 'itch') return node;
+  const { scale, ox, oy } = LAYOUT;
+  node.style.right = 'auto';
+  node.style.left = px(ox + 272 * scale - 40 * scale);
+  node.style.top = px(oy + 70 * scale);
+  node.style.width = px(460 * scale);
+  node.style.height = px(460 * scale);
+  return node;
+}
+
+function placed(spec: Spr): HTMLDivElement {
+  if (LAYOUT.scale === 1 && LAYOUT.ox === 0 && LAYOUT.oy === 0) return spr(spec);
+  return spr({
+    ...spec,
+    scale: spec.scale * LAYOUT.scale,
+    left: LAYOUT.ox + spec.left * LAYOUT.scale,
+    top: LAYOUT.oy + spec.top * LAYOUT.scale,
+  });
 }
 
 function spr(spec: Spr): HTMLDivElement {
@@ -322,6 +391,7 @@ function px(n: number): string {
 async function readyCover(): Promise<void> {
   try {
     await document.fonts.load('700 48px BillJilly');
+    await document.fonts.load('700 96px BillJilly');
     await document.fonts.ready;
     await Promise.all(SHEETS.map(decodeSheet));
   } catch {

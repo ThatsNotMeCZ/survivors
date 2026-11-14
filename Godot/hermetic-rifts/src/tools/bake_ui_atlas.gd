@@ -9,6 +9,7 @@ const FONT_PATH: String = "res://assets/fonts/BillJilly.ttf"
 const OUT_ROOT: String = "res://assets/ui"
 const CINDER_SHADER: String = "res://assets/shaders/cinder_circle.gdshader"
 const PILLAR_SHADER: String = "res://assets/shaders/menu_pillar.gdshader"
+const HALL_SHADER: String = "res://assets/shaders/hall_backdrop.gdshader"
 const RUNNER_PNG: String = "res://assets/sprites/entities/runner.png"
 
 const CONTENT_MARGIN_L: float = 20.0
@@ -65,6 +66,8 @@ func _bake() -> int:
 	if _save_material("%s/materials/cinder_circle.tres" % OUT_ROOT, CINDER_SHADER):
 		wrote += 1
 	if _save_material("%s/materials/menu_pillar.tres" % OUT_ROOT, PILLAR_SHADER):
+		wrote += 1
+	if _save_material("%s/materials/hall_backdrop.tres" % OUT_ROOT, HALL_SHADER):
 		wrote += 1
 	if _save_theme():
 		wrote += 1
@@ -159,9 +162,9 @@ func _save_theme() -> bool:
 	theme.set_color("font_disabled_color", "Button", Color("8a6a32"))
 	theme.set_color("font_outline_color", "Button", Color(0, 0, 0, 0.85))
 	theme.set_color("font_color", "Label", parchment)
-	theme.set_color("font_shadow_color", "Label", Color(0, 0, 0, 1))
+	theme.set_color("font_shadow_color", "Label", Color(0, 0, 0, 0))
 	theme.set_constant("shadow_offset_x", "Label", 0)
-	theme.set_constant("shadow_offset_y", "Label", 2)
+	theme.set_constant("shadow_offset_y", "Label", 0)
 	if ResourceLoader.exists("%s/styleboxes/focus_ring.tres" % OUT_ROOT):
 		theme.set_stylebox("focus", "Button", load("%s/styleboxes/focus_ring.tres" % OUT_ROOT))
 	return _save(theme, "%s/menu_theme.tres" % OUT_ROOT)

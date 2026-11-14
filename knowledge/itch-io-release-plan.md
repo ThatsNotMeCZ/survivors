@@ -142,7 +142,7 @@ V itch.io editoru klikni v liště popisu na ikonu **`<>` (Edit HTML)** a vlož 
     <strong>Hermetic Tablets.</strong> Graft them into your frame as you level. The kind ones help. The rare ones cut both ways.
   </li>
   <li>
-    <strong>Two chambers, and a third still sealed.</strong> Scorched Cinder Yard. Frozen Rime Dock. What lies below remains <em>???</em>.
+    <strong>Three chambers.</strong> Scorched Cinder Yard. Frozen Rime Dock. The Glacial Tomb below.
   </li>
   <li>
     <strong>The Archives.</strong> A codex of what you have killed, bound, and not yet recovered.

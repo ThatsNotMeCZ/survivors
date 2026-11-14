@@ -1,7 +1,7 @@
-[gd_resource type="Theme" format=3]
+[gd_resource type="Theme" format=3 uid="uid://dc4hy7xwyjulq"]
 
 [ext_resource type="StyleBox" path="res://assets/ui/styleboxes/focus_ring.tres" id="1_0xadh"]
-[ext_resource type="FontFile" path="res://assets/fonts/BillJilly.ttf" id="2_34pu0"]
+[ext_resource type="FontFile" uid="uid://cb03r0114qmdw" path="res://assets/fonts/BillJilly.ttf" id="2_34pu0"]
 
 [resource]
 default_font = ExtResource("2_34pu0")

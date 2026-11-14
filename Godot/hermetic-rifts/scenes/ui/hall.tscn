@@ -1,0 +1,177 @@
+[gd_scene format=3 uid="uid://bu57eds78ktfe"]
+
+[ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="1_k5jps"]
+[ext_resource type="Script" uid="uid://dseqx6nr0fwdr" path="res://src/ui/hall.gd" id="2_nqwiy"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/hall-banner.tres" id="3_kdu2k"]
+[ext_resource type="Texture2D" path="res://assets/ui/frames/ui/nav-arrow_idle.tres" id="4_kokva"]
+[ext_resource type="Material" path="res://assets/ui/materials/hall_backdrop.tres" id="5_oiwl1"]
+[ext_resource type="Texture2D" path="res://assets/ui/frames/entities/runner_idle.tres" id="6_7v3w6"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/parchment-panel.tres" id="7_dkkrd"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/btn-cta_idle.tres" id="8_75mlc"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/btn-cta_active.tres" id="9_k5t5b"]
+[ext_resource type="StyleBox" path="res://assets/ui/styleboxes/btn-cta_hover.tres" id="10_8kw86"]
+
+[node name="Hall" type="Control" unique_id=1756748950]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("1_k5jps")
+script = ExtResource("2_nqwiy")
+
+[node name="Header" type="PanelContainer" parent="." unique_id=1736353408]
+layout_mode = 0
+theme_override_styles/panel = ExtResource("3_kdu2k")
+
+[node name="HeaderRow" type="HBoxContainer" parent="Header" unique_id=1721745339]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="BackBtn" type="Button" parent="Header/HeaderRow" unique_id=1678439678]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+
+[node name="Brand" type="Label" parent="Header/HeaderRow" unique_id=642156247]
+layout_mode = 2
+text = "THE HALL"
+
+[node name="Sidebar" type="VBoxContainer" parent="." unique_id=1228785152]
+layout_mode = 0
+theme_override_constants/separation = 18
+
+[node name="Nav" type="VBoxContainer" parent="Sidebar" unique_id=340546833]
+layout_mode = 2
+
+[node name="NavArrow" type="TextureRect" parent="Sidebar" unique_id=1565897391]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("4_kokva")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SidebarBg" type="ColorRect" parent="." unique_id=577394820]
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.05490196, 0.047058824, 0.0627451, 0.9019608)
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1689781509]
+material = ExtResource("5_oiwl1")
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.03529412, 0.02745098, 0.043137256, 1)
+
+[node name="Preview" type="Control" parent="." unique_id=1921493244]
+anchors_preset = 0
+mouse_filter = 2
+
+[node name="StageCircle" type="ColorRect" parent="Preview" unique_id=432189621]
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.76862746, 0.6392157, 0.3529412, 0.078431375)
+
+[node name="Pedestal" type="ColorRect" parent="Preview" unique_id=392260633]
+layout_mode = 0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.8)
+
+[node name="VesselPreview" type="TextureRect" parent="Preview" unique_id=1214482850]
+texture_filter = 1
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("6_7v3w6")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Dossier" type="PanelContainer" parent="." unique_id=1362549916]
+layout_mode = 0
+theme_override_styles/panel = ExtResource("7_dkkrd")
+
+[node name="DossierInner" type="VBoxContainer" parent="Dossier" unique_id=297351492]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DossierHeader" type="Label" parent="Dossier/DossierInner" unique_id=828464892]
+layout_mode = 2
+
+[node name="DossierName" type="Label" parent="Dossier/DossierInner" unique_id=406741683]
+layout_mode = 2
+
+[node name="DossierLore" type="Label" parent="Dossier/DossierInner" unique_id=515858228]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="StatsGrid" type="GridContainer" parent="Dossier/DossierInner" unique_id=1185109249]
+layout_mode = 2
+columns = 2
+
+[node name="Skills" type="HBoxContainer" parent="Dossier/DossierInner" unique_id=1757999611]
+layout_mode = 2
+
+[node name="SkillTip" type="PanelContainer" parent="." unique_id=740885306]
+visible = false
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 0
+
+[node name="SkillTipInner" type="VBoxContainer" parent="SkillTip" unique_id=48827912]
+layout_mode = 2
+
+[node name="TipName" type="Label" parent="SkillTip/SkillTipInner" unique_id=1803208831]
+layout_mode = 2
+
+[node name="TipLore" type="Label" parent="SkillTip/SkillTipInner" unique_id=1831515271]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="TipHook" type="Label" parent="SkillTip/SkillTipInner" unique_id=1934821683]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="CommenceBtn" type="Button" parent="." unique_id=32988146]
+layout_mode = 0
+theme_override_styles/normal = ExtResource("8_75mlc")
+theme_override_styles/pressed = ExtResource("9_k5t5b")
+theme_override_styles/hover = ExtResource("10_8kw86")
+
+[node name="CommenceCopy" type="VBoxContainer" parent="CommenceBtn" unique_id=153576727]
+layout_mode = 0
+
+[node name="CommenceLine1" type="Label" parent="CommenceBtn/CommenceCopy" unique_id=1164150245]
+layout_mode = 2
+
+[node name="CommenceLine2" type="Label" parent="CommenceBtn/CommenceCopy" unique_id=78141660]
+layout_mode = 2
+
+[node name="Rite" type="VBoxContainer" parent="." unique_id=738957566]
+layout_mode = 0
+theme_override_constants/separation = 8
+
+[node name="RiteToggle" type="Button" parent="Rite" unique_id=1349069752]
+layout_mode = 2
+
+[node name="RiteRow" type="HBoxContainer" parent="Rite/RiteToggle" unique_id=799163262]
+layout_mode = 0
+theme_override_constants/separation = 16
+
+[node name="RiteCopy" type="VBoxContainer" parent="Rite/RiteToggle/RiteRow" unique_id=512050139]
+layout_mode = 2
+
+[node name="RiteKicker" type="Label" parent="Rite/RiteToggle/RiteRow/RiteCopy" unique_id=131095964]
+layout_mode = 2
+
+[node name="RiteLabel" type="Label" parent="Rite/RiteToggle/RiteRow/RiteCopy" unique_id=1204139990]
+layout_mode = 2
+
+[node name="RiteSwitch" type="Panel" parent="Rite/RiteToggle/RiteRow" unique_id=142400596]
+custom_minimum_size = Vector2(36, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="RiteKnob" type="ColorRect" parent="Rite/RiteToggle/RiteRow/RiteSwitch" unique_id=1827855084]
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.65882355, 0.59607846, 0.5647059, 1)
+
+[node name="RiteSeed" type="Label" parent="Rite" unique_id=172873864]
+layout_mode = 2

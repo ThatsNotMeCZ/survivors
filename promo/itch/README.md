@@ -27,7 +27,7 @@ Itch GIFs do not animate on mobile; keep the PNGs in the screenshot set.
 | Cinder Heart duel | `/?promo=boss` |
 | Level-up tablets | `/?promo=tablets` |
 | Archives bestiary | `/?promo=archives` |
-| Cover (composed still, HUD off) | `/?promo=cover` |
+| Cover (composed still, HUD off) | `/?promo=cover` (`pack=itch` default) |
 | Banner (Hall backdrop + wordmark) | `/?promo=banner` |
 | Hall only | `/?promo=hall` |
 

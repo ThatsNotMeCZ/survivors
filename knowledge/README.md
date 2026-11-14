@@ -34,6 +34,7 @@ Live slice (2026-11): **3 compressed stages**, 2 vessels, 13 items (6 locked), S
 | File | What it answers |
 |---|---|
 | [itch-io-release-plan.md](itch-io-release-plan.md) | itch.io demo publish, copy, promo |
+| [gx-kong-promo.md](gx-kong-promo.md) | GX.games + Kongregate listing packs (copy + images) |
 | [../changelog/README.md](../changelog/README.md) | Player-facing updates → itch.io Devlog source |
 
 ## Phaser

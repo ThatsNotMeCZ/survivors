@@ -2,7 +2,7 @@
 
 Chunky **32px** pixel art, vessel taller than fodder (mite 24 / spitter 28). Square fallback sheets display at 40px; authored sheets keep native frame size (Homunculus 32×48). Silhouette over detail. Arena camera `viewZoom` in `world.json` (2.5) so that scale reads on 1080p.
 
-HUD, pause, level-up, and menus are HTML in `web/src/ui/` using Dark Hermetic tokens (`theme.css`): brass, ember, mercury, parchment. Not Phaser text.
+HUD, pause, level-up, and menus are HTML in `web/src/ui/` using Dark Hermetic tokens (`theme.css`): brass, ember, mercury, parchment. Not Phaser text. Godot chrome uses the same tokens and **BillJilly** for all copy (theme default + `UiAtlas`), floor **13px**. Display titles (≥18px) keep grayscale AA; smaller copy on dark chrome is aliased (no AA, no drop shadow). Parchment / dark-ink screens (Alchemist's Desk) use `apply_ink_label`: FontVariation embolden + 1px same-color outline so hairlines hold on Mac without filling counters. Stretch is `viewport` + integer + nearest; snap 2D transforms/vertices; no font subpixel positioning. Archives **Bestiary / Reliquary** tiles are a fixed **112×148** inventory grid (64px art, 8px gap); window resize changes column count, not tile size.
 - **Main menu circle**: Authored sprite (`web/src/ui/cinder-circle.ts`) rendered via WebGL with a slow in-place occult breathing/blink (~6.5s wave, no external glow spill into surroundings).
 - **The Hall (Lobby) background**: Fullscreen WebGL fragment shader (`web/src/ui/hall-backdrop.ts`) with dark cosmic violet depth, domain-warped aetheric smoke, light cone, perspective-squashed transmutation seal with rotating sigils under vessel feet, and rising embers (dimmed/cold when vessel is sealed).
 
@@ -23,7 +23,7 @@ Hit spark, dash afterimage, death burst, ranged muzzle. Authored `web/public/spr
 
 ## Production path
 
-1. Drop `web/public/sprites/entities/{id}.png` (horizontal frames). Optional `{id}.json` (compact anims or Pixelorama project JSON) names idle/walk/attack.
+1. Drop `web/public/sprites/entities/{id}.png` (horizontal frames). Optional `{id}.json` (compact anims with per-clip `frameRate`) names idle/walk/attack.
 2. Drop `web/public/sprites/items/{id}.png` and `skills/{id}.png` at 24px.
 3. Restart `bun run dev` (manifest watcher). Arena `flipX` for left.
 4. Eyes / floor stay procedural until those folders have PNGs. Drop `fx/{id}.png` to replace sparks / bolts for that id.

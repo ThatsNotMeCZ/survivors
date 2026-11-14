@@ -15,6 +15,51 @@ static func can_seal(world: SimWorld) -> bool:
 	return world.portal_open and is_last_stage(world) and not world.won
 
 
+static func current_objective(world: SimWorld) -> Dictionary:
+	if world.portal_open:
+		var need: float = float(world.catalog.loop.get("portalHold", 1.4))
+		return {
+			"kind": &"portal",
+			"pct": clampf(world.portal_hold / maxf(need, 0.001), 0.0, 1.0) if need > 0.0 else 0.0,
+			"target_x": world.portal_x,
+			"target_y": world.portal_y,
+			"has_target": true,
+			"name": "",
+		}
+	if world.boss_spawned and world.counts_boss > 0:
+		for i: int in world.enemies.cap:
+			if world.enemies.alive[i] == 0 or world.enemies.role[i] != EnemyPool.ROLE_BOSS:
+				continue
+			var max_hp: float = world.enemies.max_hp[i] if world.enemies.max_hp[i] > 0.0 else 1.0
+			return {
+				"kind": &"boss",
+				"pct": clampf(world.enemies.hp[i] / max_hp, 0.0, 1.0),
+				"target_x": world.enemies.x[i],
+				"target_y": world.enemies.y[i],
+				"has_target": true,
+				"name": world.enemies.def_id[i],
+			}
+	if world.teleporter_state == &"charging":
+		return {
+			"kind": &"hold",
+			"pct": clampf(world.teleporter_charge / maxf(world.teleporter_hold, 0.001), 0.0, 1.0),
+			"target_x": world.teleporter_x,
+			"target_y": world.teleporter_y,
+			"has_target": true,
+			"name": "",
+		}
+	var stage: Dictionary = current_stage(world)
+	var at: float = float(stage.get("teleporterAt", 55.0))
+	return {
+		"kind": &"wait",
+		"pct": clampf(world.stage_time / maxf(at, 0.001), 0.0, 1.0) if at > 0.0 else 0.0,
+		"target_x": 0.0,
+		"target_y": 0.0,
+		"has_target": false,
+		"name": "",
+	}
+
+
 static func collect_pending_lores(world: SimWorld) -> void:
 	for i: int in world.lores.cap:
 		if world.lores.alive[i] == 0:

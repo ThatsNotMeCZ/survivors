@@ -36,18 +36,18 @@
       "frameWidth": 56,
       "frameHeight": 56,
       "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
         "walk": {
           "frames": [
             1,
             2,
             3
-          ],
-          "frameRate": 4,
-          "repeat": -1
-        },
-        "idle": {
-          "frames": [
-            0
           ],
           "frameRate": 4,
           "repeat": -1
@@ -71,7 +71,7 @@
           "frames": [
             0
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         },
         "walk": {
@@ -80,7 +80,7 @@
             2,
             3
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         },
         "attack": {
@@ -88,7 +88,7 @@
             4,
             5
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": 0
         }
       }
@@ -98,13 +98,20 @@
       "frameWidth": 48,
       "frameHeight": 48,
       "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 6,
+          "repeat": -1
+        },
         "walk": {
           "frames": [
             1,
             2,
             3
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         },
         "attack": {
@@ -112,15 +119,8 @@
             4,
             5
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": 0
-        },
-        "idle": {
-          "frames": [
-            0
-          ],
-          "frameRate": 5.99,
-          "repeat": -1
         }
       }
     },
@@ -134,7 +134,7 @@
             0,
             1
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         },
         "walk": {
@@ -142,7 +142,7 @@
             0,
             1
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         },
         "attack": {
@@ -150,7 +150,7 @@
             2,
             3
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": 0
         }
       }
@@ -165,7 +165,7 @@
             0,
             1
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         },
         "attack-bolt": {
@@ -173,7 +173,7 @@
             2,
             3
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": 0
         },
         "attack-laser": {
@@ -181,7 +181,7 @@
             2,
             3
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": 0
         },
         "attack-pulse": {
@@ -189,7 +189,7 @@
             4,
             5
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": 0
         }
       }
@@ -199,20 +199,20 @@
       "frameWidth": 24,
       "frameHeight": 24,
       "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 6,
+          "repeat": -1
+        },
         "walk": {
           "frames": [
             1,
             2,
             3
           ],
-          "frameRate": 5.99,
-          "repeat": -1
-        },
-        "idle": {
-          "frames": [
-            0
-          ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         },
         "attack": {
@@ -220,7 +220,7 @@
             4,
             5
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": 0
         }
       }
@@ -230,6 +230,13 @@
       "frameWidth": 56,
       "frameHeight": 64,
       "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 3,
+          "repeat": -1
+        },
         "walk": {
           "frames": [
             1,
@@ -262,13 +269,6 @@
           ],
           "frameRate": 3,
           "repeat": 0
-        },
-        "idle": {
-          "frames": [
-            0
-          ],
-          "frameRate": 3,
-          "repeat": -1
         }
       }
     },
@@ -281,7 +281,7 @@
           "frames": [
             0
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         },
         "walk": {
@@ -290,7 +290,7 @@
             2,
             3
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         },
         "attack": {
@@ -298,7 +298,7 @@
             4,
             5
           ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": 0
         }
       }
@@ -308,13 +308,12 @@
       "frameWidth": 42,
       "frameHeight": 45,
       "anims": {
-        "attack": {
+        "idle": {
           "frames": [
-            4,
-            5
+            0
           ],
           "frameRate": 3,
-          "repeat": 0
+          "repeat": -1
         },
         "walk": {
           "frames": [
@@ -325,12 +324,13 @@
           "frameRate": 3,
           "repeat": -1
         },
-        "idle": {
+        "attack": {
           "frames": [
-            0
+            4,
+            5
           ],
           "frameRate": 3,
-          "repeat": -1
+          "repeat": 0
         }
       }
     },
@@ -339,21 +339,21 @@
       "frameWidth": 48,
       "frameHeight": 48,
       "anims": {
+        "idle": {
+          "frames": [
+            3,
+            4
+          ],
+          "frameRate": 6,
+          "repeat": -1
+        },
         "walk": {
           "frames": [
             0,
             1,
             2
           ],
-          "frameRate": 5.99,
-          "repeat": -1
-        },
-        "idle": {
-          "frames": [
-            3,
-            4
-          ],
-          "frameRate": 5.99,
+          "frameRate": 6,
           "repeat": -1
         }
       }
@@ -363,19 +363,19 @@
       "frameWidth": 48,
       "frameHeight": 48,
       "anims": {
+        "idle": {
+          "frames": [
+            3,
+            4
+          ],
+          "frameRate": 1.5,
+          "repeat": -1
+        },
         "walk": {
           "frames": [
             0,
             1,
             2
-          ],
-          "frameRate": 2.5,
-          "repeat": -1
-        },
-        "idle": {
-          "frames": [
-            3,
-            4
           ],
           "frameRate": 2.5,
           "repeat": -1
@@ -387,18 +387,18 @@
       "frameWidth": 56,
       "frameHeight": 56,
       "anims": {
+        "idle": {
+          "frames": [
+            0
+          ],
+          "frameRate": 4,
+          "repeat": -1
+        },
         "walk": {
           "frames": [
             1,
             2,
             3
-          ],
-          "frameRate": 4,
-          "repeat": -1
-        },
-        "idle": {
-          "frames": [
-            0
           ],
           "frameRate": 4,
           "repeat": -1
@@ -418,13 +418,12 @@
       "frameWidth": 42,
       "frameHeight": 45,
       "anims": {
-        "attack": {
+        "idle": {
           "frames": [
-            4,
-            5
+            0
           ],
           "frameRate": 3,
-          "repeat": 0
+          "repeat": -1
         },
         "walk": {
           "frames": [
@@ -435,12 +434,13 @@
           "frameRate": 3,
           "repeat": -1
         },
-        "idle": {
+        "attack": {
           "frames": [
-            0
+            4,
+            5
           ],
           "frameRate": 3,
-          "repeat": -1
+          "repeat": 0
         }
       }
     }

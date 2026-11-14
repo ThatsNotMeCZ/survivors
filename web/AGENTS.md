@@ -32,6 +32,8 @@ bun run dev           # http://127.0.0.1:8080
 bun run smoke:loop    # 3 stages + bosses, no browser
 bun run build
 bun run build:itch    # smoke + build + hermetic-rifts-itch.zip
+bun run capture:gx    # promo/gx-games listing images
+bun run capture:kong  # promo/kongregate listing images
 ```
 
 ## Do not

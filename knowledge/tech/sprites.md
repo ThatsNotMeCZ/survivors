@@ -7,7 +7,7 @@ Drop finished art into `web/public/sprites/`. Vite rewrites `manifest.json` on `
 | Path | Role |
 |---|---|
 | `entities/{id}.png` | Vessel / enemy spritesheet. Id matches `survivors.json` or `entities.json`. |
-| `entities/{id}.json` | Optional sidecar: compact anims **or** a Pixelorama project / Aseprite JSON export. Skip if frames are square and idle is frame 0. |
+| `entities/{id}.json` | Optional sidecar. Canonical form is compact anims (`frameWidth` / `frameHeight` / `anims` with per-clip `frameRate`). Pixelorama / Aseprite JSON still parse as a drop-in fallback. Skip if frames are square and idle is frame 0. |
 | `items/{id}.png` | HUD / level-up icon (24px). Id matches `items.json`. |
 | `skills/{id}.png` | HUD / hall icon (24px). Id matches `skills.json`. |
 | `ui/atlas.png` + `ui/atlas.json` | Shared HUD / menu texture atlas (`logo`, `btn-plaque`, `btn-cta`, `hall-banner`, `parchment-panel`, `pause-tablet`, `pause-inventory`, `hud-objective`, `hud-timer`, `hud-flask`, `hud-skill-dock`, `hud-inventory`, `card-{rarity}`, `portrait-{id}`). Supports 3-state buttons (`idle`, `hover`, `active`) and 9-slice (`nineSlice.margins` + `nineSlice.expandable`). CSS/SVG fallback renders when missing. |
@@ -24,7 +24,7 @@ Horizontal strip of equal frames. Phaser loads `entity-{id}` via `load.spriteshe
 - `idle` = frame 0
 - `walk` = every frame at 8 fps, looping (only if there is more than one cell)
 
-Sidecar can be the compact form, a **Pixelorama project JSON** (`size_x` / `size_y` / `fps` / `tags`), or an Aseprite-style spritesheet JSON (`meta.frameTags`). Pixelorama tags are 1-based; Aseprite tags are 0-based. Tag names map to Phaser anims (`idle`, `walk`, per-attack anims like `attack-fan`, `attack-sweep`, `attack-prison`, `attack-laser`, `summon`, etc.). Vite bakes that into `manifest.json`. Anim definitions support variable frame counts and uneven per-frame timings (`durations` in ms).
+Canonical sidecar is compact JSON. Set `frameRate` per anim (`idle` vs `walk` vs `attack-*`) independently. `repeat` is `-1` (loop) for idle/walk and `0` (one-shot) for attacks. Optional `durations` (ms per frame) for uneven timing. Main menu / Hall idle reads that sidecar (not a stale baked rate). Vite also bakes this into `manifest.json` for the arena.
 
 Compact example:
 
@@ -40,7 +40,7 @@ Compact example:
 }
 ```
 
-Pixelorama drop-in: export the sheet as `entities/{id}.png` and copy the project JSON next to it as `entities/{id}.json` (tags `idle` / `walk` on the timeline).
+Pixelorama / Aseprite remain a drop-in fallback (project JSON with `size_x` / `size_y` / `fps` / `tags`, or spritesheet JSON with `meta.frameTags`). Pixelorama tags are 1-based; Aseprite tags are 0-based. Prefer converting the sidecar to compact so each clip has its own `frameRate`. Authored Pixelorama projects stay in `tools/pixelorama/`.
 
 Arena `flipX` for left. Player, elites, and bosses are Phaser Sprites (`playEntity`). Fodder uses one `SpriteGPULayer` per entity id; walk frames run on the GPU (`setAnimations`). Non-square frames keep their native size; square vessel sheets still display at 40.
 

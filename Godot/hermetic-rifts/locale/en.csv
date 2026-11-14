@@ -12,6 +12,26 @@ ui.hall.sealed,Vessel Sealed
 ui.hall.daily,Daily Rite
 ui.hall.back,Return
 ui.hall.???,??? · SEALED
+ui.hall.brand,THE HALL
+ui.hall.commence.line1,COMMENCE
+ui.hall.commence.line2,WORKING
+ui.hall.sealed.line1,VESSEL
+ui.hall.sealed.line2,SEALED
+ui.hall.rite.kicker,ALCHEMICAL SEED
+ui.hall.rite.seed.random,Random seed at commence
+ui.hall.rite.seed.on,Seed: {tag} · {date}
+ui.hall.dossier.header,VESSEL DOSSIER
+ui.hall.dossier.sealed,SEALED VESSEL
+ui.hall.unsealing,Rite of Unsealing: {label} ({progress}).
+ui.hall.stat.vitality,VITALITY: {n}
+ui.hall.stat.vitality.hidden,VITALITY: ???
+ui.hall.stat.role.hidden,ROLE: ???
+ui.hall.stat.stride.swift,STRIDE: SWIFT
+ui.hall.stat.stride.measured,STRIDE: MEASURED
+ui.hall.stat.stride.hidden,STRIDE: ???
+ui.hall.stat.frame,FRAME: COMPACT
+ui.hall.stat.seal,SEAL: {n}
+ui.hall.skill.empty,—
 ui.pause.title,Simulation Paused
 ui.pause.resume,Resume Sequence
 ui.pause.archives,The Archives
@@ -26,13 +46,24 @@ ui.recap.abandon,Vessel Dissolved
 ui.recap.again,Run Again
 ui.recap.hall,Return to Hall
 ui.settings.title,Alchemist's Desk
-ui.settings.master,Master
-ui.settings.sfx,SFX
+ui.settings.heading,Settings
+ui.settings.lead,Attune the chamber's resonance and visual clarity.
+ui.settings.master,Master Volume
+ui.settings.master.hint,Overall resonance of the chamber.
+ui.settings.sfx,Sound Effects
+ui.settings.sfx.hint,"Strikes, footsteps, and the chime of brass."
 ui.settings.music,Music
-ui.settings.mute,Mute
+ui.settings.music.hint,Ritual hymns and the chamber's drone.
+ui.settings.mute,Mute All
+ui.settings.mute.hint,Silences the entire working.
 ui.settings.shake,Screenshake
-ui.settings.vfx,Reduce VFX
+ui.settings.shake.hint,Tremor of the chamber upon heavy impacts.
+ui.settings.vfx,Reduce Effects
+ui.settings.vfx.hint,Dims sparks and flashes for clearer sight.
 ui.settings.fullscreen,Fullscreen Chamber
+ui.settings.fullscreen.hint,Expand working to fill the entire monitor.
+ui.settings.fullscreen.toggle,Toggle Fullscreen
+ui.settings.close,Close
 ui.archives.howto,I. Rites of Motion
 ui.archives.lore,II. Chronicles
 ui.archives.bestiary,III. Bestiary
@@ -45,6 +76,19 @@ ui.hud.slay,Slay the {name}
 ui.hud.descend,Descend the Rift
 ui.hud.ouroboros,Descend the Ouroboros
 ui.hud.seal,The Seal Manifests
+ui.hud.kicker.guardian,Seal Guardian
+ui.hud.kicker.ouroboros,The Ouroboros Loop
+ui.hud.sub.return,The seal cools · Return to the Transmutation Circle
+ui.hud.sub.stand,Stand in the gate to descend
+ui.hud.sub.cycle,Stand in the gate for Cycle {n} · Press F to seal the working
+ui.hud.sub.seal,Press F to seal the working
+ui.hud.timer,Rift Timer
+ui.hud.cycle,Cycle {n}
+ui.hud.level,Lv {n}
+ui.hud.key.primary,LMB
+ui.hud.key.secondary,RMB
+ui.hud.key.utility,Shift
+ui.hud.key.special,Q
 ui.prompt.???,???
 ui.diff.dormant,Dormant
 ui.diff.stirring,Stirring
@@ -147,3 +191,276 @@ stage.rime-dock.lore,A subterranean canal where alchemical salts and quicksilver
 stage.glacial-tomb.name,Glacial Tomb
 stage.glacial-tomb.kicker,Final Chamber · Rubedo & The Great Seal
 stage.glacial-tomb.lore,"The deepest vault beneath the canal, sealed in eternal permafrost to contain the Frost Emperor. Here the Transmutation Circle demands the longest vigil before the Great Work is decided."
+ui.archives.kicker,HERMETIC CODEX & LEDGER
+ui.archives.title,THE ARCHIVES
+ui.archives.foot,☉ ☽ ☿ ♀ ♂ ♃ ♄
+ui.archives.ribbon.workings,Workings
+ui.archives.ribbon.transmutations,Transmutations
+ui.archives.ribbon.dross,Dross Slain
+ui.archives.ribbon.bestiary,Bestiary
+ui.archives.ribbon.treatises,Treatises
+ui.archives.ribbon.reliquary,Reliquary
+ui.archives.tab.howto,RITES OF MOTION
+ui.archives.tab.howto.sub,"Stride, Aim, Survive"
+ui.archives.tab.lore,CHRONICLES
+ui.archives.tab.lore.sub,"World, Vessels & Chambers"
+ui.archives.tab.entities,BESTIARY
+ui.archives.tab.entities.sub,"Dross, Elites & Guardians"
+ui.archives.tab.reliquary,RELIQUARY
+ui.archives.tab.reliquary.sub,Augmentations & Relics
+ui.archives.tab.stats,LEDGER
+ui.archives.tab.stats.sub,Records & Run History
+ui.archives.howto.banner.kicker,Rites of Motion
+ui.archives.howto.banner.title,HOW TO SURVIVE THE GREAT WORK
+ui.archives.howto.banner.sub,Kite the dross. Aim your primary art. Charge the Transmutation Circle. Standing still is death.
+ui.archives.howto.controls,I. VESSEL CONTROLS & RITE BINDINGS
+ui.archives.howto.col.input,Input
+ui.archives.howto.col.rite,Rite / Action
+ui.archives.howto.col.effect,Effect in the Chamber
+ui.archives.howto.row.move.key,WASD / Arrows
+ui.archives.howto.row.move.rite,Stride
+ui.archives.howto.row.move.desc,Move the vessel continuously across the chamber floor.
+ui.archives.howto.row.aim.key,Mouse Cursor
+ui.archives.howto.row.aim.rite,Sightline
+ui.archives.howto.row.aim.desc,"Aim your primary, secondary, and ultimate arts."
+ui.archives.howto.row.primary.key,Hold LMB
+ui.archives.howto.row.primary.fallback,Primary Art (I)
+ui.archives.howto.row.primary.desc,Channel your primary weapon toward the cursor.
+ui.archives.howto.row.secondary.key,Press RMB
+ui.archives.howto.row.secondary.fallback,Secondary Art (II)
+ui.archives.howto.row.secondary.desc,Unleash your secondary tactical art.
+ui.archives.howto.row.utility.key,Shift / Space
+ui.archives.howto.row.utility.fallback,Utility Dash (III)
+ui.archives.howto.row.utility.desc,Dash through foes and hazards unharmed.
+ui.archives.howto.row.special.key,Press Q
+ui.archives.howto.row.special.fallback,Ultimate Rite (IV)
+ui.archives.howto.row.special.desc,Invoke your high-impact ultimate rite.
+ui.archives.howto.row.pick.key,1 / 2 / 3
+ui.archives.howto.row.pick.rite,Bind Augmentation
+ui.archives.howto.row.pick.desc,Select a tablet during vessel ascension (or use Arrow keys + Enter).
+ui.archives.howto.row.channel.key,Stand in Ring
+ui.archives.howto.row.channel.rite,Channel / Descend
+ui.archives.howto.row.channel.desc,Hold inside the Transmutation Circle or Rift portal until charged.
+ui.archives.howto.row.seal.key,F
+ui.archives.howto.row.seal.rite,Seal the Working
+ui.archives.howto.row.seal.desc,"After the Frost Emperor, complete the transmutation instead of entering Cycle II."
+ui.archives.howto.row.pause.key,Esc / P
+ui.archives.howto.row.pause.rite,Pause Working
+ui.archives.howto.row.pause.desc,"Pause the working, inspect tablets, or open The Archives."
+ui.archives.howto.beats,II. THE FOUR STAGES OF A WORKING
+ui.archives.howto.beat.1.step,01 · DISTILLATION
+ui.archives.howto.beat.1.title,Harvest Mercury Drops & Ascend
+ui.archives.howto.beat.1.body,"Slay the lesser dross. Mercury Drops rise from the husks. Each ascent pauses the chamber and offers tablets. Common and Uncommon grafts only fortify you. Rare and Lunar covenants cut both ways."
+ui.archives.howto.beat.2.step,02 · CONVERGENCE
+ui.archives.howto.beat.2.title,Channel the Transmutation Circle
+ui.archives.howto.beat.2.body,"When the chamber has run its course, the Transmutation Circle appears. A chevron points you to the ring. Stand inside to charge it. Leave, and the seal cools until you return."
+ui.archives.howto.beat.3.step,03 · THE GUARDIAN
+ui.archives.howto.beat.3.title,Shatter the Seal Guardian & Descend
+ui.archives.howto.beat.3.body,"A full seal wakes the chamber’s Guardian. Slay it to tear open the Rift. After the Frost Emperor, a gold Ouroboros gate remains: stand in it to begin Cycle II, or press F (or pause → Seal the Working) to complete the transmutation."
+ui.archives.howto.beat.4.step,04 · RISING PRESSURE
+ui.archives.howto.beat.4.title,The Chamber Grows Meaner
+ui.archives.howto.beat.4.body,"The longer you linger, the worse the chamber becomes: Aether-warded elites, Noxious blights, and Astral Watchers. The swarm does not grow denser. It grows meaner."
+ui.archives.howto.props,"III. CHAMBER PROPS, HAZARDS & ELITE WARDS"
+ui.archives.howto.prop.pillar.kicker,SOLID COVER
+ui.archives.howto.prop.pillar.title,"Kilns, Bollards & Monoliths"
+ui.archives.howto.prop.pillar.body,"Impassable stone and iron. Break a Watcher’s gaze, catch a spitter’s bolt, and cut a sightline when the horde closes."
+ui.archives.howto.prop.hazard.kicker,GROUND HAZARD
+ui.archives.howto.prop.hazard.title,Slag Fissures & Brine Pools
+ui.archives.howto.prop.hazard.body,Corrosive ground that burns and slows you. Phase Step or Ash Step carries you across unharmed.
+ui.archives.howto.prop.volatile.kicker,VOLATILE VESSELS
+ui.archives.howto.prop.volatile.title,Brimstone Urns & Rime Casks
+ui.archives.howto.prop.volatile.body,Strike an urn or cask, then step back. The blast hits dross and you alike. Rime casks also chill. Phase through the blast to skip the wound; the frost still bites.
+ui.archives.howto.prop.elite.kicker,ELITE AFFLICTIONS
+ui.archives.howto.prop.elite.title,Aether Wards & Noxious Blights
+ui.archives.howto.prop.elite.body,"Elites wear one of two marks. An Aether Ward is an azure shell you must break before the flesh. A Noxious blight is a viridian haze that slows your stride on contact and leaves an acid pool when the husk dies."
+ui.archives.lore.banner.kicker,Hermetic Chronicles
+ui.archives.lore.banner.title,APOCRYPHA OF THE GREAT WORK
+ui.archives.lore.banner.sub,"Treatises recovered from the outer foundry, the frozen sea-locks, and the sealed glacial vault."
+ui.archives.lore.sub.work,I. The Great Work
+ui.archives.lore.sub.vessels,II. Vessels & Arts
+ui.archives.lore.sub.chambers,III. The Three Chambers
+ui.archives.lore.sub.exchange,IV. Law of Exchange
+ui.archives.lore.work.1.kicker,FOLIO I · THE SHATTERED CRUCIBLE
+ui.archives.lore.work.1.title,When the Magisterium Burned
+ui.archives.lore.work.1.p1,"The Great Work was meant to distill immortal quintessence from base lead, sulfur, and sea-salt. Instead, the Grand Crucible cracked at the midnight conjunction, flooding the subterranean vaults with volatile humors."
+ui.archives.lore.work.1.p2,"The alchemists were consumed in the first flash of calcination. What remained in the ash were the failed transmutations—skittering clots of slag, brine-swollen husks, and the colossal furnace cores that now guard the lower seals."
+ui.archives.lore.work.2.kicker,FOLIO II · ESSENCE & MERCURY
+ui.archives.lore.work.2.title,The Circulation of Quicksilver
+ui.archives.lore.work.2.p1,"No natural flesh can breathe the fumes of the Rifts. Only constructed or consecrated Vessels—animated by refined quicksilver—can walk the flagstones without dissolving into dross."
+ui.archives.lore.work.2.p2,"Every fallen abomination releases a bead of stolen Mercury (Essence). By drawing these beads back into its core, a Vessel ascends in potency, binding fractured hermetic tablets directly into its frame."
+ui.archives.lore.work.3.kicker,FOLIO III · TRANSMUTATION CIRCLES
+ui.archives.lore.work.3.title,Seals of Passage
+ui.archives.lore.work.3.p1,"Each chamber is locked by a heavy Transmutation Circle etched into the stone. Only when the chamber’s temporal alignment arrives can a Vessel stand inside the hexagram and channel its own vital heat into the ring."
+ui.archives.lore.work.3.p2,"The channeling acts as a beacon: the chamber’s hordes converge on the circle, and the Seal Guardian awakens to crush the intruder before the Rift can tear open."
+ui.archives.lore.work.4.kicker,FOLIO IV · THE THREE OPERATIONS
+ui.archives.lore.work.4.title,"Nigredo, Albedo, Rubedo"
+ui.archives.lore.work.4.p1,"The descent follows the three classical stages of hermetic transmutation: first Nigredo in the blackened ash of the Cinder Yard; second Albedo in the white salt-frost of the Rime Dock; and finally Rubedo in the deep Glacial Tomb."
+ui.archives.lore.work.4.p2,"Slaying the Frost Emperor at the bottom of the third seal opens the gold Ouroboros gate. Seal the working there, or descend into Cycle II — Cinder Yard again, inventory intact, the coefficient still climbing with time."
+ui.archives.lore.vessel.sealed_kicker,SEALED VESSEL · UNCONSECRATED FRAME
+ui.archives.lore.vessel.dossier,{title} · VESSEL DOSSIER
+ui.archives.lore.vessel.sealed_req,Vessel Sealed — Requirement: {label} ({progress}).
+ui.archives.lore.chamber.unseen_kicker,CHAMBER {n} · UNCHARTERED SEAL
+ui.archives.lore.chamber.unseen_lore,Uncharted Chamber — Descend through the Rifts to unseal this chamber’s chronicle and survey its hazards.
+ui.archives.lore.chamber.denizens,WHO WALKS HERE
+ui.archives.lore.chamber.props,IN THE CHAMBER
+ui.archives.lore.chamber.denizens.seen,"Hunts you: {hunts}. Spits from afar: {spits}. Lances from the rim: {lances}. Warden: {warden}. Guards the seal: {guardian}."
+ui.archives.lore.chamber.denizens.unseen,Hunts you: ??? · Spits from afar: ??? · Guards the seal: ???
+ui.archives.lore.chamber.props.unseen,???. ???. ???.
+ui.archives.lore.chamber.unencountered,UNENCOUNTERED
+ui.archives.lore.chamber.none,None
+ui.archives.lore.exchange.common.title,Common Tablets · Base Matter
+ui.archives.lore.exchange.common.desc,"Pure grafts: tendons, slag plating, lead plumbum, and cinnabar leeches. They carry no drawback and form the backbone of every working."
+ui.archives.lore.exchange.uncommon.title,Uncommon Tablets · Refined Humors
+ui.archives.lore.exchange.uncommon.desc,"Quicksilver draughts, spasmodic nerves, and bellows hearts. Scarcer distillations that hasten your rites without corrupting the vessel."
+ui.archives.lore.exchange.rare.title,Rare Tablets · Volatile Bargains
+ui.archives.lore.exchange.rare.desc,"Double-edged masterworks such as Vitriol Veins, Parasitic Alembic, and the Astrologer’s Ocular. Power or haste, paid in vitality, stride, or a swollen frame."
+ui.archives.lore.exchange.lunar.title,Lunar Covenants · Forbidden Heresy
+ui.archives.lore.exchange.lunar.desc,"The Pale Moon Covenant. An unforgiven heresy against the Great Work: ruin against guardians and elite horrors, a brittle shell, and insight that will not take."
+ui.archives.filter.all,All ({n})
+ui.archives.filter.denizens,Denizens
+ui.archives.filter.guardians,Guardians
+ui.archives.filter.common,Common
+ui.archives.filter.uncommon,Uncommon
+ui.archives.filter.rare,Rare
+ui.archives.filter.lunar,Lunar
+ui.archives.kind.chaser,Hunts you
+ui.archives.kind.ranged,Spits from afar
+ui.archives.kind.sniper,Lances from the rim
+ui.archives.kind.guardian,Guards the seal
+ui.archives.bestiary.unencountered,Unencountered
+ui.archives.bestiary.slain,Slain: {n}
+ui.archives.bestiary.header.seen,CHAMBER DENIZEN
+ui.archives.bestiary.header.boss,SEAL GUARDIAN
+ui.archives.bestiary.header.unseen,UNENCOUNTERED ENTITY
+ui.archives.bestiary.subtitle.unseen,Uncharted Dross of the Rifts
+ui.archives.bestiary.encountered,ENCOUNTERED:
+ui.archives.bestiary.slain_label,SLAIN:
+ui.archives.bestiary.treatise,TREATISE:
+ui.archives.bestiary.recovered,RECOVERED
+ui.archives.bestiary.unrecovered,UNRECOVERED
+ui.archives.bestiary.lore.unseen,Encounter it in the Rifts.
+ui.archives.bestiary.lore.no_treatise,Slay it to recover its treatise.
+ui.archives.bestiary.vitality,VITALITY: {n}
+ui.archives.bestiary.chamber,CHAMBER: {n}
+ui.archives.bestiary.kind,KIND: {n}
+ui.archives.bestiary.vitality.unseen,VITALITY: ???
+ui.archives.bestiary.chamber.unseen,CHAMBER: ???
+ui.archives.bestiary.kind.unseen,KIND: ???
+ui.archives.bestiary.habitats.all,ALL CHAMBERS
+ui.archives.bestiary.habitats.rifts,THE RIFTS
+ui.archives.bestiary.behavior.boss,"Wakes when the Transmutation Circle is full. Slaying it opens the Rift, or completes the Great Work in the last chamber."
+ui.archives.bestiary.behavior.boss.rites,Its rites: {n}. 
+ui.archives.bestiary.behavior.ranged,Keeps its distance and spits. Do not stand still.
+ui.archives.bestiary.behavior.sniper,"Draws a beam from the rim. Hide behind kilns, bollards, or monoliths."
+ui.archives.bestiary.behavior.chaser,Runs straight at you.
+ui.archives.bestiary.behavior.unseen,Unknown until encountered in the Rifts.
+ui.archives.reliquary.bound,Bound: ×{n}
+ui.archives.reliquary.sealed,Sealed
+ui.archives.reliquary.header.seen,{rarity} AUGMENTATION
+ui.archives.reliquary.header.unbound,UNENCOUNTERED AUGMENTATION
+ui.archives.reliquary.header.sealed,SEALED AUGMENTATION
+ui.archives.reliquary.times,TIMES BOUND:
+ui.archives.reliquary.status,STATUS:
+ui.archives.reliquary.status.bound,BOUND
+ui.archives.reliquary.status.unbound,UNBOUND
+ui.archives.reliquary.status.sealed,SEALED
+ui.archives.reliquary.hooks.hidden,ALCHEMICAL PROPERTIES UNCHARTED (???)
+ui.archives.reliquary.lore.sealed,Sealed Relic — Requirement: {label} ({progress}).
+ui.archives.reliquary.lore.unbound,Unbound Augmentation — Bind this tablet during Vessel Ascension in the Rifts to inscribe its record.
+ui.archives.hook.on_kill,{sign}{value} HP on kill
+ui.archives.hook.on_crit,-{value}s CD on crit
+ui.archives.ledger.banner.kicker,Ledger of Workings
+ui.archives.ledger.banner.title,PERSISTENT TRANSMUTATION RECORDS
+ui.archives.ledger.banner.sub,Every vessel cast into the Rifts is inscribed here across sessions.
+ui.archives.ledger.purge_confirm,CONFIRM PURGE?
+ui.archives.ledger.totals,I. LIFETIME TOTALS & HALL OF RECORDS
+ui.archives.ledger.metric.runs,Total Workings
+ui.archives.ledger.metric.runs.sub,"{wins} Won · {defeats} Shattered · {abandons} Abandoned"
+ui.archives.ledger.metric.rate,Completion Rate
+ui.archives.ledger.metric.rate.sub,{n} Chambers Cleared
+ui.archives.ledger.metric.time,Time in the Rifts
+ui.archives.ledger.metric.time.sub,Longest Working: {n}
+ui.archives.ledger.metric.fastest,Fastest Transmutation
+ui.archives.ledger.metric.fastest.sub,Furthest Chamber: {n}
+ui.archives.ledger.metric.kills,Total Dross Slain
+ui.archives.ledger.metric.kills.sub,"{fodder} Dross · {elites} Elites · {bosses} Guardians"
+ui.archives.ledger.metric.most,Most Slain (Single Run)
+ui.archives.ledger.metric.most.sub,Highest Ascension: Lv {n}
+ui.archives.ledger.metric.dmg,Total Damage Dealt
+ui.archives.ledger.metric.dmg.sub,Peak Run Damage: {n}
+ui.archives.ledger.metric.taken,Total Damage Taken
+ui.archives.ledger.metric.taken.sub,Vitality Siphoned: +{n} HP
+ui.archives.ledger.metric.items,Augmentations Bound
+ui.archives.ledger.metric.items.sub,{n} Mercury Drops Harvested
+ui.archives.ledger.metric.levels,Total Ascensions
+ui.archives.ledger.metric.levels.sub,Bound across every working
+ui.archives.ledger.vessels,II. PERFORMANCE BY VESSEL
+ui.archives.ledger.history,III. CHRONICLE OF RECENT WORKINGS
+ui.archives.ledger.history.empty,No workings recorded yet. Commence a transmutation to inscribe the ledger.
+ui.archives.ledger.outcome.victory,TRANSMUTED
+ui.archives.ledger.outcome.defeat,SHATTERED
+ui.archives.ledger.outcome.abandon,ABANDONED
+ui.archives.ledger.history.line,{vessel} · {cycle}{stage}
+ui.archives.ledger.history.cycle,Cycle {n} · 
+ui.archives.ledger.history.sub,Duration {time} · Lv {level} · {kills} Slain · {dmg} Dmg{seed}
+ui.archives.chip.vitality,Vitality
+ui.archives.chip.stride,Stride
+ui.archives.chip.workings,Workings
+ui.archives.chip.victories,Victories
+ui.archives.chip.status,Status
+ui.archives.chip.visited,Visited
+ui.archives.chip.cleared,Cleared
+ui.archives.chip.slain,Slain
+ui.archives.chip.best,Best Time
+ui.archives.chip.fastest,Fastest Win
+ui.archives.chip.peak,Peak Level
+ui.archives.chip.rite,Rite
+ui.archives.chip.hp,{n} HP
+ui.archives.chip.lv,Lv {n}
+ui.archives.chip.sealed,SEALED ({n})
+ui.archives.skill.meta,{slot} · {cd}s CD
+ui.archives.skill.primary,I · LMB
+ui.archives.skill.secondary,II · RMB
+ui.archives.skill.utility,III · Shift / Space
+ui.archives.skill.special,IV · Q
+ui.archives.unlock.unlocked,Unlocked
+ui.archives.unlock.cleared,Cleared
+ui.archives.unlock.cleared_none,0 / 1 Cleared
+ui.archives.unlock.clears_n,{have} / {need} {stage} Clears
+ui.archives.unlock.slain,Slain
+ui.archives.unlock.slain_none,0 / 1 Slain
+ui.archives.unlock.slain_n,{have} / {need} Slain
+ui.archives.unlock.elites_n,{have} / {need} Elites Slain
+ui.archives.unlock.wins_n,{have} / {need} Transmutations
+stat.speed,Speed
+stat.maxHp,Max HP
+stat.radius,Vessel Size
+stat.damage,Damage
+stat.cooldown,Cooldown
+stat.critChance,Crit Chance
+stat.critDamage,Crit Damage
+stat.armor,Armor
+stat.hazardResist,Hazard Ward
+stat.hpRegen,HP/s Regen
+stat.pickupRadius,Essence Magnet
+stat.xpGain,Essence XP
+stat.aoeRadius,Area Size
+stat.projSpeed,Projectile Speed
+stat.controlDuration,Rite Duration
+stat.eliteDamage,Elite & Boss Damage
+unlock.boss-kill.cinder-heart,Slay the Cinder Heart
+unlock.boss-kill.frost-sovereign,Slay the Frost Sovereign in the Rime Dock
+unlock.elite-kills.10,Slay 10 Noxious Elites
+unlock.total-kills.300,Slay 300 Dross across workings
+unlock.total-kills.100,Slay 100 Dross across workings
+unlock.stage-clear.cinder-yard,Clear the Cinder Yard
+unlock.stage-clear.rime-dock,Clear the Rime Dock
+obstacle.cinder-yard.pillar,Obsidian Kiln
+obstacle.cinder-yard.hazard,Slag Fissure
+obstacle.cinder-yard.volatile,Brimstone Urn
+obstacle.rime-dock.pillar,Frozen Bollard
+obstacle.rime-dock.hazard,Brine Pool
+obstacle.rime-dock.volatile,Pressurized Rime Cask
+obstacle.glacial-tomb.pillar,Glacial Monolith
+obstacle.glacial-tomb.hazard,Permafrost Crevasse
+obstacle.glacial-tomb.volatile,Volatile Ice Chunk
