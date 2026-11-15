@@ -12,7 +12,7 @@ const RARITY_TEXT: Dictionary = {
 	"lunar": Color("62e0ff"),
 }
 
-var _banner: TextureRect
+var _banner: PanelContainer
 var _title: Label
 var _row: HBoxContainer
 var _cards: Array[Button] = []
@@ -62,18 +62,19 @@ func _build() -> void:
 	var header := CenterContainer.new()
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(header)
-	_banner = TextureRect.new()
-	_banner.texture = UiAtlas.frame("sting-banner")
-	_banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_banner.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_banner.custom_minimum_size = Vector2(560, 72)
+	_banner = PanelContainer.new()
+	_banner.name = "TitleBanner"
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_banner.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_banner.custom_minimum_size = Vector2(0, 63)
+	# Caps are 94px; keep copy in the stretchable middle only.
+	_banner.add_theme_stylebox_override("panel", UiAtlas.nine_slice("sting-banner", "idle", Vector4(100, 12, 100, 20)))
 	header.add_child(_banner)
 	_title = Label.new()
 	_title.text = tr("ui.levelup.title")
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_title.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_title.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	UiAtlas.apply_label(_title, UiAtlas.TYPE_DISPLAY, UiAtlas.GOLD_MOLTEN, 28, true)
 	_banner.add_child(_title)
 	_row = HBoxContainer.new()
@@ -96,11 +97,6 @@ func _rebuild_cards(world: SimWorld) -> void:
 		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var card := _make_card(item, i)
 		col.add_child(card)
-		var key := Label.new()
-		key.text = "[%d]" % (i + 1)
-		key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		UiAtlas.apply_label(key, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, 22, true)
-		col.add_child(key)
 		_row.add_child(col)
 		_cards.append(card)
 	_focus_first()
@@ -140,30 +136,47 @@ func _make_card(item: Dictionary, index: int) -> Button:
 	inner.add_theme_constant_override("separation", 6)
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(inner)
+	var name_box := PanelContainer.new()
+	name_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_box.add_theme_stylebox_override("panel", _card_inset(Color(10.0 / 255.0, 8.0 / 255.0, 14.0 / 255.0, 0.78), Color(196.0 / 255.0, 163.0 / 255.0, 90.0 / 255.0, 0.28), Vector4(10, 4, 10, 4)))
+	inner.add_child(name_box)
 	var name_lab := Label.new()
 	name_lab.text = Loc.item_name(id)
 	name_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name_lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_lab.custom_minimum_size = Vector2(0, 32)
+	name_lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	UiAtlas.apply_label(name_lab, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, 17, true)
-	inner.add_child(name_lab)
+	name_box.add_child(name_lab)
 	var art := TextureRect.new()
 	art.texture = UiAtlas.item_tex(id)
 	art.custom_minimum_size = Vector2(96, 96)
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner.add_child(art)
 	var rarity_lab := Label.new()
 	rarity_lab.text = tr("ui.levelup.rarity.%s" % rarity)
 	rarity_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rarity_lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var rarity_color: Color = RARITY_TEXT.get(rarity, UiAtlas.PARCHMENT)
 	UiAtlas.apply_label(rarity_lab, UiAtlas.TYPE_META, rarity_color, 14, true)
 	inner.add_child(rarity_lab)
+	var desc_box := PanelContainer.new()
+	desc_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	desc_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	desc_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	desc_box.add_theme_stylebox_override("panel", _card_inset(Color(10.0 / 255.0, 8.0 / 255.0, 14.0 / 255.0, 0.68), Color(196.0 / 255.0, 163.0 / 255.0, 90.0 / 255.0, 0.22), Vector4(10, 8, 10, 8)))
+	inner.add_child(desc_box)
 	var desc := VBoxContainer.new()
 	desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	desc.add_theme_constant_override("separation", 2)
+	desc.add_theme_constant_override("separation", 6)
+	desc.alignment = BoxContainer.ALIGNMENT_CENTER
 	desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	inner.add_child(desc)
+	desc_box.add_child(desc)
 	var hooks: Variant = item.get("hooks", [])
 	if typeof(hooks) == TYPE_ARRAY:
 		for hook_v: Variant in hooks:
@@ -171,12 +184,21 @@ func _make_card(item: Dictionary, index: int) -> Button:
 			var hook_lab := Label.new()
 			hook_lab.text = String(formatted.get("text", ""))
 			hook_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			hook_lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var hook_color: Color = Color("7dff9a") if bool(formatted.get("up", true)) else Color("ff7a6e")
 			UiAtlas.apply_label(hook_lab, UiAtlas.TYPE_META, hook_color, 15, true)
 			desc.add_child(hook_lab)
+	var divider := ColorRect.new()
+	divider.color = Color(196.0 / 255.0, 163.0 / 255.0, 90.0 / 255.0, 0.28)
+	divider.custom_minimum_size = Vector2(0, 1)
+	divider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	desc.add_child(divider)
 	var lore := Label.new()
 	lore.text = Loc.item_lore(id)
+	lore.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lore.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lore.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lore.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	UiAtlas.apply_label(lore, UiAtlas.TYPE_MICRO, UiAtlas.ASH, 13)
 	desc.add_child(lore)
@@ -190,6 +212,19 @@ func _make_card(item: Dictionary, index: int) -> Button:
 		btn.offset_transform_scale = Vector2.ONE
 	)
 	return btn
+
+
+func _card_inset(fill: Color, border: Color, pad: Vector4) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = fill
+	sb.border_color = border
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(4)
+	sb.content_margin_left = pad.x
+	sb.content_margin_top = pad.y
+	sb.content_margin_right = pad.z
+	sb.content_margin_bottom = pad.w
+	return sb
 
 
 func _focus_first() -> void:

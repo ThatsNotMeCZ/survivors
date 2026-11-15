@@ -90,8 +90,8 @@ Themes map per stage: `cinder` (`cinder-yard`), `rime` (`rime-dock`), `glacial` 
   - Horizontal edges: `{theme}-border-h-0`, `{theme}-border-h-1` (`64×16 px` or `64×32 px` or `64×64 px`).
   - Vertical edges: `{theme}-border-v-0`, `{theme}-border-v-1` (`16×64 px` or `32×64 px` or `64×64 px`).
   - Corners: `{theme}-border-corner-top` (TL & TR), `{theme}-border-corner-bottom` (BL & BR) (`16×16 px` or `32×32 px` or `64×64 px`).
-- **Pillars** (`radius: 28` -> `64×64 px` or `104×104 px`): `{theme}-pillar` (`cinder-pillar`, `rime-pillar`, `glacial-pillar`).
-- **Hazards** (`radius: 68` -> `64×64 px` or `128×128 px`): `{theme}-hazard-0`, `{theme}-hazard-1` (frame 1 falls back to frame 0).
+- **Pillars** (`radius: 28` -> `64×64 px` or `104×104 px`): `{theme}-pillar` (`cinder-pillar`, `rime-pillar`, `glacial-pillar`). Draw with feet origin so the collision circle sits on the sprite base; y-sort with the vessel.
+- **Hazards** (`radius: 68` -> `64×64 px` or `128×128 px`): `{theme}-hazard-0`, `{theme}-hazard-1` (frame 1 falls back to frame 0). Web feathers those frames into `env-blended-*` canvases. Godot ignores the PNG at runtime and draws a unit quad through `env_hazard.gdshader` (Resurrect 64 ramp, Bayer rim dither) so atlas UVs cannot clip the pool.
 - **Volatiles** (`radius: 14` -> `32×32 px` or `24×24 px`): `{theme}-volatile` (`cinder-volatile`, `rime-volatile`, `glacial-volatile`).
 - **Objectives**: `{theme}-circle` (Transmutation Circle, `160×160 px` or `320×320 px`), `{theme}-portal` (The Rift, `96×96 px` or `140×140 px`).
 - **Ambient specks** (`8×8 px` / `16×16 px`): `ambient-ash`, `ambient-ember`, `ambient-snow`, `ambient-mist`.

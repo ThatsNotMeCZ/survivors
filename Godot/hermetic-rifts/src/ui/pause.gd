@@ -8,6 +8,9 @@ signal seal_pressed
 signal abandon_pressed
 
 const ACTION_W: float = 288.0
+const ACTION_H: float = 58.0
+const PANEL_W: float = 340.0
+const INV_PAD: float = 32.0
 const GLYPHS: Array[String] = ["⚶", "🜍", "⟁", "🜂", "☿"]
 
 var _title_1: Label
@@ -95,6 +98,7 @@ func _build_left() -> Control:
 	_actions.size = Vector2(320, 260)
 	tablet_stage.add_child(_actions)
 	_resume_btn = _plaque(tr("ui.pause.resume"), GLYPHS[0], 0.0)
+	_resume_btn.name = "ResumeBtn"
 	_archives_btn = _plaque(tr("ui.pause.archives"), GLYPHS[1], 12.0)
 	_settings_btn = _plaque(tr("ui.pause.settings"), GLYPHS[2], 24.0)
 	_seal_btn = _plaque(tr("ui.pause.seal"), GLYPHS[3], 36.0)
@@ -117,7 +121,9 @@ func _build_right() -> Control:
 	right.add_theme_constant_override("separation", 20)
 	right.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var summary := PanelContainer.new()
-	summary.custom_minimum_size = Vector2(340, 0)
+	summary.name = "SummaryBox"
+	summary.custom_minimum_size = Vector2(PANEL_W, 0)
+	summary.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	summary.add_theme_stylebox_override("panel", UiAtlas.nine_slice("parchment-panel", "idle", Vector4(30, 22, 30, 56)))
 	right.add_child(summary)
 	var sum_inner := VBoxContainer.new()
@@ -133,37 +139,42 @@ func _build_right() -> Control:
 	sum_inner.add_child(_summary_rows)
 	var inv_section := VBoxContainer.new()
 	inv_section.add_theme_constant_override("separation", 8)
+	inv_section.custom_minimum_size.x = PANEL_W
+	inv_section.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	inv_section.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	right.add_child(inv_section)
 	var inv_head := Label.new()
 	inv_head.text = tr("ui.pause.inventory")
 	inv_head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	inv_head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	UiAtlas.apply_label(inv_head, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, 18, true)
 	inv_section.add_child(inv_head)
-	var inv_box := TextureRect.new()
-	inv_box.texture = UiAtlas.frame("pause-inventory")
-	inv_box.stretch_mode = TextureRect.STRETCH_KEEP
-	inv_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	inv_box.custom_minimum_size = Vector2(268, 268)
+	var inv_box := PanelContainer.new()
+	inv_box.name = "InventoryBox"
+	inv_box.custom_minimum_size = Vector2(PANEL_W, PANEL_W)
+	inv_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	inv_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inv_box.add_theme_stylebox_override("panel", UiAtlas.nine_slice("pause-inventory", "idle", Vector4(INV_PAD, INV_PAD, INV_PAD, INV_PAD)))
 	inv_section.add_child(inv_box)
+	var inv_stage := Control.new()
+	inv_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inv_stage.custom_minimum_size = Vector2(PANEL_W - INV_PAD * 2.0, PANEL_W - INV_PAD * 2.0)
+	inv_box.add_child(inv_stage)
 	_inv_list = GridContainer.new()
 	_inv_list.columns = 4
 	_inv_list.add_theme_constant_override("h_separation", 6)
 	_inv_list.add_theme_constant_override("v_separation", 6)
 	_inv_list.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_inv_list.offset_left = 32.0
-	_inv_list.offset_right = -32.0
-	_inv_list.offset_top = 32.0
-	_inv_list.offset_bottom = -32.0
-	inv_box.add_child(_inv_list)
+	inv_stage.add_child(_inv_list)
 	_inv_empty = Label.new()
+	_inv_empty.name = "EmptyInv"
 	_inv_empty.text = tr("ui.pause.empty_inv")
 	_inv_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_inv_empty.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	UiAtlas.apply_label(_inv_empty, UiAtlas.TYPE_MICRO, UiAtlas.ASH, 13)
+	_inv_empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inv_empty.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	inv_box.add_child(_inv_empty)
+	UiAtlas.apply_label(_inv_empty, UiAtlas.TYPE_MICRO, UiAtlas.ASH, 13)
+	inv_stage.add_child(_inv_empty)
 	_tooltip = PanelContainer.new()
 	_tooltip.visible = false
 	_tooltip.add_theme_stylebox_override("panel", UiAtlas.nine_slice("parchment-panel", "idle", Vector4(16, 12, 16, 12)))
@@ -258,7 +269,8 @@ func _show_tip(item_id: String) -> void:
 func _plaque(text: String, glyph: String, indent: float) -> Button:
 	var btn := Button.new()
 	btn.text = "%s    %s" % [text.to_upper(), glyph]
-	btn.custom_minimum_size = Vector2(ACTION_W, 44)
+	btn.custom_minimum_size = Vector2(ACTION_W, ACTION_H)
+	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	btn.offset_transform_enabled = true
 	btn.offset_transform_position = Vector2(indent, 0.0)
 	UiAtlas.apply_button_styles(btn, "btn-plaque")

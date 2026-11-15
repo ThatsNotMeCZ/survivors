@@ -168,14 +168,7 @@ func _apply_chrome() -> void:
 		if inner != null:
 			inner.add_theme_constant_override("separation", 12)
 			inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var rite_row := get_node_or_null("Rite/RiteToggle/RiteRow") as Control
-	if rite_row != null:
-		rite_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		rite_row.offset_left = 14.0
-		rite_row.offset_right = -14.0
-		rite_row.offset_top = 8.0
-		rite_row.offset_bottom = -8.0
-		rite_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fit_rite_row()
 	var circle := get_node_or_null("Preview/StageCircle") as ColorRect
 	if circle != null:
 		circle.visible = false
@@ -678,6 +671,7 @@ func _sync_preview_frame() -> void:
 	var tex: Texture2D = UiAtlas.entity_frame(_inspected_id, "idle", _preview_t)
 	if tex != null:
 		_preview.texture = tex
+	_place_ground_light()
 	_sync_nav_frames()
 
 
@@ -705,9 +699,8 @@ func _sync_backdrop() -> void:
 		return
 	mat.set_shader_parameter("u_res", size)
 	mat.set_shader_parameter("u_locked", 1.0 if _locked else 0.0)
-	if _preview != null and size.x > 1.0 and size.y > 1.0:
-		var center: Vector2 = (_preview.global_position + _preview.size * 0.5 - global_position) / size
-		mat.set_shader_parameter("u_center", center)
+	if size.x > 1.0 and size.y > 1.0:
+		mat.set_shader_parameter("u_center", _preview_feet_in_hall() / size)
 
 
 func _layout_chrome() -> void:
@@ -777,19 +770,7 @@ func _place_preview() -> void:
 	_preview_host.offset_bottom = 0.0
 	if _preview != null:
 		_center_rect(_preview, 280.0, 280.0)
-	var circle := get_node_or_null("Preview/StageCircle") as Control
-	if circle != null:
-		_center_rect(circle, 340.0, 340.0)
-	var pedestal := get_node_or_null("Preview/Pedestal") as Control
-	if pedestal != null:
-		pedestal.anchor_left = 0.5
-		pedestal.anchor_top = 1.0
-		pedestal.anchor_right = 0.5
-		pedestal.anchor_bottom = 1.0
-		pedestal.offset_left = -120.0
-		pedestal.offset_right = 120.0
-		pedestal.offset_top = -_preview_host.size.y * 0.18 - 46.0
-		pedestal.offset_bottom = -_preview_host.size.y * 0.18
+	_place_ground_light()
 
 
 func _place_dossier() -> void:
@@ -819,12 +800,23 @@ func _place_rite() -> void:
 	var rite := get_node_or_null("Rite") as Control
 	if rite == null:
 		return
+	if rite is VBoxContainer:
+		(rite as VBoxContainer).alignment = BoxContainer.ALIGNMENT_END
+		(rite as VBoxContainer).add_theme_constant_override("separation", 8)
 	if _rite_toggle != null:
-		_rite_toggle.custom_minimum_size = Vector2(0, 48)
+		_rite_toggle.custom_minimum_size = Vector2(280, 52)
 		_rite_toggle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_rite_toggle.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		_rite_toggle.clip_contents = true
+	_fit_rite_row()
+	if _rite_seed != null:
+		_rite_seed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_rite_seed.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	rite.custom_minimum_size = Vector2(280, 0)
 	rite.reset_size()
-	var h: float = maxf(rite.get_combined_minimum_size().y, 72.0)
+	var h: float = rite.get_combined_minimum_size().y
+	if h < 52.0:
+		h = 52.0
 	rite.anchor_left = 1.0
 	rite.anchor_top = 1.0
 	rite.anchor_right = 1.0
@@ -836,6 +828,69 @@ func _place_rite() -> void:
 	rite.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	rite.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	move_child(rite, get_child_count() - 1)
+
+
+func _fit_rite_row() -> void:
+	var rite_row := get_node_or_null("Rite/RiteToggle/RiteRow") as Control
+	if rite_row == null:
+		return
+	rite_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	rite_row.offset_left = 14.0
+	rite_row.offset_right = -14.0
+	rite_row.offset_top = 10.0
+	rite_row.offset_bottom = -10.0
+	rite_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if rite_row is HBoxContainer:
+		(rite_row as HBoxContainer).alignment = BoxContainer.ALIGNMENT_CENTER
+
+
+func _place_ground_light() -> void:
+	if _preview_host == null:
+		return
+	var feet_host: Vector2 = _preview_feet_in_host()
+	var circle := get_node_or_null("Preview/StageCircle") as Control
+	if circle != null:
+		circle.visible = false
+		_center_at(circle, feet_host, Vector2(340, 340))
+	var pedestal := get_node_or_null("Preview/Pedestal") as Control
+	if pedestal != null:
+		pedestal.visible = false
+		_center_at(pedestal, feet_host, Vector2(240, 46))
+
+
+func _preview_feet_in_host() -> Vector2:
+	if _preview == null:
+		return _preview_host.size * Vector2(0.5, 0.62)
+	var box: Vector2 = _preview.size
+	var pos: Vector2 = _preview.position
+	var tex: Texture2D = _preview.texture
+	if tex == null or box.x <= 1.0 or box.y <= 1.0:
+		return pos + Vector2(box.x * 0.5, box.y)
+	var ts := Vector2(float(tex.get_width()), float(tex.get_height()))
+	if ts.x < 1.0 or ts.y < 1.0:
+		return pos + Vector2(box.x * 0.5, box.y)
+	var s: float = minf(box.x / ts.x, box.y / ts.y)
+	var drawn: Vector2 = ts * s
+	var origin: Vector2 = pos + (box - drawn) * 0.5
+	return origin + Vector2(drawn.x * 0.5, drawn.y)
+
+
+func _preview_feet_in_hall() -> Vector2:
+	if _preview_host == null:
+		return size * Vector2(0.5, 0.62)
+	return (_preview_host.global_position - global_position) + _preview_feet_in_host()
+
+
+func _center_at(node: Control, center: Vector2, wh: Vector2) -> void:
+	node.anchor_left = 0.0
+	node.anchor_top = 0.0
+	node.anchor_right = 0.0
+	node.anchor_bottom = 0.0
+	node.offset_left = center.x - wh.x * 0.5
+	node.offset_top = center.y - wh.y * 0.5
+	node.offset_right = center.x + wh.x * 0.5
+	node.offset_bottom = center.y + wh.y * 0.5
+	node.custom_minimum_size = wh
 
 
 func _place_cta() -> void:

@@ -8,7 +8,11 @@ HUD, pause, level-up, and menus are HTML in `web/src/ui/` using Dark Hermetic to
 
 Authored PNGs live in `web/public/sprites/` (`knowledge/tech/sprites.md`). Entity bodies are spritesheets keyed by catalog id — **not** by biome. Cinder, Rime, and Glacial share Homunculus / a mite until you add a new entity with its own sheet. Procedural canvases in `web/src/view/procedural-pixel-art.ts` fill any id that has no PNG. Do not draw high-res vectors in the entity update loop.
 
-Arena floor is a cached 2560×2560 stamp of 4× 64px tiles per biome (hash `tileX * 73856093 ^ tileY * 19349663`), with ~12.5% rune accents. Env atlas in `web/public/sprites/env/`. Transmutation Circle uses the authored `{theme}-circle` plus a charge shader (`circle-charge-shader.ts`). Ambient ash/snow/mist cap 45; vignette is CSS; additive glow only on player / circle / primed urns.
+Arena floor is a cached 2560×2560 stamp of 4× 64px tiles per biome (hash `tileX * 73856093 ^ tileY * 19349663`), with ~12.5% rune accents. Env atlas in `web/public/sprites/env/`. **Floor tiles are darkened per biome** (`prepareFloorTileStamp` on web, `FloorStamp._darken_floor_color` on Godot) so characters, pickups, and HUD read against the stone: Cinder damps lava veins and lifts dark grout; Rime/Glacial scale ice and slate down (~0.38–0.58). Borders/walls are not passed through that pass. Transmutation Circle uses the authored `{theme}-circle` plus a charge shader (`circle-charge-shader.ts`). Ambient ash/snow/mist cap 45; vignette is CSS; additive glow only on player / circle / primed urns.
+
+**Environment hazards** are Resurrect 64 palette pools, not hard sprite cutouts. Web feathers authored `{theme}-hazard-*` frames (`env-blended-*` in `pixel-textures.ts`) and overlays `env-hazard-shader.ts`. Godot replaces the sprite with `env_hazard.gdshader`: noisy irregular mask, Bayer dither on the rim so pixels melt into the floor stamp, colors snapped to the same Resurrect 64 lava (`#2e1815` `#9e2835` `#ea4f36` `#f79617` `#f9c22b`) / acid (`#239063` `#1ebc73` `#91db69` `#cdff82`) / ice (`#1e3a5f` `#4d9be6` `#8fd3ff`) ramps. Hurtbox radius and sim collision stay unchanged.
+
+**Arena pillars** use a feet origin: collision circle sits on the sprite base (`originY = (frameH - radius) / frameH`). Y-sort with the player so standing north of / behind a pillar is occluded by the shaft.
 
 ## Elites
 

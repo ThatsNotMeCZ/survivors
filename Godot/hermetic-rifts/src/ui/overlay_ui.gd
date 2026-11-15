@@ -14,6 +14,7 @@ var _desk: DeskView
 var _desk_layer: CanvasLayer
 var _pause: PauseView
 var _levelup: LevelUpView
+var _recap: RecapView
 var _last_mode: StringName = &""
 var _last_offer: int = -1
 
@@ -43,6 +44,7 @@ func _ready() -> void:
 	_bind_desk()
 	_bind_pause()
 	_bind_levelup()
+	_bind_recap()
 	var col := VBoxContainer.new()
 	col.custom_minimum_size = Vector2(640, 0)
 	col.add_theme_constant_override("separation", 18)
@@ -96,6 +98,12 @@ func _input(event: InputEvent) -> void:
 		app.resume_run()
 		get_viewport().set_input_as_handled()
 		return
+	if app.overlay_mode == &"recap" and event is InputEventKey:
+		var key := event as InputEventKey
+		if key.keycode == KEY_C:
+			_on_recap_copy()
+			get_viewport().set_input_as_handled()
+			return
 	if event.is_action("confirm"):
 		_activate_primary(app)
 		get_viewport().set_input_as_handled()
@@ -134,6 +142,7 @@ func _sync(app: Node) -> void:
 	var is_hall: bool = app.overlay_mode == &"hall"
 	var is_pause: bool = app.overlay_mode == &"pause"
 	var is_levelup: bool = app.overlay_mode == &"levelup"
+	var is_recap: bool = app.overlay_mode == &"recap"
 	if _menu != null:
 		_menu.visible = is_menu
 		if is_menu:
@@ -154,6 +163,10 @@ func _sync(app: Node) -> void:
 		_levelup.visible = is_levelup
 		if is_levelup:
 			_root.move_child(_levelup, _root.get_child_count() - 1)
+	if _recap != null:
+		_recap.visible = is_recap
+		if is_recap:
+			_root.move_child(_recap, _root.get_child_count() - 1)
 	if _desk != null:
 		var keep_desk: bool = is_menu or is_hall or app.overlay_mode == &"pause" or app.overlay_mode == &"settings"
 		if not keep_desk:
@@ -168,6 +181,7 @@ func _sync(app: Node) -> void:
 		and not is_hall
 		and not is_pause
 		and not is_levelup
+		and not is_recap
 		and app.overlay_mode != &"hidden"
 	)
 	_dim.visible = (
@@ -175,6 +189,7 @@ func _sync(app: Node) -> void:
 		and not is_menu
 		and not is_archives
 		and not is_hall
+		and not is_recap
 	)
 	_dim.mouse_filter = Control.MOUSE_FILTER_STOP if _dim.visible else Control.MOUSE_FILTER_IGNORE
 	_root.mouse_filter = (
@@ -214,14 +229,16 @@ func _sync(app: Node) -> void:
 			return
 		"recap":
 			_hide_hud()
-			var kind: String = "victory" if app.world != null and app.world.won else "defeat"
-			_title.text = tr("ui.recap.%s" % kind)
-			_body.text = _recap_text(app.world)
-			_add_btn(tr("ui.recap.again"), func() -> void: app.start_run())
-			_add_btn(tr("ui.recap.hall"), func() -> void:
-				app.world = null
-				app.overlay_mode = &"hall"
-			)
+			if _recap != null:
+				_recap.refresh(
+					app.world,
+					_recap_kind(app),
+					app.records,
+					app.catalog,
+					app.run_start_items,
+					app.run_start_survivors
+				)
+			return
 		"settings":
 			_hide_hud()
 			_open_desk()
@@ -596,6 +613,71 @@ func _on_levelup_choice(index: int) -> void:
 		return
 	_play_ui("confirm")
 	_pick(app, index)
+
+
+func _bind_recap() -> void:
+	_recap = get_node_or_null("Recap") as RecapView
+	if _recap == null:
+		_recap = _root.get_node_or_null("Recap") as RecapView
+	if _recap == null:
+		var packed: PackedScene = load("res://scenes/ui/recap.tscn")
+		if packed != null:
+			_recap = packed.instantiate() as RecapView
+	if _recap == null:
+		_recap = RecapView.new()
+		_recap.name = "Recap"
+	if _recap.get_parent() != _root:
+		var old_parent: Node = _recap.get_parent()
+		if old_parent != null:
+			old_parent.remove_child(_recap)
+		_root.add_child(_recap)
+	_recap.visible = false
+	_recap.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if not _recap.again_pressed.is_connected(_on_recap_again):
+		_recap.again_pressed.connect(_on_recap_again)
+	if not _recap.hall_pressed.is_connected(_on_recap_hall):
+		_recap.hall_pressed.connect(_on_recap_hall)
+	if not _recap.copy_pressed.is_connected(_on_recap_copy):
+		_recap.copy_pressed.connect(_on_recap_copy)
+
+
+func _recap_kind(app: Node) -> String:
+	if app.run_outcome == &"abandon":
+		return "abandon"
+	if app.world != null and app.world.won:
+		return "victory"
+	return "defeat"
+
+
+func _on_recap_again() -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return
+	_play_ui("confirm")
+	app.start_run()
+
+
+func _on_recap_hall() -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return
+	_play_ui("close")
+	app.world = null
+	app.run_outcome = &""
+	app.overlay_mode = &"hall"
+	var bus := get_node_or_null("/root/GameAudio")
+	if bus != null:
+		bus.play_menu()
+
+
+func _on_recap_copy() -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null or _recap == null:
+		return
+	var text: String = _recap.format_summary(app.world, _recap_kind(app))
+	DisplayServer.clipboard_set(text)
+	_play_ui("confirm")
+	_recap.notify_copied()
 
 
 func _desk_host() -> CanvasLayer:

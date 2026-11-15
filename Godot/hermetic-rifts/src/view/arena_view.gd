@@ -41,6 +41,7 @@ var _waypoint: Sprite2D
 var _gems: MultiMeshInstance2D
 var _charge_active: float = 0.0
 var _tex_cache: Dictionary = {}
+var _env_hazard_tex: Texture2D
 var _last_px: float = 0.0
 var _last_py: float = 0.0
 var _last_stage: int = -1
@@ -63,6 +64,7 @@ func _ready() -> void:
 		world_root = Node2D.new()
 		world_root.name = "WorldRoot"
 		add_child(world_root)
+	world_root.y_sort_enabled = true
 	if player_sprite == null:
 		player_sprite = Sprite2D.new()
 		player_sprite.name = "Player"
@@ -100,11 +102,11 @@ func _ready() -> void:
 	_portal.visible = false
 	world_root.add_child(_portal)
 	_player_glow = Sprite2D.new()
-	_player_glow.z_index = 4
+	_player_glow.z_index = 5
 	_player_glow.texture = _radial(Color(1.0, 0.87, 0.56, 0.5), 48)
 	world_root.add_child(_player_glow)
 	_decoy = Sprite2D.new()
-	_decoy.z_index = 4
+	_decoy.z_index = 5
 	_decoy.visible = false
 	world_root.add_child(_decoy)
 	_waypoint = Sprite2D.new()
@@ -363,7 +365,7 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 	while _obstacle_sprites.size() < world.obstacles.cap:
 		var spr := Sprite2D.new()
 		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		spr.z_index = 2
+		spr.z_index = 5
 		world_root.add_child(spr)
 		_obstacle_sprites.append(spr)
 		var glow := Sprite2D.new()
@@ -391,33 +393,42 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 		var env_id: String = ArenaBiome.env_id(use_theme, suffix)
 		if obs.type == &"hazard" and not UiAtlas.env_has(env_id):
 			env_id = ArenaBiome.env_id(use_theme, "hazard-0")
-		if str(spr.get_meta("env_id", "")) != env_id:
+		if obs.type == &"hazard":
+			if _env_hazard_tex == null:
+				_env_hazard_tex = _placeholder(Color(1, 1, 1, 1), 64)
+			if not bool(spr.get_meta("hazard_quad", false)):
+				spr.texture = _env_hazard_tex
+				spr.set_meta("hazard_quad", true)
+				spr.set_meta("env_id", "")
+		elif str(spr.get_meta("env_id", "")) != env_id:
+			spr.remove_meta("hazard_quad")
 			spr.set_meta("env_id", env_id)
 			if UiAtlas.env_has(env_id):
 				spr.texture = UiAtlas.env_frame(env_id)
 			else:
 				var fallback_c := Color(0.35, 0.28, 0.22)
-				if obs.type == &"hazard":
-					fallback_c = Color(0.45, 0.12, 0.1, 0.8)
-				elif obs.type == &"volatile":
+				if obs.type == &"volatile":
 					fallback_c = Color(0.7, 0.35, 0.15)
 				spr.texture = _placeholder(fallback_c, int(obs.radius * 2.0))
 		spr.visible = true
 		spr.position = Vector2(obs.x, obs.y)
+		spr.centered = true
 		if spr.texture != null:
-			var tw: float = maxf(1.0, float(spr.texture.get_width()))
-			var th: float = maxf(1.0, float(spr.texture.get_height()))
+			var env_size: Vector2 = UiAtlas.env_rect(env_id).size
+			var th: float = maxf(1.0, env_size.y if env_size.y > 0.0 else float(spr.texture.get_height()))
 			if obs.type == &"hazard":
 				var diam: float = obs.radius * 2.0
-				spr.scale = Vector2(diam / tw, diam / th)
+				spr.scale = Vector2(diam / 64.0, diam / 64.0)
 				spr.offset = Vector2.ZERO
-			elif obs.type == &"pillar" and th > obs.radius * 2.0:
+				spr.z_index = 1
+			elif obs.type == &"pillar":
 				spr.scale = Vector2.ONE
-				var origin_y: float = (th - obs.radius) / th
-				spr.offset = Vector2(0.0, (0.5 - origin_y) * th)
+				spr.z_index = 5
+				_apply_pillar_origin(spr, obs.radius, th)
 			else:
 				spr.scale = Vector2.ONE
 				spr.offset = Vector2.ZERO
+				spr.z_index = 5
 		if obs.type == &"pillar":
 			var near: bool = Vector2(world.player.x, world.player.y).distance_to(Vector2(obs.x, obs.y)) < 170.0
 			spr.modulate = Color("ffe8d0") if near else Color.WHITE
@@ -516,7 +527,7 @@ func _sync_elites(world: SimWorld, reduce_vfx: bool) -> void:
 		spr.texture = _placeholder(Color(0.4, 0.7, 1.0), 40)
 		spr.material = _mat("res://assets/shaders/elite_affix.gdshader")
 		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		spr.z_index = 3
+		spr.z_index = 5
 		world_root.add_child(spr)
 		_elite_sprites.append(spr)
 	var n: int = 0
@@ -913,6 +924,15 @@ func _cached_tex(path: String) -> Texture2D:
 	var tex: Texture2D = load(path)
 	_tex_cache[path] = tex
 	return tex
+
+
+func _apply_pillar_origin(spr: Sprite2D, radius: float, frame_h: float) -> void:
+	var th: float = maxf(1.0, frame_h)
+	if th <= radius * 2.0:
+		spr.offset = Vector2.ZERO
+		return
+	var origin_y: float = (th - radius) / th
+	spr.offset = Vector2(0.0, (0.5 - origin_y) * th)
 
 
 func _fit_sprite(spr: Sprite2D, world_w: float, world_h: float) -> void:

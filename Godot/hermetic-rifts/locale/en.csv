@@ -60,7 +60,46 @@ ui.recap.defeat,Vessel Shattered
 ui.recap.victory,Transmutation Complete
 ui.recap.abandon,Vessel Dissolved
 ui.recap.again,Run Again
+ui.recap.again.hint,[Enter]
 ui.recap.hall,Return to Hall
+ui.recap.hall.hint,[Esc]
+ui.recap.copy,Copy Summary
+ui.recap.copy.hint,[C]
+ui.recap.copy.done,Copied
+ui.recap.copy.victory,TRANSMUTATION COMPLETE 🜂
+ui.recap.copy.defeat,VESSEL SHATTERED 🜍
+ui.recap.copy.abandon,VESSEL DISSOLVED ☿
+ui.recap.copy.seed,Seed: {tag}
+ui.recap.copy.seed.daily,Seed: {tag} · Daily Rite {date}
+ui.recap.copy.line.vessel,Vessel: {vessel} · Cycle: {cycle} · Chamber: {stage}
+ui.recap.copy.line.time,Time: {time} · Lv {level} · Coeff: ×{coeff}
+ui.recap.copy.line.kills,Dross Slain: {kills} · Bosses Slain: {bosses}
+ui.recap.copy.line.damage,Damage Dealt: {dmg} · Essence: {ess}
+ui.recap.copy.line.relics,Relics: {items}
+ui.recap.kicker.victory,The Great Work Holds
+ui.recap.kicker.defeat,The Clay Splits
+ui.recap.kicker.abandon,The Crucible Cools
+ui.recap.sub.victory,The last seal holds · {time}
+ui.recap.sub.run,{stage} · {time}
+ui.recap.stats,Run Statistics
+ui.recap.discoveries,Discoveries & Archives
+ui.recap.relics,Vessel Relics
+ui.recap.relics.empty,No relics bound in this cycle.
+ui.recap.relics.none,None
+ui.recap.row.vessel,Vessel
+ui.recap.row.chamber,Chamber Reached
+ui.recap.row.time,Rift Duration
+ui.recap.row.level,Level Attained
+ui.recap.row.kills,Dross Slain
+ui.recap.row.bosses,Bosses Slain
+ui.recap.row.dealt,Damage Dealt
+ui.recap.row.taken,Damage Taken
+ui.recap.row.healed,Healing Done
+ui.recap.row.essence,Essence Gathered
+ui.recap.unlock.empty,No new relics unsealed in this working.
+ui.recap.unlock.name,{name} (Unlocked)
+ui.recap.unlock.item,Condition Met: {cond}
+ui.recap.unlock.vessel,Condition Met: {cond}
 ui.settings.title,Alchemist's Desk
 ui.settings.heading,Settings
 ui.settings.lead,Attune the chamber's resonance and visual clarity.

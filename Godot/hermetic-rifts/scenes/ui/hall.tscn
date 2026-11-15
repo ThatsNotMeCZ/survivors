@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bu57eds78ktfe"]
 
-[ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="1_k5jps"]
+[ext_resource type="Theme" uid="uid://dc4hy7xwyjulq" path="res://assets/ui/menu_theme.tres" id="1_k5jps"]
 [ext_resource type="Script" uid="uid://dseqx6nr0fwdr" path="res://src/ui/hall.gd" id="2_nqwiy"]
 [ext_resource type="StyleBox" path="res://assets/ui/styleboxes/hall-banner.tres" id="3_kdu2k"]
 [ext_resource type="Texture2D" path="res://assets/ui/frames/ui/nav-arrow_idle.tres" id="4_kokva"]
@@ -16,6 +16,8 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme = ExtResource("1_k5jps")
 script = ExtResource("2_nqwiy")
 

@@ -106,7 +106,7 @@ void fragment() {
 	col += beam_color * beam * 0.38;
 
 	vec2 floor_coord = stage_coord;
-	floor_coord.y += 0.24;
+	floor_coord.y += 0.02;
 	floor_coord.y *= 2.8;
 	float sigil_time = TIME * (1.0 - u_locked * 0.7);
 	float sigil_mask = sigil_rings(floor_coord * 2.3, sigil_time);

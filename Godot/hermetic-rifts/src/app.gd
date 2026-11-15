@@ -7,6 +7,9 @@ var world: SimWorld
 var overlay_mode: StringName = &"menu"
 var sim_paused: bool = false
 var selected_survivor: String = "runner"
+var run_outcome: StringName = &""
+var run_start_items: Dictionary = {}
+var run_start_survivors: Dictionary = {}
 
 
 func _ready() -> void:
@@ -26,6 +29,15 @@ func start_run() -> void:
 	var lores: Array[String] = records.collected_lore_ids()
 	var run_seed: int = SimRng.daily_seed() if settings.daily_rite else SimRng.random_run_seed()
 	var daily: String = SimRng.utc_ymd() if settings.daily_rite else ""
+	run_start_items = {}
+	for item_id: String in unlocked:
+		run_start_items[item_id] = true
+	run_start_survivors = {}
+	for surv: Dictionary in catalog.survivors:
+		var sid: String = String(surv.get("id", ""))
+		if sid != "" and records.meets_unlock(surv.get("unlock", null)):
+			run_start_survivors[sid] = true
+	run_outcome = &""
 	world = SimWorld.create(catalog, selected_survivor, unlocked, lores, run_seed, daily)
 	overlay_mode = &"hidden"
 	sim_paused = false
@@ -50,7 +62,10 @@ func resume_run() -> void:
 func abandon_run() -> void:
 	if world != null:
 		records.record_run_end(world, "abandon")
-	world = null
+		run_outcome = &"abandon"
+		overlay_mode = &"recap"
+		sim_paused = true
+		return
 	overlay_mode = &"menu"
 	sim_paused = false
 	var audio := get_node_or_null("/root/GameAudio")
