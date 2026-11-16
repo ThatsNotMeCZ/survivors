@@ -4,6 +4,8 @@ const WAYPOINT_DIST: float = 80.0
 const WAYPOINT_PAD: float = 52.0
 const GHOST_CAP: int = 8
 const SPARK_CAP: int = 24
+const IMPACT_CAP: int = 12
+const DASH_GHOST_CD: float = 0.04
 
 @onready var camera: Camera2D = $Camera2D
 @onready var world_root: Node2D = $WorldRoot
@@ -21,8 +23,17 @@ var _lore_sprites: Array[Sprite2D] = []
 var _lore_glows: Array[Sprite2D] = []
 var _ghosts: Array[Sprite2D] = []
 var _ghost_life: PackedFloat32Array = PackedFloat32Array()
+var _ghost_max: PackedFloat32Array = PackedFloat32Array()
+var _ghost_init_a: PackedFloat32Array = PackedFloat32Array()
+var _ghost_cd: float = 0.0
 var _sparks: Array[Sprite2D] = []
 var _spark_life: PackedFloat32Array = PackedFloat32Array()
+var _impact_sprites: Array[Sprite2D] = []
+var _impact_life: PackedFloat32Array = PackedFloat32Array()
+var _impact_max: PackedFloat32Array = PackedFloat32Array()
+var _impact_mats: Array[ShaderMaterial] = []
+var _enemy_last_x: PackedFloat32Array = PackedFloat32Array()
+var _enemy_last_y: PackedFloat32Array = PackedFloat32Array()
 var _shake: float = 0.0
 var _hurt_flash: float = 0.0
 var _hurt_mat: ShaderMaterial
@@ -41,7 +52,6 @@ var _waypoint: Sprite2D
 var _gems: MultiMeshInstance2D
 var _charge_active: float = 0.0
 var _tex_cache: Dictionary = {}
-var _env_hazard_tex: Texture2D
 var _last_px: float = 0.0
 var _last_py: float = 0.0
 var _last_stage: int = -1
@@ -128,14 +138,30 @@ func _ready() -> void:
 	crosshair.z_index = 18
 	crosshair.texture = _make_crosshair(false)
 	_ghost_life.resize(GHOST_CAP)
+	_ghost_max.resize(GHOST_CAP)
+	_ghost_init_a.resize(GHOST_CAP)
 	_spark_life.resize(SPARK_CAP)
+	_impact_life.resize(IMPACT_CAP)
+	_impact_max.resize(IMPACT_CAP)
 	for _i: int in GHOST_CAP:
 		var g := Sprite2D.new()
 		g.z_index = 4
 		g.visible = false
 		g.modulate = Color(1, 1, 1, 0.0)
+		g.material = _mat("res://assets/shaders/dash_afterimage.gdshader")
+		g.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		world_root.add_child(g)
 		_ghosts.append(g)
+	for _k: int in IMPACT_CAP:
+		var impact := Sprite2D.new()
+		impact.z_index = 8
+		impact.visible = false
+		impact.texture = _placeholder(Color(1, 1, 1, 1), 64)
+		var imat: ShaderMaterial = _mat("res://assets/shaders/skill_impact.gdshader")
+		impact.material = imat
+		world_root.add_child(impact)
+		_impact_sprites.append(impact)
+		_impact_mats.append(imat)
 	for _j: int in SPARK_CAP:
 		var s := Sprite2D.new()
 		s.z_index = 12
@@ -195,6 +221,7 @@ func _process(dt: float) -> void:
 
 func _sync_menu_camera() -> void:
 	camera.position = Vector2.ZERO
+	camera.offset = Vector2.ZERO
 	camera.zoom = Vector2(0.92, 0.92)
 	_ambient.visible = false
 	if _floor != null:
@@ -219,23 +246,23 @@ func _sync(world: SimWorld, dt: float, reduce_vfx: bool, screenshake: bool) -> v
 		_apply_stage_art(world, theme)
 		crosshair.texture = _make_crosshair(String(world.survivor.get("id", "")) == "penitent")
 	_sync_player(world, dt, biome, reduce_vfx)
+	_step_dash_trail(world, dt, biome, reduce_vfx)
 	crosshair.position = Vector2(world.aim_x, world.aim_y)
 	var zoom: float = float(world.catalog.world.get("viewZoom", 2.5))
-	camera.position = Vector2(world.player.x, world.player.y)
 	camera.zoom = Vector2(zoom, zoom)
+	var focus := Vector2(world.player.x, world.player.y)
 	if screenshake and _shake > 0.0 and not reduce_vfx:
-		camera.offset = Vector2(sin(_shake * 9.0) * _shake, cos(_shake * 11.0) * _shake * 0.7)
-		_shake = maxf(0.0, _shake - dt * 18.0)
-	else:
-		camera.offset = Vector2.ZERO
-		_shake = maxf(0.0, _shake - dt * 18.0)
+		focus += Vector2(sin(_shake * 9.0) * _shake, cos(_shake * 11.0) * _shake * 0.7)
+	_shake = maxf(0.0, _shake - dt * 18.0)
+	camera.offset = Vector2.ZERO
+	camera.position = _clamp_arena_camera(world, focus)
 	_sync_ambient(world, biome, reduce_vfx)
 	_sync_circle(world, biome, dt, reduce_vfx)
 	_sync_portal(world, theme)
 	_sync_obstacles(world, biome, theme, reduce_vfx)
 	_sync_fodder(world)
 	_sync_elites(world, reduce_vfx)
-	_sync_projectiles(world, reduce_vfx)
+	_sync_projectiles(world, biome, reduce_vfx)
 	_sync_zones(world, reduce_vfx)
 	_sync_hazards(world, reduce_vfx)
 	_sync_gems(world)
@@ -243,6 +270,7 @@ func _sync(world: SimWorld, dt: float, reduce_vfx: bool, screenshake: bool) -> v
 	_sync_waypoint(world)
 	_step_ghosts(dt)
 	_step_sparks(dt)
+	_step_impacts(dt, world.run_time, reduce_vfx)
 	queue_redraw()
 
 
@@ -393,23 +421,27 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 		var env_id: String = ArenaBiome.env_id(use_theme, suffix)
 		if obs.type == &"hazard" and not UiAtlas.env_has(env_id):
 			env_id = ArenaBiome.env_id(use_theme, "hazard-0")
-		if obs.type == &"hazard":
-			if _env_hazard_tex == null:
-				_env_hazard_tex = _placeholder(Color(1, 1, 1, 1), 64)
-			if not bool(spr.get_meta("hazard_quad", false)):
-				spr.texture = _env_hazard_tex
-				spr.set_meta("hazard_quad", true)
-				spr.set_meta("env_id", "")
-		elif str(spr.get_meta("env_id", "")) != env_id:
-			spr.remove_meta("hazard_quad")
+		var has_tex: bool = UiAtlas.env_has(env_id)
+		if str(spr.get_meta("env_id", "")) != env_id:
 			spr.set_meta("env_id", env_id)
-			if UiAtlas.env_has(env_id):
-				spr.texture = UiAtlas.env_frame(env_id)
+			spr.remove_meta("hazard_quad")
+			if has_tex:
+				if obs.type == &"hazard":
+					var img: ImageTexture = UiAtlas.env_image(env_id)
+					if img != null:
+						spr.texture = img
+					else:
+						spr.texture = UiAtlas.env_frame(env_id)
+				else:
+					spr.texture = UiAtlas.env_frame(env_id)
 			else:
 				var fallback_c := Color(0.35, 0.28, 0.22)
 				if obs.type == &"volatile":
 					fallback_c = Color(0.7, 0.35, 0.15)
-				spr.texture = _placeholder(fallback_c, int(obs.radius * 2.0))
+				elif obs.type == &"hazard":
+					fallback_c = Color(1.0, 1.0, 1.0, 1.0)
+				var fallback_px: int = 64 if obs.type == &"hazard" else int(obs.radius * 2.0)
+				spr.texture = _placeholder(fallback_c, fallback_px)
 		spr.visible = true
 		spr.position = Vector2(obs.x, obs.y)
 		spr.centered = true
@@ -418,7 +450,9 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 			var th: float = maxf(1.0, env_size.y if env_size.y > 0.0 else float(spr.texture.get_height()))
 			if obs.type == &"hazard":
 				var diam: float = obs.radius * 2.0
-				spr.scale = Vector2(diam / 64.0, diam / 64.0)
+				var tw: float = maxf(1.0, float(spr.texture.get_width()))
+				var tex_h: float = maxf(1.0, float(spr.texture.get_height()))
+				spr.scale = Vector2(diam / tw, diam / tex_h)
 				spr.offset = Vector2.ZERO
 				spr.z_index = 1
 			elif obs.type == &"pillar":
@@ -447,6 +481,8 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 				hm.set_shader_parameter("u_player_in", player_in)
 				hm.set_shader_parameter("u_seed", float(i + 1) * 13.37)
 				hm.set_shader_parameter("u_fade", fade)
+				hm.set_shader_parameter("u_has_tex", 1.0 if has_tex else 0.0)
+				hm.set_shader_parameter("u_reduce", 1.0 if reduce_vfx else 0.0)
 		else:
 			spr.material = null
 		if obs.type == &"volatile":
@@ -538,9 +574,16 @@ func _sync_elites(world: SimWorld, reduce_vfx: bool) -> void:
 		spr.visible = true
 		spr.position = Vector2(world.enemies.x[i], world.enemies.y[i])
 		spr.flip_h = world.enemies.facing[i] == 255
+		if _enemy_last_x.size() < world.enemies.cap:
+			_enemy_last_x.resize(world.enemies.cap)
+			_enemy_last_y.resize(world.enemies.cap)
+		var moved: float = absf(world.enemies.x[i] - _enemy_last_x[i]) + absf(world.enemies.y[i] - _enemy_last_y[i])
+		_enemy_last_x[i] = world.enemies.x[i]
+		_enemy_last_y[i] = world.enemies.y[i]
+		var attacking: bool = world.enemies.attack_remain[i] > 0.0 or world.enemies.windup[i] > 0.0
 		var anim: String = world.enemies.anim_name[i]
-		if anim == "":
-			anim = "walk"
+		if not attacking or anim == "":
+			anim = "walk" if moved > 0.35 else "idle"
 		var tex: Texture2D = UiAtlas.entity_frame(world.enemies.def_id[i], anim, world.run_time)
 		if tex != null:
 			spr.texture = tex
@@ -565,7 +608,7 @@ func _sync_elites(world: SimWorld, reduce_vfx: bool) -> void:
 		_elite_sprites[i].visible = false
 
 
-func _sync_projectiles(world: SimWorld, reduce_vfx: bool) -> void:
+func _sync_projectiles(world: SimWorld, biome: String, reduce_vfx: bool) -> void:
 	var needed: int = 0
 	for i: int in world.projectiles.alive.size():
 		if world.projectiles.alive[i] != 0:
@@ -596,16 +639,13 @@ func _sync_projectiles(world: SimWorld, reduce_vfx: bool) -> void:
 			if _mat_tether != null:
 				_mat_tether.set_shader_parameter("u_time", world.run_time)
 		elif flags & ProjectilePool.FLAG_IMPACT != 0:
-			spr.material = _mat_impact
+			spr.material = null
 			spr.texture = _fx_texture("skill-censer-lob")
-			if _mat_impact != null:
-				_mat_impact.set_shader_parameter("u_time", world.run_time)
-				_mat_impact.set_shader_parameter("u_progress", 0.15)
-				_mat_impact.set_shader_parameter("u_kind", 0.0)
 		else:
 			spr.material = null
 			if team == ProjectilePool.TEAM_ENEMY:
-				spr.texture = _fx_texture("cinder-spit")
+				var spit: String = "cinder-spit" if biome == "cinder" else "frost-spit"
+				spr.texture = _fx_texture(spit)
 			elif flags & ProjectilePool.FLAG_PIERCE != 0:
 				spr.texture = _fx_texture("skill-aether-pierce")
 			else:
@@ -771,6 +811,27 @@ func _sync_waypoint(world: SimWorld) -> void:
 	_waypoint.rotation = atan2(dy, dx) - PI * 0.5
 
 
+func _clamp_arena_camera(world: SimWorld, focus: Vector2) -> Vector2:
+	var bounds: Dictionary = world.catalog.world
+	var arena := Rect2(0.0, 0.0, float(bounds.get("width", 2560.0)), float(bounds.get("height", 2560.0)))
+	var zx: float = camera.zoom.x if absf(camera.zoom.x) > 0.0001 else 1.0
+	var zy: float = camera.zoom.y if absf(camera.zoom.y) > 0.0001 else 1.0
+	var view: Vector2 = get_viewport_rect().size
+	var half := Vector2(view.x / zx, view.y / zy) * 0.5
+	return Vector2(
+		_clamp_camera_axis(focus.x, arena.position.x, arena.end.x, half.x),
+		_clamp_camera_axis(focus.y, arena.position.y, arena.end.y, half.y),
+	)
+
+
+func _clamp_camera_axis(value: float, lo: float, hi: float, half: float) -> float:
+	var min_c: float = lo + half
+	var max_c: float = hi - half
+	if min_c > max_c:
+		return (lo + hi) * 0.5
+	return clampf(value, min_c, max_c)
+
+
 func _view_rect() -> Rect2:
 	var size: Vector2 = get_viewport_rect().size / camera.zoom
 	return Rect2(camera.position - size * 0.5, size)
@@ -822,36 +883,116 @@ func _draw_telegraphs(world: SimWorld, biome: String) -> void:
 			)
 
 
+func _shake_for_fx(kind: int, tint: int) -> float:
+	if kind == FxIds.HURT:
+		return 6.0
+	if kind == FxIds.CRUCIBLE_IMPACT:
+		return 10.0 if tint == 0xFF4422 else 8.0
+	if kind == FxIds.CENSER_IMPACT:
+		return 7.0 if tint == 0xFF4422 else 5.0
+	if kind == FxIds.TETHER_LATCH:
+		return 5.0
+	if kind == FxIds.STRIKE:
+		return 6.0
+	if kind != FxIds.DEATH:
+		return 0.0
+	# Enemy kill (0xFFD35A) and noxious pop (0x66FF88) do not shake.
+	# Volatile break and boss enrage still do.
+	if tint == 0xFFD35A or tint == 0x66FF88:
+		return 0.0
+	return 6.0
+
+
 func _consume_fx(app: Node) -> void:
 	var world: SimWorld = app.world
-	if app.settings.screenshake:
-		for i: int in world.fx.count:
-			if world.fx.kind[i] == FxIds.HURT or world.fx.kind[i] == FxIds.DEATH:
-				_shake = maxf(_shake, 6.0)
+	var reduce_vfx: bool = bool(app.settings.reduce_vfx)
 	for i: int in world.fx.count:
-		if world.fx.kind[i] == FxIds.HURT:
+		var kind: int = int(world.fx.kind[i])
+		var tint: int = int(world.fx.tint[i])
+		if app.settings.screenshake and not reduce_vfx:
+			_shake = maxf(_shake, _shake_for_fx(kind, tint))
+		if kind == FxIds.HURT:
 			_hurt_flash = 1.0
-		elif world.fx.kind[i] == FxIds.DASH:
-			_spawn_ghost(world)
-		elif world.fx.kind[i] == FxIds.HIT or world.fx.kind[i] == FxIds.MUZZLE or world.fx.kind[i] == FxIds.DEATH:
-			_spawn_spark(world.fx.x[i], world.fx.y[i], world.fx.kind[i])
+		elif kind == FxIds.DASH:
+			_spawn_dash_ghost(world, true)
+		elif kind == FxIds.CENSER_IMPACT:
+			_spawn_impact(world.fx.x[i], world.fx.y[i], 0.0, world.fx.radius[i], 0.34, tint == 0xFF4422)
+		elif kind == FxIds.CRUCIBLE_IMPACT:
+			_spawn_impact(world.fx.x[i], world.fx.y[i], 1.0, world.fx.radius[i], 0.50, tint == 0xFF4422)
+		elif kind == FxIds.TETHER_LATCH:
+			_spawn_impact(world.fx.x[i], world.fx.y[i], 2.0, world.fx.radius[i], 0.38, tint == 0xFF4422)
+		elif kind == FxIds.HIT or kind == FxIds.MUZZLE or kind == FxIds.DEATH:
+			_spawn_spark(world.fx.x[i], world.fx.y[i], kind)
 	var bus := get_node_or_null("/root/GameAudio")
 	if bus != null:
 		for i: int in world.fx.count:
 			bus.play_fx(int(world.fx.kind[i]))
 
 
-func _spawn_ghost(world: SimWorld) -> void:
+func _step_dash_trail(world: SimWorld, dt: float, _biome: String, reduce_vfx: bool) -> void:
+	_ghost_cd = maxf(0.0, _ghost_cd - dt)
+	if reduce_vfx:
+		return
+	var dashing: bool = world.player.dash_remain > 0.0
+	if not dashing or _ghost_cd > 0.0:
+		return
+	_ghost_cd = DASH_GHOST_CD
+	_spawn_dash_ghost(world, true)
+
+
+func _spawn_dash_ghost(world: SimWorld, dashing: bool) -> void:
 	for i: int in GHOST_CAP:
 		if _ghost_life[i] > 0.0:
 			continue
-		_ghost_life[i] = 0.22
+		var life: float = 0.24 if dashing else 0.16
+		_ghost_life[i] = life
+		_ghost_max[i] = life
+		_ghost_init_a[i] = 0.55 if dashing else 0.38
 		_ghosts[i].texture = player_sprite.texture
 		_ghosts[i].position = Vector2(world.player.x, world.player.y)
 		_ghosts[i].flip_h = player_sprite.flip_h
 		_ghosts[i].visible = true
-		_ghosts[i].modulate = Color(0.85, 0.95, 1.0, 0.45)
+		var sid: String = String(world.survivor.get("id", ""))
+		var biome: String = ArenaBiome.from_stage(String(SimLoop.current_stage(world).get("id", "")))
+		var tint := Color(1.0, 0.78, 0.47, 1.0) if sid == "penitent" else Color(1.0, 0.63, 0.38, 1.0)
+		if sid != "penitent" and biome != "cinder":
+			tint = Color(0.47, 0.8, 1.0, 1.0)
+		_ghosts[i].modulate = Color(1, 1, 1, _ghost_init_a[i])
+		if _ghosts[i].material is ShaderMaterial:
+			var sm: ShaderMaterial = _ghosts[i].material as ShaderMaterial
+			sm.set_shader_parameter("tint", Color(tint.r, tint.g, tint.b, _ghost_init_a[i]))
+			sm.set_shader_parameter("u_progress", 1.0)
+			sm.set_shader_parameter("u_dash", 1.0 if dashing else 0.35)
 		return
+
+
+func _spawn_impact(px: float, py: float, kind: float, radius: float, duration: float, is_crit: bool) -> void:
+	var slot: int = -1
+	var oldest: float = -1.0
+	for i: int in IMPACT_CAP:
+		if _impact_life[i] <= 0.0:
+			slot = i
+			break
+		var spent: float = 1.0 - clampf(_impact_life[i] / maxf(_impact_max[i], 0.001), 0.0, 1.0)
+		if spent > oldest:
+			oldest = spent
+			slot = i
+	if slot < 0:
+		return
+	_impact_life[slot] = duration
+	_impact_max[slot] = duration
+	var spr: Sprite2D = _impact_sprites[slot]
+	var rad: float = maxf(radius, 16.0)
+	var size: float = rad * (2.6 if kind >= 0.5 else 2.8)
+	spr.position = Vector2(px, py)
+	spr.visible = true
+	_fit_sprite(spr, size, size)
+	var mat: ShaderMaterial = _impact_mats[slot]
+	mat.set_shader_parameter("u_progress", 0.0)
+	mat.set_shader_parameter("u_kind", kind)
+	mat.set_shader_parameter("u_is_crit", 1.0 if is_crit else 0.0)
+	mat.set_shader_parameter("u_seed", float(slot + 1) * 11.37)
+	mat.set_shader_parameter("u_time", 0.0)
 
 
 func _spawn_spark(px: float, py: float, kind: int) -> void:
@@ -879,7 +1020,28 @@ func _step_ghosts(dt: float) -> void:
 			_ghosts[i].visible = false
 			continue
 		_ghost_life[i] -= dt
-		_ghosts[i].modulate.a = clampf(_ghost_life[i] / 0.22, 0.0, 0.45)
+		var t: float = clampf(_ghost_life[i] / maxf(_ghost_max[i], 0.001), 0.0, 1.0)
+		_ghosts[i].modulate.a = t * _ghost_init_a[i]
+		if _ghosts[i].material is ShaderMaterial:
+			(_ghosts[i].material as ShaderMaterial).set_shader_parameter("u_progress", t)
+		if _ghost_life[i] <= 0.0:
+			_ghosts[i].visible = false
+
+
+func _step_impacts(dt: float, run_time: float, reduce_vfx: bool) -> void:
+	for i: int in IMPACT_CAP:
+		if reduce_vfx or _impact_life[i] <= 0.0:
+			_impact_sprites[i].visible = false
+			if reduce_vfx:
+				_impact_life[i] = 0.0
+			continue
+		_impact_life[i] -= dt
+		var progress: float = 1.0 - clampf(_impact_life[i] / maxf(_impact_max[i], 0.001), 0.0, 1.0)
+		var mat: ShaderMaterial = _impact_mats[i]
+		mat.set_shader_parameter("u_progress", progress)
+		mat.set_shader_parameter("u_time", run_time)
+		if _impact_life[i] <= 0.0:
+			_impact_sprites[i].visible = false
 
 
 func _step_sparks(dt: float) -> void:

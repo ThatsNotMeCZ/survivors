@@ -52,32 +52,59 @@ mcp.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-Bun.serve({
-  port: PORT,
-  fetch(req, server) {
-    const ok = server.upgrade(req);
-    if (ok) {
-      return undefined;
-    }
-    return new Response("godot-mcp-bridge: wait for Godot plugin on this port\n", {
-      headers: { "content-type": "text/plain" },
-    });
-  },
-  websocket: {
-    open(ws) {
-      godot.attach(ws);
+let http: ReturnType<typeof Bun.serve>;
+try {
+  http = Bun.serve({
+    port: PORT,
+    fetch(req, server) {
+      const ok = server.upgrade(req);
+      if (ok) {
+        return undefined;
+      }
+      return new Response("godot-mcp-bridge: wait for Godot plugin on this port\n", {
+        headers: { "content-type": "text/plain" },
+      });
     },
-    message(ws, message) {
-      const text = typeof message === "string" ? message : new TextDecoder().decode(message);
-      godot.handleMessage(text);
+    websocket: {
+      open(ws) {
+        godot.attach(ws);
+      },
+      message(ws, message) {
+        const text = typeof message === "string" ? message : new TextDecoder().decode(message);
+        godot.handleMessage(text);
+      },
+      close(ws) {
+        godot.detach(ws);
+      },
     },
-    close(ws) {
-      godot.detach(ws);
-    },
-  },
-});
+  });
+} catch (err) {
+  const message = err instanceof Error ? err.message : String(err);
+  log(`failed to bind ws://127.0.0.1:${PORT}: ${message}`);
+  process.exit(1);
+}
 
 log(`listening ws://127.0.0.1:${PORT} (Godot plugin connects here)`);
+
+let shuttingDown = false;
+function shutdown(reason: string): void {
+  if (shuttingDown) {
+    return;
+  }
+  shuttingDown = true;
+  log(`shutdown: ${reason}`);
+  try {
+    http.stop(true);
+  } catch {
+    // already closed
+  }
+  process.exit(0);
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.stdin.on("end", () => shutdown("stdin closed"));
+process.stdin.on("close", () => shutdown("stdin closed"));
 
 const transport = new StdioServerTransport();
 await mcp.connect(transport);

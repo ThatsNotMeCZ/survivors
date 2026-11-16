@@ -10,7 +10,7 @@ import type {
   StatId,
   SurvivorDef,
 } from '../data/schema';
-import { mountEntityArt, mountObstacleArt } from './entity-art';
+import { mountEntityArt } from './entity-art';
 import { formatTime } from './hud';
 import { ITEM_CHOICE_PX, makeItemChip, makeItemIcon } from './item-art';
 import {
@@ -30,7 +30,7 @@ import { mountVesselArt } from './vessel-art';
 
 export type ArchiveTab = 'howto' | 'lore' | 'entities' | 'reliquary' | 'stats';
 
-type LoreSubTab = 'work' | 'vessels' | 'chambers' | 'exchange';
+type LoreSubTab = 'work' | 'vessels' | 'chambers';
 
 const TAB_SPECS: { id: ArchiveTab; label: string; sub: string; glyph: string }[] = [
   { id: 'howto', label: 'RITES OF MOTION', sub: 'Stride, Aim, Survive', glyph: '⚶' },
@@ -222,7 +222,7 @@ function buildHowToView(): HTMLElement {
   controlsHead.className = 'archives-panel-head';
   const h3 = document.createElement('h3');
   h3.className = 'archives-section-title';
-  h3.textContent = 'I. VESSEL CONTROLS & RITE BINDINGS';
+  h3.textContent = 'I. VESSEL CONTROLS';
 
   const rec = getRecords();
   const switcher = document.createElement('div');
@@ -258,7 +258,7 @@ function buildHowToView(): HTMLElement {
   loopSec.className = 'archives-panel';
   const loopTitle = document.createElement('h3');
   loopTitle.className = 'archives-section-title';
-  loopTitle.textContent = 'II. THE FOUR STAGES OF A WORKING';
+  loopTitle.textContent = 'II. THE STAGES OF A WORKING';
   loopSec.appendChild(loopTitle);
 
   const beatsGrid = document.createElement('div');
@@ -267,22 +267,17 @@ function buildHowToView(): HTMLElement {
     {
       step: '01 · DISTILLATION',
       title: 'Harvest Mercury Drops & Ascend',
-      body: `Slay the lesser dross. Mercury Drops rise from the husks. Each ascent pauses the chamber and offers one of ${catalog.loop.levelChoices} tablets. Common and Uncommon grafts only fortify you. Rare and Lunar covenants cut both ways.`,
+      body: 'Slay the lesser dross. Mercury Drops rise from the husks. Each ascent pauses the chamber and offers three tablets. Pick one.',
     },
     {
       step: '02 · CONVERGENCE',
       title: 'Channel the Transmutation Circle',
-      body: 'When the chamber has run its course, the Transmutation Circle appears. A chevron points you to the ring. Stand inside to charge it. Leave, and the seal cools until you return.',
+      body: 'When the Transmutation Circle appears, a chevron points you to it. Stand inside to charge. Step out and the seal cools.',
     },
     {
       step: '03 · THE GUARDIAN',
       title: 'Shatter the Seal Guardian & Descend',
-      body: 'A full seal wakes the chamber’s Guardian. Slay it to tear open the Rift. After the Frost Emperor, a gold Ouroboros gate remains: stand in it to begin Cycle II, or press F (or pause → Seal the Working) to complete the transmutation.',
-    },
-    {
-      step: '04 · RISING PRESSURE',
-      title: 'The Chamber Grows Meaner',
-      body: 'The longer you linger, the worse the chamber becomes: Aether-warded elites, Noxious blights, and Astral Watchers. The swarm does not grow denser. It grows meaner.',
+      body: 'A full seal wakes the chamber’s Guardian. Slay it to tear open the Rift. After the Frost Emperor, stand in the gold gate for Cycle II, or press F (or pause → Seal the Working) to complete the transmutation.',
     },
   ];
   for (const beat of beats) {
@@ -302,81 +297,6 @@ function buildHowToView(): HTMLElement {
   }
   loopSec.appendChild(beatsGrid);
   wrap.appendChild(loopSec);
-
-  // 3. Chamber Props, Hazards & Elite Modifiers
-  const mechSec = document.createElement('section');
-  mechSec.className = 'archives-panel';
-  const mechTitle = document.createElement('h3');
-  mechTitle.className = 'archives-section-title';
-  mechTitle.textContent = 'III. CHAMBER PROPS, HAZARDS & ELITE WARDS';
-  mechSec.appendChild(mechTitle);
-
-  const mechGrid = document.createElement('div');
-  mechGrid.className = 'archives-cards-grid cols-2';
-
-  const propCards: {
-    kind: 'pillar' | 'hazard' | 'volatile' | 'elite';
-    kicker: string;
-    title: string;
-    body: string;
-  }[] = [
-    {
-      kind: 'pillar',
-      kicker: 'SOLID COVER',
-      title: 'Kilns, Bollards & Monoliths',
-      body: 'Impassable stone and iron. Break a Watcher’s gaze, catch a spitter’s bolt, and cut a sightline when the horde closes.',
-    },
-    {
-      kind: 'hazard',
-      kicker: 'GROUND HAZARD',
-      title: 'Slag Fissures & Brine Pools',
-      body: 'Corrosive ground that burns and slows you. Phase Step or Ash Step carries you across unharmed.',
-    },
-    {
-      kind: 'volatile',
-      kicker: 'VOLATILE VESSELS',
-      title: 'Brimstone Urns & Rime Casks',
-      body: 'Strike an urn or cask, then step back. The blast hits dross and you alike. Rime casks also chill. Phase through the blast to skip the wound; the frost still bites.',
-    },
-    {
-      kind: 'elite',
-      kicker: 'ELITE AFFLICTIONS',
-      title: 'Aether Wards & Noxious Blights',
-      body: 'Elites wear one of two marks. An Aether Ward is an azure shell you must break before the flesh. A Noxious blight is a viridian haze that slows your stride on contact and leaves an acid pool when the husk dies.',
-    },
-  ];
-
-  for (const item of propCards) {
-    const card = document.createElement('article');
-    card.className = 'archives-info-card with-art';
-
-    const artBox = document.createElement('div');
-    artBox.className = 'info-card-art';
-    if (item.kind === 'elite') {
-      mountEntityArt(artBox, 'ember-chaser', 'archives-prop-canvas', item.title);
-    } else {
-      mountObstacleArt(artBox, item.kind, 'cinder', 'archives-prop-canvas', item.title);
-    }
-
-    const copy = document.createElement('div');
-    copy.className = 'info-card-copy';
-    const kicker = document.createElement('p');
-    kicker.className = 'info-card-kicker';
-    kicker.textContent = item.kicker;
-    const title = document.createElement('h4');
-    title.className = 'info-card-title';
-    title.textContent = item.title;
-    const p = document.createElement('p');
-    p.className = 'info-card-body';
-    p.textContent = item.body;
-    copy.append(kicker, title, p);
-
-    card.append(artBox, copy);
-    mechGrid.appendChild(card);
-  }
-
-  mechSec.appendChild(mechGrid);
-  wrap.appendChild(mechSec);
   return wrap;
 }
 
@@ -390,7 +310,7 @@ function buildControlsTable(survivor: SurvivorDef): HTMLElement {
   table.className = 'archives-table';
   const head = document.createElement('thead');
   const hr = document.createElement('tr');
-  for (const col of ['Input', 'Rite / Action', 'Effect in the Chamber']) {
+  for (const col of ['Input', 'Action']) {
     const th = document.createElement('th');
     th.textContent = col;
     hr.appendChild(th);
@@ -398,46 +318,28 @@ function buildControlsTable(survivor: SurvivorDef): HTMLElement {
   head.appendChild(hr);
 
   const body = document.createElement('tbody');
-  const rows: [string, string, string][] = [
-    ['WASD / Arrows', 'Stride', 'Move the vessel continuously across the chamber floor.'],
-    ['Mouse Cursor', 'Sightline', 'Aim your primary, secondary, and ultimate arts.'],
-    [
-      'Hold LMB',
-      primary ? `${primary.name} (I)` : 'Primary Art (I)',
-      primary?.hook ?? 'Channel your primary weapon toward the cursor.',
-    ],
-    [
-      'Press RMB',
-      secondary ? `${secondary.name} (II · ${secondary.cooldown}s)` : 'Secondary Art (II)',
-      secondary?.hook ?? 'Unleash your secondary tactical art.',
-    ],
-    [
-      'Shift / Space',
-      utility ? `${utility.name} (III · ${utility.cooldown}s)` : 'Utility Dash (III)',
-      utility?.hook ?? 'Dash through foes and hazards unharmed.',
-    ],
-    [
-      'Press Q',
-      special ? `${special.name} (IV · ${special.cooldown}s)` : 'Ultimate Rite (IV)',
-      special?.hook ?? 'Invoke your high-impact ultimate rite.',
-    ],
-    ['1 / 2 / 3', 'Bind Augmentation', 'Select a tablet during vessel ascension (or use Arrow keys + Enter).'],
-    ['Stand in Ring', 'Channel / Descend', 'Hold inside the Transmutation Circle or Rift portal until charged.'],
-    ['F', 'Seal the Working', 'After the Frost Emperor, complete the transmutation instead of entering Cycle II.'],
-    ['Esc / P', 'Pause Working', 'Pause the working, inspect tablets, or open The Archives.'],
+  const rows: [string, string][] = [
+    ['WASD / Arrows', 'Move'],
+    ['Mouse Cursor', 'Aim'],
+    ['Hold LMB', primary ? `${primary.name} (I)` : 'Primary Art (I)'],
+    ['Press RMB', secondary ? `${secondary.name} (II)` : 'Secondary Art (II)'],
+    ['Shift / Space', utility ? `${utility.name} (III)` : 'Utility Dash (III)'],
+    ['Press Q', special ? `${special.name} (IV)` : 'Ultimate Rite (IV)'],
+    ['1 / 2 / 3', 'Select a tablet'],
+    ['Stand in Ring', 'Channel / Descend'],
+    ['F', 'Seal the Working'],
+    ['Esc / P', 'Pause'],
   ];
 
-  for (const [k, rite, desc] of rows) {
+  for (const [k, action] of rows) {
     const tr = document.createElement('tr');
     const tdKey = document.createElement('td');
     tdKey.className = 'key-cell';
     tdKey.textContent = k;
-    const tdRite = document.createElement('td');
-    tdRite.className = 'rite-cell';
-    tdRite.textContent = rite;
-    const tdDesc = document.createElement('td');
-    tdDesc.textContent = desc;
-    tr.append(tdKey, tdRite, tdDesc);
+    const tdAction = document.createElement('td');
+    tdAction.className = 'rite-cell';
+    tdAction.textContent = action;
+    tr.append(tdKey, tdAction);
     body.appendChild(tr);
   }
 
@@ -466,7 +368,6 @@ function buildLoreView(): HTMLElement {
     { id: 'work', label: 'I. The Great Work' },
     { id: 'vessels', label: 'II. Vessels & Arts' },
     { id: 'chambers', label: 'III. The Three Chambers' },
-    { id: 'exchange', label: 'IV. Law of Exchange' },
   ];
   for (const s of subs) {
     const btn = document.createElement('button');
@@ -483,14 +384,12 @@ function buildLoreView(): HTMLElement {
   }
   wrap.appendChild(subBar);
 
-  if (activeLoreSub === 'work') {
-    wrap.appendChild(buildGreatWorkLore());
-  } else if (activeLoreSub === 'vessels') {
+  if (activeLoreSub === 'vessels') {
     wrap.appendChild(buildVesselsLore());
   } else if (activeLoreSub === 'chambers') {
     wrap.appendChild(buildChambersLore());
   } else {
-    wrap.appendChild(buildExchangeLore());
+    wrap.appendChild(buildGreatWorkLore());
   }
 
   return wrap;
@@ -510,11 +409,11 @@ function buildGreatWorkLore(): HTMLElement {
       ],
     },
     {
-      kicker: 'FOLIO II · ESSENCE & MERCURY',
+      kicker: 'FOLIO II · MERCURY',
       title: 'The Circulation of Quicksilver',
       paragraphs: [
         'No natural flesh can breathe the fumes of the Rifts. Only constructed or consecrated Vessels—animated by refined quicksilver—can walk the flagstones without dissolving into dross.',
-        'Every fallen abomination releases a bead of stolen Mercury (Essence). By drawing these beads back into its core, a Vessel ascends in potency, binding fractured hermetic tablets directly into its frame.',
+        'Every fallen abomination releases a bead of stolen Mercury. A Vessel that gathers them grows in potency, binding hermetic tablets into its frame.',
       ],
     },
     {
@@ -530,7 +429,7 @@ function buildGreatWorkLore(): HTMLElement {
       title: 'Nigredo, Albedo, Rubedo',
       paragraphs: [
         'The descent follows the three classical stages of hermetic transmutation: first Nigredo in the blackened ash of the Cinder Yard; second Albedo in the white salt-frost of the Rime Dock; and finally Rubedo in the deep Glacial Tomb.',
-        'Slaying the Frost Emperor at the bottom of the third seal opens the gold Ouroboros gate. Seal the working there, or descend into Cycle II — Cinder Yard again, inventory intact, the coefficient still climbing with time.',
+        'Slaying the Frost Emperor opens the gold Ouroboros. Seal the working there, or descend again — Cinder Yard, every tablet still bound, the chambers no kinder for the second passage.',
       ],
     },
   ];
@@ -771,52 +670,6 @@ function buildChambersLore(): HTMLElement {
   });
 
   return wrap;
-}
-
-function buildExchangeLore(): HTMLElement {
-  const grid = document.createElement('div');
-  grid.className = 'archives-cards-grid cols-2';
-
-  const tiers: { rarity: ItemRarity; title: string; desc: string }[] = [
-    {
-      rarity: 'common',
-      title: 'Common Tablets · Base Matter',
-      desc: 'Pure grafts: tendons, slag plating, lead plumbum, and cinnabar leeches. They carry no drawback and form the backbone of every working.',
-    },
-    {
-      rarity: 'uncommon',
-      title: 'Uncommon Tablets · Refined Humors',
-      desc: 'Quicksilver draughts, spasmodic nerves, and bellows hearts. Scarcer distillations that hasten your rites without corrupting the vessel.',
-    },
-    {
-      rarity: 'rare',
-      title: 'Rare Tablets · Volatile Bargains',
-      desc: 'Double-edged masterworks such as Vitriol Veins, Parasitic Alembic, and the Astrologer’s Ocular. Power or haste, paid in vitality, stride, or a swollen frame.',
-    },
-    {
-      rarity: 'lunar',
-      title: 'Lunar Covenants · Forbidden Heresy',
-      desc: 'The Pale Moon Covenant. An unforgiven heresy against the Great Work: ruin against guardians and elite horrors, a brittle shell, and insight that will not take.',
-    },
-  ];
-
-  for (const t of tiers) {
-    const card = document.createElement('article');
-    card.className = `archives-info-card rarity-border-${t.rarity}`;
-    const kicker = document.createElement('p');
-    kicker.className = `info-card-kicker rarity-text-${t.rarity}`;
-    kicker.textContent = t.rarity.toUpperCase();
-    const title = document.createElement('h4');
-    title.className = 'info-card-title';
-    title.textContent = t.title;
-    const body = document.createElement('p');
-    body.className = 'info-card-body';
-    body.textContent = t.desc;
-    card.append(kicker, title, body);
-    grid.appendChild(card);
-  }
-
-  return grid;
 }
 
 /* ==========================================================================

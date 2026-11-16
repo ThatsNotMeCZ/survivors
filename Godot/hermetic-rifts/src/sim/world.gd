@@ -406,7 +406,13 @@ func _contact_damage(dt: float) -> void:
 		var idx: int = grid.hits[k]
 		if enemies.alive[idx] == 0:
 			continue
-		if not SimCollision.aabb_overlap(player.x, player.y, player.radius, enemies.x[idx], enemies.y[idx], enemies.radius[idx]):
+		var touching: bool = SimCollision.aabb_overlap(player.x, player.y, player.radius, enemies.x[idx], enemies.y[idx], enemies.radius[idx])
+		if SimEnemies.is_chase(self, idx):
+			var cdx: float = player.x - enemies.x[idx]
+			var cdy: float = player.y - enemies.y[idx]
+			var reach: float = SimEnemies.chase_attack_range(enemies.radius[idx], player.radius)
+			touching = cdx * cdx + cdy * cdy <= reach * reach
+		if not touching:
 			continue
 		if enemies.corpse_remain[idx] > 0.0:
 			continue

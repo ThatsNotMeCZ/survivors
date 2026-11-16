@@ -9,7 +9,7 @@
           "frames": [
             0
           ],
-          "frameRate": 2,
+          "frameRate": 6,
           "repeat": -1
         },
         "walk": {
@@ -18,7 +18,7 @@
             2,
             3
           ],
-          "frameRate": 2,
+          "frameRate": 6,
           "repeat": -1
         },
         "attack": {
@@ -26,7 +26,31 @@
             4,
             5
           ],
-          "frameRate": 2,
+          "frameRate": 6,
+          "repeat": 0
+        },
+        "attack-fan": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 6,
+          "repeat": 0
+        },
+        "attack-meteor": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 6,
+          "repeat": 0
+        },
+        "summon": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 6,
           "repeat": 0
         }
       }
@@ -168,6 +192,22 @@
           "frameRate": 6,
           "repeat": -1
         },
+        "walk": {
+          "frames": [
+            0,
+            1
+          ],
+          "frameRate": 6,
+          "repeat": -1
+        },
+        "attack": {
+          "frames": [
+            2,
+            3
+          ],
+          "frameRate": 6,
+          "repeat": 0
+        },
         "attack-bolt": {
           "frames": [
             2,
@@ -185,6 +225,14 @@
           "repeat": 0
         },
         "attack-pulse": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 6,
+          "repeat": 0
+        },
+        "summon": {
           "frames": [
             4,
             5
@@ -266,6 +314,22 @@
           "frames": [
             8,
             9
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "attack": {
+          "frames": [
+            4,
+            5
+          ],
+          "frameRate": 3,
+          "repeat": 0
+        },
+        "summon": {
+          "frames": [
+            6,
+            7
           ],
           "frameRate": 3,
           "repeat": 0

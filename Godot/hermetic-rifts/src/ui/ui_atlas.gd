@@ -331,6 +331,20 @@ static func entity_def(id: String) -> Dictionary:
 	return merged
 
 
+static func resolve_entity_anim(id: String, anim: String) -> String:
+	var def: Dictionary = entity_def(id)
+	var anims: Dictionary = def.get("anims", {})
+	if anims.has(anim):
+		return anim
+	if anim != "idle" and anim != "walk" and anims.has("attack"):
+		return "attack"
+	if anim == "walk" and anims.has("idle"):
+		return "idle"
+	if anims.has("idle"):
+		return "idle"
+	return anim
+
+
 static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
 	var def: Dictionary = entity_def(id)
 	var full: Texture2D = _load_tex("res://assets/sprites/entities/%s.png" % id)
@@ -343,7 +357,8 @@ static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
 	if fh <= 0:
 		fh = full.get_height()
 	var anims: Dictionary = def.get("anims", {})
-	var spec: Dictionary = anims.get(anim, anims.get("idle", {}))
+	var resolved: String = resolve_entity_anim(id, anim)
+	var spec: Dictionary = anims.get(resolved, anims.get("idle", {}))
 	var frames: Array = spec.get("frames", [0])
 	if frames.is_empty():
 		frames = [0]

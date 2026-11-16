@@ -3,15 +3,13 @@ extends Control
 
 signal again_pressed
 signal hall_pressed
-signal copy_pressed
 
 const STATS_W: float = 390.0
 const DETAILS_W: float = 520.0
 const INV_PAD: float = 34.0
 const CTA_W: float = 220.0
-const CTA_H: float = 84.0
 const PLAQUE_W: float = 190.0
-const PLAQUE_H: float = 52.0
+const BTN_H: float = 58.0
 
 var _kicker: Label
 var _title: Label
@@ -24,12 +22,8 @@ var _tooltip: PanelContainer
 var _tooltip_title: Label
 var _tooltip_body: Label
 var _again_btn: Button
-var _copy_btn: Button
 var _hall_btn: Button
-var _copy_label: Label
 var _built: bool = false
-var _kind: String = "defeat"
-var _copy_token: int = 0
 
 
 func _ready() -> void:
@@ -40,7 +34,6 @@ func refresh(world: SimWorld, kind: String, rec: ArchiveRecords, catalog: Catalo
 	if not _built:
 		_build()
 	visible = true
-	_kind = kind
 	_fill_header(world, kind)
 	_fill_stats(world)
 	_fill_unlocks(rec, catalog, start_items, start_survivors)
@@ -52,52 +45,6 @@ func refresh(world: SimWorld, kind: String, rec: ArchiveRecords, catalog: Catalo
 func focus_primary() -> void:
 	if _again_btn != null:
 		_again_btn.grab_focus()
-
-
-func summary_text() -> String:
-	return _copy_label.text if _copy_label != null else ""
-
-
-func format_summary(world: SimWorld, kind: String) -> String:
-	var title: String = tr("ui.recap.copy.victory") if kind == "victory" else (tr("ui.recap.copy.defeat") if kind == "defeat" else tr("ui.recap.copy.abandon"))
-	if world == null:
-		return "⚗️ HERMETIC RIFTS — %s" % title
-	var sid: String = String(world.survivor.get("id", ""))
-	var stage: Dictionary = SimLoop.current_stage(world)
-	var items_str: String = tr("ui.recap.relics.none")
-	if world.inventory.size() > 0:
-		var bits: PackedStringArray = PackedStringArray()
-		for inst: ItemInstance in world.inventory:
-			var item_nm: String = Loc.item_name(inst.id)
-			bits.append("%s ×%d" % [item_nm, inst.stacks] if inst.stacks > 1 else item_nm)
-		items_str = ", ".join(bits)
-	var seed_line: String = ""
-	var tag: String = SimRng.format_seed_tag(world.run_seed)
-	if world.daily_date != "":
-		seed_line = tr("ui.recap.copy.seed.daily").replace("{tag}", tag).replace("{date}", world.daily_date)
-	else:
-		seed_line = tr("ui.recap.copy.seed").replace("{tag}", tag)
-	var lines: PackedStringArray = PackedStringArray([
-		"⚗️ HERMETIC RIFTS — %s" % title,
-		tr("ui.recap.copy.line.vessel").replace("{vessel}", Loc.survivor_name(sid)).replace("{cycle}", SimRng.cycle_numeral(world.cycle_index)).replace("{stage}", Loc.stage_name(String(stage.get("id", "")))),
-		tr("ui.recap.copy.line.time").replace("{time}", Loc.format_time(world.run_time)).replace("{level}", str(world.level)).replace("{coeff}", "%.2f" % world.coefficient),
-		tr("ui.recap.copy.line.kills").replace("{kills}", str(world.kills_total)).replace("{bosses}", str(world.bosses_defeated)),
-		tr("ui.recap.copy.line.damage").replace("{dmg}", str(int(round(world.damage_dealt)))).replace("{ess}", str(world.gems_collected)),
-		tr("ui.recap.copy.line.relics").replace("{items}", items_str),
-		seed_line,
-	])
-	return "\n".join(lines)
-
-
-func notify_copied() -> void:
-	if _copy_label == null:
-		return
-	_copy_token += 1
-	var token: int = _copy_token
-	_copy_label.text = tr("ui.recap.copy.done")
-	await get_tree().create_timer(1.4).timeout
-	if token == _copy_token and _copy_label != null:
-		_copy_label.text = tr("ui.recap.copy")
 
 
 func _build() -> void:
@@ -259,67 +206,39 @@ func _build_actions() -> Control:
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_again_btn = Button.new()
 	_again_btn.text = ""
-	_again_btn.custom_minimum_size = Vector2(CTA_W, CTA_H)
+	_again_btn.custom_minimum_size = Vector2(CTA_W, BTN_H)
+	_again_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	UiAtlas.apply_button_styles(_again_btn, "btn-cta")
-	var again_copy := VBoxContainer.new()
-	again_copy.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	again_copy.offset_left = 16.0
-	again_copy.offset_right = -16.0
-	again_copy.offset_top = 14.0
-	again_copy.offset_bottom = -14.0
-	again_copy.alignment = BoxContainer.ALIGNMENT_CENTER
-	again_copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_again_btn.add_child(again_copy)
-	var again_1 := Label.new()
-	again_1.text = tr("ui.recap.again")
-	again_1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiAtlas.apply_label(again_1, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, UiAtlas.SIZE_CTA)
-	again_1.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	again_copy.add_child(again_1)
-	var again_2 := Label.new()
-	again_2.text = tr("ui.recap.again.hint")
-	again_2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	UiAtlas.apply_label(again_2, UiAtlas.TYPE_MICRO, UiAtlas.ASH, 12)
-	again_2.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	again_copy.add_child(again_2)
+	var again_lab := Label.new()
+	again_lab.text = tr("ui.recap.again")
+	again_lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	again_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	again_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	UiAtlas.apply_label(again_lab, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, UiAtlas.SIZE_CTA)
+	again_lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_again_btn.add_child(again_lab)
 	_again_btn.pressed.connect(func() -> void: again_pressed.emit())
 	row.add_child(_again_btn)
-	_copy_btn = _plaque_btn(tr("ui.recap.copy"), tr("ui.recap.copy.hint"))
-	_copy_label = _copy_btn.get_node("PlaqueCopy/PlaqueLabel") as Label
-	_copy_btn.pressed.connect(func() -> void: copy_pressed.emit())
-	row.add_child(_copy_btn)
-	_hall_btn = _plaque_btn(tr("ui.recap.hall"), tr("ui.recap.hall.hint"))
+	_hall_btn = _plaque_btn(tr("ui.recap.hall"))
 	_hall_btn.pressed.connect(func() -> void: hall_pressed.emit())
 	row.add_child(_hall_btn)
 	return row
 
 
-func _plaque_btn(label_text: String, hint: String) -> Button:
+func _plaque_btn(label_text: String) -> Button:
 	var btn := Button.new()
 	btn.text = ""
-	btn.custom_minimum_size = Vector2(PLAQUE_W, PLAQUE_H)
+	btn.custom_minimum_size = Vector2(PLAQUE_W, BTN_H)
+	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	UiAtlas.apply_button_styles(btn, "btn-plaque")
-	var copy := HBoxContainer.new()
-	copy.name = "PlaqueCopy"
-	copy.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	copy.offset_left = 12.0
-	copy.offset_right = -12.0
-	copy.alignment = BoxContainer.ALIGNMENT_CENTER
-	copy.add_theme_constant_override("separation", 10)
-	copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn.add_child(copy)
 	var lab := Label.new()
-	lab.name = "PlaqueLabel"
 	lab.text = label_text
-	lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	UiAtlas.apply_label(lab, UiAtlas.TYPE_META, UiAtlas.PARCHMENT, 14, true)
 	lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	copy.add_child(lab)
-	var glyph := Label.new()
-	glyph.text = hint
-	UiAtlas.apply_label(glyph, UiAtlas.TYPE_MICRO, UiAtlas.ASH, 12)
-	glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	copy.add_child(glyph)
+	btn.add_child(lab)
 	return btn
 
 

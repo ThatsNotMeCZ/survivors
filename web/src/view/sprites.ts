@@ -410,16 +410,17 @@ export function playEntity(
   } else {
     sprite.setData('attackDone', false);
     sprite.setData('activeAttackKey', '');
-    if (isPlayingAttack) {
-      return;
-    }
   }
 
+  const walkOrIdle =
+    anim === 'walk' && sprite.anims.animationManager.exists(walk)
+      ? walk
+      : sprite.anims.animationManager.exists(idle)
+        ? idle
+        : '';
   const key = sprite.anims.animationManager.exists(preferred)
     ? preferred
-    : sprite.anims.animationManager.exists(idle)
-      ? idle
-      : '';
+    : walkOrIdle;
   if (key) {
     sprite.play(key, true);
     if (sprite.anims) {

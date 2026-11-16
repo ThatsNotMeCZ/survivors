@@ -1,20 +1,36 @@
 class_name DeskView
 extends Control
 
+const Display := preload("res://src/data/display_settings.gd")
+
 signal closed
+
+const PANEL_WIDTH: float = 640.0
+const SCROLL_MAX: float = 520.0
+const INK_HINT: Color = Color("2e2014")
 
 var _dim: ColorRect
 var _panel: PanelContainer
 var _kicker: Label
 var _title: Label
 var _lead: Label
+var _scroll: ScrollContainer
 var _body: VBoxContainer
+var _confirm_bar: Control
+var _confirm_label: Label
+var _keep_btn: Button
+var _revert_btn: Button
 var _close_btn: Button
+var _first_choice: Control
 var _bound: bool = false
+var _rebuilding: bool = false
+var _pending_snapshot: Dictionary = {}
+var _confirm_left: float = 0.0
 
 
 func _ready() -> void:
 	z_index = 40
+	set_process(false)
 	_resolve_nodes()
 	_apply_chrome()
 	_bind()
@@ -29,15 +45,28 @@ func refresh() -> void:
 
 
 func focus_primary() -> void:
+	if _first_choice != null and _first_choice.is_inside_tree() and not _first_choice.disabled:
+		_first_choice.grab_focus()
+		return
 	if _close_btn != null and _close_btn.is_inside_tree():
 		_close_btn.grab_focus()
 
 
 func handle_back() -> bool:
-	if visible:
-		_close()
-		return true
-	return false
+	if not visible:
+		return false
+	_close()
+	return true
+
+
+func _process(delta: float) -> void:
+	if _pending_snapshot.is_empty():
+		set_process(false)
+		return
+	_confirm_left -= delta
+	_refresh_confirm_label()
+	if _confirm_left <= 0.0:
+		_revert_display()
 
 
 func _resolve_nodes() -> void:
@@ -46,7 +75,14 @@ func _resolve_nodes() -> void:
 	_kicker = get_node_or_null("Panel/Inner/Kicker") as Label
 	_title = get_node_or_null("Panel/Inner/Title") as Label
 	_lead = get_node_or_null("Panel/Inner/Lead") as Label
-	_body = get_node_or_null("Panel/Inner/Body") as VBoxContainer
+	_scroll = get_node_or_null("Panel/Inner/Scroll") as ScrollContainer
+	_body = get_node_or_null("Panel/Inner/Scroll/Body") as VBoxContainer
+	if _body == null:
+		_body = get_node_or_null("Panel/Inner/Body") as VBoxContainer
+	_confirm_bar = get_node_or_null("Panel/Inner/ConfirmBar") as Control
+	_confirm_label = get_node_or_null("Panel/Inner/ConfirmBar/ConfirmRow/ConfirmLabel") as Label
+	_keep_btn = get_node_or_null("Panel/Inner/ConfirmBar/ConfirmRow/KeepBtn") as Button
+	_revert_btn = get_node_or_null("Panel/Inner/ConfirmBar/ConfirmRow/RevertBtn") as Button
 	_close_btn = get_node_or_null("Panel/Inner/CloseBtn") as Button
 
 
@@ -56,7 +92,7 @@ func _apply_chrome() -> void:
 		_dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	if _panel != null:
 		_panel.add_theme_stylebox_override("panel", UiAtlas.nine_slice("parchment-panel", "idle", Vector4(40, 36, 40, 32)))
-		_panel.custom_minimum_size = Vector2(480, 0)
+		_panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
 	if _kicker != null:
 		_kicker.text = tr("ui.settings.title")
 		UiAtlas.apply_ink_label(_kicker, UiAtlas.TYPE_META, Color("2e2014"), 14)
@@ -67,26 +103,52 @@ func _apply_chrome() -> void:
 		_lead.text = tr("ui.settings.lead")
 		UiAtlas.apply_ink_label(_lead, UiAtlas.TYPE_BODY, Color("2e2014"), UiAtlas.SIZE_BODY)
 		_lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if _scroll != null:
+		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	if _body != null:
+		_body.add_theme_constant_override("separation", 0)
+		_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if _confirm_bar != null:
+		_confirm_bar.visible = not _pending_snapshot.is_empty()
+	if _confirm_label != null:
+		UiAtlas.apply_ink_label(_confirm_label, UiAtlas.TYPE_META, UiAtlas.PARCHMENT_INK, UiAtlas.SIZE_META)
+		_confirm_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_confirm_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if _keep_btn != null:
+		_keep_btn.text = tr("ui.settings.keep.action").to_upper()
+		UiAtlas.apply_button_styles(_keep_btn, "btn-plaque")
+		_keep_btn.custom_minimum_size = Vector2(120, 40)
+	if _revert_btn != null:
+		_revert_btn.text = tr("ui.settings.revert").to_upper()
+		UiAtlas.apply_button_styles(_revert_btn, "btn-plaque")
+		_revert_btn.custom_minimum_size = Vector2(120, 40)
 	if _close_btn != null:
 		_close_btn.text = tr("ui.settings.close").to_upper()
 		UiAtlas.apply_button_styles(_close_btn, "btn-plaque")
 		_close_btn.custom_minimum_size = Vector2(0, 48)
 		_close_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	if _body != null:
-		_body.add_theme_constant_override("separation", 0)
 	var inner := get_node_or_null("Panel/Inner") as VBoxContainer
 	if inner != null:
-		if _kicker != null:
-			inner.move_child(_kicker, 0)
-		if _title != null:
-			inner.move_child(_title, 1)
-		if _lead != null:
-			inner.move_child(_lead, 2)
-		if _body != null:
-			inner.move_child(_body, 3)
+		_move_named(inner, _kicker, 0)
+		_move_named(inner, _title, 1)
+		_move_named(inner, _lead, 2)
+		if _scroll != null:
+			_move_named(inner, _scroll, 3)
+		elif _body != null:
+			_move_named(inner, _body, 3)
+		if _confirm_bar != null:
+			_move_named(inner, _confirm_bar, 4)
 		if _close_btn != null:
-			inner.move_child(_close_btn, 4)
+			_move_named(inner, _close_btn, 5)
 	_center_panel()
+
+
+func _move_named(inner: VBoxContainer, node: Node, index: int) -> void:
+	if node == null or node.get_parent() != inner:
+		return
+	inner.move_child(node, mini(index, inner.get_child_count() - 1))
 
 
 func _bind() -> void:
@@ -95,6 +157,10 @@ func _bind() -> void:
 	_bound = true
 	if _close_btn != null:
 		_close_btn.pressed.connect(_on_close)
+	if _keep_btn != null:
+		_keep_btn.pressed.connect(_keep_display)
+	if _revert_btn != null:
+		_revert_btn.pressed.connect(_revert_display)
 	if _dim != null:
 		_dim.gui_input.connect(_on_dim_input)
 
@@ -112,6 +178,8 @@ func _on_close() -> void:
 
 
 func _close() -> void:
+	if not _pending_snapshot.is_empty():
+		_revert_display()
 	visible = false
 	closed.emit()
 
@@ -119,19 +187,117 @@ func _close() -> void:
 func _rebuild_rows() -> void:
 	if _body == null:
 		return
+	_rebuilding = true
+	_first_choice = null
 	for child: Node in _body.get_children():
 		_body.remove_child(child)
 		child.queue_free()
 	var app := get_node_or_null("/root/App")
 	if app == null:
+		_rebuilding = false
 		return
 	var settings: GameSettings = app.settings
-	_body.add_child(_action_row(
-		tr("ui.settings.fullscreen"),
-		tr("ui.settings.fullscreen.hint"),
-		tr("ui.settings.fullscreen.toggle"),
-		_toggle_fullscreen
+	Display.sanitize(settings)
+	_fill_display(settings)
+	_fill_audio(settings)
+	_fill_visual(settings)
+	_rebuilding = false
+	_clamp_scroll()
+
+
+func _fill_display(settings: GameSettings) -> void:
+	_body.add_child(_section_label(tr("ui.settings.section.display")))
+	var mode_items: Array[String] = [
+		tr("ui.settings.window_mode.windowed"),
+		tr("ui.settings.window_mode.borderless"),
+		tr("ui.settings.window_mode.exclusive"),
+	]
+	var mode_idx: int = Display.MODE_OPTIONS.find(settings.window_mode)
+	_body.add_child(_choice_row(
+		tr("ui.settings.window_mode"),
+		tr("ui.settings.window_mode.hint"),
+		mode_items,
+		maxi(mode_idx, 0),
+		false,
+		func(idx: int) -> void: _set_window_mode(idx)
 	))
+	var screen_count: int = DisplayServer.get_screen_count()
+	if screen_count > 1:
+		var monitors: Array[String] = []
+		for i: int in range(screen_count):
+			var sz: Vector2i = Display.screen_size(i)
+			monitors.append(
+				tr("ui.settings.monitor.item")
+					.replace("{n}", str(i + 1))
+					.replace("{w}", str(sz.x))
+					.replace("{h}", str(sz.y))
+			)
+		_body.add_child(_choice_row(
+			tr("ui.settings.monitor"),
+			tr("ui.settings.monitor.hint"),
+			monitors,
+			settings.screen_index,
+			false,
+			func(idx: int) -> void: _set_monitor(idx)
+		))
+	var borderless: bool = settings.window_mode == Display.MODE_BORDERLESS
+	var native: Vector2i = Display.screen_size(settings.screen_index)
+	var res_items: Array[String] = []
+	var res_idx: int = 0
+	if borderless:
+		res_items.append(
+			tr("ui.settings.resolution.native")
+				.replace("{w}", str(native.x))
+				.replace("{h}", str(native.y))
+		)
+	else:
+		var allowed: Array[Vector2i] = Display.resolutions_for_screen(settings.screen_index)
+		var chosen := Vector2i(settings.resolution_w, settings.resolution_h)
+		for i: int in range(allowed.size()):
+			res_items.append(Display.format_res(allowed[i]))
+			if allowed[i] == chosen:
+				res_idx = i
+	_body.add_child(_choice_row(
+		tr("ui.settings.resolution"),
+		tr("ui.settings.resolution.hint"),
+		res_items,
+		res_idx,
+		borderless,
+		func(idx: int) -> void: _set_resolution(idx)
+	))
+	var vsync_items: Array[String] = [
+		tr("ui.settings.vsync.off"),
+		tr("ui.settings.vsync.on"),
+		tr("ui.settings.vsync.adaptive"),
+	]
+	var vsync_idx: int = Display.VSYNC_OPTIONS.find(settings.vsync)
+	_body.add_child(_choice_row(
+		tr("ui.settings.vsync"),
+		tr("ui.settings.vsync.hint"),
+		vsync_items,
+		maxi(vsync_idx, 0),
+		false,
+		func(idx: int) -> void: _set_vsync(idx)
+	))
+	var fps_items: Array[String] = []
+	var fps_idx: int = 0
+	for i: int in range(Display.FPS_OPTIONS.size()):
+		var cap: int = Display.FPS_OPTIONS[i]
+		fps_items.append(tr("ui.settings.fps.unlimited") if cap == 0 else str(cap))
+		if cap == settings.max_fps:
+			fps_idx = i
+	_body.add_child(_choice_row(
+		tr("ui.settings.fps"),
+		tr("ui.settings.fps.hint"),
+		fps_items,
+		fps_idx,
+		false,
+		func(idx: int) -> void: _set_fps(idx)
+	))
+
+
+func _fill_audio(settings: GameSettings) -> void:
+	_body.add_child(_section_label(tr("ui.settings.section.audio")))
 	_body.add_child(_range_row(
 		tr("ui.settings.master"),
 		tr("ui.settings.master.hint"),
@@ -156,6 +322,10 @@ func _rebuild_rows() -> void:
 		settings.muted,
 		func(v: bool) -> void: _set_flag("muted", v)
 	))
+
+
+func _fill_visual(settings: GameSettings) -> void:
+	_body.add_child(_section_label(tr("ui.settings.section.visual")))
 	_body.add_child(_check_row(
 		tr("ui.settings.shake"),
 		tr("ui.settings.shake.hint"),
@@ -170,19 +340,55 @@ func _rebuild_rows() -> void:
 	))
 
 
-func _action_row(title: String, hint: String, action: String, cb: Callable) -> Control:
+func _section_label(text: String) -> Control:
+	var heading := MarginContainer.new()
+	heading.add_theme_constant_override("margin_top", 10)
+	heading.add_theme_constant_override("margin_bottom", 4)
+	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var lab := Label.new()
+	lab.text = text.to_upper()
+	UiAtlas.apply_ink_label(lab, UiAtlas.TYPE_META, Color("6e3b1e"), 12)
+	heading.add_child(lab)
+	return heading
+
+
+func _choice_row(
+	title: String,
+	hint: String,
+	items: Array[String],
+	selected: int,
+	disabled: bool,
+	cb: Callable
+) -> Control:
 	var row_wrap := _row_shell(_body.get_child_count() == 0)
 	var row := row_wrap.get_node("Row") as HBoxContainer
 	row.add_child(_copy_col(title, hint))
-	var btn := Button.new()
-	btn.text = action
-	UiAtlas.apply_button_styles(btn, "btn-plaque")
-	btn.custom_minimum_size = Vector2(160, 40)
-	btn.pressed.connect(func() -> void:
+	var box := OptionButton.new()
+	box.custom_minimum_size = Vector2(220, 40)
+	box.fit_to_longest_item = false
+	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	box.focus_mode = Control.FOCUS_ALL
+	if UiAtlas.ink_font() != null:
+		box.add_theme_font_override("font", UiAtlas.ink_font())
+	box.add_theme_font_size_override("font_size", UiAtlas.SIZE_META)
+	box.add_theme_color_override("font_color", UiAtlas.PARCHMENT_INK)
+	box.add_theme_color_override("font_hover_color", UiAtlas.PARCHMENT_INK)
+	box.add_theme_color_override("font_focus_color", UiAtlas.PARCHMENT_INK)
+	for i: int in range(items.size()):
+		box.add_item(items[i], i)
+	if items.is_empty():
+		box.add_item("—", 0)
+	box.select(clampi(selected, 0, maxi(box.item_count - 1, 0)))
+	box.disabled = disabled or items.is_empty()
+	box.item_selected.connect(func(idx: int) -> void:
+		if _rebuilding:
+			return
 		_play_ui("click")
-		cb.call()
+		cb.call(idx)
 	)
-	row.add_child(btn)
+	row.add_child(box)
+	if _first_choice == null and not box.disabled:
+		_first_choice = box
 	return row_wrap
 
 
@@ -261,7 +467,7 @@ func _copy_col(title: String, hint: String) -> Control:
 	UiAtlas.apply_ink_label(t, UiAtlas.TYPE_BODY, UiAtlas.PARCHMENT_INK, UiAtlas.SIZE_BODY)
 	var h := Label.new()
 	h.text = hint
-	UiAtlas.apply_ink_label(h, UiAtlas.TYPE_META, Color("2e2014"), UiAtlas.SIZE_META)
+	UiAtlas.apply_ink_label(h, UiAtlas.TYPE_META, INK_HINT, UiAtlas.SIZE_META)
 	h.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(t)
 	col.add_child(h)
@@ -286,12 +492,119 @@ func _style_slider(slider: HSlider) -> void:
 	slider.add_theme_color_override("font_color", UiAtlas.PARCHMENT_INK)
 
 
-func _toggle_fullscreen() -> void:
-	var mode: int = DisplayServer.window_get_mode()
-	if mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-	else:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+func _mutate_display(mutator: Callable) -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return
+	var settings: GameSettings = app.settings
+	if _pending_snapshot.is_empty():
+		_pending_snapshot = Display.snapshot_display(settings)
+	mutator.call(settings)
+	Display.apply(settings)
+	_begin_confirm()
+	_rebuild_rows()
+	call_deferred("_center_panel")
+
+
+func _set_window_mode(idx: int) -> void:
+	if idx < 0 or idx >= Display.MODE_OPTIONS.size():
+		return
+	_mutate_display(func(s: GameSettings) -> void:
+		s.window_mode = Display.MODE_OPTIONS[idx]
+	)
+
+
+func _set_monitor(idx: int) -> void:
+	_mutate_display(func(s: GameSettings) -> void:
+		s.screen_index = idx
+	)
+
+
+func _set_resolution(idx: int) -> void:
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return
+	var settings: GameSettings = app.settings
+	if settings.window_mode == Display.MODE_BORDERLESS:
+		return
+	var allowed: Array[Vector2i] = Display.resolutions_for_screen(settings.screen_index)
+	if idx < 0 or idx >= allowed.size():
+		return
+	var chosen: Vector2i = allowed[idx]
+	_mutate_display(func(s: GameSettings) -> void:
+		s.resolution_w = chosen.x
+		s.resolution_h = chosen.y
+	)
+
+
+func _set_vsync(idx: int) -> void:
+	if idx < 0 or idx >= Display.VSYNC_OPTIONS.size():
+		return
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return
+	var settings: GameSettings = app.settings
+	settings.vsync = Display.VSYNC_OPTIONS[idx]
+	Display.apply(settings)
+	settings.save()
+
+
+func _set_fps(idx: int) -> void:
+	if idx < 0 or idx >= Display.FPS_OPTIONS.size():
+		return
+	var app := get_node_or_null("/root/App")
+	if app == null:
+		return
+	var settings: GameSettings = app.settings
+	settings.max_fps = Display.FPS_OPTIONS[idx]
+	Display.apply(settings)
+	settings.save()
+
+
+func _begin_confirm() -> void:
+	_confirm_left = Display.CONFIRM_SECONDS
+	if _confirm_bar != null:
+		_confirm_bar.visible = true
+	_refresh_confirm_label()
+	set_process(true)
+
+
+func _refresh_confirm_label() -> void:
+	if _confirm_label == null:
+		return
+	_confirm_label.text = tr("ui.settings.keep").replace("{s}", str(maxi(ceili(_confirm_left), 0)))
+
+
+func _keep_display() -> void:
+	_play_ui("confirm")
+	_pending_snapshot.clear()
+	if _confirm_bar != null:
+		_confirm_bar.visible = false
+	set_process(false)
+	var app := get_node_or_null("/root/App")
+	if app != null:
+		var settings: GameSettings = app.settings
+		settings.save()
+	call_deferred("_center_panel")
+
+
+func _revert_display() -> void:
+	if _pending_snapshot.is_empty():
+		if _confirm_bar != null:
+			_confirm_bar.visible = false
+		set_process(false)
+		return
+	var app := get_node_or_null("/root/App")
+	if app != null:
+		var settings: GameSettings = app.settings
+		Display.restore_display(settings, _pending_snapshot)
+		Display.apply(settings)
+	_pending_snapshot.clear()
+	if _confirm_bar != null:
+		_confirm_bar.visible = false
+	set_process(false)
+	_rebuild_rows()
+	call_deferred("_center_panel")
 
 
 func _set_volume(which: String, value: float) -> void:
@@ -339,16 +652,24 @@ func _pct(value: float) -> String:
 	return "%d%%" % int(round(value * 100.0))
 
 
+func _clamp_scroll() -> void:
+	if _scroll == null or _body == null:
+		return
+	var content_h: float = _body.get_combined_minimum_size().y
+	_scroll.custom_minimum_size = Vector2(0.0, minf(content_h, SCROLL_MAX))
+
+
 func _center_panel() -> void:
 	if _panel == null:
 		return
-	_panel.custom_minimum_size = Vector2(480, 0)
+	_clamp_scroll()
+	_panel.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
 	_panel.set_anchors_preset(Control.PRESET_CENTER)
 	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_panel.reset_size()
 	var sz: Vector2 = _panel.get_combined_minimum_size()
-	_panel.size = Vector2(maxf(480.0, sz.x), sz.y)
+	_panel.size = Vector2(maxf(PANEL_WIDTH, sz.x), sz.y)
 	_panel.position = (size - _panel.size) * 0.5
 
 

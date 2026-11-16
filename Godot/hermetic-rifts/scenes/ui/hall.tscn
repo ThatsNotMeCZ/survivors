@@ -158,6 +158,8 @@ theme_override_constants/separation = 16
 
 [node name="RiteCopy" type="VBoxContainer" parent="Rite/RiteToggle/RiteRow" unique_id=512050139]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
 
 [node name="RiteKicker" type="Label" parent="Rite/RiteToggle/RiteRow/RiteCopy" unique_id=131095964]
 layout_mode = 2
@@ -166,12 +168,20 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="RiteSwitch" type="Panel" parent="Rite/RiteToggle/RiteRow" unique_id=142400596]
-custom_minimum_size = Vector2(36, 18)
+custom_minimum_size = Vector2(18, 18)
+custom_maximum_size = Vector2(18, 18)
+propagate_maximum_size = true
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 mouse_filter = 2
 
 [node name="RiteKnob" type="ColorRect" parent="Rite/RiteToggle/RiteRow/RiteSwitch" unique_id=1827855084]
 layout_mode = 0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 15.0
+offset_bottom = 15.0
 mouse_filter = 2
 color = Color(0.65882355, 0.59607846, 0.5647059, 1)
 

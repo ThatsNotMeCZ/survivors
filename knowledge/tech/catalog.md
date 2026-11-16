@@ -114,11 +114,13 @@ Rime Dock volatile detonations also apply 2.0s ×0.7 slow (Cinder and Glacial do
 
 Kills may drop a treatise orb (`sim/gems.ts` lore pool, cap 8). Chance in `loop.loreDropChance`: fodder 0.025, elite 0.25, boss 0.6. One live drop per entity id. Pickup writes `records.entityLores` and unlocks that Bestiary entry's lore. Victory auto-collects remaining orbs.
 
+Archives chamber unlock is **visit**, not clear. A run that enters Rime Dock then dies in Glacial Tomb must unlock both. Web `commitWorldProgress` writes `stageVisits` for every `stages[0..stageIndex]` as the index rises. Godot `record_run_end` writes the same range once at recap (not only the death stage). `stageClears` follows `stagesCleared` (all three on victory). Existing ledgers that already list a later chamber backfill earlier ids (`cinder-yard` → `rime-dock` → `glacial-tomb`).
+
 ## View
 
 `web/src/view/procedural-pixel-art.ts` generates cached canvases (16/24/28/32/40/48/64, plus 2560 floor) for anything without a PNG. Entity art is a spritesheet per catalog id (`web/public/sprites/entities/{id}.png`), not per biome. `ArenaScene.preload` loads `sprites/manifest.json` sheets as `entity-{id}` and plays `idle` / `walk` plus per-attack boss anims. Arena `flipX` for left. Fodder uses one GPU layer per entity id. Hall crops the idle frame (`web/src/ui/vessel-art.ts`). HUD icons: `sprites/items/{id}.png` (24px source, 32px chips), `sprites/skills/{id}.png`. See `knowledge/tech/sprites.md`.
 
-Arena GLSL (view only): elite affix, boss hazards + Cinder smoke, ambient biome, env hazards, circle charge, brimstone line, condemn tether, skill impact, player hurt, damage FX, motion smear. Hall/menu WebGL lives in `web/src/ui/` (`hall-backdrop.ts`, `cinder-circle.ts`).
+Arena GLSL (view only): elite affix, boss hazards + Cinder smoke, ambient biome, env hazards, circle charge, brimstone line, condemn tether, skill impact (Censer Lob / Crucible Cull / tether latch), dash afterimage, player hurt, damage FX. Crucible Cull also pulses screen shake. Ice-stage enemy bolts use `frost-spit` (Cinder uses `cinder-spit`). Hall/menu WebGL lives in `web/src/ui/` (`hall-backdrop.ts`, `cinder-circle.ts`).
 
 ## UI (HTML overlay)
 
@@ -132,7 +134,7 @@ Menus and HUD are `web/src/ui/`, not Phaser text. Overlay stack: HUD < prompts <
 | `archives.ts` | Standalone full-screen **The Archives** (`#archives`) with 5 tabs |
 | `records.ts` | Persistent player statistics (`localStorage` key `'survivors.records.v1'`), unlock checks, per-run telemetry commit, personal bests, recent 10 runs |
 | `entity-art.ts` | Crisp idle-frame canvas preview helper for Bestiary entities and arena props |
-| `settings.ts` | `<dialog>`: master/SFX/music, mute, screenshake, reduce-VFX, selected vessel, Fullscreen Chamber |
+| `settings.ts` | Web `<dialog>`: master/SFX/music, mute, screenshake, reduce-VFX, selected vessel, Fullscreen Chamber (browser toggle). Godot desk: Display Mode / Monitor / Resolution / VSync / FPS cap + the same audio and visual rows. |
 
 Display strings come from catalog `name` / `lore`. Settings drive the Web Audio bus (`knowledge/tech/audio.md`). Phaser stays `noAudio`.
 

@@ -3,8 +3,11 @@
   "frameHeight": 96,
   "anims": {
     "idle": { "frames": [0, 1], "frameRate": 6, "repeat": -1 },
+    "walk": { "frames": [0, 1], "frameRate": 6, "repeat": -1 },
+    "attack": { "frames": [2, 3], "frameRate": 6, "repeat": 0 },
     "attack-bolt": { "frames": [2, 3], "frameRate": 6, "repeat": 0 },
     "attack-laser": { "frames": [2, 3], "frameRate": 6, "repeat": 0 },
-    "attack-pulse": { "frames": [4, 5], "frameRate": 6, "repeat": 0 }
+    "attack-pulse": { "frames": [4, 5], "frameRate": 6, "repeat": 0 },
+    "summon": { "frames": [4, 5], "frameRate": 6, "repeat": 0 }
   }
 }

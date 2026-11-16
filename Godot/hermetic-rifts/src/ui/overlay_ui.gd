@@ -98,12 +98,6 @@ func _input(event: InputEvent) -> void:
 		app.resume_run()
 		get_viewport().set_input_as_handled()
 		return
-	if app.overlay_mode == &"recap" and event is InputEventKey:
-		var key := event as InputEventKey
-		if key.keycode == KEY_C:
-			_on_recap_copy()
-			get_viewport().set_input_as_handled()
-			return
 	if event.is_action("confirm"):
 		_activate_primary(app)
 		get_viewport().set_input_as_handled()
@@ -637,8 +631,6 @@ func _bind_recap() -> void:
 		_recap.again_pressed.connect(_on_recap_again)
 	if not _recap.hall_pressed.is_connected(_on_recap_hall):
 		_recap.hall_pressed.connect(_on_recap_hall)
-	if not _recap.copy_pressed.is_connected(_on_recap_copy):
-		_recap.copy_pressed.connect(_on_recap_copy)
 
 
 func _recap_kind(app: Node) -> String:
@@ -668,16 +660,6 @@ func _on_recap_hall() -> void:
 	var bus := get_node_or_null("/root/GameAudio")
 	if bus != null:
 		bus.play_menu()
-
-
-func _on_recap_copy() -> void:
-	var app := get_node_or_null("/root/App")
-	if app == null or _recap == null:
-		return
-	var text: String = _recap.format_summary(app.world, _recap_kind(app))
-	DisplayServer.clipboard_set(text)
-	_play_ui("confirm")
-	_recap.notify_copied()
 
 
 func _desk_host() -> CanvasLayer:

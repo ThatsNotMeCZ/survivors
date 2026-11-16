@@ -2,6 +2,18 @@ class_name SimEnemies
 extends RefCounted
 
 
+static func chase_attack_range(body_radius: float, target_radius: float) -> float:
+	return body_radius + target_radius + EnemyPool.CHASE_ATTACK_RANGE_PAD
+
+
+static func is_chase(world: SimWorld, index: int) -> bool:
+	var def_id: String = world.enemies.def_id[index]
+	if def_id == "":
+		return true
+	var ai: Dictionary = DictUtil.d(world.catalog.entity(def_id), "ai")
+	return String(ai.get("type", "chase")) == "chase"
+
+
 static func clear(world: SimWorld) -> void:
 	for i: int in world.enemies.cap:
 		world.enemies.alive[i] = 0

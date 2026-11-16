@@ -13,6 +13,8 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme = ExtResource("1_hpmw6")
 script = ExtResource("2_ilrk8")
 
@@ -23,7 +25,7 @@ anchor_bottom = 1.0
 color = Color(0.047058824, 0.039215688, 0.050980393, 0.61960787)
 
 [node name="Panel" type="PanelContainer" parent="." unique_id=1367722812]
-custom_minimum_size = Vector2(480, 0)
+custom_minimum_size = Vector2(640, 0)
 layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
@@ -39,16 +41,13 @@ theme_override_constants/separation = 10
 layout_mode = 2
 text = "Alchemist's Desk"
 
-[node name="Body" type="VBoxContainer" parent="Panel/Inner" unique_id=1440619437]
-layout_mode = 2
-
 [node name="Title" type="Label" parent="Panel/Inner" unique_id=1639105312]
 layout_mode = 2
 text = "Settings"
 
 [node name="Lead" type="Label" parent="Panel/Inner" unique_id=1248842693]
 layout_mode = 2
-text = "Attune the chamber's resonance and visual clarity."
+text = "Display, audio, and visual clarity."
 autowrap_mode = 3
 
 [node name="CloseBtn" type="Button" parent="Panel/Inner" unique_id=2053481975]
@@ -58,3 +57,38 @@ theme_override_styles/normal = ExtResource("4_x00nc")
 theme_override_styles/pressed = ExtResource("5_hdl1a")
 theme_override_styles/hover = ExtResource("6_r5u6l")
 text = "CLOSE"
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/Inner" unique_id=134977954]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Body" type="VBoxContainer" parent="Panel/Inner/Scroll" unique_id=1440619437]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ConfirmBar" type="PanelContainer" parent="Panel/Inner" unique_id=1211712835]
+visible = false
+layout_mode = 2
+
+[node name="ConfirmRow" type="HBoxContainer" parent="Panel/Inner/ConfirmBar" unique_id=1146157343]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="ConfirmLabel" type="Label" parent="Panel/Inner/ConfirmBar/ConfirmRow" unique_id=382386207]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Keep these settings?"
+autowrap_mode = 3
+
+[node name="KeepBtn" type="Button" parent="Panel/Inner/ConfirmBar/ConfirmRow" unique_id=2021556995]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = "KEEP"
+
+[node name="RevertBtn" type="Button" parent="Panel/Inner/ConfirmBar/ConfirmRow" unique_id=1532423826]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = "REVERT"

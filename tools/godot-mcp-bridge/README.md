@@ -17,4 +17,6 @@ cd tools/godot-mcp-bridge
 
 `start.sh` runs `bun install` when `@modelcontextprotocol/sdk` is missing. Cursor: `.cursor/mcp.json` runs `bash` with `start.sh` in `args` (the workspace path has a space; putting it in `command` splits on spawn). Reload MCP. Open Godot with **Godot MCP Pro** enabled. Output should show `Connected on port 6505`.
 
+If Cursor restarts MCP and logs `EADDRINUSE` on 6505, a leftover `bun src/index.ts` is still listening. Reload MCP again — `start.sh` kills that leftover. The process also exits when Cursor closes stdio.
+
 Do not Write `.tscn` as text. Scene tools go through this bridge. See `knowledge/tech/godot.md`.

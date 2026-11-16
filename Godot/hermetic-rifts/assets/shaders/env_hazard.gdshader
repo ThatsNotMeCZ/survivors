@@ -6,6 +6,8 @@ uniform float u_style : hint_range(0.0, 2.0) = 0.0;
 uniform float u_player_in : hint_range(0.0, 1.0) = 0.0;
 uniform float u_seed = 0.2;
 uniform float u_fade : hint_range(0.0, 1.0) = 1.0;
+uniform float u_has_tex : hint_range(0.0, 1.0) = 1.0;
+uniform float u_reduce : hint_range(0.0, 1.0) = 0.0;
 
 float hash21(vec2 p) {
 	p = fract(p * vec2(127.1, 311.7) + u_seed * 17.31);
@@ -93,68 +95,119 @@ vec3 pal_pick(vec3 c, vec3 a, vec3 b, vec3 d, vec3 e, vec3 f) {
 	return outc;
 }
 
+void fluid_overlay(vec2 p, float liquid_mask, inout vec3 col) {
+	if (liquid_mask <= 0.02 || u_reduce > 0.5) {
+		return;
+	}
+	float flow_speed = mix(0.12, 0.22, u_player_in);
+	vec2 flow = vec2(
+		fbm(p * 2.0 + vec2(u_time * flow_speed, -u_time * flow_speed * 0.8)),
+		fbm(p * 2.0 + vec2(-u_time * flow_speed * 0.8, u_time * flow_speed))
+	);
+	float surface = fbm(p * 3.0 + flow * 0.8);
+	float micro1 = micro_bubble(p + flow * 0.1, mix(0.18, 0.32, u_player_in), 7.0);
+	float micro2 = micro_bubble(p - flow * 0.12 + vec2(13.7, 29.1), mix(0.22, 0.38, u_player_in), 9.0);
+	float micro_total = clamp(micro1 + micro2, 0.0, 1.0);
+	vec3 fluid = vec3(0.0);
+	float overlay_a = 0.0;
+	if (u_style > 1.5) {
+		vec3 deep_cyan = vec3(0.118, 0.227, 0.373);
+		vec3 mid_blue = vec3(0.302, 0.608, 0.902);
+		vec3 bright_cyan = vec3(0.561, 0.827, 1.0);
+		vec3 dusk = vec3(0.282, 0.290, 0.467);
+		vec3 hot_glint = vec3(0.918, 0.969, 0.976);
+		fluid = mix(deep_cyan, mid_blue, surface);
+		fluid = mix(fluid, bright_cyan, micro_total * 0.85);
+		fluid = pal_pick(fluid, deep_cyan, dusk, mid_blue, bright_cyan, hot_glint);
+		overlay_a = clamp((0.35 + surface * 0.30 + micro_total * 0.35) * liquid_mask, 0.0, 0.65);
+	} else if (u_style > 0.5) {
+		vec3 deep_green = vec3(0.137, 0.565, 0.388);
+		vec3 caustic_green = vec3(0.118, 0.737, 0.451);
+		vec3 neon_acid = vec3(0.569, 0.859, 0.412);
+		vec3 acid_spec = vec3(0.804, 0.875, 0.424);
+		vec3 moss = vec3(0.133, 0.333, 0.125);
+		fluid = mix(deep_green, caustic_green, surface);
+		fluid = mix(fluid, neon_acid, micro_total * 0.9);
+		float sizzle = u_player_in * (0.5 + 0.5 * sin(u_time * 3.5)) * 0.20;
+		fluid += acid_spec * sizzle;
+		fluid = pal_pick(fluid, moss, deep_green, caustic_green, neon_acid, acid_spec);
+		overlay_a = clamp((0.38 + surface * 0.30 + micro_total * 0.32 + sizzle) * liquid_mask, 0.0, 0.68);
+	} else {
+		vec3 crust = vec3(0.180, 0.094, 0.082);
+		vec3 deep_magma = vec3(0.620, 0.157, 0.208);
+		vec3 magma_deep = vec3(0.918, 0.310, 0.212);
+		vec3 lava_ember = vec3(0.969, 0.588, 0.090);
+		vec3 lava_glint = vec3(0.976, 0.761, 0.169);
+		fluid = mix(crust, magma_deep, surface);
+		fluid = mix(fluid, deep_magma, (1.0 - surface) * 0.35);
+		fluid = mix(fluid, lava_ember, step(0.48, surface) * 0.65);
+		fluid = mix(fluid, lava_glint, micro_total * 0.85);
+		float simmer = u_player_in * (0.5 + 0.5 * sin(u_time * 3.2)) * 0.18;
+		fluid += lava_glint * simmer;
+		fluid = pal_pick(fluid, crust, deep_magma, magma_deep, lava_ember, lava_glint);
+		overlay_a = clamp((0.36 + surface * 0.32 + micro_total * 0.32 + simmer) * liquid_mask, 0.0, 0.68);
+	}
+	col = mix(col, fluid, overlay_a);
+}
+
 void fragment() {
 	const float GRID = 64.0;
 	vec2 uv = (floor(UV * GRID) + 0.5) / GRID;
 	vec2 p = (uv - 0.5) * 2.0;
 	float r = length(p);
-	float edge_noise = fbm(p * 2.4 + vec2(u_seed * 2.1, -u_seed));
-	float pool_r = 0.82 + (edge_noise - 0.5) * 0.28;
-	float mask = smoothstep(pool_r, pool_r - 0.26, r);
 	float dither = bayer4(uv * GRID + vec2(u_seed * 5.0, u_seed * 3.0));
-	float rim = smoothstep(0.04, 0.42, mask);
-	float keep = step(dither * 0.62, rim);
 	vec3 col = vec3(0.0);
 	float alpha = 0.0;
-	if (mask >= 0.03 && keep >= 0.5) {
-		float flow_speed = mix(0.12, 0.22, u_player_in);
-		vec2 flow = vec2(
-			fbm(p * 2.0 + vec2(u_time * flow_speed, -u_time * flow_speed * 0.8)),
-			fbm(p * 2.0 + vec2(-u_time * flow_speed * 0.8, u_time * flow_speed))
-		);
-		float surface = fbm(p * 3.0 + flow * 0.8);
-		float micro1 = micro_bubble(p + flow * 0.1, mix(0.18, 0.32, u_player_in), 7.0);
-		float micro2 = micro_bubble(p - flow * 0.12 + vec2(13.7, 29.1), mix(0.22, 0.38, u_player_in), 9.0);
-		float micro_total = clamp(micro1 + micro2, 0.0, 1.0);
-		if (u_style > 1.5) {
-			vec3 deep_cyan = vec3(0.118, 0.227, 0.373);
-			vec3 mid_blue = vec3(0.302, 0.608, 0.902);
-			vec3 bright_cyan = vec3(0.561, 0.827, 1.0);
-			vec3 dusk = vec3(0.282, 0.290, 0.467);
-			vec3 hot_glint = vec3(0.918, 0.969, 0.976);
-			vec3 fluid = mix(deep_cyan, mid_blue, surface);
-			fluid = mix(fluid, bright_cyan, micro_total * 0.85);
-			col = pal_pick(fluid, deep_cyan, dusk, mid_blue, bright_cyan, hot_glint);
-			alpha = clamp(0.42 + surface * 0.28 + micro_total * 0.22, 0.0, 0.78);
-		} else if (u_style > 0.5) {
-			vec3 deep_green = vec3(0.137, 0.565, 0.388);
-			vec3 caustic_green = vec3(0.118, 0.737, 0.451);
-			vec3 neon_acid = vec3(0.569, 0.859, 0.412);
-			vec3 acid_spec = vec3(0.804, 0.875, 0.424);
-			vec3 moss = vec3(0.133, 0.333, 0.125);
-			vec3 fluid = mix(deep_green, caustic_green, surface);
-			fluid = mix(fluid, neon_acid, micro_total * 0.9);
-			float sizzle = u_player_in * (0.5 + 0.5 * sin(u_time * 3.5)) * 0.20;
-			fluid += acid_spec * sizzle;
-			col = pal_pick(fluid, moss, deep_green, caustic_green, neon_acid, acid_spec);
-			alpha = clamp(0.44 + surface * 0.26 + micro_total * 0.20 + sizzle, 0.0, 0.80);
-		} else {
-			vec3 crust = vec3(0.180, 0.094, 0.082);
-			vec3 deep_magma = vec3(0.620, 0.157, 0.208);
-			vec3 magma_deep = vec3(0.918, 0.310, 0.212);
-			vec3 lava_ember = vec3(0.969, 0.588, 0.090);
-			vec3 lava_glint = vec3(0.976, 0.761, 0.169);
-			vec3 fluid = mix(crust, magma_deep, surface);
-			fluid = mix(fluid, deep_magma, (1.0 - surface) * 0.35);
-			fluid = mix(fluid, lava_ember, step(0.48, surface) * 0.65);
-			fluid = mix(fluid, lava_glint, micro_total * 0.85);
-			float simmer = u_player_in * (0.5 + 0.5 * sin(u_time * 3.2)) * 0.18;
-			fluid += lava_glint * simmer;
-			col = pal_pick(fluid, crust, deep_magma, magma_deep, lava_ember, lava_glint);
-			alpha = clamp(0.46 + surface * 0.28 + micro_total * 0.18 + simmer, 0.0, 0.86);
+
+	if (u_has_tex > 0.5) {
+		vec4 spr = texture(TEXTURE, uv);
+		if (spr.a >= 0.02) {
+			float brightness = max(spr.r, max(spr.g, spr.b));
+			float is_dark_rock = step(brightness, 72.0 / 255.0);
+			float is_steam = 0.0;
+			if (u_style > 0.5) {
+				is_steam = step(p.y, -0.12) * step(140.0 / 255.0, spr.g)
+					* max(step(120.0 / 255.0, spr.r), step(140.0 / 255.0, spr.b));
+			}
+			float inner = mix(mix(0.62, 0.72, is_steam), 0.50, is_dark_rock);
+			float outer = mix(0.95, 1.05, is_steam);
+			float edge_fade = 1.0;
+			if (r > inner) {
+				float t = clamp((r - inner) / max(0.01, outer - inner), 0.0, 1.0);
+				edge_fade = 1.0 - t * t * (3.0 - 2.0 * t);
+			}
+			alpha = spr.a * edge_fade * clamp(u_fade, 0.0, 1.0);
+			float rim = smoothstep(0.04, 0.42, alpha);
+			alpha *= step(dither * 0.62, rim);
+			col = spr.rgb;
+			float liquid_mask = 0.0;
+			if (u_style < 0.5) {
+				float warmth = spr.r - spr.b;
+				liquid_mask = smoothstep(0.20, 0.42, warmth) * step(0.26, max(spr.r, spr.g));
+			} else {
+				float green_hue = spr.g - spr.r * 0.75;
+				liquid_mask = smoothstep(0.08, 0.28, green_hue) * step(0.24, spr.g);
+			}
+			liquid_mask *= step(0.2, spr.a);
+			fluid_overlay(p, liquid_mask, col);
 		}
-		alpha *= clamp(u_fade, 0.0, 1.0);
-		alpha *= mix(0.28, 1.0, smoothstep(0.12, 0.62, mask));
+	} else {
+		float edge_noise = fbm(p * 2.4 + vec2(u_seed * 2.1, -u_seed));
+		float pool_r = 0.82 + (edge_noise - 0.5) * 0.28;
+		float mask = smoothstep(pool_r, pool_r - 0.26, r);
+		float rim = smoothstep(0.04, 0.42, mask);
+		float keep = step(dither * 0.62, rim);
+		if (mask >= 0.03 && keep >= 0.5) {
+			if (u_style > 1.5) {
+				col = vec3(0.118, 0.227, 0.373);
+			} else if (u_style > 0.5) {
+				col = vec3(0.137, 0.565, 0.388);
+			} else {
+				col = vec3(0.180, 0.094, 0.082);
+			}
+			fluid_overlay(p, mask, col);
+			alpha = clamp(u_fade, 0.0, 1.0) * mix(0.28, 1.0, smoothstep(0.12, 0.62, mask));
+		}
 	}
 	COLOR = vec4(col, alpha);
 }

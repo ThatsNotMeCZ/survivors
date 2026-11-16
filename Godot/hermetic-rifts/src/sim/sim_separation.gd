@@ -65,6 +65,9 @@ static func _player_enemies(world: SimWorld) -> void:
 		var i: int = world.grid.hits[k]
 		if world.enemies.alive[i] == 0 or world.enemies.corpse_remain[i] > 0.0:
 			continue
+		if SimEnemies.is_chase(world, i):
+			_hold_melee(world, i)
+			continue
 		if not SimCollision.aabb_overlap(world.player.x, world.player.y, world.player.radius, world.enemies.x[i], world.enemies.y[i], world.enemies.radius[i]):
 			continue
 		var split: Vector4 = _separate(
@@ -76,6 +79,25 @@ static func _player_enemies(world: SimWorld) -> void:
 		world.player.y = split.y
 		world.enemies.x[i] = split.z
 		world.enemies.y[i] = split.w
+
+
+static func _hold_melee(world: SimWorld, index: int) -> void:
+	var enemies: EnemyPool = world.enemies
+	if enemies.root_remain[index] > 0.0:
+		return
+	var hold: float = SimEnemies.chase_attack_range(enemies.radius[index], world.player.radius)
+	var dx: float = world.player.x - enemies.x[index]
+	var dy: float = world.player.y - enemies.y[index]
+	var dist: float = sqrt(dx * dx + dy * dy)
+	if dist >= hold:
+		return
+	if dist <= 0.001:
+		enemies.x[index] = world.player.x - hold
+		return
+	var nx: float = dx / dist
+	var ny: float = dy / dist
+	enemies.x[index] = world.player.x - nx * hold
+	enemies.y[index] = world.player.y - ny * hold
 
 
 static func _clamp_actors(world: SimWorld) -> void:

@@ -11,6 +11,12 @@ var screenshake: bool = true
 var reduce_vfx: bool = false
 var survivor_id: String = "runner"
 var daily_rite: bool = false
+var window_mode: String = "windowed"
+var screen_index: int = 0
+var resolution_w: int = 1920
+var resolution_h: int = 1080
+var vsync: String = "on"
+var max_fps: int = 0
 
 
 static func load_or_default() -> GameSettings:
@@ -32,6 +38,12 @@ static func load_or_default() -> GameSettings:
 	s.reduce_vfx = bool(data.get("reduceVfx", false))
 	s.survivor_id = String(data.get("survivorId", "runner"))
 	s.daily_rite = bool(data.get("dailyRite", false))
+	s.window_mode = String(data.get("windowMode", "windowed"))
+	s.screen_index = int(data.get("screenIndex", 0))
+	s.resolution_w = int(data.get("resolutionW", 1920))
+	s.resolution_h = int(data.get("resolutionH", 1080))
+	s.vsync = String(data.get("vsync", "on"))
+	s.max_fps = int(data.get("maxFps", 0))
 	return s
 
 
@@ -45,6 +57,12 @@ func save() -> void:
 		"reduceVfx": reduce_vfx,
 		"survivorId": survivor_id,
 		"dailyRite": daily_rite,
+		"windowMode": window_mode,
+		"screenIndex": screen_index,
+		"resolutionW": resolution_w,
+		"resolutionH": resolution_h,
+		"vsync": vsync,
+		"maxFps": max_fps,
 	}
 	var file := FileAccess.open(PATH, FileAccess.WRITE)
 	if file == null:

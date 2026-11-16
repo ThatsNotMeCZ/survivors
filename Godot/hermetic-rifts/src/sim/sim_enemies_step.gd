@@ -50,14 +50,21 @@ static func step(world: SimWorld, dt: float) -> void:
 		elif ai_type == "boss":
 			SimBoss.step(world, i, ai, dx, dy, dist, dt, speed)
 		else:
-			if dist > 0.001:
-				var mx: float = (dx / dist) * speed * dt
-				var my: float = (dy / dist) * speed * dt
+			var target_r: float = 14.0 if world.decoy.active and enemies.role[i] == EnemyPool.ROLE_FODDER else world.player.radius
+			var hold: float = SimEnemies.chase_attack_range(enemies.radius[i], target_r)
+			if not rooted and dist > hold and dist > 0.001:
+				var stride: float = minf(speed * dt, dist - hold)
+				var mx: float = (dx / dist) * stride
+				var my: float = (dy / dist) * stride
 				var deflected: Vector2 = _deflect(world, enemies.x[i], enemies.y[i], enemies.radius[i], mx, my, target.x, target.y)
 				enemies.x[i] += deflected.x
 				enemies.y[i] += deflected.y
-			var target_r: float = 14.0 if world.decoy.active and enemies.role[i] == EnemyPool.ROLE_FODDER else world.player.radius
-			if dist <= enemies.radius[i] + target_r + 6.0:
+			if not rooted:
+				_place_at_hold(enemies, i, target, hold)
+			var held_dx: float = target.x - enemies.x[i]
+			var held_dy: float = target.y - enemies.y[i]
+			var held: float = sqrt(held_dx * held_dx + held_dy * held_dy)
+			if held <= hold:
 				if enemies.attack_remain[i] <= 0.0 and enemies.attack_cd[i] <= 0.0:
 					enemies.attack_remain[i] = EnemyPool.CHASE_ATTACK_DURATION
 					enemies.attack_cd[i] = EnemyPool.CHASE_ATTACK_COOLDOWN
@@ -86,6 +93,21 @@ static func step(world: SimWorld, dt: float) -> void:
 			elif tdx > 0.001:
 				enemies.facing[i] = 1
 	_tick_tether_burn(world, dt)
+
+
+static func _place_at_hold(enemies: EnemyPool, index: int, target: Vector2, hold: float) -> void:
+	var dx: float = target.x - enemies.x[index]
+	var dy: float = target.y - enemies.y[index]
+	var dist: float = sqrt(dx * dx + dy * dy)
+	if dist >= hold:
+		return
+	if dist <= 0.001:
+		enemies.x[index] = target.x - hold
+		return
+	var nx: float = dx / dist
+	var ny: float = dy / dist
+	enemies.x[index] = target.x - nx * hold
+	enemies.y[index] = target.y - ny * hold
 
 
 static func _chase_target(world: SimWorld, index: int) -> Vector2:

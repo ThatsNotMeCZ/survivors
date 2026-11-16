@@ -643,16 +643,21 @@ func _style_rite_toggle(on: bool) -> void:
 		track.bg_color = Color("5c2418") if on else Color("2a242c")
 		track.border_color = Color("b82934") if on else UiAtlas.BRASS_DIM
 		track.set_border_width_all(1)
-		track.corner_radius_top_left = 9
-		track.corner_radius_top_right = 9
-		track.corner_radius_bottom_left = 9
-		track.corner_radius_bottom_right = 9
+		track.corner_radius_top_left = 2
+		track.corner_radius_top_right = 2
+		track.corner_radius_bottom_left = 2
+		track.corner_radius_bottom_right = 2
 		_rite_switch.add_theme_stylebox_override("panel", track)
-		_rite_switch.custom_minimum_size = Vector2(36, 18)
+		_rite_switch.custom_minimum_size = Vector2(18, 18)
+		_rite_switch.custom_maximum_size = Vector2(18, 18)
+		_rite_switch.propagate_maximum_size = true
+		_rite_switch.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		_rite_switch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	if _rite_knob != null:
-		_rite_knob.color = UiAtlas.GOLD_MOLTEN if on else UiAtlas.ASH
-		_rite_knob.position = Vector2(18, 2) if on else Vector2(2, 2)
-		_rite_knob.size = Vector2(14, 14)
+		_rite_knob.color = UiAtlas.GOLD_MOLTEN if on else Color(0.12, 0.1, 0.12, 0.0)
+		_rite_knob.position = Vector2(3, 3)
+		_rite_knob.size = Vector2(12, 12)
+		_rite_knob.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func _refresh_commence() -> void:
@@ -842,6 +847,19 @@ func _fit_rite_row() -> void:
 	rite_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if rite_row is HBoxContainer:
 		(rite_row as HBoxContainer).alignment = BoxContainer.ALIGNMENT_CENTER
+		(rite_row as HBoxContainer).add_theme_constant_override("separation", 16)
+	var rite_copy := get_node_or_null("Rite/RiteToggle/RiteRow/RiteCopy") as Control
+	if rite_copy != null:
+		rite_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		rite_copy.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rite_copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if _rite_switch != null:
+		_rite_switch.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		_rite_switch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		_rite_switch.custom_minimum_size = Vector2(18, 18)
+		_rite_switch.custom_maximum_size = Vector2(18, 18)
+		_rite_switch.propagate_maximum_size = true
+		_rite_switch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func _place_ground_light() -> void:

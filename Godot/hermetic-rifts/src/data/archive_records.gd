@@ -4,6 +4,7 @@ extends RefCounted
 const PATH: String = "user://records.v1.json"
 const VERSION: int = 1
 const MAX_RECENT: int = 10
+const STAGE_ORDER: PackedStringArray = ["cinder-yard", "rime-dock", "glacial-tomb"]
 
 var data: Dictionary = {}
 
@@ -20,6 +21,8 @@ static func load_or_default() -> ArchiveRecords:
 	if typeof(parsed) == TYPE_DICTIONARY:
 		rec.data = parsed
 		rec.data["version"] = VERSION
+		if rec._backfill_chamber_visits():
+			rec.save()
 	return rec
 
 
@@ -185,17 +188,24 @@ func record_run_end(world: SimWorld, outcome: String) -> void:
 	data["entityLores"] = el
 	var visits: Dictionary = data.get("stageVisits", {})
 	var stages: Array = DictUtil.a(world.catalog.loop, "stages")
-	if world.stage_index < stages.size():
-		var sid: String = String(stages[world.stage_index].get("id", ""))
+	var last_visited: int = mini(world.stage_index, stages.size() - 1)
+	for i: int in range(last_visited + 1):
+		var sid: String = String(stages[i].get("id", ""))
+		if sid == "":
+			continue
 		visits[sid] = int(visits.get(sid, 0)) + 1
 	data["stageVisits"] = visits
+	var clears: Dictionary = data.get("stageClears", {})
+	var cleared_n: int = mini(world.stages_cleared, stages.size())
 	if world.won:
-		var clears: Dictionary = data.get("stageClears", {})
-		for stage_v: Variant in stages:
-			var st: Dictionary = stage_v
-			var id: String = String(st.get("id", ""))
-			clears[id] = int(clears.get(id, 0)) + 1
-		data["stageClears"] = clears
+		cleared_n = stages.size()
+	for i: int in range(cleared_n):
+		var cid: String = String(stages[i].get("id", ""))
+		if cid == "":
+			continue
+		clears[cid] = int(clears.get(cid, 0)) + 1
+	data["stageClears"] = clears
+	if world.won:
 		var fastest: Variant = data.get("fastestVictoryTime", null)
 		if fastest == null or world.run_time < float(fastest):
 			data["fastestVictoryTime"] = world.run_time
@@ -313,6 +323,28 @@ static func _empty_survivor() -> Dictionary:
 		"totalPlayTime": 0.0,
 		"totalDamageDealt": 0.0,
 	}
+
+
+func _backfill_chamber_visits() -> bool:
+	var visits: Dictionary = data.get("stageVisits", {})
+	var clears: Dictionary = data.get("stageClears", {})
+	var furthest: int = int(data.get("furthestStageIndex", 0))
+	var last: int = furthest
+	for i: int in STAGE_ORDER.size():
+		var sid: String = STAGE_ORDER[i]
+		if int(visits.get(sid, 0)) > 0 or int(clears.get(sid, 0)) > 0:
+			last = maxi(last, i)
+	var dirty: bool = false
+	for i: int in range(last + 1):
+		if i >= STAGE_ORDER.size():
+			break
+		var sid2: String = STAGE_ORDER[i]
+		if int(visits.get(sid2, 0)) <= 0 and int(clears.get(sid2, 0)) <= 0:
+			visits[sid2] = 1
+			dirty = true
+	if dirty:
+		data["stageVisits"] = visits
+	return dirty
 
 
 static func _empty() -> Dictionary:

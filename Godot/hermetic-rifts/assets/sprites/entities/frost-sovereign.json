@@ -6,6 +6,8 @@
     "walk": { "frames": [1, 2, 3], "frameRate": 3, "repeat": -1 },
     "attack-bolt": { "frames": [4, 5], "frameRate": 3, "repeat": 0 },
     "attack-sweep": { "frames": [6, 7], "frameRate": 3, "repeat": 0 },
-    "attack-prison": { "frames": [8, 9], "frameRate": 3, "repeat": 0 }
+    "attack-prison": { "frames": [8, 9], "frameRate": 3, "repeat": 0 },
+    "attack": { "frames": [4, 5], "frameRate": 3, "repeat": 0 },
+    "summon": { "frames": [6, 7], "frameRate": 3, "repeat": 0 }
   }
 }

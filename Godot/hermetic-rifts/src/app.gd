@@ -1,5 +1,7 @@
 extends Node
 
+const Display := preload("res://src/data/display_settings.gd")
+
 var catalog: Catalog
 var settings: GameSettings
 var records: ArchiveRecords
@@ -18,6 +20,8 @@ func _ready() -> void:
 	settings = GameSettings.load_or_default()
 	records = ArchiveRecords.load_or_default()
 	selected_survivor = settings.survivor_id
+	Display.sanitize(settings)
+	Display.apply(settings)
 	var win: Window = get_window()
 	if win != null:
 		win.size_changed.connect(_sync_content_scale_stretch)

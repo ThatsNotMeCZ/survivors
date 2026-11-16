@@ -79,41 +79,33 @@ static func fill_howto(parent: Control, rec: ArchiveRecords, catalog: Catalog, v
 	var beats_in := _inner(beats)
 	beats_in.add_child(_section_title(Loc.t("ui.archives.howto.beats")))
 	var grid := _cards_grid(2)
-	for i: int in range(1, 5):
+	for i: int in range(1, 4):
 		grid.add_child(_info_card(Loc.t("ui.archives.howto.beat.%d.step" % i), Loc.t("ui.archives.howto.beat.%d.title" % i), Loc.t("ui.archives.howto.beat.%d.body" % i)))
 	beats_in.add_child(grid)
 	parent.add_child(beats)
-	var props := _panel()
-	var props_in := _inner(props)
-	props_in.add_child(_section_title(Loc.t("ui.archives.howto.props")))
-	var prop_grid := _cards_grid(2)
-	var kinds: Array[String] = ["pillar", "hazard", "volatile", "elite"]
-	for kind: String in kinds:
-		prop_grid.add_child(_prop_card(kind))
-	props_in.add_child(prop_grid)
-	parent.add_child(props)
 
 
 static func fill_lore(parent: Control, rec: ArchiveRecords, catalog: Catalog, sub: StringName, on_sub: Callable) -> void:
 	parent.add_child(_banner("ui.archives.lore.banner.kicker", "ui.archives.lore.banner.title", "ui.archives.lore.banner.sub"))
 	var bar := HBoxContainer.new()
 	bar.add_theme_constant_override("separation", 8)
-	var subs: Array[StringName] = [&"work", &"vessels", &"chambers", &"exchange"]
+	var subs: Array[StringName] = [&"work", &"vessels", &"chambers"]
+	var active: StringName = sub
+	if active != &"work" and active != &"vessels" and active != &"chambers":
+		active = &"work"
 	for id: StringName in subs:
-		var pill := _filter_pill(Loc.t("ui.archives.lore.sub.%s" % String(id)), id == sub, true)
+		var pill := _filter_pill(Loc.t("ui.archives.lore.sub.%s" % String(id)), id == active, true)
 		var captured: StringName = id
 		pill.pressed.connect(func() -> void: on_sub.call(captured))
 		bar.add_child(pill)
 	parent.add_child(bar)
-	match String(sub):
-		"work":
-			parent.add_child(_great_work())
+	match String(active):
 		"vessels":
 			parent.add_child(_vessels_lore(rec, catalog))
 		"chambers":
 			parent.add_child(_chambers_lore(rec, catalog))
 		_:
-			parent.add_child(_exchange_lore())
+			parent.add_child(_great_work())
 
 
 static func fill_bestiary(grid: Control, dossier: Control, rec: ArchiveRecords, catalog: Catalog, filter: String, selected_id: String, on_filter: Callable, on_select: Callable) -> void:
@@ -290,29 +282,18 @@ static func _chambers_lore(rec: ArchiveRecords, catalog: Catalog) -> Control:
 	return holder
 
 
-static func _exchange_lore() -> Control:
-	var grid := _cards_grid(2)
-	var rarities: Array[String] = ["common", "uncommon", "rare", "lunar"]
-	for rarity: String in rarities:
-		var card := _info_card(rarity.to_upper(), Loc.t("ui.archives.lore.exchange.%s.title" % rarity), Loc.t("ui.archives.lore.exchange.%s.desc" % rarity))
-		_tint_border(card, Color(RARITY_BORDER.get(rarity, UiAtlas.BRASS)))
-		grid.add_child(card)
-	return grid
-
-
 static func _controls_table(survivor: Dictionary) -> Control:
 	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 12)
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 16)
 	grid.add_theme_constant_override("v_separation", 6)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for col: String in ["ui.archives.howto.col.input", "ui.archives.howto.col.rite", "ui.archives.howto.col.effect"]:
-		var th := _label(Loc.t(col), 12, UiAtlas.BRASS, UiAtlas.TYPE_MICRO)
-		grid.add_child(th)
+	for col: String in ["ui.archives.howto.col.input", "ui.archives.howto.col.action"]:
+		grid.add_child(_label(Loc.t(col), 12, UiAtlas.BRASS, UiAtlas.TYPE_MICRO))
 	var skills: Dictionary = DictUtil.d(survivor, "skills")
 	var rows: Array[Array] = [
-		["ui.archives.howto.row.move.key", "ui.archives.howto.row.move.rite", "ui.archives.howto.row.move.desc"],
-		["ui.archives.howto.row.aim.key", "ui.archives.howto.row.aim.rite", "ui.archives.howto.row.aim.desc"],
+		["ui.archives.howto.row.move.key", "ui.archives.howto.row.move.rite"],
+		["ui.archives.howto.row.aim.key", "ui.archives.howto.row.aim.rite"],
 	]
 	var slots: Array[Array] = [
 		["primary", "ui.archives.howto.row.primary", "I"],
@@ -320,35 +301,25 @@ static func _controls_table(survivor: Dictionary) -> Control:
 		["utility", "ui.archives.howto.row.utility", "III"],
 		["special", "ui.archives.howto.row.special", "IV"],
 	]
-	var host: Node = _app()
 	for slot: Array in slots:
 		var skill_id: String = String(skills.get(String(slot[0]), ""))
 		var prefix: String = String(slot[1])
 		var numeral: String = String(slot[2])
-		var rite: String = Loc.t("%s.fallback" % prefix)
-		var desc: String = Loc.t("%s.desc" % prefix)
+		var action: String = Loc.t("%s.fallback" % prefix)
 		if skill_id != "":
-			rite = "%s (%s)" % [Loc.skill_name(skill_id), numeral]
-			if host != null:
-				var cd: int = int(host.catalog.skill(skill_id).get("cooldown", 0))
-				if String(slot[0]) != "primary" and cd > 0:
-					rite = "%s (%s · %ds)" % [Loc.skill_name(skill_id), numeral, cd]
-			desc = Loc.skill_hook(skill_id)
-		rows.append([prefix + ".key", rite, desc])
-	rows.append(["ui.archives.howto.row.pick.key", "ui.archives.howto.row.pick.rite", "ui.archives.howto.row.pick.desc"])
-	rows.append(["ui.archives.howto.row.channel.key", "ui.archives.howto.row.channel.rite", "ui.archives.howto.row.channel.desc"])
-	rows.append(["ui.archives.howto.row.seal.key", "ui.archives.howto.row.seal.rite", "ui.archives.howto.row.seal.desc"])
-	rows.append(["ui.archives.howto.row.pause.key", "ui.archives.howto.row.pause.rite", "ui.archives.howto.row.pause.desc"])
+			action = "%s (%s)" % [Loc.skill_name(skill_id), numeral]
+		rows.append([prefix + ".key", action])
+	rows.append(["ui.archives.howto.row.pick.key", "ui.archives.howto.row.pick.rite"])
+	rows.append(["ui.archives.howto.row.channel.key", "ui.archives.howto.row.channel.rite"])
+	rows.append(["ui.archives.howto.row.seal.key", "ui.archives.howto.row.seal.rite"])
+	rows.append(["ui.archives.howto.row.pause.key", "ui.archives.howto.row.pause.rite"])
 	for row: Array in rows:
 		var key_text: String = Loc.t(String(row[0])) if String(row[0]).begins_with("ui.") else String(row[0])
-		var rite_text: String = Loc.t(String(row[1])) if String(row[1]).begins_with("ui.") else String(row[1])
-		var desc_text: String = Loc.t(String(row[2])) if String(row[2]).begins_with("ui.") else String(row[2])
+		var action_text: String = Loc.t(String(row[1])) if String(row[1]).begins_with("ui.") else String(row[1])
 		grid.add_child(_label(key_text, 14, UiAtlas.GOLD_MOLTEN))
-		grid.add_child(_label(rite_text, 14, UiAtlas.PARCHMENT))
-		var desc_l := _label(desc_text, 13, ASH)
-		desc_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		desc_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		grid.add_child(desc_l)
+		var action_l := _label(action_text, 14, UiAtlas.PARCHMENT)
+		action_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(action_l)
 	return grid
 
 
@@ -849,38 +820,6 @@ static func _info_card(kicker: String, title: String, body: String) -> Control:
 	if body != "":
 		inner.add_child(_body_label(body))
 	holder.add_child(inner)
-	return holder
-
-
-static func _prop_card(kind: String) -> Control:
-	var holder := PanelContainer.new()
-	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	holder.add_theme_stylebox_override("panel", _sb(CARD, BORDER, 1, 14))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	var art := _art_box(72)
-	if kind == "elite":
-		_mount_entity(art, "ember-chaser", true)
-	else:
-		var frame_id: String = "cinder-pillar" if kind == "pillar" else ("cinder-hazard-0" if kind == "hazard" else "cinder-volatile")
-		var tex: Texture2D = UiAtlas.env_frame(frame_id)
-		if tex != null:
-			var rect := TextureRect.new()
-			rect.texture = tex
-			rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-			rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			art.add_child(rect)
-	row.add_child(art)
-	var copy := VBoxContainer.new()
-	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	copy.add_child(_kicker(Loc.t("ui.archives.howto.prop.%s.kicker" % kind)))
-	copy.add_child(_gold_title(Loc.t("ui.archives.howto.prop.%s.title" % kind)))
-	copy.add_child(_body_label(Loc.t("ui.archives.howto.prop.%s.body" % kind)))
-	row.add_child(copy)
-	holder.add_child(row)
 	return holder
 
 
