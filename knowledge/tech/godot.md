@@ -89,13 +89,14 @@ Vendor `skills.md` in the addon may still say "prefer inspector"; that is fine *
 
 ## Human editor checklist
 
-Agents print this list and wait. They do not click the editor for the human. Once MCP is connected, use MCP for steps 3–4.
+Agents print this list and wait. They do not click the editor for the human. Once MCP is connected, use MCP for steps 4–5.
 
 1. Install **Godot 4.7** (standard build, not .NET).
 2. Project Manager → Open `Godot/hermetic-rifts/` (nested project root). Renderer: Compatibility. Version-control metadata: Git **files only** (no nested `.git`).
-3. Enable plugin **Godot MCP Pro**. Keep the editor open.
-4. MCP: `create_scene` `res://scenes/boot.tscn`, set Main Scene, `add_autoload` `App`.
-5. Later, not now: export templates, signing, Android SDK, Steam app ID.
+3. First clone: Cursor MCP runs `bash` + `tools/godot-mcp-bridge/start.sh` in `args` (never put the workspace path in `command`; `Disk P` would spawn `/mnt/Disk`). The wrapper `bun install`s the SDK if `node_modules` is missing. Reload MCP after that.
+4. Enable plugin **Godot MCP Pro**. Keep the editor open.
+5. MCP: `create_scene` `res://scenes/boot.tscn`, set Main Scene, `add_autoload` `App`.
+6. Later, not now: export templates, signing, Android SDK, Steam app ID.
 
 After the human finishes a step that MCP cannot do, continue via MCP + GDScript.
 

@@ -2,22 +2,16 @@
 
 [ext_resource type="Script" uid="uid://d2421sfxacglv" path="res://src/boot.gd" id="1_j20pb"]
 [ext_resource type="PackedScene" uid="uid://vu1m1s6h4abv" path="res://scenes/arena.tscn" id="2_fbohu"]
-[ext_resource type="Script" uid="uid://c3yktgx3wiaqh" path="res://src/view/arena_view.gd" id="3_jo0fb"]
 [ext_resource type="Script" uid="uid://bfxi76pxogqc8" path="res://src/ui/overlay_ui.gd" id="4_ok243"]
 
 [node name="Boot" type="Node" unique_id=433894324]
 script = ExtResource("1_j20pb")
 
-[node name="Arena" type="Node2D" parent="." unique_id=739898426 instance=ExtResource("2_fbohu")]
-script = ExtResource("3_jo0fb")
+[node name="Arena" parent="." unique_id=739898426 instance=ExtResource("2_fbohu")]
 
-[node name="Camera2D" type="Camera2D" parent="Arena" unique_id=1084681180]
+[node name="Camera2D2" type="Camera2D" parent="Arena" unique_id=1084681180]
 
-[node name="WorldRoot" type="Node2D" parent="Arena" unique_id=1544102057]
-
-[node name="Player" type="Sprite2D" parent="Arena/WorldRoot" unique_id=1261687323]
-
-[node name="Crosshair" type="Sprite2D" parent="Arena/WorldRoot" unique_id=2018279231]
+[node name="WorldRoot2" type="Node2D" parent="Arena" unique_id=1544102057]
 
 [node name="Overlay" type="CanvasLayer" parent="." unique_id=1893798031]
 script = ExtResource("4_ok243")
