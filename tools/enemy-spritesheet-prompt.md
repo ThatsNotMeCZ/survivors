@@ -18,7 +18,7 @@ TECHNICAL RULES:
 - Frame order: [1: Idle] [2–4: Walk cycle] [5–6: Attack].
 - Pure flat white background (#FFFFFF). No floor, no ground shadow, no fog, no gradients, no text, no labels, no frame borders.
 - Generous white padding between frames so they slice cleanly.
-- Chunky 16-bit pixel art at ~24x24 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #120a0d.
+- Chunky 16-bit pixel art at ~24x24 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #000000.
 - 3/4 top-down arena view, creature faces RIGHT. Readable silhouette over micro-detail.
 
 CREATURE — EMBER MITE ("Scorched Dross", small fodder):
@@ -39,7 +39,7 @@ TECHNICAL RULES:
 - Frame order: [1: Idle] [2–4: Walk cycle] [5–6: Attack].
 - Pure flat white background (#FFFFFF). No floor, no ground shadow, no fog, no gradients, no text, no labels, no frame borders.
 - Generous white padding between frames so they slice cleanly.
-- Chunky 16-bit pixel art at ~28x28 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #120a0d.
+- Chunky 16-bit pixel art at ~28x28 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #000000.
 - 3/4 top-down arena view, creature faces RIGHT. Readable silhouette over micro-detail.
 
 CREATURE — EMBER SPITTER ("Slag Bile Vessel", ranged fodder):
@@ -66,7 +66,7 @@ TECHNICAL RULES:
 - Frame order: [1: Idle] [2–4: Walk cycle] [5–6: Attack].
 - Pure flat white background (#FFFFFF). No floor, no ground shadow, no fog, no gradients, no text, no labels, no frame borders.
 - Generous white padding between frames so they slice cleanly.
-- Chunky 16-bit pixel art at ~48x48 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #120a0d.
+- Chunky 16-bit pixel art at ~48x48 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #000000.
 - 3/4 top-down arena view, creature faces RIGHT. Readable silhouette over micro-detail.
 
 CREATURE — EMBER WARDEN ("Furnace Overseer", Cinder elite):
@@ -87,7 +87,7 @@ TECHNICAL RULES:
 - Frame order: [1: Idle] [2–4: Float cycle] [5–6: Attack].
 - Pure flat white background (#FFFFFF). No floor, no ground shadow, no fog, no gradients, no text, no labels, no frame borders.
 - Generous white padding between frames so they slice cleanly.
-- Chunky 16-bit pixel art at ~64x64 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #120a0d.
+- Chunky 16-bit pixel art at ~64x64 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #000000.
 - 3/4 top-down arena view, creature faces RIGHT. Readable silhouette over micro-detail.
 
 CREATURE — CINDER HEART ("Core of the First Kiln", Stage 1 boss):
@@ -228,7 +228,7 @@ TECHNICAL RULES:
 - Frame order: [1: Idle] [2–4: Float cycle] [5–6: Attack].
 - Pure flat white background (#FFFFFF). No floor, no ground shadow, no fog, no gradients, no text, no labels, no frame borders.
 - Generous white padding between frames so they slice cleanly.
-- Chunky 16-bit pixel art at ~28x28 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #120a0d.
+- Chunky 16-bit pixel art at ~28x28 px scale (Blasphemous / Nuclear Throne / Vampire Survivors feel). Crisp 1px outline #000000.
 - 3/4 top-down arena view, creature faces RIGHT. Readable silhouette over micro-detail.
 
 CREATURE — ASTRAL WATCHER ("Ocular of the Void", sniper fodder):

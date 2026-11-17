@@ -1,0 +1,26 @@
+---
+description: Hermetic Rifts pixel-art style, Resurrect 64 + black, keep sprite noise
+globs: tools/pixelorama/**,web/public/sprites/**,Godot/hermetic-rifts/assets/sprites/**
+alwaysApply: false
+---
+
+# Pixelorama Survivors Art
+
+Before drawing or editing pixel art, read `.agents/skills/pixelorama-survivors/SKILL.md`. Routing (MCP namespace, export, publish) stays in `pixelorama-mcp.mdc`. Disconnect / export: `knowledge/tech/pixelorama-mcp.md`.
+
+## Palette
+
+Only colors from [`tools/pixelorama/resurrect-64.pal`](../../tools/pixelorama/resurrect-64.pal) plus **`#000000`**. Outline and dark lines are black. Do not use `#120a0d` or any hex outside palette + black.
+
+## Noise
+
+Do not fill large areas with one color. Existing sprites have internal noise — preserve it. Do not rewrite pixels outside the change bbox.
+
+On existing entity / item / fx art, do not use `fill_area`, large `draw_rect`, global `color_replace`, or `remap_to_palette` (they flatten noise).
+
+## MCP defaults
+
+1. `open_project` the existing `tools/pixelorama/{id}.pxo` when it exists.
+2. `switch_palette` to Resurrect 64.
+3. Patch with `draw_pixels_fast` stride 3 `[x, y, '#hex', ...]`.
+4. `capture_canvas_image` at most 1–2 times, then export once at the end.

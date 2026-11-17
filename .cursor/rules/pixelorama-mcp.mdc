@@ -15,7 +15,7 @@ If the task is to **draw, edit, animate, or export pixel art** (sprites, icons, 
 | Export staging | `export_image` → `tools/pixelorama/export/{id}.png`; keep `{id}.pxo` in `tools/pixelorama/` |
 | Ship | Shell `./tools/pixelorama/publish-sprite.sh <kind> <id>` (not an MCP tool) |
 
-Open `tools/pixelorama/{id}.pxo` when it exists. Palette [`tools/pixelorama/resurrect-64.pal`](../../tools/pixelorama/resurrect-64.pal). Prefer `draw_pixels_fast` over per-pixel roundtrips. `eval_gdscript` only for procedural tiles in `tools/pixelorama/` — never to patch Godot game scripts.
+Open `tools/pixelorama/{id}.pxo` when it exists. Palette [`tools/pixelorama/resurrect-64.pal`](../../tools/pixelorama/resurrect-64.pal). Prefer `draw_pixels_fast` over per-pixel roundtrips. `eval_gdscript` only for procedural tiles in `tools/pixelorama/` — never to patch Godot game scripts. Style / palette / noise → rule `pixelorama-survivors-art` + skill `pixelorama-survivors`.
 
 Art = Pixelorama. Scenes / GDScript / playtest = `godot-mcp-pro`. Ports: Pixelorama `7373`, Godot `6505`.
 

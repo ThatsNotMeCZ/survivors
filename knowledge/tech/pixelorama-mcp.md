@@ -33,19 +33,24 @@ If MCP tools time out or `start.sh` prints that `:7373` is unreachable:
 1. Pixelorama is open.
 2. **pix-MCP Bridge** is enabled under Extensions (re-add the `.pck` after a submodule update).
 3. Pixelorama was restarted after enabling.
-4. `curl http://127.0.0.1:7373/health` works.
-5. Cursor MCP was reloaded after `git submodule update --init`.
-6. Port **7373** is Pixelorama. Port **6505** is Godot. Do not swap them.
+4. **Flatpak Pixelorama** (`com.orama_interactive.Pixelorama`): sandbox blocks host loopback (`network` missing) and `/mnt/Disk P`:
+   `flatpak override --user --share=network --filesystem="/mnt/Disk P/Work/survivors" com.orama_interactive.Pixelorama` (then restart Pixelorama).
+5. `curl http://127.0.0.1:7373/health` works.
+6. Cursor MCP was reloaded after `git submodule update --init`.
+7. Port **7373** is Pixelorama. Port **6505** is Godot. Do not swap them.
 
 Print this list and stop. Do not invent PNG pixels with file Write.
 
 ## Hermetic Rifts playbook
 
-- Palette: [`tools/pixelorama/resurrect-64.pal`](../../tools/pixelorama/resurrect-64.pal). Stay on Resurrect 64 plus the 1px outline.
-- Outline `#120a0d`. Silhouette over micro-detail. Arena camera is 3/4 top-down; creatures face **right** (`flipX` for left in game).
+Agent workflow: [`.agents/skills/pixelorama-survivors/SKILL.md`](../../.agents/skills/pixelorama-survivors/SKILL.md). Cursor rule: [`.cursor/rules/pixelorama-survivors-art.mdc`](../../.cursor/rules/pixelorama-survivors-art.mdc).
+
+- Palette: [`tools/pixelorama/resurrect-64.pal`](../../tools/pixelorama/resurrect-64.pal) plus **`#000000`**. No other hex (including legacy `#120a0d`).
+- Outline `#000000`. Silhouette over micro-detail. Arena camera is 3/4 top-down; creatures face **right** (`flipX` for left in game).
+- Keep authored **noise**: bodies are clustered 2–4 adjacent palette shades, not large single-color fills. On existing sheets, patch a tight bbox with `draw_pixels_fast`; do not `fill_area`, `remap_to_palette`, global `color_replace`, or `clean_isolated_pixels` (they flatten noise).
 - Entity frame sizes ([design/style.md](../design/style.md)): mite **24**, spitter **28**, vessel **32×48** (Homunculus), elite **40**, boss **64**. Icons **24**. FX stills typically **32** facing +X.
 - Horizontal strip of equal frames. Pixelorama animation tags are **1-based**. Use lowercase names that match [sprites.md](sprites.md): `idle`, `walk`, `attack`, or `attack-*` (boss kits). `repeat` is `-1` for idle/walk and `0` for attacks after compact conversion.
-- Prefer `draw_pixels_fast` and layers. Use `capture_canvas_image` (magnify) to inspect before export. `eval_gdscript` only for procedural tiles inside `tools/pixelorama/` — not for writing game code.
+- Prefer `draw_pixels_fast` and layers. Use `capture_canvas_image` (magnify) at most 1–2 times before export. `eval_gdscript` only for procedural tiles inside `tools/pixelorama/` — not for writing game code.
 - Open `tools/pixelorama/{id}.pxo` when it exists instead of creating a blank canvas.
 
 **Do not** generate art in `procedural-pixel-art.ts`, Comfy, or `_ref` / `_in` / `_raw` folders. Do not author a second Godot-only sheet set. Do not auto-rebuild `env/atlas.png`; env atlas frames stay in `world.pxo` and [`tools/environment.md`](../../tools/environment.md).
