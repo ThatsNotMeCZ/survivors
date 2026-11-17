@@ -55,11 +55,17 @@ func _bake() -> int:
 	for id: String in STYLE_IDS:
 		var entry: Dictionary = ui_frames.get(id, {})
 		var margins: Dictionary = {}
+		var hover_outset: Dictionary = {}
 		var nine: Variant = entry.get("nineSlice", null)
 		if typeof(nine) == TYPE_DICTIONARY:
-			margins = (nine as Dictionary).get("margins", {})
+			var nine_dict: Dictionary = nine as Dictionary
+			margins = nine_dict.get("margins", {})
+			var ho: Variant = nine_dict.get("hoverOutset", null)
+			if typeof(ho) == TYPE_DICTIONARY:
+				hover_outset = ho as Dictionary
 		for state: String in STYLE_STATES:
-			if _save_stylebox(id, state, margins):
+			var outset: Dictionary = hover_outset if state == "hover" else {}
+			if _save_stylebox(id, state, margins, outset):
 				wrote += 1
 	if _save_focus_ring():
 		wrote += 1
@@ -107,17 +113,25 @@ func _save_atlas(path: String, sheet: Texture2D, region: Rect2) -> bool:
 	return _save(atlas, path)
 
 
-func _save_stylebox(id: String, state: String, margins: Dictionary) -> bool:
+func _save_stylebox(id: String, state: String, margins: Dictionary, outset: Dictionary = {}) -> bool:
 	var tex_path: String = "%s/frames/ui/%s_%s.tres" % [OUT_ROOT, _safe(id), _safe(state)]
 	if not ResourceLoader.exists(tex_path):
 		push_error("bake_ui_atlas: missing frame %s" % tex_path)
 		return false
 	var sb := StyleBoxTexture.new()
 	sb.texture = load(tex_path) as Texture2D
-	sb.texture_margin_left = float(margins.get("left", 0))
-	sb.texture_margin_top = float(margins.get("top", 0))
-	sb.texture_margin_right = float(margins.get("right", 0))
-	sb.texture_margin_bottom = float(margins.get("bottom", 0))
+	var out_l: float = float(outset.get("left", 0))
+	var out_t: float = float(outset.get("top", 0))
+	var out_r: float = float(outset.get("right", 0))
+	var out_b: float = float(outset.get("bottom", 0))
+	sb.texture_margin_left = float(margins.get("left", 0)) + out_l
+	sb.texture_margin_top = float(margins.get("top", 0)) + out_t
+	sb.texture_margin_right = float(margins.get("right", 0)) + out_r
+	sb.texture_margin_bottom = float(margins.get("bottom", 0)) + out_b
+	sb.expand_margin_left = out_l
+	sb.expand_margin_top = out_t
+	sb.expand_margin_right = out_r
+	sb.expand_margin_bottom = out_b
 	sb.content_margin_left = CONTENT_MARGIN_L
 	sb.content_margin_right = CONTENT_MARGIN_R
 	sb.content_margin_top = CONTENT_MARGIN_T

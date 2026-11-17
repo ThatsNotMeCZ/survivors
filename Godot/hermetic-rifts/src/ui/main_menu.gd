@@ -168,10 +168,10 @@ func _place_cta() -> void:
 		return
 	const PAD_L: float = 28.0
 	const PAD_R: float = 28.0
-	const PAD_T: float = 36.0
-	const PAD_B: float = 22.0
+	const PAD_T: float = 8.0
+	const PAD_B: float = 8.0
 	const MIN_W: float = 240.0
-	const MIN_H: float = 96.0
+	const MIN_H: float = 58.0
 	var copy := _commence_btn.get_node_or_null("CommenceCopy") as VBoxContainer
 	if copy != null:
 		copy.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

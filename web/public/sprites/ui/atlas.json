@@ -18,25 +18,26 @@
       },
       "nineSlice": {
         "margins": { "top": 21, "right": 48, "bottom": 21, "left": 52 },
-        "expandable": { "x": 52, "y": 22, "w": 48, "h": 32 },
+        "expandable": { "x": 52, "y": 21, "w": 46, "h": 10 },
         "repeat": "stretch",
         "scale": 1
       }
     },
     "btn-cta": {
       "x": 0,
-      "y": 230,
+      "y": 266,
       "w": 141,
-      "h": 92,
+      "h": 52,
       "states": {
-        "idle": { "x": 0, "y": 230, "w": 141, "h": 92 },
+        "idle": { "x": 0, "y": 266, "w": 141, "h": 52 },
         "hover": { "x": 160, "y": 230, "w": 141, "h": 92 },
-        "active": { "x": 312, "y": 230, "w": 141, "h": 92 }
+        "active": { "x": 312, "y": 266, "w": 141, "h": 52 }
       },
       "nineSlice": {
-        "margins": { "top": 43, "right": 45, "bottom": 26, "left": 46 },
-        "expandable": { "x": 46, "y": 43, "w": 50, "h": 23 },
-        "center": { "x": 62, "y": 47, "w": 17, "h": 15 },
+        "margins": { "top": 18, "right": 45, "bottom": 22, "left": 46 },
+        "expandable": { "x": 46, "y": 18, "w": 50, "h": 12 },
+        "center": { "x": 62, "y": 19, "w": 17, "h": 11 },
+        "hoverOutset": { "top": 36, "right": 0, "bottom": 4, "left": 0 },
         "repeat": "stretch",
         "scale": 1
       }

@@ -53,8 +53,8 @@
       "title": "Core of the First Kiln",
       "lore": "The living furnace heart that consumed its own alchemists. It awakens only when the Transmutation Circle is charged, determined to melt every vessel back into raw clay.",
       "role": "boss",
-      "tags": ["boss", "ranged"],
-      "stats": { "speed": 60, "maxHp": 1100, "radius": 36 },
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 60, "maxHp": 1650, "radius": 36 },
       "contact": { "dps": 22 },
       "rewards": { "xp": 50, "credits": 0 },
       "ai": {
@@ -70,18 +70,28 @@
             "windup": 0.6,
             "count": 5,
             "spread": 50,
-            "projectile": { "speed": 280, "lifetime": 2.0, "radius": 9, "damage": 9 }
+            "projectile": { "speed": 230, "lifetime": 2.0, "radius": 9, "damage": 9 }
           },
           {
             "type": "meteor",
             "name": "Falling Clinker",
             "anim": "attack-meteor",
-            "cooldown": 3.8,
+            "cooldown": 5.0,
             "windup": 0.4,
             "delay": 1.2,
-            "radius": 80,
+            "radius": 58,
             "damage": 24,
-            "pool": { "duration": 4.0, "radius": 80, "dps": 8, "slowMul": 0.6 }
+            "pool": { "duration": 4.0, "radius": 50, "dps": 8, "slowMul": 0.6 }
+          },
+          {
+            "type": "summon",
+            "name": "Kiln Brood",
+            "anim": "summon",
+            "cooldown": 9.0,
+            "windup": 0.35,
+            "entity": "ember-mite",
+            "count": 3,
+            "maxAlive": 6
           }
         ]
       },
@@ -187,8 +197,8 @@
             "cooldown": 9.0,
             "windup": 0.35,
             "entity": "frost-mite",
-            "count": 2,
-            "maxAlive": 3
+            "count": 3,
+            "maxAlive": 6
           }
         ]
       },
@@ -200,8 +210,8 @@
       "title": "Monarch of Absolute Zero",
       "lore": "Entombed at the bottom of the Great Work where heat and motion cease. It is the final seal-keeper; to shatter its glacial hull is to complete the transmutation.",
       "role": "boss",
-      "tags": ["boss", "ranged"],
-      "stats": { "speed": 70, "maxHp": 2600, "radius": 45 },
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 70, "maxHp": 2800, "radius": 45 },
       "contact": { "dps": 30 },
       "rewards": { "xp": 120, "credits": 0 },
       "ai": {
@@ -221,14 +231,12 @@
             "type": "pulse",
             "name": "Absolute Zero Pulse",
             "anim": "attack-pulse",
-            "cooldown": 16.0,
+            "cooldown": 12.0,
             "windup": 1.8,
             "radius": 620,
-            "damage": 28,
-            "slowMul": 0.55,
-            "slowDuration": 1.4,
-            "initialCooldown": 10.0,
-            "recovery": 1.2
+            "damage": 48,
+            "slowMul": 0.35,
+            "slowDuration": 2.5
           },
           {
             "type": "laser",
@@ -236,13 +244,32 @@
             "anim": "attack-laser",
             "cooldown": 9.5,
             "windup": 0.8,
-            "duration": 4.2,
-            "trackSpeed": 140,
-            "hitRadius": 20,
+            "duration": 2.4,
+            "trackSpeed": 220,
+            "hitRadius": 28,
             "dps": 28,
             "trailInterval": 0.22,
-            "trailPool": { "duration": 3.5, "radius": 34, "dps": 7, "slowMul": 0.55 },
-            "recovery": 1.2
+            "trailPool": { "duration": 3.5, "radius": 34, "dps": 7, "slowMul": 0.55 }
+          },
+          {
+            "type": "summon",
+            "name": "Imperial Guard",
+            "anim": "summon",
+            "cooldown": 10.0,
+            "windup": 0.35,
+            "entity": "frost-mite",
+            "count": 3,
+            "maxAlive": 6
+          },
+          {
+            "type": "summon",
+            "name": "Brine Retinue",
+            "anim": "summon",
+            "cooldown": 14.0,
+            "windup": 0.35,
+            "entity": "frost-spitter",
+            "count": 2,
+            "maxAlive": 3
           }
         ]
       },

@@ -15,6 +15,8 @@ const TRAIL_SPEED: float = 18.0
 @onready var crosshair: Sprite2D = $WorldRoot/Crosshair
 
 var _fodder_layers: Dictionary = {}
+var _fodder_sprites: Array[Sprite2D] = []
+var _fodder_attack_played: PackedByteArray = PackedByteArray()
 var _elite_sprites: Array[Sprite2D] = []
 var _proj_sprites: Array[Sprite2D] = []
 var _hazard_sprites: Array[Sprite2D] = []
@@ -522,29 +524,69 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 
 
 func _sync_fodder(world: SimWorld) -> void:
-	var by_id: Dictionary = {}
-	for i: int in world.enemies.cap:
-		if world.enemies.alive[i] == 0 or world.enemies.role[i] != EnemyPool.ROLE_FODDER:
-			continue
-		var id: String = world.enemies.def_id[i]
-		if not by_id.has(id):
-			by_id[id] = []
-		(by_id[id] as Array).append(i)
+	while _fodder_sprites.size() < world.enemies.cap:
+		var spr := Sprite2D.new()
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		spr.z_index = 2
+		world_root.add_child(spr)
+		_fodder_sprites.append(spr)
+	if _enemy_last_x.size() < world.enemies.cap:
+		_enemy_last_x.resize(world.enemies.cap)
+		_enemy_last_y.resize(world.enemies.cap)
+		_enemy_anim.resize(world.enemies.cap)
+		_enemy_anim_t0.resize(world.enemies.cap)
+		_enemy_windup.resize(world.enemies.cap)
+	if _fodder_attack_played.size() < world.enemies.cap:
+		_fodder_attack_played.resize(world.enemies.cap)
 	for id: Variant in _fodder_layers.keys():
-		if not by_id.has(id):
-			(_fodder_layers[id] as MultiMeshInstance2D).multimesh.instance_count = 0
-	for id: Variant in by_id.keys():
-		var mm: MultiMeshInstance2D = _fodder_layer(String(id))
-		var sheet: Texture2D = UiAtlas.entity_frame(String(id), "walk", world.run_time)
-		if sheet != null:
-			mm.texture = sheet
-		var indices: Array = by_id[id]
-		mm.multimesh.instance_count = indices.size()
-		for n: int in indices.size():
-			var idx: int = int(indices[n])
-			var pos := Vector2(world.enemies.x[idx], world.enemies.y[idx])
-			var sx: float = -1.0 if world.enemies.facing[idx] == 255 else 1.0
-			mm.multimesh.set_instance_transform_2d(n, Transform2D(Vector2(sx, 0.0), Vector2(0.0, 1.0), pos))
+		(_fodder_layers[id] as MultiMeshInstance2D).multimesh.instance_count = 0
+	for i: int in world.enemies.cap:
+		var spr: Sprite2D = _fodder_sprites[i]
+		if world.enemies.alive[i] == 0 or world.enemies.role[i] != EnemyPool.ROLE_FODDER:
+			spr.visible = false
+			_fodder_attack_played[i] = 0
+			continue
+		spr.visible = true
+		spr.position = Vector2(world.enemies.x[i], world.enemies.y[i])
+		spr.flip_h = world.enemies.facing[i] == 255
+		var moved: float = absf(world.enemies.x[i] - _enemy_last_x[i]) + absf(world.enemies.y[i] - _enemy_last_y[i])
+		_enemy_last_x[i] = world.enemies.x[i]
+		_enemy_last_y[i] = world.enemies.y[i]
+		var def_id: String = world.enemies.def_id[i]
+		var attacking: bool = world.enemies.attack_remain[i] > 0.0 or world.enemies.windup[i] > 0.0
+		var attack_key: String = world.enemies.anim_name[i] if world.enemies.anim_name[i] != "" else "attack"
+		var anim: String = "idle"
+		if attacking:
+			var attack_dur: float = UiAtlas.entity_anim_duration(def_id, attack_key)
+			if _fodder_attack_played[i] != 0:
+				var elapsed: float = world.run_time - _enemy_anim_t0[i]
+				if attack_dur > 0.0 and elapsed < attack_dur:
+					anim = attack_key
+				else:
+					anim = "walk" if moved > 0.35 else "idle"
+			else:
+				_fodder_attack_played[i] = 1
+				_enemy_anim_t0[i] = world.run_time
+				anim = attack_key
+		else:
+			_fodder_attack_played[i] = 0
+			anim = "walk" if moved > 0.35 else "idle"
+		var clip: String = "%s:%s" % [def_id, anim]
+		var wu: float = world.enemies.windup[i]
+		if clip != _enemy_anim[i] or wu > _enemy_windup[i] + 0.001:
+			var restart_t: bool = wu > _enemy_windup[i] + 0.001
+			if clip != _enemy_anim[i] and anim != attack_key:
+				restart_t = true
+			_enemy_anim[i] = clip
+			if restart_t:
+				_enemy_anim_t0[i] = world.run_time
+		_enemy_windup[i] = wu
+		var anim_t: float = world.run_time if anim == "idle" or anim == "walk" else world.run_time - _enemy_anim_t0[i]
+		var tex: Texture2D = UiAtlas.entity_frame(def_id, anim, anim_t)
+		if tex != null:
+			spr.texture = tex
+		elif spr.texture == null:
+			spr.texture = _placeholder(Color(0.85, 0.4, 0.25), 24)
 
 
 func _fodder_layer(id: String) -> MultiMeshInstance2D:

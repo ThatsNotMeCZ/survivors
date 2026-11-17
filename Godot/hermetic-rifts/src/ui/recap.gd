@@ -9,7 +9,7 @@ const DETAILS_W: float = 520.0
 const INV_PAD: float = 64.0
 const INV_H: float = 220.0
 const CTA_W: float = 220.0
-const CTA_H: float = 84.0
+const CTA_H: float = 58.0
 const PLAQUE_W: float = 190.0
 const BTN_H: float = 58.0
 
@@ -205,8 +205,8 @@ func _build_actions() -> Control:
 	again_lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	again_lab.offset_left = 28.0
 	again_lab.offset_right = -28.0
-	again_lab.offset_top = 36.0
-	again_lab.offset_bottom = -22.0
+	again_lab.offset_top = 0.0
+	again_lab.offset_bottom = 0.0
 	again_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	again_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	UiAtlas.apply_label(again_lab, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, UiAtlas.SIZE_CTA)

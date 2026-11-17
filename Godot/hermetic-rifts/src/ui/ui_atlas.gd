@@ -215,11 +215,16 @@ static func apply_button_styles(button: Button, id: String) -> void:
 	ensure_loaded()
 	var entry: Dictionary = _ui_frames.get(id, {})
 	var margins: Dictionary = {}
+	var hover_outset: Dictionary = {}
 	var nine: Variant = entry.get("nineSlice", null)
 	if typeof(nine) == TYPE_DICTIONARY:
-		margins = (nine as Dictionary).get("margins", {})
+		var nine_dict: Dictionary = nine as Dictionary
+		margins = nine_dict.get("margins", {})
+		var ho: Variant = nine_dict.get("hoverOutset", null)
+		if typeof(ho) == TYPE_DICTIONARY:
+			hover_outset = ho as Dictionary
 	button.add_theme_stylebox_override("normal", _stylebox(id, "idle", margins))
-	button.add_theme_stylebox_override("hover", _stylebox(id, "hover", margins))
+	button.add_theme_stylebox_override("hover", _stylebox(id, "hover", margins, hover_outset))
 	button.add_theme_stylebox_override("focus", empty_focus())
 	button.add_theme_stylebox_override("pressed", _stylebox(id, "active", margins))
 	button.add_theme_stylebox_override("disabled", _stylebox(id, "idle", margins))
@@ -374,6 +379,18 @@ static func resolve_entity_anim(id: String, anim: String) -> String:
 	return anim
 
 
+static func entity_anim_duration(id: String, anim: String) -> float:
+	var def: Dictionary = entity_def(id)
+	var anims: Dictionary = def.get("anims", {})
+	var resolved: String = resolve_entity_anim(id, anim)
+	var spec: Dictionary = anims.get(resolved, anims.get("idle", {}))
+	var frames: Array = spec.get("frames", [0])
+	if frames.is_empty():
+		return 0.0
+	var rate: float = maxf(0.001, float(spec.get("frameRate", 8.0)))
+	return float(frames.size()) / rate
+
+
 static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
 	var def: Dictionary = entity_def(id)
 	var full: Texture2D = _load_tex("res://assets/sprites/entities/%s.png" % id)
@@ -439,13 +456,21 @@ static func _strip_button_padding(button: Button) -> void:
 			button.add_theme_stylebox_override(state, flat)
 
 
-static func _stylebox(id: String, state: String, margins: Dictionary) -> StyleBoxTexture:
+static func _stylebox(id: String, state: String, margins: Dictionary, outset: Dictionary = {}) -> StyleBoxTexture:
 	var sb := StyleBoxTexture.new()
 	sb.texture = _make_atlas(_ui_tex, _rect_for(_ui_frames, id, state))
-	sb.texture_margin_left = float(margins.get("left", 0))
-	sb.texture_margin_top = float(margins.get("top", 0))
-	sb.texture_margin_right = float(margins.get("right", 0))
-	sb.texture_margin_bottom = float(margins.get("bottom", 0))
+	var out_l: float = float(outset.get("left", 0))
+	var out_t: float = float(outset.get("top", 0))
+	var out_r: float = float(outset.get("right", 0))
+	var out_b: float = float(outset.get("bottom", 0))
+	sb.texture_margin_left = float(margins.get("left", 0)) + out_l
+	sb.texture_margin_top = float(margins.get("top", 0)) + out_t
+	sb.texture_margin_right = float(margins.get("right", 0)) + out_r
+	sb.texture_margin_bottom = float(margins.get("bottom", 0)) + out_b
+	sb.expand_margin_left = out_l
+	sb.expand_margin_top = out_t
+	sb.expand_margin_right = out_r
+	sb.expand_margin_bottom = out_b
 	# Keep content padding smaller than 9-slice margins so labels don't inflate the button.
 	sb.content_margin_left = 20.0
 	sb.content_margin_right = 20.0
