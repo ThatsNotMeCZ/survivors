@@ -18,6 +18,7 @@ See [combat.md](combat.md).
 - **Bosses collide with pillars.** Phase-through was reverted so they cannot crush the player into stone.
 - **Commons/uncommons are clean grafts.** Only rare and lunar cut both ways.
 - **Dual client** (2026-11-12): Phaser `web/` ships itch. Godot 4.7 typed GDScript is the native sibling. itch stays Phaser (no second HTML5 ship). See [tech/clients.md](../tech/clients.md).
+- **Default implementation: Godot** (2026-11-17): unspecified change prompts edit Godot only. `web/` only when the prompt names web / Phaser / itch / both clients.
 - **Godot language: typed GDScript** (2026-11-12; C# lock dropped before any `.cs` shipped). Agent-first. `.tscn` via Godot MCP / editor UndoRedo, never as text. See [tech/godot.md](../tech/godot.md).
 - **Localization: Godot only.** `tr("KEY")` + `locale/*.csv`. Web stays English in TS/JSON.
 - **Co-op shape:** post-v1 online 2–4, host authority, `Array[InputFrame]`. Not split-screen, not lockstep. See [future.md](future.md).

@@ -1,5 +1,5 @@
 import { aabbOverlap, clamp } from './collision';
-import { ROLE_BOSS } from './enemies';
+import { ROLE_BOSS, chaseAttackRange, isChase } from './enemies';
 import { resolveObstacleBodies } from './obstacles';
 import { hashClear, hashInsert, hashQuery } from './spatial-hash';
 import type { World } from './world';
@@ -86,6 +86,10 @@ function resolvePlayerEnemies(world: World): void {
   for (let k = 0; k < n; k += 1) {
     const i = scratch[k];
     if (enemies.alive[i] === 0 || enemies.corpseRemain[i] > 0) continue;
+    if (isChase(world, i)) {
+      holdMelee(world, i);
+      continue;
+    }
     if (!aabbOverlap(player.x, player.y, player.radius, enemies.x[i], enemies.y[i], enemies.radius[i])) {
       continue;
     }
@@ -104,6 +108,24 @@ function resolvePlayerEnemies(world: World): void {
     enemies.x[i] = split.bx;
     enemies.y[i] = split.by;
   }
+}
+
+function holdMelee(world: World, index: number): void {
+  const { player, enemies } = world;
+  if (enemies.rootRemain[index] > 0) return;
+  const hold = chaseAttackRange(enemies.radius[index], player.radius);
+  const dx = player.x - enemies.x[index];
+  const dy = player.y - enemies.y[index];
+  const dist = Math.hypot(dx, dy);
+  if (dist >= hold) return;
+  if (dist <= 0.001) {
+    enemies.x[index] = player.x - hold;
+    return;
+  }
+  const nx = dx / dist;
+  const ny = dy / dist;
+  enemies.x[index] = player.x - nx * hold;
+  enemies.y[index] = player.y - ny * hold;
 }
 
 function clampActors(world: World): void {

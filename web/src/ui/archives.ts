@@ -3,13 +3,12 @@ import { catalog } from '../data/catalog';
 import type {
   EntityDef,
   ItemDef,
-  ItemHook,
   ItemRarity,
   SkillDef,
   SkillSlot,
-  StatId,
   SurvivorDef,
 } from '../data/schema';
+import { formatHook } from './format-hook';
 import { mountEntityArt } from './entity-art';
 import { formatTime } from './hud';
 import { ITEM_CHOICE_PX, makeItemChip, makeItemIcon } from './item-art';
@@ -39,25 +38,6 @@ const TAB_SPECS: { id: ArchiveTab; label: string; sub: string; glyph: string }[]
   { id: 'reliquary', label: 'RELIQUARY', sub: 'Augmentations & Relics', glyph: '🜍' },
   { id: 'stats', label: 'LEDGER', sub: 'Records & Run History', glyph: '☿' },
 ];
-
-const STAT_LABEL: Record<StatId, string> = {
-  speed: 'Speed',
-  maxHp: 'Max HP',
-  radius: 'Vessel Size',
-  damage: 'Damage',
-  cooldown: 'Cooldown',
-  critChance: 'Crit Chance',
-  critDamage: 'Crit Damage',
-  armor: 'Armor',
-  hazardResist: 'Hazard Ward',
-  hpRegen: 'HP/s Regen',
-  pickupRadius: 'Essence Magnet',
-  xpGain: 'Essence XP',
-  aoeRadius: 'Area Size',
-  projSpeed: 'Projectile Speed',
-  controlDuration: 'Rite Duration',
-  eliteDamage: 'Elite & Boss Damage',
-};
 
 let activeTab: ArchiveTab = 'howto';
 let activeLoreSub: LoreSubTab = 'work';
@@ -1093,21 +1073,6 @@ function fillItemDossier(root: HTMLElement, item: ItemDef, rec: ArchiveRecords):
   }
 
   root.replaceChildren(header, name, stageWrap, ledgerStrip, hooksBox, lore);
-}
-
-function formatHook(hook: ItemHook): { text: string; up: boolean } {
-  const sign = hook.value > 0 ? '+' : '';
-  if (hook.op === 'on-kill') {
-    return { text: `${sign}${hook.value} HP on kill`, up: hook.value > 0 };
-  }
-  if (hook.op === 'on-crit') {
-    return { text: `-${hook.value}s CD on crit`, up: true };
-  }
-  const amount =
-    hook.op === 'pct' ? `${sign}${Math.round(hook.value * 100)}%` : `${sign}${hook.value}`;
-  const hurt = hook.stat === 'radius' || hook.stat === 'cooldown';
-  const up = hook.value === 0 ? true : hurt ? hook.value < 0 : hook.value > 0;
-  return { text: `${amount} ${STAT_LABEL[hook.stat]}`, up };
 }
 
 /* ==========================================================================

@@ -362,7 +362,6 @@ export function playEntity(
     currentKey !== '' &&
     currentKey !== idle &&
     currentKey !== walk;
-  const attackDone = sprite.getData('attackDone') === true;
 
   if (isAttackRequest) {
     if (resolvedAttackKey) {
@@ -376,35 +375,7 @@ export function playEntity(
       if (isPlayingAttack) {
         return;
       }
-      if (attackDone) {
-        const fallback = timeScale > 0 && sprite.anims.animationManager.exists(walk)
-          ? walk
-          : sprite.anims.animationManager.exists(idle)
-            ? idle
-            : '';
-        if (fallback) {
-          sprite.play(fallback, true);
-          if (sprite.anims) sprite.anims.timeScale = fallback === walk ? Math.max(0.1, timeScale) : 1;
-        }
-        return;
-      }
-      if (!sprite.anims.isPlaying && currentKey === resolvedAttackKey) {
-        sprite.setData('attackDone', true);
-        const fallback = timeScale > 0 && sprite.anims.animationManager.exists(walk)
-          ? walk
-          : sprite.anims.animationManager.exists(idle)
-            ? idle
-            : '';
-        if (fallback) {
-          sprite.play(fallback, true);
-          if (sprite.anims) sprite.anims.timeScale = fallback === walk ? Math.max(0.1, timeScale) : 1;
-        }
-        return;
-      }
-      sprite.setData('activeAttackKey', resolvedAttackKey);
-      sprite.setData('attackDone', false);
-      sprite.play(resolvedAttackKey);
-      if (sprite.anims) sprite.anims.timeScale = 1;
+      sprite.setData('attackDone', true);
       return;
     }
   } else {

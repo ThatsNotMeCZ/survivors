@@ -1,8 +1,10 @@
 # Catalog
 
-Content lives in `web/src/data/*.json`. Numbers do not belong in `web/src/sim/` classes or in Godot scripts. Godot deserializes this schema (or a byte-identical copy). Do not fork stats.
+Godot numbers live in `Godot/hermetic-rifts/data/catalog/*.json`. Same schema as `web/src/data/*.json`. Numbers do not belong in sim classes. Do not invent a second schema.
 
-Phaser reads JSON `name` / `lore` / `title` as English display. Godot looks up `item.{id}.name` (and the sibling keys in [design/future.md](../design/future.md)) via `tr()`. Keep the JSON fields for the web client.
+A default (Godot-only) number or content change edits the Godot JSON copy and Godot sim. Do not also patch Phaser unless the prompt names web / both. Syncing `web/src/data/*.json` waits for that opt-in.
+
+Phaser reads JSON `name` / `lore` / `title` as English display. Godot looks up `item.{id}.name` (and the sibling keys in [design/future.md](../design/future.md)) via `tr()`. Keep the JSON fields so a later web sync stays valid.
 
 | File | Contains |
 |---|---|
@@ -14,7 +16,7 @@ Phaser reads JSON `name` / `lore` / `title` as English display. Godot looks up `
 | `entities.json` | fodder / elite-host / boss, tags, AI (`chase`, `ranged`, `sniper`, `boss`), contact DPS, rewards, view, `title` + `lore` |
 | `items.json` | stackable hooks (`add` / `pct` / `on-kill` / `on-crit`) plus display `name` / `lore` / optional `unlock` |
 
-Schema: `web/src/data/schema.ts`. Loader: `web/src/data/catalog.ts` (version check, unique ids, skill refs, stage entity roles, unlock refs).
+Godot loader: `Godot/hermetic-rifts/src/data/` (same JSON keys). Web schema (opt-in): `web/src/data/schema.ts`. Web loader: `web/src/data/catalog.ts` (version check, unique ids, skill refs, stage entity roles, unlock refs).
 
 ## Skill slots
 
@@ -31,7 +33,7 @@ Schema: `web/src/data/schema.ts`. Loader: `web/src/data/catalog.ts` (version che
 - `slow-line` — brimstone seam; fodder-only slow
 - `tether` — pierces and burns lesser enemies along its path; roots first elite/boss hit with an active burning tether chain. Fodder touching the active chain also burn. Miss wastes the cooldown
 
-Unknown `type` throws at boot. To add one: variant in `schema.ts` → case in `sim/skills.ts` → this list.
+Unknown `type` throws at boot. To add one (Godot default): case in Godot sim + JSON in `Godot/hermetic-rifts/data/catalog/` → this list. Web `schema.ts` + `sim/skills.ts` only when the prompt names web / both.
 
 ## Survivors
 
@@ -71,7 +73,7 @@ Display names elsewhere: survivor `runner` → **Homunculus**; `penitent` → **
 - `chase` — seek player (fodder peel toward an Ash Step decoy if one is live)
 - `ranged` — keep `keep`–`range`, windup telegraph, then `projectile` bolt (enemy team)
 - `sniper` — stay at `keep`, 1.5s laser telegraph, hitscan. Pillars block. Directed separately (`sniperCost`, `maxSnipers` 3)
-- `boss` — dedicated duel AI. `keep` range, optional `enrage` (`hpPct` + `cooldownMul`), `attacks[]` with per-attack `anim` + windup. Types: `bolt`, `fan`, `meteor` (+ optional lava/frost `pool`), `cone`, `prison`, `pulse`, `laser` (tracking beam + trail pools), `summon` (`entity`, `count`, `maxAlive`). Cases live in `sim/boss.ts` + `sim/boss-hazards.ts`
+- `boss` — dedicated duel AI. `keep` range, optional `enrage` (`hpPct` + `cooldownMul`), `attacks[]` with per-attack `anim` + windup. Types: `bolt`, `fan`, `meteor` (+ optional lava/frost `pool`), `cone`, `prison`, `pulse`, `laser` (tracking beam + trail pools), `summon` (`entity`, `count`, `maxAlive`). Optional `initialCooldown` overrides the default first-cast delay. Optional `recovery` floors every other attack's remaining cooldown when that attack resolves (pulse: end of windup; laser: end of channel). Cases live in Godot `src/sim/sim_boss.gd` + `sim_boss_hazards.gd` (Phaser `sim/boss.ts` + `sim/boss-hazards.ts` on a web-named task)
 
 Elites are not catalog rows. Any non-boss spawn can mutate; the elite then rolls **50/50 Shielder vs Noxious** (`sim/enemies.ts`).
 
@@ -82,13 +84,13 @@ Unknown `ai.type` is a catalog/schema miss; add the JSON shape then a case in `s
 
 ## Boss kits (live)
 
-Director credit spawns halt for the whole duel. Enrage at 50% HP (cooldown ×0.75; Frost Emperor ×0.72).
+Director credit spawns halt for the whole duel. Enrage at 50% HP (cooldown ×0.75; Frost Emperor ×0.72). Only Frost Sovereign summons; Cinder Heart and Frost Emperor are kit-only duels.
 
 | Stage | Boss | Attacks |
 |---|---|---|
-| Cinder Yard | Cinder Heart | Slag Spray (`fan`), Falling Clinker (`meteor` + lava pool), Kiln Brood (`ember-mite` ×3, max 6) |
-| Rime Dock | Frost Sovereign | Cryo Lance (`bolt`), Glacial Sweep (`cone`), Rime Prison (`prison`), Rime Brood (`frost-mite` ×3, max 6) |
-| Glacial Tomb | Frost Emperor | Glacial Spear (`bolt`), Absolute Zero Pulse (`pulse` r=620), Aether Laser (`laser` + trail pools), Imperial Guard (`frost-mite`), Brine Retinue (`frost-spitter`) |
+| Cinder Yard | Cinder Heart | Slag Spray (`fan`), Falling Clinker (`meteor` + lava pool r=80). HP 1100. No brood |
+| Rime Dock | Frost Sovereign | Cryo Lance (`bolt`), Glacial Sweep (`cone`), Rime Prison (`prison`), Rime Brood (`frost-mite` ×2, max 3) |
+| Glacial Tomb | Frost Emperor | Glacial Spear (`bolt`), Absolute Zero Pulse (`pulse` r=420, `initialCooldown` 8, `recovery` 1.2), Aether Laser (`laser` + trail pools, `recovery` 1.2). No brood |
 
 ## Stages
 

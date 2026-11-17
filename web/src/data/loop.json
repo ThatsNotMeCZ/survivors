@@ -56,7 +56,7 @@
     "percentHp": 0.3
   },
   "difficulty": {
-    "perSecond": 0.0032,
+    "perSecond": 0.0026,
     "stageBonus": 0,
     "speedPerCoeff": 0.035
   },

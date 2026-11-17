@@ -36,6 +36,12 @@ const PARCHMENT_SHEET: Color = Color("d5c4a1")
 const ASH: Color = Color("a89890")
 const PILLAR_TOP: Color = Color("1b171d")
 const PILLAR_BOT: Color = Color("141116")
+const RARITY_SPLASH: Dictionary = {
+	"common": Color("d4b48473"),
+	"uncommon": Color("88c0d073"),
+	"rare": Color("e06a2873"),
+	"lunar": Color("62e0ff73"),
+}
 
 static var _ui_frames: Dictionary = {}
 static var _env_frames: Dictionary = {}
@@ -43,13 +49,13 @@ static var _manifest: Dictionary = {}
 static var _ui_tex: Texture2D
 static var _env_tex: Texture2D
 static var _font: FontFile
-static var _font_crisp: FontFile
 static var _font_ink: FontFile
 static var _tex_cache: Dictionary = {}
 static var _atlas_cache: Dictionary = {}
 static var _sidecar_defs: Dictionary = {}
 static var _sidecar_mtime: Dictionary = {}
 static var _loaded: bool = false
+static var _splash_tex: Texture2D
 
 
 static func ensure_loaded() -> void:
@@ -63,15 +69,9 @@ static func ensure_loaded() -> void:
 	_manifest = _load_json(MANIFEST)
 	if ResourceLoader.exists(FONT_PATH):
 		_font = load(FONT_PATH) as FontFile
-		_configure_font(_font, true)
-		_font_crisp = _font.duplicate() as FontFile
-		if _font_crisp != null:
-			_configure_font(_font_crisp, false)
+		_configure_display_font(_font)
 	if ResourceLoader.exists(INK_FONT_PATH):
 		_font_ink = load(INK_FONT_PATH) as FontFile
-		if _font_ink != null:
-			_configure_font(_font_ink, true)
-			_font_ink.force_autohinter = false
 
 
 static func display_font() -> Font:
@@ -81,8 +81,6 @@ static func display_font() -> Font:
 
 static func body_font() -> Font:
 	ensure_loaded()
-	if _font_crisp != null:
-		return _font_crisp
 	return _font
 
 
@@ -93,13 +91,12 @@ static func ink_font() -> Font:
 	return body_font()
 
 
-static func _configure_font(font: FontFile, antialias: bool) -> void:
+static func _configure_display_font(font: FontFile) -> void:
 	font.multichannel_signed_distance_field = false
-	font.antialiasing = TextServer.FONT_ANTIALIASING_GRAY if antialias else TextServer.FONT_ANTIALIASING_NONE
-	font.hinting = TextServer.HINTING_NONE if not antialias else TextServer.HINTING_LIGHT
-	font.force_autohinter = antialias
+	font.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+	font.hinting = TextServer.HINTING_LIGHT
+	font.force_autohinter = true
 	font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
-	font.oversampling = 0.0
 
 
 static func spaced_font(px: int) -> Font:
@@ -297,6 +294,38 @@ static func item_tex(id: String) -> Texture2D:
 	return null
 
 
+static func attach_rarity_splash(host: Control, rarity: String) -> void:
+	var splash := TextureRect.new()
+	splash.name = "RaritySplash"
+	splash.texture = _rarity_splash_tex()
+	var splash_col: Color = Color("d4b48473")
+	if RARITY_SPLASH.has(rarity):
+		splash_col = Color(RARITY_SPLASH[rarity])
+	splash.modulate = splash_col
+	splash.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	splash.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	splash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	splash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	host.add_child(splash)
+
+
+static func _rarity_splash_tex() -> Texture2D:
+	if _splash_tex != null:
+		return _splash_tex
+	var g := Gradient.new()
+	g.offsets = PackedFloat32Array([0.0, 0.4, 1.0])
+	g.colors = PackedColorArray([Color(1, 1, 1, 1), Color(1, 1, 1, 0.55), Color(1, 1, 1, 0)])
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.width = 64
+	tex.height = 64
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(0.5, 0.0)
+	_splash_tex = tex
+	return _splash_tex
+
+
 static func env_atlas_tex() -> Texture2D:
 	ensure_loaded()
 	return _env_tex
@@ -363,7 +392,11 @@ static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
 	if frames.is_empty():
 		frames = [0]
 	var rate: float = float(spec.get("frameRate", 8.0))
-	var frame_i: int = int(frames[int(floor(t * rate)) % frames.size()])
+	var is_loop: bool = resolved == "idle" or resolved == "walk" or resolved.begins_with("idle-") or resolved.begins_with("walk-") or resolved.begins_with("channel")
+	var repeat: int = int(spec.get("repeat", -1 if is_loop else 0))
+	var raw_i: int = int(floor(maxf(0.0, t) * rate))
+	var idx: int = clampi(raw_i, 0, frames.size() - 1) if repeat == 0 else raw_i % frames.size()
+	var frame_i: int = int(frames[idx])
 	var key: String = "%s:%d:%d:%d" % [id, fw, fh, frame_i]
 	if _atlas_cache.has(key):
 		return _atlas_cache[key]

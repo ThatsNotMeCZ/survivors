@@ -1,0 +1,14 @@
+---
+description: Default implementation target is Godot; web only when named
+alwaysApply: true
+---
+
+# Default client: Godot
+
+Every implement / fix / change / playtest prompt targets **Godot 4.7** in `Godot/hermetic-rifts/` unless the user names **web**, **Phaser**, **itch**, or **both clients**.
+
+- Do: GDScript, MCP scenes, `locale/*.csv`, Godot catalog at `Godot/hermetic-rifts/data/catalog/`, Godot smoke / playtest.
+- Do not: edit `web/` (Phaser, TypeScript, HTML/CSS, web smoke, itch zip).
+- Design still updates `knowledge/` in the same change. Do not keep a Godot-only design fork in chat.
+- Catalog numbers for a Godot-default task live in the Godot JSON copy. Do not also patch Phaser sim/view/UI.
+- Shared assets (sprites, audio, knowledge) may be read from the repo; do not author a second sheet set.

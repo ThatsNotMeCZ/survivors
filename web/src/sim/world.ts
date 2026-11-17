@@ -25,7 +25,9 @@ import {
   ROLE_FODDER,
   applyNoxiousContact,
   applyEnemyDamage,
+  chaseContactRange,
   createEnemyPool,
+  isChase,
   stepEnemies,
   type EnemyPool,
 } from './enemies';
@@ -584,7 +586,21 @@ function contactDamage(world: World, dt: number): void {
   for (let k = 0; k < n; k += 1) {
     const idx = scratch[k];
     if (enemies.alive[idx] === 0) continue;
-    if (!aabbOverlap(player.x, player.y, player.radius, enemies.x[idx], enemies.y[idx], enemies.radius[idx])) {
+    let touching = aabbOverlap(
+      player.x,
+      player.y,
+      player.radius,
+      enemies.x[idx],
+      enemies.y[idx],
+      enemies.radius[idx],
+    );
+    if (isChase(world, idx)) {
+      const cdx = player.x - enemies.x[idx];
+      const cdy = player.y - enemies.y[idx];
+      const reach = chaseContactRange(enemies.radius[idx], player.radius);
+      touching = cdx * cdx + cdy * cdy <= reach * reach;
+    }
+    if (!touching) {
       continue;
     }
     if (enemies.corpseRemain[idx] > 0) continue;

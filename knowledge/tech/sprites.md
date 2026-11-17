@@ -40,11 +40,11 @@ Compact example:
 }
 ```
 
-Pixelorama / Aseprite remain a drop-in fallback (project JSON with `size_x` / `size_y` / `fps` / `tags`, or spritesheet JSON with `meta.frameTags`). Pixelorama tags are 1-based; Aseprite tags are 0-based. Prefer converting the sidecar to compact so each clip has its own `frameRate`. Authored Pixelorama projects stay in `tools/pixelorama/`.
+Pixelorama / Aseprite remain a drop-in fallback (project JSON with `size_x` / `size_y` / `fps` / `tags`, or spritesheet JSON with `meta.frameTags`). Pixelorama tags are 1-based; Aseprite tags are 0-based. Prefer converting the sidecar to compact so each clip has its own `frameRate`. Authored Pixelorama projects stay in `tools/pixelorama/`. Agent drawing goes through Pixelorama MCP ([pixelorama-mcp.md](pixelorama-mcp.md)); publish with `tools/pixelorama/publish-sprite.sh`.
 
 Arena `flipX` for left. Player, elites, and bosses are Phaser Sprites (`playEntity`). Fodder uses one `SpriteGPULayer` per entity id; walk frames run on the GPU (`setAnimations`). Non-square frames keep their native size; square vessel sheets still display at 40.
 
-Boss catalog `ai.attacks[].anim` keys must exist on the sheet (`attack-fan`, `attack-meteor`, `summon`, `attack-bolt`, …). Missing clips fall back to `attack`, then `idle`. Every moving boss needs a `walk` clip; reuse idle frames if the sheet has no distinct stride. Cinder Heart / Frost Sovereign / Frost Emperor play `walk` while moving and the attack clip while winding up.
+Boss catalog `ai.attacks[].anim` keys must exist on the sheet (`attack-fan`, `attack-meteor`, `summon`, `attack-bolt`, …). Missing clips fall back to `attack`, then `idle`. Every moving boss needs a `walk` clip; reuse idle frames if the sheet has no distinct stride. Cinder Heart / Frost Sovereign / Frost Emperor play `walk` while moving and the attack clip while winding up. One-shot clips (`repeat: 0`) play once per windup and hold the last frame until the attack state ends — do not sample them from global `runTime` (that loops a 2-frame clip twice during a 0.6s windup).
 
 Walk animation playback speed is dynamically linked to real movement speed (`speedRatio = currentSpeed / baseSpeed`):
 - Player walk animation and vertical step bobbing scale proportionally with `speedRatio` (reflecting buffs, items like Goat Hoof, or hazard/slow debuffs).
@@ -97,6 +97,13 @@ Themes map per stage: `cinder` (`cinder-yard`), `rime` (`rime-dock`), `glacial` 
 - **Volatiles** (`radius: 14` -> `32×32 px` or `24×24 px`): `{theme}-volatile` (`cinder-volatile`, `rime-volatile`, `glacial-volatile`).
 - **Objectives**: `{theme}-circle` (Transmutation Circle, `160×160 px` or `320×320 px`), `{theme}-portal` (The Rift, `96×96 px` or `140×140 px`).
 - **Ambient specks** (`8×8 px` / `16×16 px`): `ambient-ash`, `ambient-ember`, `ambient-snow`, `ambient-mist`.
+
+## Production (Pixelorama MCP)
+
+1. Draw in Pixelorama via MCP (`knowledge/tech/pixelorama-mcp.md`). Keep `{id}.pxo` under `tools/pixelorama/`.
+2. Export PNG (+ optional project JSON) to `tools/pixelorama/export/`.
+3. `./tools/pixelorama/publish-sprite.sh entity {id}` copies into `web/public/sprites/` (compact sidecar for entities) and runs `tools/sync-godot-content`.
+4. Restart `bun run dev` if the web client is running (manifest watcher). Godot picks up the synced copy.
 
 ## Do
 

@@ -17,6 +17,22 @@ export const ROLE_BOSS = 2;
 
 export const CHASE_ATTACK_DURATION = 0.35;
 export const CHASE_ATTACK_COOLDOWN = 0.8;
+export const CHASE_ATTACK_RANGE_PAD = 6;
+export const CHASE_CONTACT_RANGE_PAD = 10;
+
+export function chaseAttackRange(bodyRadius: number, targetRadius: number): number {
+  return bodyRadius + targetRadius + CHASE_ATTACK_RANGE_PAD;
+}
+
+export function chaseContactRange(bodyRadius: number, targetRadius: number): number {
+  return bodyRadius + targetRadius + CHASE_CONTACT_RANGE_PAD;
+}
+
+export function isChase(world: World, index: number): boolean {
+  const defId = world.enemies.defId[index];
+  if (!defId) return true;
+  return world.catalog.entity(defId).ai.type === 'chase';
+}
 
 export type EnemyPool = {
   cap: number;
@@ -391,15 +407,24 @@ export function stepEnemies(world: World, dt: number): void {
     } else if (ai.type === 'boss') {
       stepBoss(world, i, ai, dx, dy, len, dt, speed);
     } else {
-      if (len > 0.001) {
-        const mx = (dx / len) * speed * dt;
-        const my = (dy / len) * speed * dt;
+      const targetRadius = world.decoy.active && enemies.role[i] === ROLE_FODDER ? 14 : world.player.radius;
+      const hold = chaseAttackRange(enemies.radius[i], targetRadius);
+      if (!rooted && len > hold && len > 0.001) {
+        const stride = Math.min(speed * dt, len - hold);
+        const mx = (dx / len) * stride;
+        const my = (dy / len) * stride;
         const deflected = deflectFromObstacles(world, enemies.x[i], enemies.y[i], enemies.radius[i], mx, my, target.x, target.y);
         enemies.x[i] += deflected.x;
         enemies.y[i] += deflected.y;
       }
-      const targetRadius = world.decoy.active && enemies.role[i] === ROLE_FODDER ? 14 : world.player.radius;
-      if (len <= enemies.radius[i] + targetRadius + 6) {
+      if (!rooted) {
+        placeAtHold(enemies, i, target, hold);
+      }
+      const heldDx = target.x - enemies.x[i];
+      const heldDy = target.y - enemies.y[i];
+      const held = Math.hypot(heldDx, heldDy);
+      const contact = chaseContactRange(enemies.radius[i], targetRadius);
+      if (held <= contact) {
         if (enemies.attackRemain[i] <= 0 && enemies.attackCd[i] <= 0) {
           enemies.attackRemain[i] = CHASE_ATTACK_DURATION;
           enemies.attackCd[i] = CHASE_ATTACK_COOLDOWN;
@@ -437,6 +462,26 @@ function chaseTarget(world: World, index: number): { x: number; y: number } {
     return { x: world.decoy.x, y: world.decoy.y };
   }
   return { x: world.player.x, y: world.player.y };
+}
+
+function placeAtHold(
+  enemies: EnemyPool,
+  index: number,
+  target: { x: number; y: number },
+  hold: number,
+): void {
+  const dx = target.x - enemies.x[index];
+  const dy = target.y - enemies.y[index];
+  const dist = Math.hypot(dx, dy);
+  if (dist >= hold) return;
+  if (dist <= 0.001) {
+    enemies.x[index] = target.x - hold;
+    return;
+  }
+  const nx = dx / dist;
+  const ny = dy / dist;
+  enemies.x[index] = target.x - nx * hold;
+  enemies.y[index] = target.y - ny * hold;
 }
 
 function stepRanged(

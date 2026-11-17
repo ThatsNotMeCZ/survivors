@@ -573,7 +573,10 @@ func _sync_skills(world: SimWorld) -> void:
 func _sync_items(world: SimWorld) -> void:
 	var key: String = ""
 	for inst: ItemInstance in world.inventory:
-		key += "%s:%d|" % [inst.id, inst.stacks]
+		var rarity_key: String = "common"
+		if world.catalog != null and world.catalog.has_item(inst.id):
+			rarity_key = String(world.catalog.item(inst.id).get("rarity", "common"))
+		key += "%s:%d:%s|" % [inst.id, inst.stacks, rarity_key]
 	if key == _last_item_key:
 		return
 	_last_item_key = key
@@ -584,9 +587,13 @@ func _sync_items(world: SimWorld) -> void:
 	var cols: int = maxi(3, int(ceil(sqrt(float(maxi(1, n))))))
 	_item_list.columns = mini(6, cols)
 	for inst: ItemInstance in world.inventory:
+		var rarity: String = "common"
+		if world.catalog != null and world.catalog.has_item(inst.id):
+			rarity = String(world.catalog.item(inst.id).get("rarity", "common"))
 		var chip := Control.new()
 		chip.custom_minimum_size = Vector2(32, 32)
 		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		UiAtlas.attach_rarity_splash(chip, rarity)
 		var icon := TextureRect.new()
 		icon.texture = UiAtlas.item_tex(inst.id)
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

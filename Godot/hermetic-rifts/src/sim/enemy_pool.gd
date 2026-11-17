@@ -7,6 +7,7 @@ const ROLE_BOSS: int = 2
 const CHASE_ATTACK_DURATION: float = 0.35
 const CHASE_ATTACK_COOLDOWN: float = 0.8
 const CHASE_ATTACK_RANGE_PAD: float = 6.0
+const CHASE_CONTACT_RANGE_PAD: float = 10.0
 const PILLAR_COVER_EXTRA_RADIUS: float = 8.0
 
 var cap: int = 0

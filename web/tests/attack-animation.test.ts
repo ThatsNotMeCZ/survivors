@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   CHASE_ATTACK_COOLDOWN,
   CHASE_ATTACK_DURATION,
+  chaseAttackRange,
   currentEnemySpeed,
   isEnemyAttacking,
   spawnEnemy,
@@ -78,6 +79,27 @@ describe('Attack Animation & Attack State Lifecycle', () => {
     expect(world.player.hp).toBeLessThan(initialHp);
   });
 
+  it('applies chase contact DPS from cardinal and diagonal hold-ring positions', () => {
+    const emberMite = createWorld().catalog.entity('ember-mite');
+    const offsets: Array<[number, number]> = [
+      [1, 0],
+      [Math.SQRT1_2, Math.SQRT1_2],
+    ];
+    for (const [ox, oy] of offsets) {
+      const world = createWorld();
+      world.player.x = 400;
+      world.player.y = 400;
+      world.player.hp = 100;
+      world.player.iframeRemain = 0;
+      const hold = chaseAttackRange(emberMite.stats.radius, world.player.radius);
+      const idx = spawnEnemy(world, emberMite, world.player.x + hold * ox, world.player.y + hold * oy);
+      expect(idx).toBeGreaterThanOrEqual(0);
+      const initialHp = world.player.hp;
+      stepWorld(world, emptyInput(), 0.1);
+      expect(world.player.hp).toBeLessThan(initialHp);
+    }
+  });
+
   it('ranged enemy windup triggers attack state that ends when projectile fires', () => {
     const world = createWorld();
     world.player.x = 200;
@@ -145,6 +167,31 @@ describe('Attack Animation & Attack State Lifecycle', () => {
     expect(currentEnemySpeed(world, idx)).toBeGreaterThan(0);
     stepEnemies(world, 0.1);
     expect(world.enemies.x[idx]).toBeGreaterThan(startX);
+  });
+
+  it('Cinder Heart keeps the same attack anim through one windup', () => {
+    const world = createWorld();
+    world.player.x = 400;
+    world.player.y = 400;
+    const def = world.catalog.entity('cinder-heart');
+    const idx = spawnEnemy(world, def, 400, 170);
+    expect(idx).toBeGreaterThanOrEqual(0);
+    world.boss.cooldowns.fill(0);
+
+    let started = false;
+    let anim = '';
+    for (let s = 0; s < 20; s += 1) {
+      stepEnemies(world, 0.05);
+      if (!isEnemyAttacking(world, idx)) continue;
+      if (!started) {
+        started = true;
+        anim = world.enemies.animName[idx] ?? '';
+        expect(anim.length).toBeGreaterThan(0);
+        continue;
+      }
+      expect(world.enemies.animName[idx]).toBe(anim);
+    }
+    expect(started).toBe(true);
   });
 
   it('manifest.json defines entity attack animation with repeat: 0', () => {

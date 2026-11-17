@@ -7,6 +7,14 @@
       "env": {
         "GODOT_MCP_PORT": "6505"
       }
+    },
+    "pixelorama-mcp": {
+      "type": "stdio",
+      "command": "bash",
+      "args": ["${workspaceFolder}/tools/pixelorama-mcp-bridge/start.sh"],
+      "env": {
+        "PIXELORAMA_MCP_ALLOWED_DIRS": "${workspaceFolder}/tools/pixelorama,${workspaceFolder}/web/public/sprites,${workspaceFolder}/Godot/hermetic-rifts/assets/sprites"
+      }
     }
   }
 }

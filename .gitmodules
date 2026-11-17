@@ -1,0 +1,3 @@
+[submodule "tools/pixelorama-mcp"]
+	path = tools/pixelorama-mcp
+	url = https://github.com/abidoo22/pixelorama-mcp.git

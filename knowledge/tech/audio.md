@@ -53,6 +53,6 @@ Kebab-case `.ogg` in `sfx/{ui,combat,world}/`. Filename stem is the id (`click.o
 
 Each clip in `manifest.json` is `{ src, volume }`. `volume` is linear gain **0–2** (default **1**), multiplied with the SFX slider. Kenney packs land at different loudness — set `volume` per id, then refresh. Vite rescans folders on `dev` / `build` and **keeps** existing `volume` values; new files start at 1.
 
-Kenney CC0 packs in `sources/kenney_*` are the current placeholders. Hits/deaths/muzzle/gems are rate-limited.
+Kenney CC0 packs in `sources/kenney_*` are the current placeholders. Hits/deaths/muzzle/gems are rate-limited (sliding 1s window: hit 8, death 6, gem 10, muzzle 12).
 
-Sim emits FX only (`FX_HIT`, `FX_HURT`, `FX_GEM`, …). `ArenaScene.consumeFx` plays the sting. `web/src/sim/` does not import audio.
+Sim emits FX only (`FX_HIT`, `FX_HURT`, `FX_GEM`, …). `ArenaScene.consumeFx` / Godot `arena_view._consume_fx` plays the sting. `web/src/sim/` and `Godot/.../src/sim/` do not import audio. Godot SFX uses a pool of 12 `AudioStreamPlayer` voices (web `VOICE_CAP`); death tint `0xFF8844` plays `break` instead of `death`.

@@ -1,0 +1,22 @@
+---
+description: Route sprite and pixel-art jobs through MCP pixelorama-mcp
+globs: tools/pixelorama/**,web/public/sprites/**,Godot/hermetic-rifts/assets/sprites/**
+alwaysApply: true
+---
+
+# Pixelorama MCP
+
+If the task is to **draw, edit, animate, or export pixel art** (sprites, icons, FX stills, env tiles, UI chrome in Pixelorama), call MCP namespace `pixelorama-mcp`. Inspect the tool schema, then call it. Do not Write binary PNGs. Do not ask the human to click Pixelorama for those jobs.
+
+| Job | MCP / script |
+|---|---|
+| Canvas, layers, pixels | `create_canvas`, `draw_pixels_fast`, `draw_rect`, `add_layer`, `capture_canvas_image` |
+| Animation | `add_frame`, `duplicate_frame`, tags `idle` / `walk` / `attack-*` (1-based in Pixelorama) |
+| Export staging | `export_image` → `tools/pixelorama/export/{id}.png`; keep `{id}.pxo` in `tools/pixelorama/` |
+| Ship | Shell `./tools/pixelorama/publish-sprite.sh <kind> <id>` (not an MCP tool) |
+
+Open `tools/pixelorama/{id}.pxo` when it exists. Palette [`tools/pixelorama/resurrect-64.pal`](../../tools/pixelorama/resurrect-64.pal). Prefer `draw_pixels_fast` over per-pixel roundtrips. `eval_gdscript` only for procedural tiles in `tools/pixelorama/` — never to patch Godot game scripts.
+
+Art = Pixelorama. Scenes / GDScript / playtest = `godot-mcp-pro`. Ports: Pixelorama `7373`, Godot `6505`.
+
+If tools say disconnected or `:7373` times out, print the checklist in `knowledge/tech/pixelorama-mcp.md` and stop.

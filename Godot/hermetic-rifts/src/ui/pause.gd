@@ -10,7 +10,7 @@ signal abandon_pressed
 const ACTION_W: float = 288.0
 const ACTION_H: float = 58.0
 const PANEL_W: float = 340.0
-const INV_PAD: float = 32.0
+const INV_PAD: float = 70.0
 const GLYPHS: Array[String] = ["⚶", "🜍", "⟁", "🜂", "☿"]
 
 var _title_1: Label
@@ -25,9 +25,8 @@ var _abandon_btn: Button
 var _summary_rows: VBoxContainer
 var _inv_list: GridContainer
 var _inv_empty: Label
-var _tooltip: PanelContainer
-var _tooltip_title: Label
-var _tooltip_body: Label
+var _tooltip: ItemTooltip
+var _catalog: Catalog
 var _built: bool = false
 
 
@@ -69,6 +68,9 @@ func _build() -> void:
 	stage.add_child(grid)
 	grid.add_child(_build_left())
 	grid.add_child(_build_right())
+	_tooltip = ItemTooltip.new()
+	_tooltip.name = "ItemTooltip"
+	add_child(_tooltip)
 
 
 func _build_left() -> Control:
@@ -175,21 +177,6 @@ func _build_right() -> Control:
 	_inv_empty.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	UiAtlas.apply_label(_inv_empty, UiAtlas.TYPE_MICRO, UiAtlas.ASH, 13)
 	inv_stage.add_child(_inv_empty)
-	_tooltip = PanelContainer.new()
-	_tooltip.visible = false
-	_tooltip.add_theme_stylebox_override("panel", UiAtlas.nine_slice("parchment-panel", "idle", Vector4(16, 12, 16, 12)))
-	_tooltip.custom_minimum_size = Vector2(220, 0)
-	inv_section.add_child(_tooltip)
-	var tip_col := VBoxContainer.new()
-	_tooltip.add_child(tip_col)
-	_tooltip_title = Label.new()
-	UiAtlas.apply_ink_label(_tooltip_title, UiAtlas.TYPE_META, UiAtlas.PARCHMENT_INK, 14)
-	tip_col.add_child(_tooltip_title)
-	_tooltip_body = Label.new()
-	_tooltip_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_tooltip_body.custom_minimum_size = Vector2(200, 0)
-	UiAtlas.apply_ink_label(_tooltip_body, UiAtlas.TYPE_BODY, Color("2e2014"), 13)
-	tip_col.add_child(_tooltip_body)
 	return right
 
 
@@ -227,7 +214,9 @@ func _fill_inventory(world: SimWorld) -> void:
 	for child: Node in _inv_list.get_children():
 		_inv_list.remove_child(child)
 		child.free()
-	_tooltip.visible = false
+	_catalog = null if world == null else world.catalog
+	if _tooltip != null:
+		_tooltip.hide_tip()
 	var n: int = 0 if world == null else world.inventory.size()
 	_inv_empty.visible = n == 0
 	_inv_list.visible = n > 0
@@ -235,9 +224,13 @@ func _fill_inventory(world: SimWorld) -> void:
 		return
 	_inv_list.columns = maxi(4, int(ceil(sqrt(float(n)))))
 	for inst: ItemInstance in world.inventory:
+		var rarity: String = "common"
+		if _catalog != null and _catalog.has_item(inst.id):
+			rarity = String(_catalog.item(inst.id).get("rarity", "common"))
 		var chip := Button.new()
 		chip.custom_minimum_size = Vector2(36, 36)
 		chip.flat = true
+		UiAtlas.attach_rarity_splash(chip, rarity)
 		var icon := TextureRect.new()
 		icon.texture = UiAtlas.item_tex(inst.id)
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -253,17 +246,8 @@ func _fill_inventory(world: SimWorld) -> void:
 		count.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		UiAtlas.apply_label(count, UiAtlas.TYPE_MICRO, UiAtlas.PARCHMENT, 10, true)
 		chip.add_child(count)
-		var item_id: String = inst.id
-		chip.mouse_entered.connect(func() -> void: _show_tip(item_id))
-		chip.mouse_exited.connect(func() -> void: _tooltip.visible = false)
-		chip.focus_entered.connect(func() -> void: _show_tip(item_id))
+		_tooltip.bind_chip(chip, inst.id, inst.stacks, _catalog)
 		_inv_list.add_child(chip)
-
-
-func _show_tip(item_id: String) -> void:
-	_tooltip_title.text = Loc.item_name(item_id)
-	_tooltip_body.text = Loc.item_lore(item_id)
-	_tooltip.visible = true
 
 
 func _plaque(text: String, glyph: String, indent: float) -> Button:

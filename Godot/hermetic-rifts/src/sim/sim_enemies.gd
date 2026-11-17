@@ -6,6 +6,10 @@ static func chase_attack_range(body_radius: float, target_radius: float) -> floa
 	return body_radius + target_radius + EnemyPool.CHASE_ATTACK_RANGE_PAD
 
 
+static func chase_contact_range(body_radius: float, target_radius: float) -> float:
+	return body_radius + target_radius + EnemyPool.CHASE_CONTACT_RANGE_PAD
+
+
 static func is_chase(world: SimWorld, index: int) -> bool:
 	var def_id: String = world.enemies.def_id[index]
 	if def_id == "":

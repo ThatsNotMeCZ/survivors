@@ -1,50 +1,51 @@
-# survivors — Game Design Spec (gameplay)
+# survivors - Game Design Spec (gameplay)
 
-Snapshot: **2026-11-05**. Čísla v tabulkách musí přesně sedět s `02-catalog-numbers.md`.
+Snapshot: **2026-11-17**. Čísla v tabulkách musí přesně sedět s `02-catalog-numbers.md`.  
+Klient: Godot 4.7, `Godot/hermetic-rifts/`.
 
 Working title: **survivors**. Hall title: **Hermetic Rifts**.  
 Žánr: 2D survivor-like. Hybrid **Vampire Survivors pacing** + **Risk of Rain 2 pressure**.  
-Jeden run (target): **15–20 minut**. Hráč hraje aktivně rukama, nesleduje build, jak vyhrává za něj.
+Jeden run (target): **15-20 minut**. Live slice používá komprimované hodiny. Hráč hraje aktivně rukama.
 
 Player-facing téma: **Dark Hermetic**. V rozhraní se používají hermetické názvy, nikoliv interní ID.  
-Hráč ovládá alchemickou schránku (Vessel — Homunculus nebo The Penitent), která spaluje a čistí nečistoty (Dross / Failed Transmutations). XP = Mercury Drops / Essence, zóna přežití = Transmutation Circle, přechod mezi komorami = Rift.
+Hráč ovládá alchemickou schránku (Vessel: Homunculus nebo The Penitent). XP = Mercury Drops / Essence. Zóna přežití = Transmutation Circle. Přechod mezi komorami = Rift. Po Frost Emperorovi zlatá brána **Ouroboros**.
 
 ---
 
 ## 1. Pitch
 
-Nejsi v pasivním orbitálu, který bezmyšlenkovitě čistí obrazovku. **Pohybuješ se skrz hordu, která časem zhrubne, zrychlí a získá nebezpečnější schopnosti, nikoliv jen bezhlavý počet těl.**  
-Late game = méně těl, tvrdší elity s aetherickými štíty a jedem, přesně mířené hazardy a epický souboj s bossem v aréně.
+Pohybuješ se skrz hordu, která časem zhrubne, zrychlí a získá nebezpečnější schopnosti, nikoliv jen bezhlavý počet těl.  
+Late game = méně těl, tvrdší elity s aetherickým štítem nebo jedem, přesně mířené hazardy a duel s bossem v aréně.
 
-Power fantasy zůstává: v minutě 15 **aktivně prorážíš** hordou díky synergii svých dovedností a augmentací. Nesedíš v koutě a nesleduješ AFK generátor čísel.
+Power fantasy: v minutě 15 **aktivně prorážíš** hordou díky synergii dovedností a augmentací.
 
 ---
 
-## 2. Co krademe / co necháváme
+## 2. Co krademe a co necháváme
 
 **Z Vampire Survivors bereme:**
-- 15–20 min run, okamžitý nástup akce.
+- 15-20 min run, okamžitý nástup akce.
 - Draft 1 ze 3 karet při každém postupu na nový level.
 - Čitelný pixel art a syté vizuální telegrafy.
 - Rychlý pocit snowballingu a alchymického růstu.
 
 **Z Vampire Survivors necháváme:**
 - Full auto střelbu do všech stran bez míření.
-- Obrazovku mažící evoluce, které smažou celou herní plochu.
-- Nekonečné prázdné louky bez překážek a struktury.
+- Obrazovku mažící evoluce.
+- Nekonečné prázdné louky bez překážek.
 
 **Z Risk of Rain 2 bereme:**
-- Časový koeficient obtížnosti (Difficulty Coefficient), který neúprosně stoupá.
-- Monster Director pracující s rozpočtem kreditů.
-- Elitní nepřátele s brutálními modifikátory (Noxious jed, Shielder štít).
-- Teleporter event (Transmutation Circle) vyžadující obranu pevného bodu.
+- Časový koeficient obtížnosti.
+- Monster Director s rozpočtem kreditů.
+- Elitní afixy (Noxious, Shielder).
+- Teleporter event (Transmutation Circle).
 - Pohyb a dash jako primární nástroj přežití.
 - Výrazné tradeoffs na silných itemech.
 
 **Z Risk of Rain 2 necháváme:**
-- 3D prostorovou navigaci a bloudění.
-- 100+ položkový nepřehledný item pool.
-- Roster 20 postav a nutnost kooperace (ve v1 čistý singleplayer).
+- 3D prostorovou navigaci.
+- 100+ položkový item pool.
+- Roster 20 postav a nutnost kooperace (v1 singleplayer).
 
 ---
 
@@ -53,17 +54,17 @@ Power fantasy zůstává: v minutě 15 **aktivně prorážíš** hordou díky sy
 Žádný herní prvek se nesmí dostat do hry, pokud porušuje tyto body:
 
 1. **Stání se trestá.**  
-   LIVE: Astral Watcher laser (1.5 s zamčený telegraph, okamžitý hitscan), Noxious contact slow + exploze mrtvoly + trvalá louže kyseliny, Shielder regenerace štítu při nečinnosti, útoky bossů (meteority s lávou, rime prison root, absolute zero pulse přes celou arénu, stopovací aether laser).
+   LIVE: Astral Watcher laser (1.5 s zamčený telegraph, hitscan), Noxious contact slow + exploze mrtvoly + 6 s louže kyseliny, Shielder regenerace štítu po 5 s klidu, útoky bossů (meteority s lávou, Rime Prison root, Absolute Zero Pulse, Aether Laser).
 2. **Aspoň jeden hráčský verb každých ~2 s.**  
-   Primary útok je **player-aimed** (mířený myší). Auto-fire a auto-aim na primární zbrani jsou zakázané.
+   Primary útok je **player-aimed**. Auto-fire a auto-aim na primární zbrani jsou zakázané.
 3. **Teleporter / Transmutation Circle.**  
-   Na ploše arény se aktivuje kruh. Nabíjí se pouze tehdy, když hráč stojí uvnitř jeho poloměru. Nepřátelé se stahují přímo do kruhu. AFK pobyt mimo kruh hru neposouvá.
+   Kruh se nabíjí jen uvnitř poloměru. Nepřátelé se stahují do kruhu. AFK mimo kruh hru neposouvá.
 4. **Kvalita nad kvantitou.**  
-   Soft cap živých nepřátel je ~80–120 (v slice 32 fodder + 3 elity + 1 boss). Během duelu s bossem Director **zastaví generování kreditů**, takže se souboj nezvrhne v nekonečný spam drobotiny; boss si sám vyvolává své přisluhovače.
+   Soft cap: 24 fodder + 6 elit + 1 boss. Během duelu Director zastaví kredity. Boss si líhne vlastní miniony.
 5. **Itemy staví build a mají jasnou roli.**  
-   Common a Uncommon augmentace jsou čistě pozitivní stavební kameny. Rare a Lunar augmentace jsou drsné dvousečné meče s výrazným rizikem. Zaveden byl systém kritických zásahů (`critChance`, `critDamage`). Žádný item nesmí zajistit automatickou výhru bez hraní.
+   Common a Uncommon jsou čistě pozitivní. Rare a Lunar mají tradeoff. Crit je LIVE (základ 5 % / ×2).
 6. **Překážky jsou tlak, ne pasivní kryt.**  
-   Pilíře lámou edge-kiting a pohlcují střely, ale bossové jimi procházejí. Hazardy udělují slow a DPS. Volatiles detonují pouze po mířeném zásahu hráče a 0.4 s telegraphu. Kyselina z elit zmenšuje prostor v kruhu.
+   Pilíře lámou edge-kiting a pohlcují střely. Bossové do nich narážejí. Hazardy dávají slow a DPS. Volatiles detonují po mířeném zásahu hráče a 0.4 s telegraphu.
 
 ---
 
@@ -77,187 +78,190 @@ Power fantasy zůstává: v minutě 15 **aktivně prorážíš** hordou díky sy
 | **Myš** | Míření | Schránka se otáčí a míří na herní kurzor |
 | **Držet LMB** | Primary útok | Kontinuální střelba mířená na kurzor |
 | **RMB** | Secondary skill | Mířený sekundární úder / paprsek / zóna |
-| **Shift / Space** | Utility dash | Úhybný dash s plnými i-framy ve směru pohybu |
+| **Shift / Space** | Utility dash | Úhybný dash s plnými i-framy ve směru pohybu (stání: směr aim) |
 | **Q** | Special / Ult | Mířený devastující zásah s delším cooldownem |
-| **Esc** | Pause | Otevře hermetické menu s přehledem augmentací a archivu |
+| **F** | Seal the Working | Po Frost Emperorovi uzavře Velké dílo |
+| **Esc / P** | Pause | Otevře hermetické menu s inventářem a Archívem |
 
 Primary **nikdy** nemíří samo. Primary **nikdy** nestřílí bez stisknutého tlačítka.  
-Během dashe hráč **není** tělesně separován, takže dokáže proříznout obklíčení. Během i-framů hráč ignoruje jak contact damage potvor, tak letící nepřátelské střely i exploze.
+Během dashe hráč **není** tělesně separován, takže dokáže proříznout obklíčení. I-framy ignorují contact damage, nepřátelské střely i exploze.
+
+One-shot ochrana: pokud má hráč ≥ 90 % max HP a zásah by ho srazil pod 1 HP, zbude 1 HP a 0.25 s i-framů.
 
 ---
 
-## 5. Struktura běhu (Run Structure)
+## 5. Struktura běhu
 
-Hra se skládá ze **3 komor (stages)** Velkého díla (The Great Work):
-1. **Stage 1: Cinder Yard** — *Nigredo & Calcination* (vnější hutě a pece, žár a popel).
-2. **Stage 2: Rime Dock** — *Albedo & Fixation* (podzemní mrazivé doky, solné krystaly a rtuť).
-3. **Stage 3: Glacial Tomb** — *Rubedo & The Great Seal* (nejhlubší krypta věčného ledu, finální pečeť).
+Hra se skládá ze **3 komor** Velkého díla. Po Frost Emperorovi se otevírá zlatá brána Ouroboros.
 
-### Průběh jedné stage:
-1. **Drop do arény:** Hráč začíná v aréně 2560×2560 px. Kolem něj je vygenerováno **14 pilířů, 8 hazardů a 9 volatilních nádob**. HUD hlásí: `Seal manifests in M:SS`.
-2. **Kiting a sběr esence:** Likvidace drobotiny (Mites, Spitters), sběr Mercury Drops, postupy na level.
-3. **Příchod elit:** Director v daném čase spawne první elitu s Noxious jedem a Shielder štítem.
-4. **Manifestace Transmutačního kruhu:** V předem daném čase se v aréně rozsvítí Transmutation Circle. Souřadnice jsou vyhrazeny již při startu stage, takže se uvnitř kruhu nenachází pilíře ani hazardy.
-5. **Channeling kruhu (Hold):** Hráč stojí v kruhu a nabíjí jej na 100 %. Mimo kruh se nabíjení pozastaví. Swarm a elity se stahují dovnitř.
-6. **Boss Duel:** Po dokončení channelingu se kruh uzavře a v aréně se probudí Strážce komory (Boss). V té chvíli Director **zastaví credit spawny**, aby aréna patřila epickému duelu. Boss používá unikátní telegraphované útoky, fázuje skrz sloupy, při 50 % HP vstoupí do enrage a vyvolává vlastní miniony.
-7. **Rift (Trhlina):** Po skolenení bosse se otevře Rift. Vstup a podržení pozice na 1.4 s přenese hráče do další komory. Všechny předchozí překážky a louže se vymažou, životy hráče se doplní na 100 % a nová stage vygeneruje čerstvé překážky daného biomu.
-8. **Vítězství (Transmutation Complete):** Porážka třetího bosse (Frost Emperor) v Glacial Tomb završuje Velké dílo — nastává triumf a závěrečný souhrn běhu.
+1. **Cinder Yard** - *Nigredo & Calcination* (vnější hutě a pece).
+2. **Rime Dock** - *Albedo & Fixation* (podzemní mrazivé doky).
+3. **Glacial Tomb** - *Rubedo & The Great Seal* (krypta věčného ledu).
 
-### Časové osy komor (Slice Clocks):
+### Průběh jedné stage
 
-| Fáze | Stage 1: Cinder Yard | Stage 2: Rime Dock | Stage 3: Glacial Tomb |
+1. **Drop do arény.** Aréna 2560×2560 px. Kolem hráče: **14 pilířů, 8 hazardů, 9 volatilních nádob**. HUD: *The Seal Manifests*.
+2. **Kiting a sběr esence.** Likvidace drobotiny, Mercury Drops, postupy na level.
+3. **Příchod elit.** Po `firstEliteAt` Director spawnuje wardeny. Každá elita dostane **jeden** afix: Shielder nebo Noxious (50/50). Před zjevením kruhu žije nanejvýš 1 elita.
+4. **Manifestace Transmutačního kruhu.** Souřadnice jsou rezervované už při startu stage, takže uvnitř kruhu neleží pilíře ani hazardy.
+5. **Channeling (Hold).** Hráč stojí v kruhu a nabíjí jej. Mimo kruh se nabíjení zastaví. Swarm a elity se stahují dovnitř. HUD: *Channel the Transmutation Circle*. Chevron ukazuje na zónu mimo obrazovku.
+6. **Boss duel.** Po 100 % charge se kruh uzavře a probudí se Strážce. Director **zastaví credit spawny**. Žijící fodder dokape přirozeně. HUD: *Slay the [Boss]*.
+7. **Rift.** Po skolenení bosse se otevře portál (r=70, hold 1.4 s). Hráč se doplní na 100 % HP. Překážky, nepřátelé, gems, lore, projectiles a boss hazardy se vymažou. Nová stage vygeneruje biomové překážky.
+8. **Ouroboros nebo pečeť.** Po Frost Emperorovi je brána zlatá (*Descend the Ouroboros*). Hold spustí **Cycle II**: Cinder Yard znovu, inventář / XP / `runTime` zůstávají, `stageGen` pokračuje, koeficient dál stoupá s časem. **F** nebo pauza → *Seal the Working* = **Transmutation Complete**. Nedosebrané lore fragmenty se při pečeti i při cyklu posbírají automaticky.
+
+HP na 0 = **Vessel Shattered**. Opuštění z pauzy = **Vessel Dissolved**.
+
+### Slice clocks (LIVE)
+
+| Fáze | Cinder Yard | Rime Dock | Glacial Tomb |
 |---|---|---|---|
-| **První elita** | 15 s | 12 s | 10 s |
-| **Kruh se objeví** | 55 s | 50 s | 50 s |
-| **Délka nabíjení kruhu** | 20 s | 22 s | 25 s |
-| **Poloměr kruhu** | 160 px | 150 px | 140 px |
-| **Boss arény** | Cinder Heart | Frost Sovereign | Frost Emperor (Konec hry) |
+| První elita | 25 s | 18 s | 14 s |
+| Kruh se objeví | 55 s | 50 s | 50 s |
+| Délka nabíjení | 20 s | 22 s | 25 s |
+| Poloměr kruhu | 160 px | 150 px | 140 px |
+| Boss | Cinder Heart | Frost Sovereign | Frost Emperor (Ouroboros) |
+
+Produkční cíl (TARGET): ~6 min na komoru, kruh ~minuta 4, hold ~60 s.
+
+### Daily Rite
+
+Přepínač v The Hall. Zapnuto: `runSeed = hash('daily:' + UTC YYYY-MM-DD)`. Stejný den = stejný layout překážek, pozice kruhu a pořadí level-up karet. Director a combat RNG **není** seedovaný. Vypnuto: náhodný seed, vytiskne se na recapu.
 
 ---
 
 ## 6. Shell a uživatelské rozhraní
 
-Veškeré rozhraní je postaveno v HTML/CSS (`web/src/ui/`) přes canvas rendereru.
+Rozhraní je Godot Control overlay nad SubViewport arény. Hráčské texty jdou přes `tr()` a `locale/en.csv`.
 
-- **Hlavní sál (The Hall):** Titul **Hermetic Rifts**. Třísloupcové rozhraní zasazené do aetherického WebGL fragment shaderu (kouř a rotující transmutační sigilie).
-  - Levý sloupec: Volba schránky (Vessel Selection), Archiv (The Archives), Alchymistův stůl (Settings).
-  - Prostřední sloupec: 32px živý pixel-art náhled schránky s podstavcem.
-  - Pravý sloupec: Pergamenový spis schránky (Dossier) s titulem, lore a 4 sloty dovedností včetně podrobných vysvětlivek.
-  - Tlačítko **Commence Transmutation** (Enter) zahájí rituál.
-- **The Archives (`#archives`):** Plnoobrazovkový kodex s 5 svazky:
-  - **I. Rites of Motion:** Herní zákony, ovládání, práce s kruhem a překážkami.
-  - **II. Chronicles:** Příběh Velkého díla, popisy schránek a tří komor.
-  - **III. Bestiary:** Všech 10 entit s animovaným pixel-art náhledem, kompletními statistikami, popisem AI, lore a počtem střetnutí/zabití.
-  - **IV. Reliquary:** Všech 13 augmentací s filtry rarit, hooky, stohováním, lore a počtem voleb.
-  - **V. Ledger:** Trvalá statistika uložená v `localStorage` (`survivors.records.v1`), osobní rekordy, historie posledních běhů a bezpečné pročištění archivu.
-- **Odemykání obsahu (Progression):**
-  - Schránka *The Penitent* je uzamčena, dokud hráč neskolí Frost Sovereigna v Rime Docku.
-  - Šest vybraných augmentací se odemyká herními činy (porážka bossů, zabíjení drossu, dokončení komor). Zamčené augmentace se v nabídce level-upu neobjeví.
-- **Výběr augmentace (Level-up):** Pozastaví simulační smyčku. Zobrazí 3 hermetické karty (styl tarotových desek s raritními lemy, ikonami a detailním popisem hooků i lore). Klávesy 1–3 nebo kliknutí provedou volbu.
-- **HUD během hry:**
-  - Horní střed: Plaketa aktuálního cíle s procentuálním ukazatelem (Wait / Hold / Boss / Rift).
-  - Horní vpravo: Hodiny běhu a název komory.
-  - Dolní vlevo: Skleněná alchymistická baňka s tekutinou života (HP) + číselný údaj, tenká rtuťová linka zkušeností (XP) a úroveň.
-  - Dolní střed: 4 sloty skillů s radiálním odpočtem cooldownu a zábleskem i-framů.
-  - Dolní vpravo: Kompaktní mřížka 32×32 px sebraných augmentací s počtem stacků (sloupce se dynamicky přizpůsobují, aby nezakrývaly hrací plochu).
+- **Main menu:** Titul **Hermetic Rifts**. *The Archives*, *Alchemist's Desk*, *Commence Transmutation* (Enter) otevře The Hall.
+- **The Hall:** Lobby schránek. Levý sloupec: portréty (zamčená schránka tiskne **??? · SEALED**). Střed: 32px náhled. Pravý sloupec: dossier (titul, lore, 4 skilly). Nad CTA přepínač **Daily Rite**. CTA: *Commence Working* (Enter), nebo *Vessel Sealed*.
+- **The Archives:** Plnoobrazovkový kodex z menu i pauzy. Pět svazků:
+  - **I. Rites of Motion:** ovládání a 3 beaty Distillation / Convergence / Guardian.
+  - **II. Chronicles:** Great Work / Vessels & Arts / Three Chambers.
+  - **III. Bestiary:** 10 entit.
+  - **IV. Reliquary:** 13 itemů, filtry rarit, unlocky.
+  - **V. Ledger:** `user://records.v1.json`, osobní rekordy, posledních 10 běhů, dvoukrokové Purge Ledger. Neviděné názvy tisknou **???**.
+- **Level-up:** Pozastaví sim. 3 tarotové tablety (rarity lemy), klávesy 1-3. Zamčené itemy v nabídce nejsou. Prázdný unlocked pool spadne na všechny itemy.
+- **Pause:** Esc nebo P. *Simulation Paused* · Resume Sequence · The Archives · Settings · Abandon Vessel. Po Frost Emperorovi navíc *Seal the Working*. Inventář 32px chipy se stack countem. Nested dialogy (settings, archives, confirm) se odchází nejdřív.
+- **Alchemist's Desk:** Display Mode (Windowed / Borderless / Exclusive), Monitor, Resolution, VSync, Frame Rate Limit, Master / SFX / Music, Mute, Screenshake, Reduce Effects. Persistuje `user://settings.v1.json`. Změna mode/monitor/resolution chce 15 s potvrzení.
+- **HUD:** Horní střed zlatá plaketa cíle (Wait / Hold / Boss / Rift / Ouroboros). Horní vpravo hodiny, komora, Cycle, posuvník Dormant → Cataclysm. Dolní vlevo baňka HP + XP linka + Lv. Dolní střed 4 skilly s radiálním CD. Dolní vpravo mřížka 32×32 augmentací.
+- **Recap:** Vessel Shattered / Transmutation Complete / Vessel Dissolved. Čas, level, koeficient, kills, bossové, damage, essence, Cycle, inventory, Discoveries & Archives. Copy Summary [C] dumpne pasteable řádek se Seed / Daily Rite. Run Again [Enter], Return to Hall [Esc].
+
+Zaměřovač Homunculus: rtuťové závorky. The Penitent: liturgický kruh. Během unpaused runu je OS kurzor skrytý.
 
 ---
 
 ## 7. Schránky (Vessels)
 
-### 1. Homunculus (`runner`) — Skirmisher
+### Homunculus (`runner`) - Skirmisher
+
 - **Titul:** The Runner
 - **Lore:** *Clay and quicksilver, stolen from a failed Great Work. You kite the dross until the seal holds.*
-- **Základní statistiky:** Rychlost 280, Max HP 100, Hurtbox poloměr 14 px.
-- **Zaměřovač:** Rtuťové přesné závorky (`runner`).
-- **Styl boje:** Rychlý pohyb po obvodu, precizní střelba, prořezávání chumlu fázovým krokem.
+- **Základ:** Speed 280, Max HP 100, radius 14.
+- **Styl:** Rychlý pohyb po obvodu, precizní střelba, prořezávání chumlu.
 
 **Dovednosti:**
-- **Primary:** `Ignis Bolt` (`bolt`) — Hold LMB, CD 0.28 s. Rychlý plamenný šíp (speed 780, lifetime 0.85 s, damage 10). Zaniká při prvním nárazu.
-- **Secondary:** `Piercing Aether` (`skill-aether-pierce`) — Press RMB, CD 4.0 s. Paprsek ukradeného nebe (speed 1400, damage 22), který propálí všechny nepřátele v přímce, za cenu krátkého zpomalení kroku (50 % slow na 0.25 s).
-- **Utility:** `Phase Step` (`dash`) — Press Shift/Space, CD 0.9 s. Rychlý posun o 210 px trvající 0.16 s s 0.22 s nezranitelností (i-frames).
-- **Special:** `Crucible Cull` (`skill-crucible-cull`) — Press Q, CD 12.0 s. Alchymistický úder z nebes na pozici kurzoru. Po 0.7 s telegraphu dopadne úder o poloměru 45 px s drtivým poškozením 95.
+- **Ignis Bolt** (`bolt`) - Hold LMB, CD 0.28 s. Šíp speed 780, life 0.85 s, dmg 10. Zaniká při prvním nárazu.
+- **Piercing Aether** (`skill-aether-pierce`) - Press RMB, CD 4.0 s. Pierce paprsek speed 1400, dmg 22, self-slow ×0.5 na 0.25 s.
+- **Phase Step** (`dash`) - Press Shift/Space, CD 2.9 s. 210 px za 0.16 s, iframe 0.22 s.
+- **Crucible Cull** (`skill-crucible-cull`) - Press Q, CD 12.0 s. Telegraph 0.7 s, r=45, dmg 95 na kurzor.
 
-### 2. The Penitent (`penitent`) — Caster / Controller
+### The Penitent (`penitent`) - Caster / Controller
+
 - **Titul:** The Caster
 - **Lore:** *A monk who walked into the kiln and did not burn. He draws circles the horde must not cross.*
 - **Odemčení:** Porazit Frost Sovereigna v Rime Docku.
-- **Základní statistiky:** Rychlost 245, Max HP 135, Hurtbox poloměr 14 px.
-- **Zaměřovač:** Liturgický vysvěcený kruh (`penitent`).
-- **Styl boje:** Zónování arény, lákání drobotiny do pastí, spoutávání nebezpečných elit a bossů.
+- **Základ:** Speed 245, Max HP 135, radius 14.
+- **Styl:** Zónování, lákání drobotiny, spoutávání elit a bossů.
 
 **Dovednosti:**
-- **Primary:** `Censer Lob` (`skill-censer-lob`) — Hold LMB, CD 0.42 s. Vrh těžké kadidelnice obloukem (speed 420, lifetime 1.1 s, damage 14). Létá nad hlavami nepřátel (`flyOver`) a roztříští se až u kurzoru s plošným výbuchem o poloměru 30 px.
-- **Secondary:** `Brimstone Line` (`skill-brimstone-line`) — Press RMB, CD 5.0 s. Vytvoří před sebou sírový šev (150×18 px) trvající 2.4 s. Zpomalí drobotinu na 20 % rychlosti a uděluje 2 DPS. Elity a bossové linku ignorují.
-- **Utility:** `Ash Step` (`dash-ash-step`) — Press Shift/Space, CD 1.1 s. Dash o 210 px s i-framy (0.22 s), který na původním místě zanechá popelovou figurínu (decoy) na 1.5 s. Drobotina se vrhá na figurínu, elity ji ignorují.
-- **Special:** `Condemnation Tether` (`skill-condemn-tether`) — Press Q, CD 15.0 s. Vrhne těžký řetěz (speed 640, lifetime 0.7 s). První zasažená elita nebo boss je znehybněna (root) na 2.5 s a veškerá drobotina dotýkající se spoutaného cíle je pálena za 18 DPS. Minutí nebo zásah řadového nepřítele cooldown vyplýtvá.
+- **Censer Lob** (`skill-censer-lob`) - Hold LMB, CD 0.42 s. Oblouk speed 420, life 1.1 s, dmg 14, `flyOver`, impact r=30.
+- **Brimstone Line** (`skill-brimstone-line`) - Press RMB, CD 5.0 s. Šev 150×18, 2.4 s, slow fodder na 20 %, 2 DPS. Elity a bossové linku ignorují.
+- **Ash Step** (`dash-ash-step`) - Press Shift/Space, CD 3.0 s. Dash 210 px, iframe 0.22 s, decoy 1.5 s. Fodder se vrhá na figurínu, elity ji ignorují.
+- **Condemnation Tether** (`skill-condemn-tether`) - Press Q, CD 15.0 s. Řetěz speed 640, life 0.7 s. Fodder na dráze bere 45 dmg. První elita/boss: root 2.5 s, fodder na řetězu 28 DPS. Minutí cooldown vyplýtvá.
+
+Žádná schránka nezačíná s itemy. Síla jen z level-up tablet.
 
 ---
 
-## 8. Systém zkušeností a růst (XP & Level-up)
+## 8. XP a level-up
 
-- Každý padlý nepřítel upustí rtuťovou kapku esence (**Mercury Drop**).
-- Hodnoty esence: Drobotina 3–5 XP, Elity 14–18 XP, Bossové 50–120 XP.
-- Vzorec pro potřebné XP: `round(32 * 1.30^(level - 1))`. První level vyžaduje 32 XP (~8–11 potvor).
-- Magnet na kapky: základní dosah sebrání 36 px, magnetické pole od 88 px (přitahuje rychlostí 320 px/s).
-- Postup na nový level okamžitě pozastaví simulaci a předloží **3 karty augmentací** vážené podle rarit:
-  - Common: váha 1.00
-  - Uncommon: váha 0.55
-  - Rare: váha 0.22
-  - Lunar: váha 0.08
-- Zamčené augmentace jsou z nabídky vyřazeny, dokud nejsou splněny jejich podmínky v archivu.
+- Padlý nepřítel pouští Mercury Drop (nebo přímé XP).
+- Fodder 3-6 XP podle entity. Elita = base XP × 2.5. Boss 50 / 75 / 120.
+- Vzorec: `round(32 * 1.30^(level-1))`. Level 1 = 32 XP (~11 Ember Mites).
+- Pickup 36 px, magnet od 88 px rychlostí 320 px/s.
+- 3 karty vážené rarity: common 1.00, uncommon 0.55, rare 0.22, lunar 0.08.
+- Zamčené augmentace z nabídky vypadnou. Duplikát `stack: none` by z nabídky vypadl; LIVE itemy mají `linear`, takže se stackují.
 
 ---
 
-## 9. Augmentace (Itemy & Staty)
+## 9. Augmentace
 
-Systém statistik podporuje:
-- `speed` — rychlost pohybu schránky
-- `maxHp` — maximální životy (při změně se aktuální HP posouvá úměrně)
-- `radius` — velikost kolizního hurtboxu hráče (menší = lépe kličkuje)
-- `damage` — multiplikátor síly útoků
-- `cooldown` — zkrácení doby nabíjení schopností
-- `critChance` — šance na kritický úder
-- `critDamage` — bonusové poškození při kritickém zásahu
-- `on-kill` — přímé léčení za každého zabitého nepřítele
+Staty, které itemy hýbou: `speed`, `maxHp`, `radius`, `damage`, `cooldown`, `critChance`, `critDamage`, `armor`, `hazardResist`, `hpRegen`, `pickupRadius`, `xpGain`, `aoeRadius`, `projSpeed`, `controlDuration`, `eliteDamage`. Plus `on-kill` heal a `on-crit` CD refund.
 
-### Filozofie vyvážení:
-- **Common & Uncommon:** Čistě pozitivní esence, základ každého funkčního buildu.
-- **Rare & Lunar:** Extrémní síla vykoupená citelnou slabinou.
+Filozofie: Common a Uncommon čistě pozitivní. Rare a Lunar s rizikem.
 
-### Seznam 13 augmentací:
+| Display | id | Rarity | Hook | Unlock |
+|---|---|---|---|---|
+| Cloven Sinew | `goat-hoof` | common | +15 % speed | - |
+| Slag Carapace | `brittle-plate` | common | +12 % armor | - |
+| Waxen Pinions | `wax-wings` | common | +35 % hazard ward | - |
+| Lead Plumbum | `lead-core` | common | +25 max HP | - |
+| Salt Effigy | `salt-ward` | common | −12 % hurtbox | Clear Cinder Yard |
+| Cinnabar Leech | `cinnabar-leech` | common | +0.3 HP za kill | Slay 100 Dross |
+| Spasmodic Nerve | `hair-trigger` | uncommon | −15 % cooldown | - |
+| Bellows Heart | `overclock` | uncommon | +22 % AoE, +20 % proj speed | Slay Cinder Heart |
+| Quicksilver Draught | `mercury-vial` | uncommon | +35 % magnet, +15 % XP | - |
+| Vitriol Veins | `glass-cannon` | rare | +55 % dmg, −25 % max HP | - |
+| Parasitic Alembic | `hungry-clip` | rare | +1 HP/s, +35 % rite duration, +25 % hurtbox | Slay 10 elites |
+| Astrologer's Ocular | `calcined-lens` | rare | +25 % crit chance, −0.25 s CD on crit, −15 % speed | Slay 300 Dross |
+| Pale Moon Covenant | `lunar-tithe` | lunar | +60 % elite/boss dmg, +75 % crit dmg, −25 % armor, −25 % XP | Clear Rime Dock |
 
-1. **Cloven Sinew** (`goat-hoof`, Common): +14% speed. *Rychlost kroků po spáleništi.*
-2. **Slag Carapace** (`brittle-plate`, Common): +25% max HP. *Pláty strusky chránící jádro.*
-3. **Waxen Pinions** (`wax-wings`, Common): +12% speed. *Křídla z loje odlehčující schránku.*
-4. **Lead Plumbum** (`lead-core`, Common): +25 max HP (add). *Olověné závaží kotvící životní sílu.*
-5. **Salt Effigy** (`salt-ward`, Common): −12% hurtbox radius. *Vysušená silueta, která proklouzne mezi střelami.* (Unlock: Dokončit Cinder Yard).
-6. **Cinnabar Leech** (`cinnabar-leech`, Common): +0.25 HP za každé zabití. *Pijavice sající zbytky esence.* (Unlock: Zabít 100 nepřátel).
-7. **Spasmodic Nerve** (`hair-trigger`, Uncommon): −15% cooldown. *Zrychlené alchymistické reflexy.*
-8. **Bellows Heart** (`overclock`, Uncommon): +16% damage, +35% crit damage. *Alchymistické dmychadlo rozdmýchávající plamen.* (Unlock: Porazit Cinder Heart).
-9. **Quicksilver Draught** (`mercury-vial`, Uncommon): −12% cooldown, +6% speed. *Zředěná rtuť v tepnách schránky.*
-10. **Vitriol Veins** (`glass-cannon`, Rare): +60% damage, −25% max HP. *Kyselina leptající nepřátele i vlastní schránku.*
-11. **Parasitic Alembic** (`hungry-clip`, Rare): −30% cooldown, +25% hurtbox radius. *Dravá destilace zrychlující kouzla, která však nafukuje siluetu.* (Unlock: Zabít 10 Noxious elit).
-12. **Astrologer's Ocular** (`calcined-lens`, Rare): +30% crit chance, +50% crit damage, −18% speed. *Hvězdářský okulár odhalující pukliny v tělech za cenu pomalého kroku.* (Unlock: Zabít 300 nepřátel).
-13. **Pale Moon Covenant** (`lunar-tithe`, Lunar): +75% damage, +50% crit damage, −40% max HP, +20% hurtbox radius. *Kacířská smlouva s bledým měsícem nabízející nesmírnou ničivost za cenu křehké a zranitelné skořápky.* (Unlock: Dokončit Rime Dock).
+Při změně max HP se aktuální HP posune o rozdíl max (min 1).
 
 ---
 
-## 10. Monster Director a eskalace
+## 10. Monster Director
 
-Obtížnost se neřídí tupým násobením počtu monster na obrazovce. Řídí ji **Monster Director**:
-- Obtížnostní koeficient: `1 + runTime * 0.006 + stageIndex * 0.35`.
-- Příjem kreditů: `3.6 * coefficient` za sekundu.
-- Nákupní ceny: Drobotina 7 kreditů (interval 0.5 s), Elita 42 kreditů (interval 14.0 s), Sniper 30 kreditů (interval 7.0 s).
-- Bezpečná zóna spawnu: Nepřátelé se rodí v prstenci 460–900 px od hráče, nikdy blíž než 460 px.
-- **Boss Duel Freeze:** V momentě probuzení bosse Director přestane utrácet kredity.
-
----
-
-## 11. Elity a Boss Souboje
-
-### Elitní nepřátelé
-Každá elita v aréně disponuje dvěma modifikátory:
-- **Noxious:** Při dotyku zpomalí hráče na 50 % rychlosti (1.1 s). Po smrti se 0.5 s chvěje, vybuchne (r=40 px, damage `8 * coeff`) a zanechá trvalou louži kyseliny (r=68 px, 4 DPS, slow ×0.65) trvající až do konce stage.
-- **Shielder:** Spawne se s aetherickým štítem o hodnotě +30 % max HP. Pokud není 5 sekund zasažena, štít se plně zregeneruje.
-
-### Souboje s Bossovskými Strážci
-Bossové se chovají jako inteligentní arénoví protivníci:
-- Fázují skrz pilíře (hráč se za nimi nemůže natrvalo schovat).
-- Při 50 % HP vstoupí do enrage (cooldowny se zkrátí o ~25 %).
-- Vyvolávají vlastní miniony namísto náhodného spawnu directoru.
-
-1. **Cinder Heart (Stage 1):** HP 1650. Útočí pětičlennou vějířovitou salvou lávy (`Slag Spray`), vyvolává padající meteority zanechávající lávové pasti (`Falling Clinker`) a líhne útočné Mity (`Kiln Brood`).
-2. **Frost Sovereign (Stage 2):** HP 2100. Pálí rychlá ledová kopí (`Cryo Lance`), metá mrazivý kužel zpomalující krok na 22 % (`Glacial Sweep`), uvězňuje hráče v ledové kleci (`Rime Prison`) a vyvolává mrazivé Mity (`Rime Brood`).
-3. **Frost Emperor (Stage 3):** HP 2800. Finální vládce absolutní nuly. Vrhá těžké ledové oštěpy (`Glacial Spear`), vysílá arénový pulz o poloměru 620 px (`Absolute Zero Pulse`), zaměřuje rotující termální laser (`Aether Laser`) zanechávající stopu mrazivých louží a vyvolává imperiální gardu (Mites i Spitters).
+Koeficient: `1 + runTime * 0.0026` (`stageBonus` 0).  
+Příjem kreditů: `3.0 * coefficient` za sekundu.  
+Ceny: fodder 6, elite base 18 × `eliteCostMul` 3 = 54, sniper 18.  
+Intervaly: fodder 1.6 s, elite 14 s, sniper 9 s (max 3).  
+Spawn prstenec 460-900 px, nikdy blíž než 460. Pack 3-6 fodder, elita pack 1.  
+~22 % fodder spawnů je ranged (Glacial Tomb 0.28).  
+Šance mutace na elitu: `0.02 + (coeff−1)*0.12`, cap 0.40.  
+Před kruhem max 1 elita, během Hold až 6.  
+Boss freeze: Director neutrácí, dokud je boss naživu nebo po jeho smrti až do další stage.
 
 ---
 
-## 12. Překážky a prostředí
+## 11. Elity a bossové
 
-Aréna o rozměrech 2560×2560 px obsahuje 31 pevných překážek + až 8 dynamických louží:
-- **Pilíře (Pillars, r=28 px):** Pevné překážky blokující pohyb hráče i nepřátel. Pohlcují běžné střely i smrtící paprsky sniperů.
-- **Hazardy (Hazards, r=68 px):** Trhliny a louže zpomalující krok a udělující průběžné poškození. Během úhybného dashe (i-framů) je hráč ignoruje.
-- **Volatiles (r=14 px):** Tlakové nádoby reagující pouze na mířené útoky hráče. Po vyčerpání životů a 0.4 s telegraphu explodují v poloměru 110 px a udělí masivní poškození nepřátelům.
+### Elity
 
-Každá komora má své vlastní vizuální a tematické varianty překážek (Obsidian Kiln v pecích, Frozen Bollard v docích, Glacial Monolith v hrobce).
+Každá elita má **jeden** afix (50/50):
+
+- **Noxious:** Contact slow ×0.5 na 1.1 s. Po smrti 0.5 s corpse, pop r=40 dmg `8 * coeff`, louže 6 s (hazard r=68, 4 DPS, player speed ×0.65).
+- **Shielder:** Štít 30 % max HP. Po 5 s bez zásahu se plně obnoví.
+
+Vizuál: Shielder azurový outline, Noxious viridiánový pulz.
+
+### Bossové
+
+Bossové kolidují s pilíři. Enrage při 50 % HP. Vlastní minioni, ne Director.
+
+1. **Cinder Heart** (HP 1650): Slag Spray fan, Falling Clinker meteor + láva, Kiln Brood (`ember-mite` ×3, max 6). Enrage CD ×0.75.
+2. **Frost Sovereign** (HP 2100): Cryo Lance, Glacial Sweep kužel slow 0.22, Rime Prison root 1.6 s, Rime Brood. Enrage CD ×0.75.
+3. **Frost Emperor** (HP 2800): Glacial Spear, Absolute Zero Pulse r=620, Aether Laser + trail louže, Imperial Guard, Brine Retinue. Enrage CD ×0.72.
+
+---
+
+## 12. Překážky
+
+Aréna 2560×2560: 14+8+9 pevných + až 8 dynamických louží.
+
+- **Pilíře r=28:** Solid vs hráč, fodder, elity **i bossové**. Blokují Bolt, spitter bolts, Astral Watcher laser i Aether Laser.
+- **Hazardy r=68:** Bez kolize střel. Hráč ×0.65 speed a `4 * coeff` DPS. Dash / i-frame = čistý průchod. Fodder/elity ×0.85 speed. Noxious smrt spawne 6 s louži tohoto typu.
+- **Volatiles r=14:** HP `25 * coeff`, damage jen hráčské skilly. Prime 0.4 s, exploze r=110, `45 * coeff` enemy, 18 flat hráči bez i-framů. Rime Dock navíc 2.0 s ×0.7 slow.
+
+Keep-out při place: ≥160 od stěn, ≥200 od spawnu hráče, pilíř/hazard ≥230 od kruhu, volatile ≥200 od kruhu, ≥190 mezi sebou.

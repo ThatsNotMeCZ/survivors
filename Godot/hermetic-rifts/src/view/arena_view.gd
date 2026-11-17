@@ -2,10 +2,12 @@ extends Node2D
 
 const WAYPOINT_DIST: float = 80.0
 const WAYPOINT_PAD: float = 52.0
-const GHOST_CAP: int = 8
+const GHOST_CAP: int = 10
 const SPARK_CAP: int = 24
 const IMPACT_CAP: int = 12
 const DASH_GHOST_CD: float = 0.04
+const MOVE_GHOST_CD: float = 0.055
+const TRAIL_SPEED: float = 18.0
 
 @onready var camera: Camera2D = $Camera2D
 @onready var world_root: Node2D = $WorldRoot
@@ -34,6 +36,9 @@ var _impact_max: PackedFloat32Array = PackedFloat32Array()
 var _impact_mats: Array[ShaderMaterial] = []
 var _enemy_last_x: PackedFloat32Array = PackedFloat32Array()
 var _enemy_last_y: PackedFloat32Array = PackedFloat32Array()
+var _enemy_anim: PackedStringArray = PackedStringArray()
+var _enemy_anim_t0: PackedFloat32Array = PackedFloat32Array()
+var _enemy_windup: PackedFloat32Array = PackedFloat32Array()
 var _shake: float = 0.0
 var _hurt_flash: float = 0.0
 var _hurt_mat: ShaderMaterial
@@ -41,6 +46,8 @@ var _mat_tether: ShaderMaterial
 var _mat_impact: ShaderMaterial
 var _mat_brim: ShaderMaterial
 var _mat_charge: ShaderMaterial
+var _mat_laser: ShaderMaterial
+var _laser: Sprite2D
 var _ambient: Sprite2D
 var _floor: Sprite2D
 var _circle: Sprite2D
@@ -54,6 +61,9 @@ var _charge_active: float = 0.0
 var _tex_cache: Dictionary = {}
 var _last_px: float = 0.0
 var _last_py: float = 0.0
+var _trail_px: float = 0.0
+var _trail_py: float = 0.0
+var _trail_inited: bool = false
 var _last_stage: int = -1
 var _last_stage_gen: int = -1
 var _last_boss: bool = false
@@ -129,6 +139,13 @@ func _ready() -> void:
 	_mat_tether = _mat("res://assets/shaders/tether.gdshader")
 	_mat_impact = _mat("res://assets/shaders/skill_impact.gdshader")
 	_mat_brim = _mat("res://assets/shaders/brimstone_line.gdshader")
+	_mat_laser = _mat("res://assets/shaders/boss_laser.gdshader")
+	_laser = Sprite2D.new()
+	_laser.z_index = 6
+	_laser.texture = _placeholder(Color(1, 1, 1, 1), 64)
+	_laser.material = _mat_laser
+	_laser.visible = false
+	world_root.add_child(_laser)
 	player_sprite.material = _hurt_mat
 	player_sprite.z_index = 5
 	player_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -245,6 +262,7 @@ func _sync(world: SimWorld, dt: float, reduce_vfx: bool, screenshake: bool) -> v
 		_last_stage_gen = world.stage_gen
 		_apply_stage_art(world, theme)
 		crosshair.texture = _make_crosshair(String(world.survivor.get("id", "")) == "penitent")
+		_trail_inited = false
 	_sync_player(world, dt, biome, reduce_vfx)
 	_step_dash_trail(world, dt, biome, reduce_vfx)
 	crosshair.position = Vector2(world.aim_x, world.aim_y)
@@ -265,6 +283,7 @@ func _sync(world: SimWorld, dt: float, reduce_vfx: bool, screenshake: bool) -> v
 	_sync_projectiles(world, biome, reduce_vfx)
 	_sync_zones(world, reduce_vfx)
 	_sync_hazards(world, reduce_vfx)
+	_sync_laser(world, reduce_vfx)
 	_sync_gems(world)
 	_sync_lores(world)
 	_sync_waypoint(world)
@@ -577,6 +596,9 @@ func _sync_elites(world: SimWorld, reduce_vfx: bool) -> void:
 		if _enemy_last_x.size() < world.enemies.cap:
 			_enemy_last_x.resize(world.enemies.cap)
 			_enemy_last_y.resize(world.enemies.cap)
+			_enemy_anim.resize(world.enemies.cap)
+			_enemy_anim_t0.resize(world.enemies.cap)
+			_enemy_windup.resize(world.enemies.cap)
 		var moved: float = absf(world.enemies.x[i] - _enemy_last_x[i]) + absf(world.enemies.y[i] - _enemy_last_y[i])
 		_enemy_last_x[i] = world.enemies.x[i]
 		_enemy_last_y[i] = world.enemies.y[i]
@@ -584,7 +606,14 @@ func _sync_elites(world: SimWorld, reduce_vfx: bool) -> void:
 		var anim: String = world.enemies.anim_name[i]
 		if not attacking or anim == "":
 			anim = "walk" if moved > 0.35 else "idle"
-		var tex: Texture2D = UiAtlas.entity_frame(world.enemies.def_id[i], anim, world.run_time)
+		var clip: String = "%s:%s" % [world.enemies.def_id[i], anim]
+		var wu: float = world.enemies.windup[i]
+		if clip != _enemy_anim[i] or wu > _enemy_windup[i] + 0.001:
+			_enemy_anim[i] = clip
+			_enemy_anim_t0[i] = world.run_time
+		_enemy_windup[i] = wu
+		var anim_t: float = world.run_time if anim == "idle" or anim == "walk" else world.run_time - _enemy_anim_t0[i]
+		var tex: Texture2D = UiAtlas.entity_frame(world.enemies.def_id[i], anim, anim_t)
 		if tex != null:
 			spr.texture = tex
 		var affix: float = 0.0
@@ -737,9 +766,96 @@ func _sync_hazards(world: SimWorld, reduce_vfx: bool) -> void:
 			hm.set_shader_parameter("u_progress", progress)
 			hm.set_shader_parameter("u_angle", world.boss_hazards.angle[i])
 			hm.set_shader_parameter("u_dir", Vector2(world.boss_hazards.dir_x[i], world.boss_hazards.dir_y[i]))
+			hm.set_shader_parameter("u_radius", world.boss_hazards.radius[i])
+			if world.boss_hazards.kind[i] == BossHazardPool.HAZ_PULSE:
+				var pillars: Array[Projection] = _pulse_pillar_projections(world, world.boss_hazards.x[i], world.boss_hazards.y[i])
+				hm.set_shader_parameter("u_pillars0", pillars[0])
+				hm.set_shader_parameter("u_pillars1", pillars[1])
+				hm.set_shader_parameter("u_pillars2", pillars[2])
+				hm.set_shader_parameter("u_pillars3", pillars[3])
+			else:
+				var empty := Projection(Vector4.ZERO, Vector4.ZERO, Vector4.ZERO, Vector4.ZERO)
+				hm.set_shader_parameter("u_pillars0", empty)
+				hm.set_shader_parameter("u_pillars1", empty)
+				hm.set_shader_parameter("u_pillars2", empty)
+				hm.set_shader_parameter("u_pillars3", empty)
 		n += 1
 	for i: int in range(n, _hazard_sprites.size()):
 		_hazard_sprites[i].visible = false
+
+
+func _sync_laser(world: SimWorld, reduce_vfx: bool) -> void:
+	if _laser == null:
+		return
+	var boss: BossState = world.boss
+	var idx: int = boss.enemy_index
+	if reduce_vfx or idx < 0 or world.enemies.alive[idx] == 0 or boss.active_attack < 0 or boss.phase == &"none":
+		_laser.visible = false
+		return
+	var def_id: String = world.enemies.def_id[idx]
+	if def_id == "":
+		_laser.visible = false
+		return
+	var ai: Dictionary = DictUtil.d(world.catalog.entity(def_id), "ai")
+	if String(ai.get("type", "")) != "boss":
+		_laser.visible = false
+		return
+	var attacks: Array = DictUtil.a(ai, "attacks")
+	if boss.active_attack >= attacks.size():
+		_laser.visible = false
+		return
+	var atk: Dictionary = attacks[boss.active_attack]
+	if String(atk.get("type", "")) != "laser":
+		_laser.visible = false
+		return
+	var bx: float = world.enemies.x[idx]
+	var by: float = world.enemies.y[idx]
+	var ex: float = boss.laser_end_x
+	var ey: float = boss.laser_end_y
+	var dx: float = ex - bx
+	var dy: float = ey - by
+	var length: float = maxf(24.0, sqrt(dx * dx + dy * dy))
+	var hit_r: float = float(atk.get("hitRadius", 28.0))
+	var tw: float = 64.0
+	_laser.visible = true
+	_laser.position = Vector2((bx + ex) * 0.5, (by + ey) * 0.5)
+	_laser.rotation = atan2(dy, dx)
+	_laser.scale = Vector2(length / tw, (hit_r * 3.0) / tw)
+	if _mat_laser != null:
+		_mat_laser.set_shader_parameter("u_time", world.run_time)
+		_mat_laser.set_shader_parameter("u_channeling", 1.0 if boss.phase == &"channel" else 0.0)
+		var dur: float = boss.duration if boss.duration > 0.0 else 1.0
+		_mat_laser.set_shader_parameter("u_progress", clampf(boss.elapsed / dur, 0.0, 1.0))
+
+
+func _pulse_pillar_projections(world: SimWorld, px: float, py: float) -> Array[Projection]:
+	var zero := Projection(Vector4.ZERO, Vector4.ZERO, Vector4.ZERO, Vector4.ZERO)
+	var mats: Array[Projection] = [zero, zero, zero, zero]
+	var slot: int = 0
+	for i: int in world.obstacles.cap:
+		if slot >= 16:
+			break
+		if world.obstacles.alive[i] == 0:
+			continue
+		var obs: SimObstacle = world.obstacles.items[i]
+		if obs.type != &"pillar":
+			continue
+		var mat_i: int = slot >> 2
+		var col: int = slot & 3
+		var v := Vector4(obs.x - px, obs.y - py, obs.radius + EnemyPool.PILLAR_COVER_EXTRA_RADIUS, 1.0)
+		var mat: Projection = mats[mat_i]
+		match col:
+			0:
+				mat.x = v
+			1:
+				mat.y = v
+			2:
+				mat.z = v
+			_:
+				mat.w = v
+		mats[mat_i] = mat
+		slot += 1
+	return mats
 
 
 func _sync_gems(world: SimWorld) -> void:
@@ -926,18 +1042,31 @@ func _consume_fx(app: Node) -> void:
 	var bus := get_node_or_null("/root/GameAudio")
 	if bus != null:
 		for i: int in world.fx.count:
-			bus.play_fx(int(world.fx.kind[i]))
+			bus.play_fx(int(world.fx.kind[i]), int(world.fx.tint[i]))
 
 
 func _step_dash_trail(world: SimWorld, dt: float, _biome: String, reduce_vfx: bool) -> void:
 	_ghost_cd = maxf(0.0, _ghost_cd - dt)
+	var px: float = world.player.x
+	var py: float = world.player.y
+	if not _trail_inited:
+		_trail_inited = true
+		_trail_px = px
+		_trail_py = py
+		return
 	if reduce_vfx:
+		_trail_px = px
+		_trail_py = py
 		return
 	var dashing: bool = world.player.dash_remain > 0.0
-	if not dashing or _ghost_cd > 0.0:
-		return
-	_ghost_cd = DASH_GHOST_CD
-	_spawn_dash_ghost(world, true)
+	var moving: bool = absf(_last_move_x) + absf(_last_move_y) > 0.0
+	var pdist: float = Vector2(px - _trail_px, py - _trail_py).length()
+	var pspeed: float = pdist / dt if dt > 0.0 else 0.0
+	if _ghost_cd <= 0.0 and (dashing or (moving and pspeed > TRAIL_SPEED)):
+		_ghost_cd = DASH_GHOST_CD if dashing else MOVE_GHOST_CD
+		_spawn_dash_ghost(world, dashing)
+	_trail_px = px
+	_trail_py = py
 
 
 func _spawn_dash_ghost(world: SimWorld, dashing: bool) -> void:

@@ -1,77 +1,69 @@
-# survivors — LIVE vs TARGET vs ZAKÁZÁNO
+# survivors - LIVE vs TARGET vs ZAKÁZÁNO
 
-Snapshot: **2026-11-05**.  
+Snapshot: **2026-11-17**.  
 Když navrhuješ nový herní prvek nebo úpravu, vždy jej zařaď do jedné z těchto kategorií.
 
 ---
 
-## LIVE (Plně hratelné v kódu teď)
+## LIVE (hratelné v Godot teď)
 
-Aktuální build představuje kompletní **tříkomorový hratelný run** s komprimovaným časováním pro playtestování:
+Aktuální build je kompletní **tříkomorový run** s komprimovaným časováním pro playtest. Klient: Godot 4.7.
 
-- **Combat verb A:** Hráč míří myší. Držet LMB pálí mířenou primární zbraň. RMB sekundární skill, Shift/Space úhybný dash s i-framy, Q speciální úder.
-- **2 schránky (Survivors):**
-  - **Homunculus:** Skirmisher, odemčen od začátku, přesný rtuťový zaměřovač. Skilly: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull.
-  - **The Penitent:** Caster/Controller, odemyká se porážkou Frost Sovereigna, liturgický kruhový zaměřovač. Skilly: Censer Lob / Brimstone Line / Ash Step / Condemnation Tether.
-- **3 komory (Stages):**
-  - Stage 1: Cinder Yard (*Nigredo & Calcination*) → Boss: Cinder Heart.
-  - Stage 2: Rime Dock (*Albedo & Fixation*) → Boss: Frost Sovereign.
-  - Stage 3: Glacial Tomb (*Rubedo & The Great Seal*) → Boss: Frost Emperor → Dokončení Velkého díla.
-- **Boss Duel System:**
-  - V momentě příchodu bosse Director **zastaví credit spawny** (žádný nový fodder, spitters ani elity).
-  - Bossové fázují skrz pilíře a mají unikátní telegraphované útoky (salvy lávy, meteority s loužemi, mrazivé kužely, ledové vězení, arénový pulz r=620, rotující aether laser).
-  - Enrage při 50 % HP (zkrácení cooldownů o ~25 %).
-  - Bossové si sami líhnou vlastní miniony (Kiln Brood, Rime Brood, Imperial Guard, Brine Retinue).
-- **Elitní modifikátory (LIVE na každé elitě):**
-  - **Noxious:** Contact slow ×0.5 na 1.1 s, exploze mrtvoly po 0.5 s, trvalá louže kyseliny (hazard r=68) až do konce stage.
-  - **Shielder:** Extra aetherický štít o hodnotě +30 % max HP, který se po 5.0 s bez poškození plně obnoví.
-- **13 hermetických augmentací (Itemů):**
-  - Vyvážení: Common a Uncommon jsou pozitivní stavební kameny, Rare a Lunar jsou silné dvousečné meče s rizikem.
-  - Systém kritických zásahů (`critChance`, `critDamage`).
-  - Systém odemykání: 6 augmentací vyžaduje splnění podmínek (zabití bossů, elit, drossu, dokončení komory).
-- **The Archives & Ledger:**
-  - Plnoobrazovkový kodex (`#archives`) přístupný z menu i pauzy: 5 svazků (Rites of Motion, Chronicles, Bestiary s 10 entitami, Reliquary s 13 itemy, Persistent Ledger s trvalými statistikami v `localStorage`).
-  - Lore fragmenty padající z nepřátel (2.5 % fodder, 25 % elita, 60 % boss).
-- **Arénové překážky ve 3 biomech:**
-  - 14 pilířů (r=28 px), 8 hazardů (r=68 px), 9 volatilních nádob (r=14 px) + až 8 dynamických louží kyseliny.
-  - Odlišné modely a názvy pro Cinder Yard, Rime Dock i Glacial Tomb.
-- **Audiovizuální podoba:**
-  - Aetherický WebGL fragment shader v pozadí Sálu (The Hall).
-  - GLSL shadery pro boss hazardy a arénové efekty.
-  - Vlastní skladby pro menu, stage a jednotlivé bossy přes Web Audio bus.
+- **Combat verb A:** Myš míří. Držet LMB pálí mířenou primární zbraň. RMB sekundární skill, Shift/Space dash s i-framy (CD 2.9 / 3.0 s), Q speciální úder, F Seal the Working, Esc/P pauza.
+- **2 schránky:**
+  - **Homunculus:** Skirmisher, odemčen od začátku. Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull.
+  - **The Penitent:** Caster/Controller, odemyká se porážkou Frost Sovereigna. Censer Lob / Brimstone Line / Ash Step / Condemnation Tether.
+- **3 komory:** Cinder Yard → Cinder Heart. Rime Dock → Frost Sovereign. Glacial Tomb → Frost Emperor → zlatá brána **Ouroboros**.
+- **Ouroboros / Cycle II:** Hold ve zlaté bráně vrací hráče do Cinder Yard s inventářem, XP a `runTime`. **F** nebo pauza → Seal the Working = Transmutation Complete.
+- **Daily Rite:** UTC seed layoutu, kruhu a pořadí tablet. Combat RNG neseeduje.
+- **Boss duel:** Director zastaví credit spawny. Bossové narážejí na pilíře. Unikátní telegraphované útoky, enrage 50 % HP, vlastní minioni.
+- **Elitní afixy (50/50, jeden na elitu):**
+  - **Noxious:** Contact slow ×0.5 na 1.1 s, corpse 0.5 s, pop, 6 s acid pool.
+  - **Shielder:** Štít 30 % max HP, obnova po 5.0 s bez zásahu.
+- **13 augmentací:** Common/Uncommon pozitivní, Rare/Lunar tradeoff. Crit 5 % / ×2. 6 itemů má unlock. Zamčené karty v draftu nejsou.
+- **The Archives & Ledger:** 5 svazků. Persistence `user://records.v1.json`. Lore dropy 2.5 % / 25 % / 60 %.
+- **Překážky ve 3 biomech:** 14 pilířů r=28, 8 hazardů r=68, 9 volatiles r=14, až 8 dynamických louží.
+- **Audio:** Playlisty menu / stage / boss. Pauza pouští overlay over ducked bed. Settings bus Master / SFX / Music / Mute.
+- **Alchemist's Desk:** Display mode, monitor, rozlišení, VSync, FPS cap, shake, reduce VFX.
 
 ---
 
-## TARGET v1 (Plánováno pro plnou produkční verzi v1)
+## TARGET v1 (plná produkční verze)
 
-- **Produkční časování:** Prodloužení délky runu na standardních ~15–20 minut (~5–6 minut na komoru, kruh v minutě ~4, hold ~60 s) namísto současného zrychleného playtest tempa.
-- **Náhodný roll elitních afixů:** Elity budou náhodně losovat mezi modifikátory (Burn, Chain Lightning, Noxious, Shielder) namísto současné kombinace Noxious + Shielder na každé elitě.
-- **4. enemy archetyp:** Rozšíření trojice chase / ranged / sniper o čtvrtý výrazný archetyp chování nepřátel.
-
----
-
-## ZAKÁZÁNO (Nikdy nenavrhovat)
-
-- Auto-aim nebo auto-fire na primární zbrani. Hráč musí aktivně mířit a držet střelbu.
-- Obrazovku mažící pasivní aury (orbital garlic) nebo evoluce, které smažou celou arénu.
-- AFK výhry (stát za sloupem po celou dobu rituálu, nechat miniony umírat o zeď).
-- Čisté generické `+damage` nebo `+HP` augmentace v kategorii Rare a Lunar bez odpovídajícího rizika či tradeoffu.
-- Kooperativní multiplayer (ve v1 je hra striktní singleplayer zážitek).
-- Přeplácaný pool 100+ zbytečných itemů a 20 postav.
-- Nekonečné prázdné travnaté louky bez překážek, krytů a hazardů.
+- **Produkční časování:** Run ~15-20 minut (~5-6 minut na komoru, kruh v minutě ~4, hold ~60 s) místo komprimovaného slice.
+- **Náhodný pool elitních afixů:** Elity budou losovat z širší sady (Burn, Chain Lightning, Noxious, Shielder). LIVE má jen Noxious nebo Shielder.
+- **4. enemy archetyp:** Vedle chase / ranged / sniper čtvrtý výrazný vzorec chování.
 
 ---
 
-## Časté omyly konzultantů (Pozor na záměny!)
+## ZAKÁZÁNO
 
-| Zastaralý předpoklad / Chyba | Co je LIVE ve skutečnosti |
+- Auto-aim nebo auto-fire na primární zbrani.
+- Obrazovku mažící pasivní aury (orbital garlic) nebo evoluce, které smažou arénu.
+- AFK výhry (stát za sloupem po celou dobu rituálu).
+- Čisté generické `+damage` nebo `+HP` v Rare a Lunar bez tradeoffu.
+- Kooperativní multiplayer ve v1 (tvar post-v1 existuje, shipping je otevřený).
+- Přeplácaný pool 100+ itemů a 20 postav.
+- Nekonečné prázdné louky bez překážek a hazardů.
+
+---
+
+## Časté omyly konzultantů
+
+| Zastaralý předpoklad | Co je LIVE |
 |---|---|
-| Jen 2 stage a 2 bossové | **3 stage a 3 unikátní bossové** (včetně Glacial Tomb & Frost Emperor) |
-| Bossové jsou jen tupí chase chodiči | **Bossové mají unikátní sady útoků**, enrage fází, hazardy a miniony |
-| Director dál spawnuje během bosse | **Director spawny kreditů ZASTAVÍ**, duel je čistý |
-| Všechny itemy mají negativní postih | **Common a Uncommon jsou čistě pozitivní**, Rare a Lunar mají tradeoff |
-| Elity mají jen Noxious jed | **Elity mají Noxious jed i Shielder regenerující štít** |
-| Pilíř má poloměr 52 px | **Pilíř má poloměr 28 px** (přizpůsobeno přesné kolizi) |
-| Ignis Bolt má cooldown 0.16 s | **Ignis Bolt má cooldown 0.28 s** |
-| Žádný systém odemykání | **The Penitent a 6 itemů mají unlock podmínky** v Archívu |
-| Všechny itemy jsou od začátku v nabídce | **Zamčené itemy se v draftu neobjeví**, dokud nesplníš podmínku |
+| Pack popisuje Phaser / HTML overlay / `localStorage` | **Godot 4.7**, Control UI, Ledger `user://records.v1.json` |
+| Jen 2 stage a 2 bossové | **3 stage a 3 bossové**, po Emperorovi Ouroboros |
+| Frost Emperor končí run | Run končí jen **Seal the Working**; hold v bráně = Cycle II |
+| Bossové fázují skrz pilíře | **Bossové kolidují** s pilíři; laser a hitscan umírají na kameni |
+| Každá elita má Noxious i Shielder | **50/50 jeden afix** |
+| Noxious louže trvá do konce stage | Louže trvá **6 s** |
+| Soft cap 32 fodder + 3 elity | **24 fodder + 6 elit + 1 boss** |
+| Director `perSecond` 0.006 / `stageBonus` 0.35 | **0.0026 / 0** |
+| Ignis Bolt CD 0.16 s, Phase Step CD 0.9 s | Bolt **0.28 s**, Phase Step **2.9 s** |
+| Slag Carapace +25 % HP, Waxen Pinions +speed | Carapace **+12 % armor**, Pinions **+35 % hazard ward** |
+| Vitriol Veins +60 % dmg | **+55 % damage, −25 % max HP** |
+| Pale Moon +75 % dmg / −40 % HP | **+60 % eliteDamage, +75 % critDamage, −25 % armor, −25 % XP** |
+| Elity mají jen Noxious | Také **Shielder** (jeden z nich) |
+| Všechny itemy v draftu od startu | 6 augmentací a The Penitent mají unlock |
+| Pilíř r=52 | Pilíř **r=28** |

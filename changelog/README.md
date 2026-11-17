@@ -36,4 +36,5 @@ Template:
 
 | # | File | Itch title |
 |---|---|---|
+| 0002 | [0002-seal-guardian-duels.md](0002-seal-guardian-duels.md) | Update 2 — Distinct Seal Guardians |
 | 0001 | [0001-ouroboros-loop-daily-rite.md](0001-ouroboros-loop-daily-rite.md) | Update 1 — The Ouroboros Loop & Daily Rite |

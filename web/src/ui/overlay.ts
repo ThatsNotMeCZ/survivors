@@ -1,6 +1,7 @@
 import { playSfx, setMusicOverlay, setMusicScene, type SfxId } from '../audio';
 import { catalog } from '../data/catalog';
-import type { ItemDef, ItemHook, SkillDef, SkillSlot, StatId, SurvivorDef } from '../data/schema';
+import type { ItemDef, SkillDef, SkillSlot, SurvivorDef } from '../data/schema';
+import { formatHook } from './format-hook';
 import { isPromoPlayShot } from '../promo/shot';
 import { renderArchivesView, type ArchiveTab } from './archives';
 import { formatTime, getHudItems, getHudSummary, hideHud, type HudItem } from './hud';
@@ -80,25 +81,6 @@ export type RunRecap = {
     survivorsUnlocked: number;
     totalSurvivors: number;
   };
-};
-
-const STAT_LABEL: Record<StatId, string> = {
-  speed: 'Speed',
-  maxHp: 'Max HP',
-  radius: 'Vessel Size',
-  damage: 'Damage',
-  cooldown: 'Cooldown',
-  critChance: 'Crit Chance',
-  critDamage: 'Crit Damage',
-  armor: 'Armor',
-  hazardResist: 'Hazard Ward',
-  hpRegen: 'HP/s Regen',
-  pickupRadius: 'Essence Magnet',
-  xpGain: 'Essence XP',
-  aoeRadius: 'Area Size',
-  projSpeed: 'Projectile Speed',
-  controlDuration: 'Rite Duration',
-  eliteDamage: 'Elite & Boss Damage',
 };
 
 let handlers: OverlayHandlers = {
@@ -583,21 +565,6 @@ function hookLines(item: ItemDef, uppercase = false): HTMLElement[] {
     line.textContent = uppercase ? formatted.text.toUpperCase() : formatted.text;
     return line;
   });
-}
-
-function formatHook(hook: ItemHook): { text: string; up: boolean } {
-  const sign = hook.value > 0 ? '+' : '';
-  if (hook.op === 'on-kill') {
-    return { text: `${sign}${hook.value} HP on kill`, up: hook.value > 0 };
-  }
-  if (hook.op === 'on-crit') {
-    return { text: `-${hook.value}s CD on crit`, up: true };
-  }
-  const amount =
-    hook.op === 'pct' ? `${sign}${Math.round(hook.value * 100)}%` : `${sign}${hook.value}`;
-  const hurt = hook.stat === 'radius' || hook.stat === 'cooldown';
-  const up = hook.value === 0 ? true : hurt ? hook.value < 0 : hook.value > 0;
-  return { text: `${amount} ${STAT_LABEL[hook.stat]}`, up };
 }
 
 function capitalize(str: string): string {

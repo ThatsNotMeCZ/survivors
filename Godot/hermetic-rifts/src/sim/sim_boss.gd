@@ -9,6 +9,10 @@ static func init_state(world: SimWorld, enemy_index: int, ai: Dictionary) -> voi
 	var attacks: Array = DictUtil.a(ai, "attacks")
 	for k: int in mini(attacks.size(), BossState.MAX_ATTACKS):
 		var atk: Dictionary = attacks[k]
+		var initial: float = float(atk.get("initialCooldown", 0.0))
+		if initial > 0.0:
+			boss.cooldowns[k] = initial
+			continue
 		var t: String = String(atk.get("type", ""))
 		if t == "bolt" or t == "fan":
 			boss.cooldowns[k] = 0.8
@@ -126,7 +130,7 @@ static func _tick_windup(world: SimWorld, i: int, ai: Dictionary, dt: float) -> 
 		boss.laser_end_y = hit.y
 	enemies.windup[i] = maxf(0.01, boss.duration - boss.elapsed)
 	if boss.elapsed >= boss.duration:
-		_finish_windup(world, i, atk)
+		_finish_windup(world, i, ai, atk)
 
 
 static func _tick_channel(world: SimWorld, i: int, ai: Dictionary, dt: float) -> void:
@@ -179,6 +183,7 @@ static func _tick_channel(world: SimWorld, i: int, ai: Dictionary, dt: float) ->
 			BossHazardPool.STYLE_FROST,
 		)
 	if boss.elapsed >= boss.duration:
+		_apply_recovery(world, ai, boss.active_attack, float(atk.get("recovery", 0.0)))
 		boss.phase = &"none"
 		boss.active_attack = -1
 		enemies.windup[i] = 0.0
@@ -267,7 +272,7 @@ static func _start_windup(world: SimWorld, i: int, ai: Dictionary, attack_index:
 		boss.counts["pulse"] = int(boss.counts.get("pulse", 0)) + 1
 
 
-static func _finish_windup(world: SimWorld, i: int, atk: Dictionary) -> void:
+static func _finish_windup(world: SimWorld, i: int, ai: Dictionary, atk: Dictionary) -> void:
 	var enemies: EnemyPool = world.enemies
 	var boss: BossState = world.boss
 	var bx: float = enemies.x[i]
@@ -344,10 +349,22 @@ static func _finish_windup(world: SimWorld, i: int, atk: Dictionary) -> void:
 		boss.laser_end_x = hit.x
 		boss.laser_end_y = hit.y
 		return
+	_apply_recovery(world, ai, boss.active_attack, float(atk.get("recovery", 0.0)))
 	boss.phase = &"none"
 	boss.active_attack = -1
 	enemies.windup[i] = 0.0
 	enemies.attack_remain[i] = 0.25
+
+
+static func _apply_recovery(world: SimWorld, ai: Dictionary, except_index: int, recovery: float) -> void:
+	if recovery <= 0.0:
+		return
+	var boss: BossState = world.boss
+	var attacks: Array = DictUtil.a(ai, "attacks")
+	for k: int in mini(attacks.size(), BossState.MAX_ATTACKS):
+		if k == except_index:
+			continue
+		boss.cooldowns[k] = maxf(boss.cooldowns[k], recovery)
 
 
 static func _count_id(world: SimWorld, def_id: String) -> int:

@@ -752,6 +752,14 @@ static func _list_has(list: Array[Dictionary], id: String) -> bool:
 	return false
 
 
+static func _format_hook_number(value: float) -> String:
+	if is_equal_approx(value, round(value)):
+		return str(int(round(value)))
+	if is_equal_approx(value * 10.0, round(value * 10.0)):
+		return "%.1f" % value
+	return "%.2f" % value
+
+
 static func _format_hook(hook_v: Variant) -> Dictionary:
 	if typeof(hook_v) != TYPE_DICTIONARY:
 		return {"text": "", "up": true}
@@ -759,11 +767,12 @@ static func _format_hook(hook_v: Variant) -> Dictionary:
 	var op: String = String(hook.get("op", ""))
 	var value: float = float(hook.get("value", 0.0))
 	var sign_s: String = "+" if value > 0.0 else ""
+	var shown: String = _format_hook_number(value)
 	if op == "on-kill":
-		return {"text": Loc.t("ui.archives.hook.on_kill").replace("{sign}", sign_s).replace("{value}", str(int(value))), "up": value > 0.0}
+		return {"text": Loc.t("ui.archives.hook.on_kill").replace("{sign}", sign_s).replace("{value}", shown), "up": value > 0.0}
 	if op == "on-crit":
-		return {"text": Loc.t("ui.archives.hook.on_crit").replace("{value}", str(value)), "up": true}
-	var amount: String = "%s%d%%" % [sign_s, int(round(value * 100.0))] if op == "pct" else "%s%s" % [sign_s, str(value)]
+		return {"text": Loc.t("ui.archives.hook.on_crit").replace("{value}", shown), "up": true}
+	var amount: String = "%s%d%%" % [sign_s, int(round(value * 100.0))] if op == "pct" else "%s%s" % [sign_s, shown]
 	var stat: String = String(hook.get("stat", ""))
 	var hurt: bool = stat == "radius" or stat == "cooldown"
 	var up: bool = value < 0.0 if hurt else value > 0.0

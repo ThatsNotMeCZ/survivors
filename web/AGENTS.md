@@ -1,6 +1,8 @@
 # AGENTS — web client
 
-2D survivor-like (Vampire Survivors pacing + Risk of Rain 2 director). Agent-first Phaser 4 + TypeScript.
+**Opt-in only.** Do not edit this tree unless the prompt names **web**, **Phaser**, **itch**, or **both clients**. Default implementation is Godot (`../Godot/AGENTS.md`, `knowledge/tech/clients.md`).
+
+2D survivor-like (Vampire Survivors pacing + Risk of Rain 2 director). Agent-first Phaser 4 + TypeScript. itch.io HTML5 ship.
 
 ## Read first
 

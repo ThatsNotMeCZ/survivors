@@ -11,4 +11,4 @@ Before changing combat, items, director, loop, or stack, read `knowledge/README.
 
 If a task changes design, update the knowledge file in the same change. Do not leave chat-only decisions.
 
-Do not add systems that violate `knowledge/design/anti-idle.md`.
+Implementation default is Godot (`knowledge/tech/clients.md`, `.cursor/rules/godot-default.mdc`). Do not add systems that violate `knowledge/design/anti-idle.md`.

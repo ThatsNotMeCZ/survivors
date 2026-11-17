@@ -22,10 +22,6 @@ func _ready() -> void:
 	selected_survivor = settings.survivor_id
 	Display.sanitize(settings)
 	Display.apply(settings)
-	var win: Window = get_window()
-	if win != null:
-		win.size_changed.connect(_sync_content_scale_stretch)
-	_sync_content_scale_stretch()
 
 
 func start_run() -> void:
@@ -79,17 +75,3 @@ func abandon_run() -> void:
 
 func is_sim_paused() -> bool:
 	return sim_paused or overlay_mode == &"levelup" or overlay_mode == &"pause" or overlay_mode == &"archives"
-
-
-func _sync_content_scale_stretch() -> void:
-	var win: Window = get_window()
-	if win == null:
-		return
-	var base: Vector2i = win.content_scale_size
-	if base.x <= 0 or base.y <= 0:
-		return
-	var fits: bool = win.size.x >= base.x and win.size.y >= base.y
-	win.content_scale_stretch = (
-		Window.CONTENT_SCALE_STRETCH_INTEGER if fits
-		else Window.CONTENT_SCALE_STRETCH_FRACTIONAL
-	)

@@ -8,6 +8,11 @@ uniform float u_state : hint_range(0.0, 1.0) = 0.0;
 uniform float u_progress : hint_range(0.0, 1.0) = 0.0;
 uniform float u_angle = 0.8;
 uniform vec2 u_dir = vec2(1.0, 0.0);
+uniform float u_radius = 620.0;
+uniform mat4 u_pillars0;
+uniform mat4 u_pillars1;
+uniform mat4 u_pillars2;
+uniform mat4 u_pillars3;
 
 float hash21(vec2 p) {
 	p = fract(p * vec2(127.1, 311.7));
@@ -28,6 +33,42 @@ float vnoise(vec2 p) {
 
 float fbm(vec2 p) {
 	return 0.55 * vnoise(p) + 0.30 * vnoise(p * 2.1 + 11.3) + 0.15 * vnoise(p * 4.3 + 27.1);
+}
+
+bool ray_blocked_by_pillar(vec2 target, vec4 pil) {
+	if (pil.w < 0.5) {
+		return false;
+	}
+	float len = length(target);
+	if (len < 1.0) {
+		return false;
+	}
+	vec2 dir = target / len;
+	float proj = dot(pil.xy, dir);
+	if (proj <= 0.0 || proj >= len) {
+		return false;
+	}
+	vec2 closest = dir * proj;
+	float dist_sq = dot(pil.xy - closest, pil.xy - closest);
+	return dist_sq <= pil.z * pil.z;
+}
+
+bool is_shadowed(vec2 pos) {
+	if (ray_blocked_by_pillar(pos, u_pillars0[0])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars0[1])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars0[2])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars0[3])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars1[0])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars1[1])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars1[2])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars1[3])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars2[0])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars2[1])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars2[2])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars2[3])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars3[0])) return true;
+	if (ray_blocked_by_pillar(pos, u_pillars3[1])) return true;
+	return false;
 }
 
 void fragment() {
@@ -135,15 +176,25 @@ void fragment() {
 		}
 	} else {
 		keep = step(r, 1.0);
+		vec2 world_offset = p * u_radius;
+		bool shadowed = is_shadowed(world_offset);
 		if (u_state < 0.5) {
 			float outer_ring = smoothstep(0.015, 0.0, abs(r - 0.985));
 			float wave_r = clamp(u_progress, 0.05, 1.0) * 0.985;
 			float wave_edge = smoothstep(0.025, 0.0, abs(r - wave_r));
 			float ripples = 0.5 + 0.5 * sin(r * 28.0 - u_time * 10.0);
-			float danger_fill = (0.10 + 0.16 * u_progress + 0.06 * ripples) * smoothstep(1.0, 0.92, r);
-			float flash = u_progress > 0.78 ? (0.5 + 0.5 * sin(u_time * 32.0)) : 0.0;
-			col = mix(vec3(0.32, 0.76, 1.0), vec3(0.92, 0.98, 1.0), clamp(outer_ring + wave_edge + flash * 0.45, 0.0, 1.0));
-			alpha = clamp(outer_ring * 0.85 + wave_edge * 0.75 + danger_fill, 0.0, 0.82);
+			if (shadowed) {
+				col = vec3(0.25, 0.85, 0.62);
+				alpha = (0.10 + 0.06 * u_progress) * smoothstep(1.0, 0.85, r);
+			} else {
+				float danger_fill = (0.10 + 0.16 * u_progress + 0.06 * ripples) * smoothstep(1.0, 0.92, r);
+				float flash = u_progress > 0.78 ? (0.5 + 0.5 * sin(u_time * 32.0)) : 0.0;
+				col = mix(vec3(0.32, 0.76, 1.0), vec3(0.92, 0.98, 1.0), clamp(outer_ring + wave_edge + flash * 0.45, 0.0, 1.0));
+				alpha = clamp(outer_ring * 0.85 + wave_edge * 0.75 + danger_fill, 0.0, 0.82);
+			}
+		} else if (shadowed) {
+			keep = 0.0;
+			alpha = 0.0;
 		} else {
 			float fade = 1.0 - u_progress;
 			float shock_r = 0.25 + u_progress * 0.75;

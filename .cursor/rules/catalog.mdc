@@ -1,13 +1,13 @@
 ---
 description: Content goes in JSON catalog, not in sim classes
-globs: web/src/data/**/*.{json,ts}
+globs: Godot/hermetic-rifts/data/catalog/**/*.json,web/src/data/**/*.{json,ts}
 alwaysApply: false
 ---
 
 # Catalog
 
-- Balance and defs: `web/src/data/*.json` + `schema.ts`.
-- New enemy/item/survivor = JSON entry. Do not add stats to `world.ts`.
-- New skill effect = `SkillEffect` variant + `applyEffect` case + `knowledge/tech/catalog.md`.
+- Default: `Godot/hermetic-rifts/data/catalog/*.json`. Web `web/src/data/*.json` + `schema.ts` only when the prompt names web / both.
+- New enemy/item/survivor = JSON entry. Do not add stats in sim classes.
+- New skill effect = Godot sim case + JSON + `knowledge/tech/catalog.md`. Web `SkillEffect` / `applyEffect` only on a web-named task.
 - Unknown effect types must throw at load, never silently no-op.
 - Items use `add` / `pct` / `on-kill` / `on-crit` hooks. No screen-clear or AFK-win hooks.

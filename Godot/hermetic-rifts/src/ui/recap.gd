@@ -6,8 +6,10 @@ signal hall_pressed
 
 const STATS_W: float = 390.0
 const DETAILS_W: float = 520.0
-const INV_PAD: float = 34.0
+const INV_PAD: float = 64.0
+const INV_H: float = 220.0
 const CTA_W: float = 220.0
+const CTA_H: float = 84.0
 const PLAQUE_W: float = 190.0
 const BTN_H: float = 58.0
 
@@ -18,9 +20,8 @@ var _stats_rows: VBoxContainer
 var _unlocks: VBoxContainer
 var _inv_list: GridContainer
 var _inv_empty: Label
-var _tooltip: PanelContainer
-var _tooltip_title: Label
-var _tooltip_body: Label
+var _tooltip: ItemTooltip
+var _catalog: Catalog
 var _again_btn: Button
 var _hall_btn: Button
 var _built: bool = false
@@ -34,6 +35,7 @@ func refresh(world: SimWorld, kind: String, rec: ArchiveRecords, catalog: Catalo
 	if not _built:
 		_build()
 	visible = true
+	_catalog = catalog
 	_fill_header(world, kind)
 	_fill_stats(world)
 	_fill_unlocks(rec, catalog, start_items, start_survivors)
@@ -76,6 +78,9 @@ func _build() -> void:
 	col.add_child(_build_header())
 	col.add_child(_build_content())
 	col.add_child(_build_actions())
+	_tooltip = ItemTooltip.new()
+	_tooltip.name = "ItemTooltip"
+	add_child(_tooltip)
 
 
 func _build_header() -> Control:
@@ -161,11 +166,11 @@ func _build_details() -> Control:
 	UiAtlas.apply_label(inv_head, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, 18, true)
 	inv_section.add_child(inv_head)
 	var inv_box := PanelContainer.new()
-	inv_box.custom_minimum_size = Vector2(DETAILS_W, 148.0)
+	inv_box.custom_minimum_size = Vector2(DETAILS_W, INV_H)
 	inv_box.add_theme_stylebox_override("panel", UiAtlas.nine_slice("pause-inventory", "idle", Vector4(INV_PAD, INV_PAD, INV_PAD, INV_PAD)))
 	inv_section.add_child(inv_box)
 	var inv_stage := Control.new()
-	inv_stage.custom_minimum_size = Vector2(DETAILS_W - INV_PAD * 2.0, 80.0)
+	inv_stage.custom_minimum_size = Vector2(DETAILS_W - INV_PAD * 2.0, INV_H - INV_PAD * 2.0)
 	inv_box.add_child(inv_stage)
 	_inv_list = GridContainer.new()
 	_inv_list.columns = 8
@@ -181,21 +186,6 @@ func _build_details() -> Control:
 	_inv_empty.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	UiAtlas.apply_label(_inv_empty, UiAtlas.TYPE_MICRO, UiAtlas.ASH, 13)
 	inv_stage.add_child(_inv_empty)
-	_tooltip = PanelContainer.new()
-	_tooltip.visible = false
-	_tooltip.add_theme_stylebox_override("panel", UiAtlas.nine_slice("parchment-panel", "idle", Vector4(16, 12, 16, 12)))
-	_tooltip.custom_minimum_size = Vector2(240, 0)
-	inv_section.add_child(_tooltip)
-	var tip_col := VBoxContainer.new()
-	_tooltip.add_child(tip_col)
-	_tooltip_title = Label.new()
-	UiAtlas.apply_ink_label(_tooltip_title, UiAtlas.TYPE_META, UiAtlas.PARCHMENT_INK, 14)
-	tip_col.add_child(_tooltip_title)
-	_tooltip_body = Label.new()
-	_tooltip_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_tooltip_body.custom_minimum_size = Vector2(220, 0)
-	UiAtlas.apply_ink_label(_tooltip_body, UiAtlas.TYPE_BODY, Color("2e2014"), 13)
-	tip_col.add_child(_tooltip_body)
 	return col
 
 
@@ -206,12 +196,17 @@ func _build_actions() -> Control:
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_again_btn = Button.new()
 	_again_btn.text = ""
-	_again_btn.custom_minimum_size = Vector2(CTA_W, BTN_H)
+	_again_btn.custom_minimum_size = Vector2(CTA_W, CTA_H)
 	_again_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_again_btn.clip_contents = false
 	UiAtlas.apply_button_styles(_again_btn, "btn-cta")
 	var again_lab := Label.new()
 	again_lab.text = tr("ui.recap.again")
 	again_lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	again_lab.offset_left = 28.0
+	again_lab.offset_right = -28.0
+	again_lab.offset_top = 36.0
+	again_lab.offset_bottom = -22.0
 	again_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	again_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	UiAtlas.apply_label(again_lab, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, UiAtlas.SIZE_CTA)
@@ -362,7 +357,8 @@ func _fill_inventory(world: SimWorld) -> void:
 	for child: Node in _inv_list.get_children():
 		_inv_list.remove_child(child)
 		child.free()
-	_tooltip.visible = false
+	if _tooltip != null:
+		_tooltip.hide_tip()
 	var n: int = 0 if world == null else world.inventory.size()
 	_inv_empty.visible = n == 0
 	_inv_list.visible = n > 0
@@ -370,9 +366,16 @@ func _fill_inventory(world: SimWorld) -> void:
 		return
 	_inv_list.columns = clampi(int(ceil(sqrt(float(n)))), 4, 8)
 	for inst: ItemInstance in world.inventory:
+		var cat: Catalog = _catalog
+		if cat == null:
+			cat = world.catalog
+		var rarity: String = "common"
+		if cat != null and cat.has_item(inst.id):
+			rarity = String(cat.item(inst.id).get("rarity", "common"))
 		var chip := Button.new()
 		chip.custom_minimum_size = Vector2(44, 44)
 		chip.flat = true
+		UiAtlas.attach_rarity_splash(chip, rarity)
 		var icon := TextureRect.new()
 		icon.texture = UiAtlas.item_tex(inst.id)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -389,17 +392,8 @@ func _fill_inventory(world: SimWorld) -> void:
 		count.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		UiAtlas.apply_label(count, UiAtlas.TYPE_MICRO, UiAtlas.PARCHMENT, 10, true)
 		chip.add_child(count)
-		var item_id: String = inst.id
-		chip.mouse_entered.connect(func() -> void: _show_tip(item_id))
-		chip.mouse_exited.connect(func() -> void: _tooltip.visible = false)
-		chip.focus_entered.connect(func() -> void: _show_tip(item_id))
+		_tooltip.bind_chip(chip, inst.id, inst.stacks, cat)
 		_inv_list.add_child(chip)
-
-
-func _show_tip(item_id: String) -> void:
-	_tooltip_title.text = Loc.item_name(item_id)
-	_tooltip_body.text = Loc.item_lore(item_id)
-	_tooltip.visible = true
 
 
 func _fmt_num(value: float) -> String:

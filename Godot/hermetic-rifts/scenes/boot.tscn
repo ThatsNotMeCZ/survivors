@@ -7,11 +7,24 @@
 [node name="Boot" type="Node" unique_id=433894324]
 script = ExtResource("1_j20pb")
 
-[node name="Arena" parent="." unique_id=739898426 instance=ExtResource("2_fbohu")]
-
-[node name="Camera2D2" type="Camera2D" parent="Arena" unique_id=1084681180]
-
-[node name="WorldRoot2" type="Node2D" parent="Arena" unique_id=1544102057]
-
 [node name="Overlay" type="CanvasLayer" parent="." unique_id=1893798031]
 script = ExtResource("4_ok243")
+
+[node name="WorldHost" type="SubViewportContainer" parent="." unique_id=206010875]
+texture_filter = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+stretch = true
+
+[node name="WorldViewport" type="SubViewport" parent="WorldHost" unique_id=1422274347]
+disable_3d = true
+handle_input_locally = false
+snap_2d_transforms_to_pixel = true
+snap_2d_vertices_to_pixel = true
+canvas_item_default_texture_filter = 0
+size = Vector2i(1920, 1080)
+render_target_update_mode = 4
+
+[node name="Arena" parent="WorldHost/WorldViewport" unique_id=739898426 instance=ExtResource("2_fbohu")]

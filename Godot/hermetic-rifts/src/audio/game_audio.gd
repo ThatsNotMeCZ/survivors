@@ -1,14 +1,24 @@
 extends Node
 
+const VOICE_CAP: int = 12
+const WINDOW_MS: int = 1000
+const RATE: Dictionary = {
+	"hit": 8,
+	"death": 6,
+	"gem": 10,
+	"muzzle": 12,
+}
+
 var _master: float = 0.7
 var _sfx: float = 0.8
 var _music: float = 0.6
 var _muted: bool = false
 var _bed: AudioStreamPlayer
 var _overlay: AudioStreamPlayer
-var _sfx_player: AudioStreamPlayer
+var _sfx_pool: Array[AudioStreamPlayer] = []
 var _ui_player: AudioStreamPlayer
-var _last_fx: Dictionary = {}
+var _recent: Dictionary = {}
+var _stream_cache: Dictionary = {}
 
 
 func _ready() -> void:
@@ -22,9 +32,11 @@ func _ready() -> void:
 	_overlay.bus = "Music"
 	_overlay.volume_db = -9.0
 	add_child(_overlay)
-	_sfx_player = AudioStreamPlayer.new()
-	_sfx_player.bus = "SFX"
-	add_child(_sfx_player)
+	for _i: int in VOICE_CAP:
+		var voice := AudioStreamPlayer.new()
+		voice.bus = "SFX"
+		add_child(voice)
+		_sfx_pool.append(voice)
 	_ui_player = AudioStreamPlayer.new()
 	_ui_player.bus = "UI"
 	add_child(_ui_player)
@@ -63,34 +75,19 @@ func set_chill(on: bool) -> void:
 		_apply()
 
 
-func play_fx(kind: int) -> void:
-	var now: int = Time.get_ticks_msec()
-	if int(_last_fx.get(kind, 0)) + 80 > now:
+func play_fx(kind: int, tint: int = 0) -> void:
+	var id: String = _sfx_id(kind, tint)
+	if not _allowed(id):
 		return
-	_last_fx[kind] = now
-	var id: String = "hit"
-	match kind:
-		FxIds.DEATH:
-			id = "death"
-		FxIds.MUZZLE:
-			id = "muzzle"
-		FxIds.DASH:
-			id = "dash"
-		FxIds.STRIKE:
-			id = "strike"
-		FxIds.HURT:
-			id = "hurt"
-		FxIds.GEM:
-			id = "gem"
-		_:
-			id = "hit"
-	var path: String = "res://assets/audio/sfx/combat/%s.ogg" % id
-	if not ResourceLoader.exists(path):
-		path = "res://assets/audio/sfx/world/%s.ogg" % id
-	if ResourceLoader.exists(path):
-		_sfx_player.pitch_scale = randf_range(0.94, 1.06)
-		_sfx_player.stream = load(path)
-		_sfx_player.play()
+	var stream: AudioStream = _load_sfx(id)
+	if stream == null:
+		return
+	var voice: AudioStreamPlayer = _free_voice()
+	if voice == null:
+		return
+	voice.pitch_scale = randf_range(0.94, 1.06)
+	voice.stream = stream
+	voice.play()
 
 
 func play_ui(kind: String) -> void:
@@ -100,6 +97,63 @@ func play_ui(kind: String) -> void:
 	if ResourceLoader.exists(path):
 		_ui_player.stream = load(path)
 		_ui_player.play()
+
+
+func _sfx_id(kind: int, tint: int) -> String:
+	match kind:
+		FxIds.DEATH:
+			return "break" if tint == 0xFF8844 else "death"
+		FxIds.MUZZLE:
+			return "muzzle"
+		FxIds.DASH:
+			return "dash"
+		FxIds.STRIKE:
+			return "strike"
+		FxIds.HURT:
+			return "hurt"
+		FxIds.GEM:
+			return "gem"
+		_:
+			return "hit"
+
+
+func _allowed(id: String) -> bool:
+	var cap: int = int(RATE.get(id, 0))
+	if cap <= 0:
+		return true
+	var now: int = Time.get_ticks_msec()
+	var prev: Array = _recent.get(id, []) as Array
+	var kept: Array[int] = []
+	for t_v: Variant in prev:
+		var stamp: int = int(t_v)
+		if now - stamp < WINDOW_MS:
+			kept.append(stamp)
+	if kept.size() >= cap:
+		_recent[id] = kept
+		return false
+	kept.append(now)
+	_recent[id] = kept
+	return true
+
+
+func _free_voice() -> AudioStreamPlayer:
+	for voice: AudioStreamPlayer in _sfx_pool:
+		if not voice.playing:
+			return voice
+	return null
+
+
+func _load_sfx(id: String) -> AudioStream:
+	if _stream_cache.has(id):
+		return _stream_cache[id] as AudioStream
+	var path: String = "res://assets/audio/sfx/combat/%s.ogg" % id
+	if not ResourceLoader.exists(path):
+		path = "res://assets/audio/sfx/world/%s.ogg" % id
+	if not ResourceLoader.exists(path):
+		return null
+	var stream: AudioStream = load(path) as AudioStream
+	_stream_cache[id] = stream
+	return stream
 
 
 func _play_folder(player: AudioStreamPlayer, dir: String) -> void:
@@ -129,7 +183,8 @@ func _apply() -> void:
 	if ui_idx != -1:
 		AudioServer.set_bus_volume_db(ui_idx, 0.0)
 	_bed.volume_db = 0.0
-	_sfx_player.volume_db = 0.0
+	for voice: AudioStreamPlayer in _sfx_pool:
+		voice.volume_db = 0.0
 	_ui_player.volume_db = 0.0
 
 

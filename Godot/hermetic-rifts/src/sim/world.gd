@@ -410,7 +410,7 @@ func _contact_damage(dt: float) -> void:
 		if SimEnemies.is_chase(self, idx):
 			var cdx: float = player.x - enemies.x[idx]
 			var cdy: float = player.y - enemies.y[idx]
-			var reach: float = SimEnemies.chase_attack_range(enemies.radius[idx], player.radius)
+			var reach: float = SimEnemies.chase_contact_range(enemies.radius[idx], player.radius)
 			touching = cdx * cdx + cdy * cdy <= reach * reach
 		if not touching:
 			continue

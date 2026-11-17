@@ -1,6 +1,6 @@
 # Stack
 
-Two clients, one design ([clients.md](clients.md)).
+Two clients, one design ([clients.md](clients.md)). **Default work is Godot.** Phaser `web/` is the itch ship and opt-in for agents.
 
 | Client | Stack | Ships |
 |---|---|---|

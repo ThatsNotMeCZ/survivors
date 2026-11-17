@@ -64,7 +64,8 @@ static func step(world: SimWorld, dt: float) -> void:
 			var held_dx: float = target.x - enemies.x[i]
 			var held_dy: float = target.y - enemies.y[i]
 			var held: float = sqrt(held_dx * held_dx + held_dy * held_dy)
-			if held <= hold:
+			var contact: float = SimEnemies.chase_contact_range(enemies.radius[i], target_r)
+			if held <= contact:
 				if enemies.attack_remain[i] <= 0.0 and enemies.attack_cd[i] <= 0.0:
 					enemies.attack_remain[i] = EnemyPool.CHASE_ATTACK_DURATION
 					enemies.attack_cd[i] = EnemyPool.CHASE_ATTACK_COOLDOWN

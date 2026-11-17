@@ -22,7 +22,7 @@ Homunculus: Ignis Bolt / Piercing Aether / Phase Step / Crucible Cull. The Penit
 
 ## Bodies
 
-CPU AABB + spatial hash. Enemies separate from each other. Bosses shove fodder aside. Melee (`ai.type: chase`) holds at attack range (sum of body radii + 6) and attacks there instead of walking into the player. A melee overlap moves only the melee body, so the player is not displaced. Ranged and snipers keep their catalog standoff (`range` / `keep`). Boss and ranged overlaps still push apart (player share 0.35). Melee contact DPS applies while the player is inside that attack range; other contact DPS still applies on remaining overlap. No Arcade/Matter on swarms.
+CPU AABB + spatial hash. Enemies separate from each other. Bosses shove fodder aside. Melee (`ai.type: chase`) holds at attack range (sum of body radii + 6) and attacks there instead of walking into the player. A melee overlap moves only the melee body, so the player is not displaced. Ranged and snipers keep their catalog standoff (`range` / `keep`). Boss and ranged overlaps still push apart (player share 0.35). Melee contact DPS applies while the player is inside a slightly larger contact range (radii + 10) so pack shove still hits from every side; other contact DPS still applies on remaining overlap. No Arcade/Matter on swarms.
 
 Obstacles use **circle vs circle** push-out in sim (not Arcade). Numbers: `web/src/data/obstacles.json`. **Bosses collide with pillars** (they are pushed out — no phase-through). Pillar r=28, volatile r=14, hazard r=68.
 
@@ -49,6 +49,6 @@ Any non-boss spawn can mutate. The elite then rolls **50/50**:
 
 ## Boss duel
 
-Director credit spawns halt the moment the Seal Guardian appears. Unique `ai.type: "boss"` kits + summons; see `knowledge/tech/catalog.md`. Enrage at 50% HP. Custom GLSL hazards in `web/src/view/shaders/boss-shaders.ts`.
+Director credit spawns halt the moment the Seal Guardian appears. Unique `ai.type: "boss"` kits; only Frost Sovereign summons a light brood (punish for eating Rime Prison). Cinder Heart controls floor with lava meteors. Frost Emperor chains geometry (pulse, then laser trails) with a recovery gap so those signatures do not stack. See `knowledge/tech/catalog.md`. Enrage at 50% HP. Custom GLSL hazards in `web/src/view/shaders/boss-shaders.ts`.
 
 Run (`ArenaScene`): director-spawned fodder + spitters + snipers + Shielder/Noxious elites, teleporter hold, stage boss, arena obstacles. Primary never auto-aims.
