@@ -10,7 +10,7 @@ Drop finished art into `web/public/sprites/`. Vite rewrites `manifest.json` on `
 | `entities/{id}.json` | Optional sidecar. Canonical form is compact anims (`frameWidth` / `frameHeight` / `anims` with per-clip `frameRate`). Pixelorama / Aseprite JSON still parse as a drop-in fallback. Skip if frames are square and idle is frame 0. |
 | `items/{id}.png` | HUD / level-up icon (24px). Id matches `items.json`. |
 | `skills/{id}.png` | HUD / hall icon (24px). Id matches `skills.json`. |
-| `ui/atlas.png` + `ui/atlas.json` | Shared HUD / menu texture atlas (`logo`, `btn-plaque`, `btn-cta`, `hall-banner`, `parchment-panel`, `pause-tablet`, `pause-inventory`, `hud-objective`, `hud-timer`, `hud-flask`, `hud-skill-dock`, `hud-inventory`, `card-{rarity}`, `portrait-{id}`). Supports 3-state buttons (`idle`, `hover`, `active`) and 9-slice (`nineSlice.margins` + `nineSlice.expandable`). CSS/SVG fallback renders when missing. |
+| `ui/atlas.png` + `ui/atlas.json` | Shared HUD / menu texture atlas (`logo`, `btn-plaque`, `btn-cta`, `hall-banner`, `parchment-panel`, `pause-tablet`, `pause-inventory`, `hud-objective`, `hud-timer` (243×158 run panel: timer + diff track chrome), `hud-flask`, `hud-skill-dock`, `hud-inventory`, `card-{rarity}`, `portrait-{id}`). Supports 3-state buttons (`idle`, `hover`, `active`) and 9-slice (`nineSlice.margins` + `nineSlice.expandable`). CSS/SVG fallback renders when missing. |
 | `env/` | Future authored stage blocks (not random tile stamps). |
 | `fx/` | Optional VFX stills. Id matches a skill, a biome spit, or a sim FX kind (`hit`, `dash`, …). |
 
@@ -41,6 +41,8 @@ Compact example:
 ```
 
 Pixelorama / Aseprite remain a drop-in fallback (project JSON with `size_x` / `size_y` / `fps` / `tags`, or spritesheet JSON with `meta.frameTags`). Pixelorama tags are 1-based; Aseprite tags are 0-based. Prefer converting the sidecar to compact so each clip has its own `frameRate`. Authored Pixelorama projects stay in `tools/pixelorama/`. Agent drawing goes through Pixelorama MCP ([pixelorama-mcp.md](pixelorama-mcp.md)); publish with `tools/pixelorama/publish-sprite.sh`.
+
+**UI atlas source:** `tools/pixelorama/gui_agent.pxo` (4000×3000 layout; shipped `ui/atlas.png` is the top-left crop to atlas.json extent, currently **1203×1740**). `hud-timer` run panel lives at **(960, 620) 243×158**. After MCP `save_project` + `export_image` → `tools/pixelorama/export/gui_agent.png`, run `python3 tools/pixelorama/pack_ui_atlas_from_gui.py`.
 
 Arena `flipX` for left. Player, elites, and bosses are Phaser Sprites (`playEntity`). Fodder uses one `SpriteGPULayer` per entity id; walk frames run on the GPU (`setAnimations`). Non-square frames keep their native size; square vessel sheets still display at 40.
 

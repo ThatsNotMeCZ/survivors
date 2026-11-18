@@ -627,7 +627,7 @@
   ],
   "uiAtlas": {
     "src": "sprites/ui/atlas.png",
-    "width": 1173,
+    "width": 1203,
     "height": 1740,
     "frames": {
       "logo": {
@@ -1054,35 +1054,35 @@
       },
       "hud-timer": {
         "idle": {
-          "x": 700,
-          "y": 500,
+          "x": 960,
+          "y": 620,
           "w": 243,
-          "h": 101
+          "h": 158
         },
         "hover": {
-          "x": 700,
-          "y": 500,
+          "x": 960,
+          "y": 620,
           "w": 243,
-          "h": 101
+          "h": 158
         },
         "active": {
-          "x": 700,
-          "y": 500,
+          "x": 960,
+          "y": 620,
           "w": 243,
-          "h": 101
+          "h": 158
         },
         "nineSlice": {
           "margins": {
-            "top": 0,
-            "right": 18,
-            "bottom": 0,
-            "left": 88
+            "top": 4,
+            "right": 12,
+            "bottom": 4,
+            "left": 52
           },
           "expandable": {
-            "x": 88,
-            "y": 38,
-            "w": 137,
-            "h": 50
+            "x": 52,
+            "y": 34,
+            "w": 177,
+            "h": 120
           },
           "repeat": "stretch",
           "scale": 1

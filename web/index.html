@@ -38,35 +38,37 @@
           <p id="hud-objective-sub" class="objective-sub hidden"></p>
         </div>
         <div id="hud-meta" data-ui-sprite="hud-timer">
-          <div class="meta-clock" aria-hidden="true">
-            <svg viewBox="0 0 24 24" class="clock-svg">
-              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
-              <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            </svg>
-          </div>
-          <div class="meta-rows">
-            <p class="meta-timer-row">
-              <span class="meta-timer-label">Rift Timer</span>
-              <span id="hud-time">0:00</span>
-            </p>
-            <p id="hud-stage">--</p>
-          </div>
-        </div>
-        <div id="hud-difficulty" data-tier="1" aria-label="Difficulty Coefficient">
-          <div class="diff-header">
-            <span id="hud-diff-tier">Dormant</span>
-            <span id="hud-diff-coeff">×1.00</span>
-          </div>
-          <div class="diff-viewport" aria-hidden="true">
-            <div id="hud-diff-tape" class="diff-tape">
-              <div class="diff-seg" data-tier="1"><span>I</span></div>
-              <div class="diff-seg" data-tier="2"><span>II</span></div>
-              <div class="diff-seg" data-tier="3"><span>III</span></div>
-              <div class="diff-seg" data-tier="4"><span>IV</span></div>
-              <div class="diff-seg" data-tier="5"><span>V</span></div>
-              <div class="diff-seg diff-seg-endless" data-tier="6"><span>VI · ☠</span></div>
+          <div class="meta-top">
+            <div class="meta-clock" aria-hidden="true">
+              <svg viewBox="0 0 24 24" class="clock-svg">
+                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+                <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
             </div>
-            <div class="diff-marker"></div>
+            <div class="meta-rows">
+              <p class="meta-timer-row">
+                <span class="meta-timer-label">Rift Timer</span>
+                <span id="hud-time">0:00</span>
+              </p>
+              <p id="hud-stage">--</p>
+            </div>
+          </div>
+          <div id="hud-difficulty" data-tier="1" aria-label="Difficulty Coefficient">
+            <div class="diff-header">
+              <span id="hud-diff-tier">Dormant</span>
+              <span id="hud-diff-coeff">×1.00</span>
+            </div>
+            <div class="diff-viewport" aria-hidden="true">
+              <div id="hud-diff-tape" class="diff-tape">
+                <div class="diff-seg" data-tier="1"><span>I</span></div>
+                <div class="diff-seg" data-tier="2"><span>II</span></div>
+                <div class="diff-seg" data-tier="3"><span>III</span></div>
+                <div class="diff-seg" data-tier="4"><span>IV</span></div>
+                <div class="diff-seg" data-tier="5"><span>V</span></div>
+                <div class="diff-seg diff-seg-endless" data-tier="6"><span>VI · ☠</span></div>
+              </div>
+              <div class="diff-marker"></div>
+            </div>
           </div>
         </div>
         <div id="hud-vitals">

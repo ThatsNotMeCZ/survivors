@@ -146,8 +146,7 @@ func _build() -> void:
 	_corner.offset_bottom = 96.0
 	add_child(_corner)
 	_build_objective()
-	_build_meta()
-	_build_difficulty()
+	_build_run_panel()
 	_build_vitals()
 	_build_skills()
 	_build_items()
@@ -213,34 +212,38 @@ func _build_objective() -> void:
 	root.add_child(_obj_sub)
 
 
-func _build_meta() -> void:
-	var meta := TextureRect.new()
-	meta.texture = UiAtlas.frame("hud-timer")
-	meta.stretch_mode = TextureRect.STRETCH_KEEP
-	meta.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	meta.custom_minimum_size = Vector2(243, 101)
-	meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	meta.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	meta.anchor_left = 1.0
-	meta.anchor_right = 1.0
-	meta.offset_left = -255.0
-	meta.offset_right = -12.0
-	meta.offset_top = 4.0
-	meta.offset_bottom = 105.0
-	add_child(meta)
-	var rows := VBoxContainer.new()
-	rows.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	rows.offset_left = 82.0
-	rows.offset_top = 43.0
-	rows.offset_right = -15.0
-	rows.offset_bottom = -20.0
-	rows.add_theme_constant_override("separation", 1)
-	rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	meta.add_child(rows)
+func _build_run_panel() -> void:
+	var root := Control.new()
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.custom_minimum_size = Vector2(243, 158)
+	root.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	root.anchor_left = 1.0
+	root.anchor_right = 1.0
+	root.offset_left = -255.0
+	root.offset_right = -12.0
+	root.offset_top = 4.0
+	root.offset_bottom = 162.0
+	add_child(root)
+	var bg := TextureRect.new()
+	bg.texture = UiAtlas.frame("hud-timer")
+	bg.stretch_mode = TextureRect.STRETCH_KEEP
+	bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(bg)
+	var col := VBoxContainer.new()
+	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	col.offset_left = 56.0
+	col.offset_top = 34.0
+	col.offset_right = -12.0
+	col.offset_bottom = -10.0
+	col.add_theme_constant_override("separation", 6)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(col)
 	var timer_row := HBoxContainer.new()
 	timer_row.alignment = BoxContainer.ALIGNMENT_END
 	timer_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	rows.add_child(timer_row)
+	col.add_child(timer_row)
 	var timer_lab := _label(11, UiAtlas.PARCHMENT, UiAtlas.TYPE_MICRO)
 	timer_lab.text = tr("ui.hud.timer")
 	timer_row.add_child(timer_lab)
@@ -250,33 +253,7 @@ func _build_meta() -> void:
 	timer_row.add_child(_time)
 	_stage = _label(11, UiAtlas.ASH, UiAtlas.TYPE_MICRO)
 	_stage.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	rows.add_child(_stage)
-
-
-func _build_difficulty() -> void:
-	var root := PanelContainer.new()
-	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.18, 0.13, 0.18, 0.96)
-	sb.border_color = Color("625565")
-	sb.set_border_width_all(1)
-	sb.content_margin_left = 8.0
-	sb.content_margin_right = 8.0
-	sb.content_margin_top = 4.0
-	sb.content_margin_bottom = 6.0
-	root.add_theme_stylebox_override("panel", sb)
-	root.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	root.anchor_left = 1.0
-	root.anchor_right = 1.0
-	root.offset_left = -248.0
-	root.offset_right = -12.0
-	root.offset_top = 96.0
-	root.offset_bottom = 142.0
-	add_child(root)
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 3)
-	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(col)
+	col.add_child(_stage)
 	var header := HBoxContainer.new()
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(header)
@@ -291,11 +268,6 @@ func _build_difficulty() -> void:
 	viewport.clip_contents = true
 	viewport.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(viewport)
-	var bg := ColorRect.new()
-	bg.color = Color("1a1216")
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	viewport.add_child(bg)
 	_diff_tape = HBoxContainer.new()
 	_diff_tape.add_theme_constant_override("separation", 0)
 	_diff_tape.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -314,13 +286,6 @@ func _build_difficulty() -> void:
 		lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		seg.add_child(lab)
-	var marker := ColorRect.new()
-	marker.color = Color("e8dcc8")
-	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	marker.set_anchors_preset(Control.PRESET_LEFT_WIDE)
-	marker.offset_left = DIFF_MARKER_X - 1.0
-	marker.offset_right = DIFF_MARKER_X + 1.0
-	viewport.add_child(marker)
 
 
 func _build_vitals() -> void:
