@@ -27,12 +27,19 @@ const DIFF_COLORS: Array[Color] = [
 
 var _vignette: ColorRect
 var _vignette_mat: ShaderMaterial
+var _draw_layer: Control
 var _corner: TextureRect
 var _kicker: Label
 var _objective: Label
 var _obj_fill: ColorRect
 var _obj_detail: Label
 var _obj_sub: Label
+var _ritual_lab: Label
+var _alert_lab: Label
+var _essence_panel: PanelContainer
+var _essence_lab: Label
+var _interact_panel: PanelContainer
+var _interact_lab: Label
 var _time: Label
 var _stage: Label
 var _diff_tier: Label
@@ -46,12 +53,15 @@ var _xp_fill: ColorRect
 var _skill_icons: Array[TextureRect] = []
 var _skill_glyphs: Array[Label] = []
 var _skill_cds: Array[Label] = []
+var _skill_keys: Array[Label] = []
 var _skill_sweeps: Array[ColorRect] = []
 var _skill_slots: Array[Control] = []
 var _item_list: GridContainer
 var _last_item_key: String = ""
 var _last_skill_bind: String = ""
 var _built: bool = false
+var _world: SimWorld
+var _cached_world_vp: Viewport
 
 
 func _ready() -> void:
@@ -61,6 +71,7 @@ func _ready() -> void:
 func sync(world: SimWorld) -> void:
 	if not _built:
 		_build()
+	_world = world
 	if world == null:
 		visible = false
 		return
@@ -72,7 +83,7 @@ func sync(world: SimWorld) -> void:
 	var tel_in: bool = (
 		world.teleporter_state == &"charging"
 		and Vector2(world.player.x, world.player.y).distance_to(Vector2(world.teleporter_x, world.teleporter_y))
-		<= world.teleporter_radius
+		<= SimLoop.effective_teleporter_radius(world)
 	)
 	var portal_r: float = float(world.catalog.loop.get("portalRadius", 70.0))
 	var portal_in: bool = (
@@ -116,10 +127,16 @@ func sync(world: SimWorld) -> void:
 	var xp_pct: float = clampf(world.xp / maxf(world.xp_need, 1.0), 0.0, 1.0)
 	_xp_fill.anchor_right = xp_pct
 	_xp_fill.offset_right = 0.0
+	_sync_essence(world)
+	_sync_ritual_and_alerts(world)
+	_sync_interact_prompt(world)
 	_sync_difficulty(world.coefficient)
 	_sync_skills(world)
 	_sync_items(world)
 	_sync_vignette(biome)
+	if _draw_layer != null:
+		_draw_layer.queue_redraw()
+	queue_redraw()
 
 
 func _build() -> void:
@@ -135,6 +152,12 @@ func _build() -> void:
 	_vignette_mat.shader = load("res://assets/shaders/vignette.gdshader")
 	_vignette.material = _vignette_mat
 	add_child(_vignette)
+	_draw_layer = Control.new()
+	_draw_layer.name = "GaugeAndRingsLayer"
+	_draw_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_draw_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_draw_layer.draw.connect(_on_draw_layer)
+	add_child(_draw_layer)
 	_corner = TextureRect.new()
 	_corner.texture = UiAtlas.frame("hud-corner")
 	_corner.stretch_mode = TextureRect.STRETCH_KEEP
@@ -150,6 +173,7 @@ func _build() -> void:
 	_build_vitals()
 	_build_skills()
 	_build_items()
+	_build_interact_prompt()
 
 
 func _build_objective() -> void:
@@ -210,6 +234,14 @@ func _build_objective() -> void:
 	_obj_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_obj_sub.visible = false
 	root.add_child(_obj_sub)
+	_ritual_lab = _label(11, UiAtlas.GOLD_MOLTEN, UiAtlas.TYPE_MICRO)
+	_ritual_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ritual_lab.visible = false
+	root.add_child(_ritual_lab)
+	_alert_lab = _label(11, Color("ff7a6e"), UiAtlas.TYPE_MICRO)
+	_alert_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_alert_lab.visible = false
+	root.add_child(_alert_lab)
 
 
 func _build_run_panel() -> void:
@@ -286,6 +318,30 @@ func _build_run_panel() -> void:
 		lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		seg.add_child(lab)
+	_essence_panel = PanelContainer.new()
+	_essence_panel.name = "EssenceBadge"
+	_essence_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_essence_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_essence_panel.anchor_left = 1.0
+	_essence_panel.anchor_right = 1.0
+	_essence_panel.offset_left = -196.0
+	_essence_panel.offset_right = -12.0
+	_essence_panel.offset_top = 166.0
+	_essence_panel.offset_bottom = 194.0
+	var ess_sb := StyleBoxFlat.new()
+	ess_sb.bg_color = Color("140d14d9")
+	ess_sb.border_color = UiAtlas.BRASS_DIM
+	ess_sb.set_border_width_all(1)
+	ess_sb.content_margin_left = 10.0
+	ess_sb.content_margin_right = 10.0
+	ess_sb.content_margin_top = 3.0
+	ess_sb.content_margin_bottom = 3.0
+	_essence_panel.add_theme_stylebox_override("panel", ess_sb)
+	add_child(_essence_panel)
+	_essence_lab = _label(12, Color("ff809a"), UiAtlas.TYPE_META)
+	_essence_lab.text = tr("ui.hud.essence").replace("{n}", "0")
+	_essence_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_essence_panel.add_child(_essence_lab)
 
 
 func _build_vitals() -> void:
@@ -450,7 +506,36 @@ func _build_skills() -> void:
 		_skill_icons.append(icon)
 		_skill_glyphs.append(glyph)
 		_skill_cds.append(cd)
+		_skill_keys.append(key)
 		_skill_sweeps.append(sweep)
+
+
+func _build_interact_prompt() -> void:
+	var center := CenterContainer.new()
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	center.anchor_top = 1.0
+	center.anchor_bottom = 1.0
+	center.offset_top = -168.0
+	center.offset_bottom = -124.0
+	add_child(center)
+	_interact_panel = PanelContainer.new()
+	_interact_panel.name = "InteractPrompt"
+	_interact_panel.visible = false
+	_interact_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("140e14e8")
+	sb.border_color = UiAtlas.GOLD_MOLTEN
+	sb.set_border_width_all(1)
+	sb.content_margin_left = 14.0
+	sb.content_margin_right = 14.0
+	sb.content_margin_top = 6.0
+	sb.content_margin_bottom = 6.0
+	_interact_panel.add_theme_stylebox_override("panel", sb)
+	center.add_child(_interact_panel)
+	_interact_lab = _label(13, UiAtlas.GOLD_MOLTEN, UiAtlas.TYPE_META)
+	_interact_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_interact_panel.add_child(_interact_lab)
 
 
 func _build_items() -> void:
@@ -502,16 +587,19 @@ func _sync_difficulty(coefficient: float) -> void:
 
 
 func _sync_skills(world: SimWorld) -> void:
-	var skills: Dictionary = world.survivor.get("skills", {})
+	var slot_ids: Array[String] = []
 	var bind: String = ""
 	for i: int in SKILL_SLOTS.size():
-		bind += "%s:%s|" % [String(SKILL_SLOTS[i]), String(skills.get(String(SKILL_SLOTS[i]), ""))]
+		var slot_id: String = SimSkills.slot_skill_id(world, SKILL_SLOTS[i])
+		slot_ids.append(slot_id)
+		bind += "%s:%s|" % [String(SKILL_SLOTS[i]), slot_id]
 	var rebind: bool = bind != _last_skill_bind
 	if rebind:
 		_last_skill_bind = bind
+	var action_names: Array[String] = ["fire_primary", "fire_secondary", "utility", "special"]
 	for i: int in SKILL_SLOTS.size():
 		var slot: StringName = SKILL_SLOTS[i]
-		var id: String = String(skills.get(String(slot), ""))
+		var id: String = slot_ids[i]
 		var empty: bool = id == ""
 		var cd: float = float(world.player.skill_cd.get(slot, 0.0))
 		var max_cd: float = 0.0
@@ -520,6 +608,8 @@ func _sync_skills(world: SimWorld) -> void:
 			max_cd = float(def.get("cooldown", 1.0)) * world.stats.cooldown_mul
 		if rebind:
 			_skill_icons[i].texture = null if empty else UiAtlas.skill_tex(id)
+		if i < _skill_keys.size() and i < action_names.size():
+			_skill_keys[i].text = _short_action_key(action_names[i], tr(SKILL_KEYS[i]))
 		_skill_glyphs[i].visible = empty or _skill_icons[i].texture == null
 		_skill_glyphs[i].modulate = Color(1, 1, 1, 0.35 if empty or cd > 0.0 else 1.0)
 		_skill_icons[i].modulate = Color(1, 1, 1, 0.42 if cd > 0.05 else 1.0)
@@ -619,3 +709,295 @@ func _label(px: int, color: Color, role: StringName = UiAtlas.TYPE_META) -> Labe
 	lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiAtlas.apply_label(lab, role, color, px, true)
 	return lab
+
+
+func _sync_essence(world: SimWorld) -> void:
+	if _essence_lab != null:
+		_essence_lab.text = tr("ui.hud.essence").replace("{n}", str(world.run_essence))
+
+
+func _sync_ritual_and_alerts(world: SimWorld) -> void:
+	if _ritual_lab != null:
+		if world.teleporter_state == &"charging" and world.ritual_tier > 0:
+			_ritual_lab.text = tr("ui.hud.ritual.tier").replace("{n}", str(world.ritual_tier))
+			_ritual_lab.visible = true
+		else:
+			_ritual_lab.visible = false
+	if _alert_lab == null:
+		return
+	var alerts: Array[String] = []
+	var reliquary_time: float = -1.0
+	var geode_time: float = INF
+	if world.obstacles != null:
+		for i: int in world.obstacles.cap:
+			if world.obstacles.alive[i] == 0:
+				continue
+			var obs: SimObstacle = world.obstacles.items[i]
+			if obs.type == &"obelisk" and obs.state == &"trial_active" and obs.sub_kind == "obelisk-reliquary":
+				reliquary_time = maxf(reliquary_time, maxf(0.0, obs.trial_timer))
+			elif obs.type == &"geode" and obs.state == &"intact" and obs.collapse_timer >= 0.0:
+				geode_time = minf(geode_time, maxf(0.0, obs.collapse_timer))
+	if reliquary_time >= 0.0 or world.obelisk_armor_debuff < -0.001:
+		var t_val: float = maxf(0.0, reliquary_time)
+		var txt: String = tr("ui.hud.reliquary.trial").replace("{s}", "%.1f" % t_val)
+		if world.obelisk_armor_debuff < -0.001:
+			txt += " (%d%% Armor)" % int(round(world.obelisk_armor_debuff * 100.0))
+		alerts.append(txt)
+	if geode_time < INF:
+		alerts.append(tr("ui.hud.geode").replace("{s}", "%.1f" % geode_time))
+	_alert_lab.text = "   |   ".join(alerts)
+	_alert_lab.visible = not alerts.is_empty()
+
+
+func _sync_interact_prompt(world: SimWorld) -> void:
+	if _interact_panel == null or _interact_lab == null:
+		return
+	var key_txt: String = _action_key_label("interact", "E")
+	var prompt: String = ""
+	var px: float = world.player.x
+	var py: float = world.player.y
+	if world.teleporter_state == &"ready":
+		var tel_dist: float = Vector2(px, py).distance_to(Vector2(world.teleporter_x, world.teleporter_y))
+		if tel_dist <= world.teleporter_radius:
+			prompt = "[%s] %s" % [key_txt, tr("ui.hud.channel")]
+	if prompt == "" and not world.portals.is_empty():
+		var default_pr: float = float(world.catalog.loop.get("portalRadius", 70.0))
+		var best_dist: float = INF
+		var best_portal: Dictionary = {}
+		for portal: Dictionary in world.portals:
+			var pr: float = float(portal.get("radius", default_pr))
+			var d: float = Vector2(px, py).distance_to(Vector2(float(portal.get("x", 0.0)), float(portal.get("y", 0.0))))
+			if d <= pr and d < best_dist:
+				best_dist = d
+				best_portal = portal
+		if not best_portal.is_empty():
+			var kind: String = String(best_portal.get("kind", "next"))
+			var target_id: String = String(best_portal.get("target_stage_id", ""))
+			if kind == "demo-seal":
+				prompt = "[%s] Complete Demo Seal" % key_txt
+			elif kind == "true-ending":
+				prompt = "[%s] Claim the True Seal" % key_txt
+			elif kind == "crimson" or target_id == "prima-materia-core":
+				prompt = "[%s] %s" % [key_txt, tr("ui.hud.portal.core")]
+			elif kind == "secret" or target_id == "aether-vault":
+				prompt = "[%s] %s" % [key_txt, tr("ui.hud.portal.vault")]
+			elif kind == "gold":
+				prompt = "[%s] %s" % [key_txt, tr("ui.hud.ouroboros")]
+			elif kind == "branch" or (target_id != "" and kind == "next"):
+				prompt = "[%s] %s" % [key_txt, tr("ui.hud.portal.branch").replace("{stage}", Loc.stage_name(target_id))]
+			else:
+				prompt = "[%s] %s" % [key_txt, tr("ui.hud.descend")]
+	if prompt == "" and world.obstacles != null:
+		var blocked: bool = world.teleporter_state == &"charging" or (world.boss_spawned and not world.boss_defeated)
+		if not blocked:
+			var ob_cfg: Dictionary = DictUtil.d(world.catalog.obstacles, "siphonObelisk")
+			var interact_r: float = float(ob_cfg.get("interactRadius", 64.0))
+			var channel_dur: float = maxf(0.01, float(ob_cfg.get("channelDuration", 2.0)))
+			var best_ob_dist: float = INF
+			var best_ob: SimObstacle = null
+			for i: int in world.obstacles.cap:
+				if world.obstacles.alive[i] == 0:
+					continue
+				var obs: SimObstacle = world.obstacles.items[i]
+				if obs.type != &"obelisk":
+					continue
+				if obs.state != &"idle" and obs.state != &"channeling":
+					continue
+				var d_ob: float = Vector2(px, py).distance_to(Vector2(obs.x, obs.y))
+				if d_ob <= interact_r and d_ob < best_ob_dist:
+					best_ob_dist = d_ob
+					best_ob = obs
+			if best_ob != null:
+				if best_ob.state == &"channeling":
+					var pct: int = clampi(int(round((best_ob.progress / channel_dur) * 100.0)), 0, 100)
+					prompt = "%s (%d%%)" % [tr("ui.hud.obelisk.channel"), pct]
+				else:
+					var ob_key: String = "obstacle.%s.name" % best_ob.sub_kind
+					var ob_name: String = tr(ob_key)
+					if ob_name == ob_key or ob_name == "":
+						ob_name = tr("ui.hud.obelisk.channel")
+					prompt = "[%s] %s" % [key_txt, ob_name]
+	_interact_lab.text = prompt
+	_interact_panel.visible = prompt != ""
+
+
+func _on_draw_layer() -> void:
+	if _draw_layer == null or _world == null or not visible:
+		return
+	_draw_world_rings(_world)
+	_draw_overheat_arc(_world)
+
+
+func _draw_overheat_arc(world: SimWorld) -> void:
+	var oh_cfg: Dictionary = DictUtil.d(world.catalog.loop, "overheat")
+	if not bool(oh_cfg.get("enabled", true)):
+		return
+	var heat: float = clampf(world.player.heat, 0.0, 1.0)
+	var lockout: float = world.player.overheat_lockout_remain
+	if heat <= 0.01 and lockout <= 0.0:
+		return
+	var center: Vector2 = _draw_layer.get_local_mouse_position()
+	var vp_rect: Rect2 = _draw_layer.get_rect()
+	if center == Vector2.ZERO or not vp_rect.has_point(center):
+		center = _world_to_hud(world.player.x, world.player.y) + Vector2(0.0, -34.0)
+	var radius: float = 26.0
+	var start_ang: float = deg_to_rad(-225.0)
+	var end_ang: float = deg_to_rad(45.0)
+	var span_ang: float = end_ang - start_ang
+	var sweet_lo: float = clampf(float(oh_cfg.get("sweetSpotMin", 0.80)), 0.0, 0.99)
+	var sweet_hi: float = clampf(float(oh_cfg.get("sweetSpotMax", 0.99)), sweet_lo, 1.0)
+	var font: Font = ThemeDB.fallback_font
+	_draw_layer.draw_arc(center, radius, start_ang, end_ang, 28, Color(0.08, 0.06, 0.08, 0.72), 5.0, true)
+	if lockout > 0.0:
+		var pulse: float = 0.55 + 0.45 * absf(sin(world.run_time * 14.0))
+		_draw_layer.draw_arc(center, radius, start_ang, end_ang, 28, Color(0.95, 0.22, 0.20, 0.85 * pulse), 5.0, true)
+		var bf_txt: String = tr("ui.hud.overheat.backfire")
+		if font != null:
+			_draw_layer.draw_string(font, center + Vector2(-46.0, radius + 16.0), bf_txt, HORIZONTAL_ALIGNMENT_CENTER, 92.0, 10, Color(1.0, 0.42, 0.36, 0.95))
+		return
+	var s_start: float = start_ang + span_ang * sweet_lo
+	var s_end: float = start_ang + span_ang * sweet_hi
+	_draw_layer.draw_arc(center, radius, s_start, s_end, 12, Color(0.32, 0.90, 0.96, 0.65), 6.0, true)
+	var in_sweet: bool = heat >= sweet_lo and heat <= sweet_hi
+	var fill_col: Color = Color(0.95, 0.68, 0.22, 0.95)
+	if in_sweet:
+		fill_col = Color(0.45, 0.96, 0.98, 0.98)
+	elif heat >= 0.55:
+		fill_col = Color(0.96, 0.40, 0.16, 0.95)
+	_draw_layer.draw_arc(center, radius, start_ang, start_ang + span_ang * heat, 28, fill_col, 4.5, true)
+	if in_sweet and font != null:
+		var vent_txt: String = tr("ui.hud.overheat.vent")
+		_draw_layer.draw_string(font, center + Vector2(-56.0, radius + 16.0), vent_txt, HORIZONTAL_ALIGNMENT_CENTER, 112.0, 10, Color(0.55, 0.98, 1.0, 0.98))
+
+
+func _draw_world_rings(world: SimWorld) -> void:
+	var font: Font = ThemeDB.fallback_font
+	if world.teleporter_state == &"charging":
+		var eff_r: float = SimLoop.effective_teleporter_radius(world)
+		var tp_pos: Vector2 = _world_to_hud(world.teleporter_x, world.teleporter_y)
+		var edge_pos: Vector2 = _world_to_hud(world.teleporter_x + eff_r, world.teleporter_y)
+		var scr_r: float = tp_pos.distance_to(edge_pos)
+		if scr_r >= 8.0 and scr_r <= 1000.0:
+			var tel_pct: float = clampf(world.teleporter_charge / maxf(world.teleporter_hold, 0.001), 0.0, 1.0)
+			_draw_layer.draw_arc(tp_pos, scr_r, 0.0, TAU, 48, Color(0.10, 0.08, 0.10, 0.35), 2.5, true)
+			_draw_layer.draw_arc(tp_pos, scr_r, -PI * 0.5, -PI * 0.5 + TAU * tel_pct, 48, Color(0.90, 0.78, 0.47, 0.72), 3.0, true)
+			var tel_cfg: Dictionary = DictUtil.d(world.catalog.loop, "teleporter")
+			var tiers: Array = DictUtil.a(tel_cfg, "ritualTiers")
+			var thresholds: Array[float] = [
+				float(tiers[0]) if tiers.size() > 0 else 0.33,
+				float(tiers[1]) if tiers.size() > 1 else 0.66,
+				float(tiers[2]) if tiers.size() > 2 else 1.0,
+			]
+			for t_frac: float in thresholds:
+				var ang: float = -PI * 0.5 + TAU * clampf(t_frac, 0.0, 1.0)
+				var p0: Vector2 = tp_pos + Vector2(cos(ang), sin(ang)) * (scr_r - 5.0)
+				var p1: Vector2 = tp_pos + Vector2(cos(ang), sin(ang)) * (scr_r + 5.0)
+				var hit_col: Color = UiAtlas.GOLD_MOLTEN if tel_pct >= t_frac else UiAtlas.ASH
+				_draw_layer.draw_line(p0, p1, hit_col, 2.0, true)
+	if world.obstacles == null:
+		return
+	var ob_cfg: Dictionary = DictUtil.d(world.catalog.obstacles, "siphonObelisk")
+	var channel_dur: float = maxf(0.01, float(ob_cfg.get("channelDuration", 2.0)))
+	var rel_dur: float = maxf(0.01, float(DictUtil.d(ob_cfg, "reliquary").get("trialDuration", 20.0)))
+	var geo_cfg: Dictionary = DictUtil.d(world.catalog.loop, "mercuryGeode")
+	var geo_dur: float = maxf(0.01, float(geo_cfg.get("collapseDuration", 12.0)))
+	var hud_bounds: Rect2 = _draw_layer.get_rect().grow(64.0)
+	for i: int in world.obstacles.cap:
+		if world.obstacles.alive[i] == 0:
+			continue
+		var obs: SimObstacle = world.obstacles.items[i]
+		if obs.type == &"obelisk":
+			if obs.state != &"channeling" and obs.state != &"trial_active":
+				continue
+			var spos: Vector2 = _world_to_hud(obs.x, obs.y)
+			if not hud_bounds.has_point(spos):
+				continue
+			if obs.state == &"channeling":
+				var pct: float = clampf(obs.progress / channel_dur, 0.0, 1.0)
+				_draw_ring_meter(spos, 26.0, pct, UiAtlas.GOLD_MOLTEN)
+			elif obs.sub_kind == "obelisk-reliquary":
+				var pct_r: float = clampf(obs.trial_timer / rel_dur, 0.0, 1.0)
+				_draw_ring_meter(spos, 28.0, pct_r, Color("ff7a6e"))
+				if font != null:
+					_draw_layer.draw_string(font, spos + Vector2(-28.0, -34.0), "%.1fs" % maxf(0.0, obs.trial_timer), HORIZONTAL_ALIGNMENT_CENTER, 56.0, 10, Color("ff9e94"))
+			else:
+				_draw_ring_meter(spos, 28.0, 1.0, Color("f04f78"))
+				if font != null and obs.trial_remaining > 0:
+					_draw_layer.draw_string(font, spos + Vector2(-24.0, -34.0), "%d left" % obs.trial_remaining, HORIZONTAL_ALIGNMENT_CENTER, 48.0, 10, UiAtlas.PARCHMENT)
+		elif obs.type == &"geode" and obs.state == &"intact" and obs.collapse_timer >= 0.0:
+			var gpos: Vector2 = _world_to_hud(obs.x, obs.y)
+			if not hud_bounds.has_point(gpos):
+				continue
+			var pct_g: float = clampf(obs.collapse_timer / geo_dur, 0.0, 1.0)
+			_draw_ring_meter(gpos, 24.0, pct_g, Color("7ee8fa"))
+			if font != null:
+				_draw_layer.draw_string(font, gpos + Vector2(-28.0, -30.0), "%.1fs" % maxf(0.0, obs.collapse_timer), HORIZONTAL_ALIGNMENT_CENTER, 56.0, 10, Color("a8f5ff"))
+
+
+func _draw_ring_meter(center: Vector2, radius: float, pct: float, color: Color) -> void:
+	_draw_layer.draw_arc(center, radius, 0.0, TAU, 28, Color(0.06, 0.04, 0.06, 0.72), 4.0, true)
+	if pct > 0.005:
+		_draw_layer.draw_arc(center, radius, -PI * 0.5, -PI * 0.5 + TAU * clampf(pct, 0.0, 1.0), 28, color, 3.5, true)
+
+
+func _world_to_hud(wx: float, wy: float) -> Vector2:
+	if _cached_world_vp == null or not is_instance_valid(_cached_world_vp):
+		var tree: SceneTree = get_tree()
+		if tree != null and tree.root != null:
+			var arena: Node = tree.root.find_child("Arena", true, false)
+			if arena != null:
+				_cached_world_vp = arena.get_viewport()
+	if _cached_world_vp != null and is_instance_valid(_cached_world_vp):
+		var vp_pt: Vector2 = _cached_world_vp.get_canvas_transform() * Vector2(wx, wy)
+		if _cached_world_vp is SubViewport:
+			var vp_parent: Node = _cached_world_vp.get_parent()
+			if vp_parent is Control:
+				var ctrl: Control = vp_parent as Control
+				var sv: SubViewport = _cached_world_vp as SubViewport
+				var sx: float = ctrl.size.x / float(maxi(1, sv.size.x)) if sv.size.x > 0 else 1.0
+				var sy: float = ctrl.size.y / float(maxi(1, sv.size.y)) if sv.size.y > 0 else 1.0
+				var global_pt: Vector2 = ctrl.get_global_transform_with_canvas() * Vector2(vp_pt.x * sx, vp_pt.y * sy)
+				if _draw_layer != null:
+					return _draw_layer.get_global_transform_with_canvas().affine_inverse() * global_pt
+				return global_pt
+		return vp_pt
+	return get_viewport().get_canvas_transform() * Vector2(wx, wy)
+
+
+func _short_action_key(action: String, fallback: String) -> String:
+	var label: String = _action_key_label(action, fallback)
+	if label.length() > 5:
+		if label.begins_with("Left "):
+			return "LMB"
+		if label.begins_with("Right "):
+			return "RMB"
+		if label.begins_with("Middle "):
+			return "MMB"
+		return label.substr(0, 5)
+	return label
+
+
+func _action_key_label(action: String, fallback: String) -> String:
+	if not InputMap.has_action(action):
+		return fallback
+	var events: Array[InputEvent] = InputMap.action_get_events(action)
+	for ev: InputEvent in events:
+		if ev is InputEventKey:
+			var ek: InputEventKey = ev as InputEventKey
+			var k: int = ek.physical_keycode if ek.physical_keycode != KEY_NONE else ek.keycode
+			if k != KEY_NONE:
+				var k_txt: String = OS.get_keycode_string(k)
+				if k_txt != "":
+					return k_txt.to_upper()
+		elif ev is InputEventMouseButton:
+			var emb: InputEventMouseButton = ev as InputEventMouseButton
+			match emb.button_index:
+				MOUSE_BUTTON_LEFT:
+					return "LMB"
+				MOUSE_BUTTON_RIGHT:
+					return "RMB"
+				MOUSE_BUTTON_MIDDLE:
+					return "MMB"
+				_:
+					return "M%d" % emb.button_index
+	return fallback

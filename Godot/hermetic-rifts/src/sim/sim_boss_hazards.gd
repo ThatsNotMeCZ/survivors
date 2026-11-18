@@ -15,7 +15,7 @@ static func step(world: SimWorld, dt: float) -> void:
 		var kind: int = pool.kind[i]
 		if kind == BossHazardPool.HAZ_METEOR:
 			if pool.elapsed[i] >= pool.duration[i]:
-				var tint: int = 0xFF7A3A if pool.style[i] == BossHazardPool.STYLE_LAVA else 0x7AD4FF
+				var tint: int = 0xFF7A3A if pool.style[i] == BossHazardPool.STYLE_LAVA else (0x6BD968 if pool.style[i] == BossHazardPool.STYLE_AETHER else 0x7AD4FF)
 				world.fx.emit(FxIds.STRIKE, pool.x[i], pool.y[i], tint)
 				if player.iframe_remain <= 0.0 and SimCollision.circles_overlap(pool.x[i], pool.y[i], pool.radius[i], player.x, player.y, player.radius):
 					world.fx.emit(FxIds.HURT, player.x, player.y, tint)
@@ -86,4 +86,21 @@ static func step(world: SimWorld, dt: float) -> void:
 					pool.elapsed[i] = 0.0
 					pool.duration[i] = pool.pool_duration[i]
 			elif pool.elapsed[i] >= pool.duration[i]:
+				pool.alive[i] = 0
+			continue
+		if kind == BossHazardPool.HAZ_RING:
+			var expand_speed: float = maxf(1.0, pool.pool_dps[i])
+			pool.radius[i] += expand_speed * dt
+			var dist_ring: float = sqrt((player.x - pool.x[i]) ** 2.0 + (player.y - pool.y[i]) ** 2.0)
+			var half_thick: float = maxf(14.0, pool.angle[i] * 0.5)
+			if pool.state[i] == 0 and player.iframe_remain <= 0.0 and player.dash_remain <= 0.0 and player.parry_remain <= 0.0:
+				if absf(dist_ring - pool.radius[i]) <= half_thick + player.radius:
+					world.fx.emit(FxIds.HURT, player.x, player.y, 0xFFE870)
+					world.damage_player(pool.damage[i])
+					pool.state[i] = 1
+			if pool.radius[i] >= pool.pool_radius[i] or pool.elapsed[i] >= pool.duration[i]:
+				pool.alive[i] = 0
+			continue
+		if kind == BossHazardPool.HAZ_SPIRE_TETHER:
+			if pool.duration[i] > 0.0 and pool.elapsed[i] >= pool.duration[i]:
 				pool.alive[i] = 0

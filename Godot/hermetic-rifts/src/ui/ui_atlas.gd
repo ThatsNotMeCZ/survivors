@@ -6,8 +6,23 @@ const UI_JSON: String = "res://assets/sprites/ui/atlas.json"
 const ENV_PNG: String = "res://assets/sprites/env/atlas.png"
 const ENV_JSON: String = "res://assets/sprites/env/atlas.json"
 const MANIFEST: String = "res://assets/sprites/manifest.json"
+const LUT_PATH: String = "res://assets/sprites/generated/resurrect-64-32x.png"
 const FONT_PATH: String = "res://assets/fonts/BillJilly.ttf"
 const INK_FONT_PATH: String = "res://assets/fonts/source-sans-3-latin-600-normal.woff"
+
+const ENTITY_GENERATED_PATHS: Dictionary = {
+	"flagellant": "players/vessel-flagellant.png",
+	"astromancer": "players/vessel-astromancer.png",
+	"slag-hound": "enemies/slag-hound.png",
+	"aether-hexer": "enemies/aether-hexer.png",
+	"voltaic-regent": "enemies/voltaic-regent.png",
+	"voltaic-spire": "enemies/voltaic-spire.png",
+}
+
+const ENTITY_FALLBACK_IDS: Dictionary = {
+	"viridian-alchemist": "penitent",
+	"arch-alchemist": "voltaic-regent",
+}
 
 const TYPE_DISPLAY: StringName = &"display"
 const TYPE_BODY: StringName = &"body"
@@ -211,6 +226,47 @@ static func frame_image(id: String, state: String = "idle") -> ImageTexture:
 	return _blit(_ui_tex, _rect_for(_ui_frames, id, state))
 
 
+static func generated_tex(rel_path: String, fallback_size: int = 32, fallback_color: Color = Color("5ec8d4")) -> Texture2D:
+	var path: String = "res://assets/sprites/generated/%s" % rel_path
+	var tex: Texture2D = _load_tex(path)
+	if tex != null:
+		return tex
+	return _procedural_fallback(fallback_size, fallback_size, fallback_color)
+
+
+static func generated_frame(
+	rel_path: String,
+	frame_w: int,
+	frame_h: int,
+	frame_idx: int,
+	fallback_color: Color = Color("5ec8d4"),
+) -> Texture2D:
+	var fw: int = maxi(1, frame_w)
+	var fh: int = maxi(1, frame_h)
+	var safe_idx: int = maxi(0, frame_idx)
+	var key: String = "genframe:%s:%d:%d:%d" % [rel_path, fw, fh, safe_idx]
+	if _atlas_cache.has(key):
+		return _atlas_cache[key]
+	var sheet: Texture2D = _load_tex("res://assets/sprites/generated/%s" % rel_path)
+	if sheet == null:
+		var fb: ImageTexture = _procedural_fallback(fw, fh, fallback_color)
+		_atlas_cache[key] = fb
+		return fb
+	var cols: int = maxi(1, int(float(sheet.get_width()) / float(fw)))
+	var col: int = safe_idx % cols
+	var row: int = int(float(safe_idx) / float(cols))
+	var region := Rect2(float(col * fw), float(row * fh), float(fw), float(fh))
+	var cropped: ImageTexture = _blit(sheet, region)
+	if cropped == null:
+		cropped = _procedural_fallback(fw, fh, fallback_color)
+	_atlas_cache[key] = cropped
+	return cropped
+
+
+static func lut_tex() -> Texture2D:
+	return _load_tex(LUT_PATH)
+
+
 static func apply_button_styles(button: Button, id: String) -> void:
 	ensure_loaded()
 	var entry: Dictionary = _ui_frames.get(id, {})
@@ -286,17 +342,11 @@ static func nine_slice(id: String, state: String = "idle", pad: Vector4 = Vector
 
 
 static func skill_tex(id: String) -> Texture2D:
-	var path: String = "res://assets/sprites/skills/%s.png" % id
-	if ResourceLoader.exists(path):
-		return load(path) as Texture2D
-	return null
+	return _load_tex("res://assets/sprites/skills/%s.png" % id)
 
 
 static func item_tex(id: String) -> Texture2D:
-	var path: String = "res://assets/sprites/items/%s.png" % id
-	if ResourceLoader.exists(path):
-		return load(path) as Texture2D
-	return null
+	return _load_tex("res://assets/sprites/items/%s.png" % id)
 
 
 static func attach_rarity_splash(host: Control, rarity: String) -> void:
@@ -347,6 +397,10 @@ static func env_rect(id: String) -> Rect2:
 	return _rect_for(_env_frames, id, "idle")
 
 
+static func has_own_entity_tex(id: String) -> bool:
+	return _load_entity_tex_direct(id) != null
+
+
 static func entity_def(id: String) -> Dictionary:
 	ensure_loaded()
 	_refresh_sidecar(id)
@@ -366,7 +420,8 @@ static func entity_def(id: String) -> Dictionary:
 
 
 static func resolve_entity_anim(id: String, anim: String) -> String:
-	var def: Dictionary = entity_def(id)
+	var eff_id: String = _effective_entity_id(id)
+	var def: Dictionary = entity_def(eff_id)
 	var anims: Dictionary = def.get("anims", {})
 	if anims.has(anim):
 		return anim
@@ -380,9 +435,10 @@ static func resolve_entity_anim(id: String, anim: String) -> String:
 
 
 static func entity_anim_duration(id: String, anim: String) -> float:
-	var def: Dictionary = entity_def(id)
+	var eff_id: String = _effective_entity_id(id)
+	var def: Dictionary = entity_def(eff_id)
 	var anims: Dictionary = def.get("anims", {})
-	var resolved: String = resolve_entity_anim(id, anim)
+	var resolved: String = resolve_entity_anim(eff_id, anim)
 	var spec: Dictionary = anims.get(resolved, anims.get("idle", {}))
 	var frames: Array = spec.get("frames", [0])
 	if frames.is_empty():
@@ -392,10 +448,12 @@ static func entity_anim_duration(id: String, anim: String) -> float:
 
 
 static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
-	var def: Dictionary = entity_def(id)
-	var full: Texture2D = _load_tex("res://assets/sprites/entities/%s.png" % id)
+	var eff_id: String = _effective_entity_id(id)
+	var full: Texture2D = _load_entity_tex_direct(eff_id)
 	if full == null:
-		return null
+		var fb_col := Color("6bd968") if id == "viridian-alchemist" else (Color("ffae42") if id == "arch-alchemist" else Color("5ec8d4"))
+		return _procedural_fallback(32, 32, fb_col)
+	var def: Dictionary = entity_def(eff_id)
 	var fw: int = int(def.get("frameWidth", full.get_width()))
 	var fh: int = int(def.get("frameHeight", full.get_height()))
 	if fw <= 0:
@@ -403,7 +461,7 @@ static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
 	if fh <= 0:
 		fh = full.get_height()
 	var anims: Dictionary = def.get("anims", {})
-	var resolved: String = resolve_entity_anim(id, anim)
+	var resolved: String = resolve_entity_anim(eff_id, anim)
 	var spec: Dictionary = anims.get(resolved, anims.get("idle", {}))
 	var frames: Array = spec.get("frames", [0])
 	if frames.is_empty():
@@ -414,7 +472,7 @@ static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
 	var raw_i: int = int(floor(maxf(0.0, t) * rate))
 	var idx: int = clampi(raw_i, 0, frames.size() - 1) if repeat == 0 else raw_i % frames.size()
 	var frame_i: int = int(frames[idx])
-	var key: String = "%s:%d:%d:%d" % [id, fw, fh, frame_i]
+	var key: String = "%s:%d:%d:%d" % [eff_id, fw, fh, frame_i]
 	if _atlas_cache.has(key):
 		return _atlas_cache[key]
 	var cols: int = maxi(1, int(float(full.get_width()) / float(fw)))
@@ -431,6 +489,52 @@ static func entity_frame(id: String, anim: String, t: float) -> Texture2D:
 	atlas.region = region
 	_atlas_cache[key] = atlas
 	return atlas
+
+
+static func _effective_entity_id(id: String) -> String:
+	if _load_entity_tex_direct(id) != null:
+		return id
+	if ENTITY_FALLBACK_IDS.has(id):
+		return String(ENTITY_FALLBACK_IDS[id])
+	return id
+
+
+static func _load_entity_tex_direct(id: String) -> Texture2D:
+	var direct: Texture2D = _load_tex("res://assets/sprites/entities/%s.png" % id)
+	if direct != null:
+		return direct
+	if ENTITY_GENERATED_PATHS.has(id):
+		return _load_tex("res://assets/sprites/generated/%s" % String(ENTITY_GENERATED_PATHS[id]))
+	return null
+
+
+static func _procedural_fallback(w: int, h: int, color: Color) -> ImageTexture:
+	var cw: int = maxi(4, w)
+	var ch: int = maxi(4, h)
+	var key: String = "procfallback:%dx%d:%s" % [cw, ch, color.to_html()]
+	if _atlas_cache.has(key):
+		return _atlas_cache[key]
+	var img := Image.create(cw, ch, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var cx: float = float(cw) * 0.5
+	var cy: float = float(ch) * 0.5
+	var rx: float = maxf(1.5, cx - 2.0)
+	var ry: float = maxf(1.5, cy - 2.0)
+	var dark: Color = color.darkened(0.45)
+	var hi: Color = color.lightened(0.35)
+	for y: int in ch:
+		for x: int in cw:
+			var dx: float = absf(float(x) + 0.5 - cx) / rx
+			var dy: float = absf(float(y) + 0.5 - cy) / ry
+			var d: float = dx + dy
+			if d <= 1.05 and d > 0.85:
+				img.set_pixel(x, y, INK)
+			elif d <= 0.85:
+				var c: Color = hi if (float(x) < cx and float(y) < cy and d < 0.45) else (dark if float(y) > cy else color)
+				img.set_pixel(x, y, c)
+	var tex := ImageTexture.create_from_image(img)
+	_atlas_cache[key] = tex
+	return tex
 
 
 static func _strip_button_padding(button: Button) -> void:
@@ -496,7 +600,13 @@ static func _blit(sheet: Texture2D, region: Rect2) -> ImageTexture:
 	var src: Image = sheet.get_image()
 	if src == null:
 		return null
-	var cropped: Image = src.get_region(Rect2i(int(region.position.x), int(region.position.y), int(region.size.x), int(region.size.y)))
+	var rx: int = int(region.position.x)
+	var ry: int = int(region.position.y)
+	var rw: int = int(region.size.x)
+	var rh: int = int(region.size.y)
+	if rx < 0 or ry < 0 or rx + rw > src.get_width() or ry + rh > src.get_height():
+		return null
+	var cropped: Image = src.get_region(Rect2i(rx, ry, rw, rh))
 	cropped.fix_alpha_edges()
 	return ImageTexture.create_from_image(cropped)
 
@@ -549,9 +659,18 @@ static func _load_json(path: String) -> Dictionary:
 static func _load_tex(path: String) -> Texture2D:
 	if _tex_cache.has(path):
 		return _tex_cache[path]
-	if not ResourceLoader.exists(path):
-		_tex_cache[path] = null
-		return null
-	var tex: Texture2D = load(path)
+	var tex: Texture2D = null
+	if ResourceLoader.exists(path):
+		var loaded: Variant = load(path)
+		if loaded is Texture2D:
+			tex = loaded as Texture2D
+	if tex == null:
+		var abs_path: String = ProjectSettings.globalize_path(path)
+		if FileAccess.file_exists(path) or FileAccess.file_exists(abs_path):
+			var img: Image = Image.load_from_file(abs_path)
+			if img == null or img.is_empty():
+				img = Image.load_from_file(path)
+			if img != null and not img.is_empty():
+				tex = ImageTexture.create_from_image(img)
 	_tex_cache[path] = tex
 	return tex

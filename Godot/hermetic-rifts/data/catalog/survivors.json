@@ -17,6 +17,12 @@
         "utility": "dash",
         "special": "skill-crucible-cull"
       },
+      "altSkills": {
+        "primary": "bolt-twin-ember",
+        "secondary": "skill-prism-lance",
+        "utility": "util-quicksilver-parry",
+        "special": "skill-mercurial-tempest"
+      },
       "startingItems": [],
       "view": {
         "kind": "chevron",
@@ -42,6 +48,12 @@
         "utility": "dash-ash-step",
         "special": "skill-condemn-tether"
       },
+      "altSkills": {
+        "primary": "skill-incense-flail",
+        "secondary": "skill-salt-sigil",
+        "utility": "util-censure-bell",
+        "special": "skill-penitent-pyre"
+      },
       "startingItems": [],
       "view": {
         "kind": "chevron",
@@ -55,6 +67,80 @@
         "entityId": "frost-sovereign",
         "stageId": "rime-dock",
         "label": "Slay the Frost Sovereign in the Rime Dock"
+      }
+    },
+    {
+      "id": "flagellant",
+      "name": "The Flagellant",
+      "title": "The Crucible Zealot",
+      "lore": "Bound in furnace iron and quenched in molten brass. He welcomes the horde within arm's reach, cleaving slag and hooking distant foes into his pyre.",
+      "stats": {
+        "speed": 255,
+        "maxHp": 150,
+        "radius": 15
+      },
+      "skills": {
+        "primary": "skill-crucible-cleave",
+        "secondary": "skill-slag-harpoon",
+        "utility": "dash-furnace-rush",
+        "special": "skill-calcinatio-slam"
+      },
+      "altSkills": {
+        "primary": "skill-cinder-flail",
+        "secondary": "skill-molten-brand",
+        "utility": "util-iron-bulwark",
+        "special": "skill-kiln-overdrive"
+      },
+      "startingItems": [],
+      "view": {
+        "kind": "chevron",
+        "size": 34,
+        "inner": "#ffd6b8",
+        "mid": "#d94e34"
+      },
+      "crosshair": "flagellant",
+      "unlock": {
+        "type": "boss-kill",
+        "entityId": "cinder-heart",
+        "count": 10,
+        "label": "Slay the Cinder Heart 10 times"
+      }
+    },
+    {
+      "id": "astromancer",
+      "name": "The Astromancer",
+      "title": "The Celestial Seer",
+      "lore": "A fragile vessel hollowed out to house refracted starlight. She bends aether prisms across the flagstones and calls down focused solar judgment.",
+      "stats": {
+        "speed": 265,
+        "maxHp": 85,
+        "radius": 13
+      },
+      "skills": {
+        "primary": "skill-argent-lance",
+        "secondary": "skill-prism-refraction",
+        "utility": "dash-aether-blink",
+        "special": "skill-solar-convergence"
+      },
+      "altSkills": {
+        "primary": "skill-starlight-dart",
+        "secondary": "skill-lunar-orb",
+        "utility": "util-celestial-swap",
+        "special": "skill-astral-collapse"
+      },
+      "startingItems": [],
+      "view": {
+        "kind": "chevron",
+        "size": 30,
+        "inner": "#f2e8ff",
+        "mid": "#9b6bff"
+      },
+      "crosshair": "astromancer",
+      "unlock": {
+        "type": "low-hp-boss-kills",
+        "count": 3,
+        "hpPctMax": 0.10,
+        "label": "Slay 3 Seal Guardians in one working below 10% HP"
       }
     }
   ]

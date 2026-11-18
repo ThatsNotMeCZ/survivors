@@ -7,6 +7,8 @@
       "slot": "primary",
       "input": "hold",
       "cooldown": 0.28,
+      "heatGain": 0.065,
+      "element": "fire",
       "lore": "A needle of fire. It only flies where you point.",
       "hook": "Fires searing bolts of flame toward your cursor.",
       "effects": [
@@ -20,11 +22,34 @@
       ]
     },
     {
+      "id": "bolt-twin-ember",
+      "name": "Twin Ember",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.30,
+      "heatGain": 0.065,
+      "element": "fire",
+      "lore": "A forked retort nozzle that splits one breath of sulfur into twin sparks.",
+      "hook": "Fires two angled embers toward your cursor.",
+      "effects": [
+        {
+          "type": "projectile",
+          "count": 2,
+          "spreadDeg": 12,
+          "speed": 760,
+          "lifetime": 0.80,
+          "radius": 5,
+          "damage": 6
+        }
+      ]
+    },
+    {
       "id": "dash",
       "name": "Phase Step",
       "slot": "utility",
       "input": "press",
       "cooldown": 2.9,
+      "element": "aether",
       "lore": "The vessel slips between worlds for a breath.",
       "hook": "Dash swiftly forward, phasing harmlessly through foes and projectiles.",
       "effects": [
@@ -42,6 +67,7 @@
       "slot": "secondary",
       "input": "press",
       "cooldown": 4,
+      "element": "aether",
       "lore": "A thin ray of stolen sky. Line them up or waste the breath.",
       "hook": "Lances through every foe in a line, briefly steadying your stride.",
       "effects": [
@@ -61,11 +87,60 @@
       ]
     },
     {
+      "id": "skill-prism-lance",
+      "name": "Prism Lance",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 4.2,
+      "element": "aether",
+      "lore": "Cut quartz fired at speed. On first bone, it refracts into three knives.",
+      "hook": "Fires an aether lance that fractures into three piercing shards on impact.",
+      "effects": [
+        {
+          "type": "prism",
+          "speed": 1100,
+          "lifetime": 0.55,
+          "radius": 6,
+          "damage": 20,
+          "splitCount": 3,
+          "splitSpreadDeg": 36,
+          "splitDamage": 11
+        }
+      ]
+    },
+    {
+      "id": "util-quicksilver-parry",
+      "name": "Quicksilver Parry",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 3.4,
+      "element": "aether",
+      "lore": "Liquid silver turns rigid for half a heartbeat, flinging wrath back to its sender.",
+      "hook": "Raise a brief mirror ward that reflects bolts into 3 quicksilver shards and refunds cooldown on parry.",
+      "unlock": {
+        "type": "obelisk-clears",
+        "count": 3,
+        "label": "Channel 3 Siphon Obelisks"
+      },
+      "effects": [
+        {
+          "type": "parry",
+          "duration": 0.28,
+          "iframe": 0.28,
+          "shardCount": 3,
+          "shardDamage": 20,
+          "cooldownRefund": 1.8,
+          "reflectProjectiles": true
+        }
+      ]
+    },
+    {
       "id": "skill-crucible-cull",
       "name": "Crucible Cull",
       "slot": "special",
       "input": "press",
       "cooldown": 12,
+      "element": "fire",
       "lore": "A hammer of the Great Work, dropped where you will it.",
       "hook": "Calls down a concentrated alchemical strike at the cursor after a brief delay.",
       "effects": [
@@ -78,11 +153,38 @@
       ]
     },
     {
+      "id": "skill-mercurial-tempest",
+      "name": "Mercurial Tempest",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 11.5,
+      "element": "aether",
+      "lore": "The Homunculus vents its core pressure in one blinding silver ring.",
+      "hook": "Erupts in an expanding tempest of quicksilver that hurls and slows surrounding foes.",
+      "unlock": {
+        "type": "stage-clear",
+        "stageId": "fulmination-foundry",
+        "label": "Clear the Fulmination Foundry"
+      },
+      "effects": [
+        {
+          "type": "nova-burst",
+          "radius": 175,
+          "damage": 72,
+          "knockback": 220,
+          "slowMul": 0.6,
+          "slowDuration": 1.5
+        }
+      ]
+    },
+    {
       "id": "skill-censer-lob",
       "name": "Censer Lob",
       "slot": "primary",
       "input": "hold",
       "cooldown": 0.42,
+      "heatGain": 0.065,
+      "element": "fire",
       "lore": "Heavy glass, thrown in an arc. The air between you and the stain is empty.",
       "hook": "Lobs a heavy censer over the horde that shatters on impact, scorching nearby foes.",
       "effects": [
@@ -98,11 +200,32 @@
       ]
     },
     {
+      "id": "skill-incense-flail",
+      "name": "Incense Flail",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.40,
+      "heatGain": 0.065,
+      "element": "fire",
+      "lore": "Swung on a blackened brass chain until the ember bowl howls.",
+      "hook": "Sweeps a burning censer in a forward arc, battering back nearby dross.",
+      "effects": [
+        {
+          "type": "melee-arc",
+          "range": 92,
+          "arcDeg": 110,
+          "damage": 15,
+          "knockback": 90
+        }
+      ]
+    },
+    {
       "id": "skill-brimstone-line",
       "name": "Brimstone Line",
       "slot": "secondary",
       "input": "press",
       "cooldown": 5,
+      "element": "fire",
       "lore": "A seam of sulfur drawn across the yard. The small ones fear it.",
       "hook": "Draws a burning seam of sulfur that slows lesser foes crossing it.",
       "effects": [
@@ -119,11 +242,30 @@
       ]
     },
     {
+      "id": "skill-salt-sigil",
+      "name": "Salt Sigil",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 5.5,
+      "element": "aether",
+      "lore": "Consecrated sea-salt cast at the cursor to fracture brittle husks.",
+      "hook": "Inscribes a salt glyph at the cursor that detonates after a short delay.",
+      "effects": [
+        {
+          "type": "delayed-strike",
+          "delay": 0.45,
+          "radius": 75,
+          "damage": 42
+        }
+      ]
+    },
+    {
       "id": "dash-ash-step",
       "name": "Ash Step",
       "slot": "utility",
       "input": "press",
       "cooldown": 3,
+      "element": "fire",
       "lore": "Leave a husk of ash. The mites chase the ghost.",
       "hook": "Dash to safety while leaving an ash effigy that lures lesser foes.",
       "effects": [
@@ -137,11 +279,38 @@
       ]
     },
     {
+      "id": "util-censure-bell",
+      "name": "Censure Bell",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 4.2,
+      "element": "aether",
+      "lore": "One toll of cracked bronze drives lesser dross to their knees.",
+      "hook": "Tolls a resonant ward that shatters enemy bolts, shoves foes back, and slows them in consecrated salt.",
+      "unlock": {
+        "type": "elite-kills",
+        "count": 20,
+        "label": "Slay 20 Elites across workings"
+      },
+      "effects": [
+        {
+          "type": "censure-bell",
+          "radius": 125,
+          "knockback": 260,
+          "destroyProjectiles": true,
+          "saltDuration": 2.5,
+          "slowMul": 0.45,
+          "damage": 22
+        }
+      ]
+    },
+    {
       "id": "skill-condemn-tether",
       "name": "Condemnation Tether",
       "slot": "special",
       "input": "press",
       "cooldown": 15,
+      "element": "fire",
       "lore": "A chain for the proud. The small are ash before the iron locks.",
       "hook": "Pierces and incinerates lesser foes to bind the first elite or boss struck with a searing chain.",
       "effects": [
@@ -153,6 +322,384 @@
           "rootDuration": 2.5,
           "fodderDamage": 45,
           "fodderContactDps": 28
+        }
+      ]
+    },
+    {
+      "id": "skill-penitent-pyre",
+      "name": "Penitent Pyre",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 13.5,
+      "element": "fire",
+      "lore": "He carries the kiln inside his ribs; when the vow breaks, the whole floor burns.",
+      "hook": "Unleashes a consecrated ring of fire that knocks back and scorches every nearby foe.",
+      "unlock": {
+        "type": "boss-kill",
+        "entityId": "viridian-alchemist",
+        "label": "Slay the Viridian Alchemist"
+      },
+      "effects": [
+        {
+          "type": "nova-burst",
+          "radius": 190,
+          "damage": 88,
+          "knockback": 200,
+          "burnDps": 14,
+          "burnDuration": 3.0
+        }
+      ]
+    },
+    {
+      "id": "skill-crucible-cleave",
+      "name": "Crucible Cleave",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.36,
+      "heatGain": 0.065,
+      "element": "fire",
+      "lore": "A notched iron paddle meant to skim molten dross—turned to bone instead.",
+      "hook": "Sweeps a wide incandescent cleave toward your cursor, staggering foes and deflecting incoming bolts.",
+      "effects": [
+        {
+          "type": "melee-arc",
+          "range": 78,
+          "arcDeg": 135,
+          "damage": 18,
+          "knockback": 120,
+          "deflectProjectiles": true
+        }
+      ]
+    },
+    {
+      "id": "skill-cinder-flail",
+      "name": "Cinder Flail",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.34,
+      "heatGain": 0.065,
+      "element": "fire",
+      "lore": "Three slag links whipped in a blistering circle around the wrist.",
+      "hook": "Lashes a broad cinder arc with wide reach and steady knockback.",
+      "effects": [
+        {
+          "type": "melee-arc",
+          "range": 86,
+          "arcDeg": 160,
+          "damage": 16,
+          "knockback": 110
+        }
+      ]
+    },
+    {
+      "id": "skill-slag-harpoon",
+      "name": "Slag Harpoon",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 4.5,
+      "element": "fire",
+      "lore": "Barbed crucible iron on a winch. None escape the kiln.",
+      "hook": "Hurls a hooked iron lance that yanks struck foes straight into melee range.",
+      "effects": [
+        {
+          "type": "harpoon",
+          "speed": 980,
+          "lifetime": 0.45,
+          "radius": 8,
+          "damage": 24,
+          "pullDistance": 180,
+          "stunDuration": 0.4
+        }
+      ]
+    },
+    {
+      "id": "skill-molten-brand",
+      "name": "Molten Brand",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 4.8,
+      "element": "fire",
+      "lore": "Carves a glowing seam of slag into the stone ahead.",
+      "hook": "Brands a blazing furrow across the floor that slows and sears foes.",
+      "effects": [
+        {
+          "type": "slow-line",
+          "length": 170,
+          "width": 24,
+          "duration": 2.8,
+          "slowMul": 0.35,
+          "damage": 8,
+          "fodderOnly": false,
+          "offset": 62
+        }
+      ]
+    },
+    {
+      "id": "dash-furnace-rush",
+      "name": "Furnace Rush",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 3.2,
+      "element": "fire",
+      "lore": "A shoulder-low bull charge fueled by bellows air.",
+      "hook": "Surge forward in an armored rush, phasing through danger.",
+      "effects": [
+        {
+          "type": "dash",
+          "distance": 230,
+          "duration": 0.17,
+          "iframe": 0.24
+        }
+      ]
+    },
+    {
+      "id": "util-iron-bulwark",
+      "name": "Iron Bulwark",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 5.2,
+      "element": "fire",
+      "lore": "Annealed plates clamp shut while white-hot rivets punish every blow.",
+      "hook": "Brace behind iron plates for heavy damage reduction and knockback immunity, unleashing a counter arc.",
+      "unlock": {
+        "type": "boss-kill",
+        "entityId": "voltaic-regent",
+        "label": "Slay the Voltaic Regent"
+      },
+      "effects": [
+        {
+          "type": "iron-bulwark",
+          "duration": 0.55,
+          "damageReduction": 0.85,
+          "knockbackImmune": true,
+          "counterDamage": 32,
+          "counterRange": 140,
+          "counterArcDeg": 90
+        }
+      ]
+    },
+    {
+      "id": "skill-calcinatio-slam",
+      "name": "Calcinatio Slam",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 12.5,
+      "element": "fire",
+      "lore": "Leap to the cursor and bring the whole crucible down on the flagstones.",
+      "hook": "Bounds toward the cursor and craters the floor, venting overheat while igniting and hurling foes.",
+      "effects": [
+        {
+          "type": "calcinatio-slam",
+          "range": 220,
+          "radius": 96,
+          "delay": 0.35,
+          "damage": 85,
+          "knockback": 240,
+          "burnDps": 12,
+          "burnDuration": 3.0,
+          "ventsOverheat": true
+        }
+      ]
+    },
+    {
+      "id": "skill-kiln-overdrive",
+      "name": "Kiln Overdrive",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 13.0,
+      "element": "fire",
+      "lore": "Uncorks the chest furnace in a desperate blast that mends cracked clay.",
+      "hook": "Detonates an intense furnace blast around you, restoring a portion of vitality.",
+      "unlock": {
+        "type": "ascension-clear",
+        "tier": 1,
+        "label": "Complete a working at Ascension Seal I or higher"
+      },
+      "effects": [
+        {
+          "type": "nova-burst",
+          "radius": 165,
+          "damage": 95,
+          "knockback": 260,
+          "selfHealPct": 0.12
+        }
+      ]
+    },
+    {
+      "id": "skill-argent-lance",
+      "name": "Argent Lance",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.30,
+      "heatGain": 0.065,
+      "element": "aether",
+      "lore": "Starlight distilled into quicksilver needles.",
+      "hook": "Fires swift bolts of argent aether toward your cursor.",
+      "effects": [
+        {
+          "type": "projectile",
+          "speed": 920,
+          "lifetime": 0.90,
+          "radius": 5,
+          "damage": 11
+        }
+      ]
+    },
+    {
+      "id": "skill-starlight-dart",
+      "name": "Starlight Dart",
+      "slot": "primary",
+      "input": "hold",
+      "cooldown": 0.22,
+      "heatGain": 0.065,
+      "element": "aether",
+      "lore": "Fine celestial splinters loosed in breathless cadence.",
+      "hook": "Rapidly fires slender starlight darts with high velocity.",
+      "effects": [
+        {
+          "type": "projectile",
+          "speed": 1020,
+          "lifetime": 0.78,
+          "radius": 4,
+          "damage": 8
+        }
+      ]
+    },
+    {
+      "id": "skill-prism-refraction",
+      "name": "Prism Refraction",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 4.4,
+      "element": "aether",
+      "lore": "One beam enters the crystal; three rays depart across the chamber.",
+      "hook": "Deploys a refracting prism beacon at your cursor that splits primary shots passing through it into 3 rays at ±18°.",
+      "effects": [
+        {
+          "type": "prism",
+          "deployDuration": 5.5,
+          "deployRadius": 28,
+          "splitCount": 3,
+          "splitSpreadDeg": 18,
+          "speed": 960,
+          "lifetime": 0.65,
+          "radius": 7,
+          "damage": 24,
+          "splitDamage": 12
+        }
+      ]
+    },
+    {
+      "id": "skill-lunar-orb",
+      "name": "Lunar Orb",
+      "slot": "secondary",
+      "input": "press",
+      "cooldown": 6.0,
+      "element": "aether",
+      "lore": "Twin pale lunar waves loosed straight from the Astromancer's hand along a dual silver arc.",
+      "hook": "Fires twin piercing lunar waves toward your cursor.",
+      "effects": [
+        {
+          "type": "projectile",
+          "count": 2,
+          "spreadDeg": 16,
+          "speed": 720,
+          "lifetime": 0.9,
+          "radius": 9,
+          "damage": 20,
+          "pierce": true
+        }
+      ]
+    },
+    {
+      "id": "dash-aether-blink",
+      "name": "Aether Blink",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 2.6,
+      "element": "aether",
+      "lore": "Fold the distance between two constellations.",
+      "hook": "Blink briskly through space with brief invulnerability.",
+      "effects": [
+        {
+          "type": "dash",
+          "distance": 240,
+          "duration": 0.14,
+          "iframe": 0.24
+        }
+      ]
+    },
+    {
+      "id": "util-celestial-swap",
+      "name": "Celestial Swap",
+      "slot": "utility",
+      "input": "press",
+      "cooldown": 3.6,
+      "element": "aether",
+      "lore": "Trade places with a distant star-shadow and shatter the ground upon arrival.",
+      "hook": "Swap positions with your prism or a lesser foe toward the cursor, briefly stunning nearby enemies.",
+      "unlock": {
+        "type": "obelisk-clears",
+        "count": 5,
+        "label": "Channel 5 Siphon Obelisks"
+      },
+      "effects": [
+        {
+          "type": "celestial-swap",
+          "range": 420,
+          "stunDuration": 1.2,
+          "iframe": 0.22,
+          "swapsPrismOrFodder": true,
+          "arrivalRadius": 90,
+          "arrivalDamage": 28
+        }
+      ]
+    },
+    {
+      "id": "skill-solar-convergence",
+      "name": "Solar Convergence",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 13.0,
+      "element": "aether",
+      "lore": "Aligns every lens on the astrolabe to burn a single corridor clean.",
+      "hook": "Channels a focused solar beam toward your cursor, searing all foes in its path.",
+      "effects": [
+        {
+          "type": "solar-beam",
+          "length": 520,
+          "width": 28,
+          "duration": 1.6,
+          "dps": 68,
+          "tickInterval": 0.16
+        },
+        {
+          "type": "self-slow",
+          "mul": 0.45,
+          "duration": 1.6
+        }
+      ]
+    },
+    {
+      "id": "skill-astral-collapse",
+      "name": "Astral Collapse",
+      "slot": "special",
+      "input": "press",
+      "cooldown": 12.0,
+      "element": "aether",
+      "lore": "Draws down a dying star onto the cursor.",
+      "hook": "Condenses a star-well at your cursor that implodes in an immense blast.",
+      "unlock": {
+        "type": "true-endings",
+        "count": 1,
+        "label": "Shatter the Arch-Alchemist in the Prima Materia Core"
+      },
+      "effects": [
+        {
+          "type": "delayed-strike",
+          "delay": 0.65,
+          "radius": 85,
+          "damage": 110
         }
       ]
     }

@@ -101,6 +101,19 @@ static func _hold_melee(world: SimWorld, index: int) -> void:
 
 
 static func _clamp_actors(world: SimWorld) -> void:
+	if world.arena_shape == "circle":
+		var p_max: float = maxf(0.0, world.arena_radius - world.player.radius)
+		var clamped_p: Vector2 = SimCollision.clamp_to_circle(world.player.x, world.player.y, p_max)
+		world.player.x = clamped_p.x
+		world.player.y = clamped_p.y
+		for i: int in world.enemies.cap:
+			if world.enemies.alive[i] == 0:
+				continue
+			var e_max: float = maxf(0.0, world.arena_radius - world.enemies.radius[i] - 4.0)
+			var clamped_e: Vector2 = SimCollision.clamp_to_circle(world.enemies.x[i], world.enemies.y[i], e_max)
+			world.enemies.x[i] = clamped_e.x
+			world.enemies.y[i] = clamped_e.y
+		return
 	var bounds: Dictionary = world.catalog.world
 	var inset_x: float = float(bounds.get("borderInsetX", 0.0))
 	var inset_y: float = float(bounds.get("borderInsetY", 0.0))

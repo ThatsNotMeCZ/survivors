@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "divination-reroll",
+      "name": "Divination Reroll",
+      "maxLevel": 3,
+      "costs": [15, 30, 55],
+      "effect": {
+        "stat": "rerolls",
+        "perLevel": 1
+      },
+      "desc": "Grants +1 tablet draft reroll per working per rank.",
+      "lore": "Cast the astrolabe dice anew when the first tablets reveal only dross."
+    },
+    {
+      "id": "exorcism-banish",
+      "name": "Exorcism Banish",
+      "maxLevel": 2,
+      "costs": [20, 45],
+      "effect": {
+        "stat": "banishes",
+        "perLevel": 1
+      },
+      "desc": "Grants +1 tablet banish per working per rank.",
+      "lore": "Strike an unwanted formula from the cycle so its taint never returns to the offer."
+    },
+    {
+      "id": "fixation-lock",
+      "name": "Fixation Lock",
+      "maxLevel": 2,
+      "costs": [20, 45],
+      "effect": {
+        "stat": "locks",
+        "perLevel": 1
+      },
+      "desc": "Grants +1 tablet lock per working per rank.",
+      "lore": "Seal a prized tablet in wax to guarantee it appears in your next ascension draft."
+    },
+    {
+      "id": "distillation-attunement",
+      "name": "Distillation Attunement",
+      "maxLevel": 5,
+      "costs": [12, 24, 40, 60, 85],
+      "effect": {
+        "stat": "essenceGainPct",
+        "perLevel": 0.05
+      },
+      "desc": "+5% Essence gained from all sources per rank.",
+      "lore": "Finer alembic coils trap stray quintessence before it evaporates into the ash."
+    },
+    {
+      "id": "tonic-buffer",
+      "name": "Tonic Buffer",
+      "maxLevel": 3,
+      "costs": [18, 35, 60],
+      "effect": {
+        "stat": "maxHp",
+        "perLevel": 15
+      },
+      "desc": "+15 Max HP for all vessels per rank.",
+      "lore": "Annealed clay walls and salt-tempered ribs harden the vessel before it descends."
+    },
+    {
+      "id": "bellows-valve",
+      "name": "Bellows Valve",
+      "maxLevel": 3,
+      "costs": [18, 38, 65],
+      "effect": {
+        "stat": "overheatControl",
+        "decayPerLevel": 0.12,
+        "heatGainReductionPerLevel": 0.08
+      },
+      "desc": "+12% overheat decay rate and -8% primary heat gain per rank.",
+      "lore": "Brass relief vents bleed excess furnace pressure between sustained volleys."
+    },
+    {
+      "id": "ascension-seals",
+      "name": "Ascension Seals",
+      "maxLevel": 5,
+      "costs": [25, 45, 70, 100, 140],
+      "effect": {
+        "stat": "ascensionTier",
+        "perLevel": 1,
+        "essenceBonusPerTier": 0.15,
+        "enemyScalingPerTier": 0.12
+      },
+      "desc": "Unlocks +1 Ascension Seal difficulty tier (+15% Essence reward per active seal).",
+      "lore": "Break successive hermetic seals at the Crucible to draw harsher trials and richer essence."
+    }
+  ]
+}

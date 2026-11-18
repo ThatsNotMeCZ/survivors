@@ -1,0 +1,30 @@
+{
+  "frameWidth": 32,
+  "frameHeight": 32,
+  "anims": {
+    "idle": {
+      "frames": [
+        0
+      ],
+      "frameRate": 6,
+      "repeat": -1
+    },
+    "walk": {
+      "frames": [
+        1,
+        2,
+        3
+      ],
+      "frameRate": 8,
+      "repeat": -1
+    },
+    "attack": {
+      "frames": [
+        4,
+        5
+      ],
+      "frameRate": 8,
+      "repeat": 0
+    }
+  }
+}

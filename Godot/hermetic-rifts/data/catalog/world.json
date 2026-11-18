@@ -1,11 +1,12 @@
 {
   "version": 1,
-  "width": 2560,
-  "height": 2560,
-  "borderInsetX": 21,
-  "borderInsetY": 34,
+  "arenaShape": "circle",
+  "arenaRadius": 1500,
+  "arenaRimThickness": 24,
+  "width": 3000,
+  "height": 3000,
   "viewZoom": 2.5,
-  "maxProjectiles": 128,
+  "maxProjectiles": 160,
   "defaultSurvivor": "runner",
-  "defaultEnemy": "ember-chaser"
+  "defaultEnemy": "ember-mite"
 }

@@ -312,6 +312,7 @@ func _rebuild_stage(rec: ArchiveRecords, catalog: Catalog) -> void:
 		ArchivesContent.clear(_dossier)
 		if _tab == &"entities":
 			ArchivesContent.fill_bestiary(_split_grid, _dossier, rec, catalog, _entity_filter, _selected_entity, Callable(self, "_on_entity_filter"), Callable(self, "_on_select_entity"))
+			_patch_bestiary(rec, catalog)
 		else:
 			ArchivesContent.fill_reliquary(_split_grid, _dossier, rec, catalog, _item_rarity, _selected_item, Callable(self, "_on_item_rarity"), Callable(self, "_on_select_item"))
 		return
@@ -319,10 +320,12 @@ func _rebuild_stage(rec: ArchiveRecords, catalog: Catalog) -> void:
 	match String(_tab):
 		"howto":
 			ArchivesContent.fill_howto(_stage_inner, rec, catalog, _howto_vessel, Callable(self, "_on_howto_vessel"))
+			_patch_howto_controls()
 		"lore":
 			ArchivesContent.fill_lore(_stage_inner, rec, catalog, _lore_sub, Callable(self, "_on_lore_sub"))
 		_:
 			ArchivesContent.fill_ledger(_stage_inner, rec, catalog, _confirm_purge, Callable(self, "_on_purge"))
+			_append_crucible_ledger_panel(rec)
 	if _stage_scroll != null:
 		_stage_scroll.scroll_vertical = 0
 
@@ -573,3 +576,172 @@ func _play_ui(kind: String) -> void:
 	var bus := get_node_or_null("/root/GameAudio")
 	if bus != null:
 		bus.play_ui(kind)
+
+
+func _patch_bestiary(rec: ArchiveRecords, catalog: Catalog) -> void:
+	if rec == null or catalog == null:
+		return
+	var filtered: Array[Dictionary] = []
+	for entity: Dictionary in catalog.entities:
+		var is_boss: bool = String(entity.get("role", "")) == "boss"
+		if _entity_filter == "boss" and not is_boss:
+			continue
+		if _entity_filter == "fodder" and is_boss:
+			continue
+		filtered.append(entity)
+	if _split_grid != null and _split_grid.get_child_count() >= 2:
+		var cards: Node = _split_grid.get_child(1)
+		for i: int in mini(cards.get_child_count(), filtered.size()):
+			var entity: Dictionary = filtered[i]
+			var eid: String = String(entity.get("id", ""))
+			if not rec.is_entity_seen(eid):
+				continue
+			var ai_type: String = String(DictUtil.d(entity, "ai").get("type", ""))
+			if ai_type != "cleaver" and ai_type != "charger" and ai_type != "hexer" and ai_type != "spire":
+				continue
+			var kind_txt: String = tr("ui.archives.kind.%s" % ai_type)
+			if kind_txt == "" or kind_txt.begins_with("ui.archives.kind."):
+				continue
+			var card: Node = cards.get_child(i)
+			if card.get_child_count() >= 1:
+				var col: Node = card.get_child(0)
+				if col.get_child_count() >= 1:
+					var badge: Node = col.get_child(0)
+					if badge.get_child_count() >= 1 and badge.get_child(0) is Label:
+						(badge.get_child(0) as Label).text = kind_txt.to_upper()
+	var sel_entity: Dictionary = {}
+	for entity: Dictionary in filtered:
+		if String(entity.get("id", "")) == _selected_entity:
+			sel_entity = entity
+			break
+	if sel_entity.is_empty() and not filtered.is_empty():
+		sel_entity = filtered[0]
+	if sel_entity.is_empty() or _dossier == null:
+		return
+	var sel_id: String = String(sel_entity.get("id", ""))
+	if not rec.is_entity_seen(sel_id):
+		return
+	var sel_ai: String = String(DictUtil.d(sel_entity, "ai").get("type", ""))
+	if sel_ai != "cleaver" and sel_ai != "charger" and sel_ai != "hexer" and sel_ai != "spire":
+		return
+	var kind_label_txt: String = tr("ui.archives.kind.%s" % sel_ai)
+	var behav_txt: String = tr("ui.archives.bestiary.behavior.%s" % sel_ai)
+	if _dossier.get_child_count() >= 7:
+		var stats: Node = _dossier.get_child(6)
+		if stats is VBoxContainer and stats.get_child_count() >= 3 and stats.get_child(2) is Label:
+			(stats.get_child(2) as Label).text = tr("ui.archives.bestiary.kind").replace("{n}", kind_label_txt.to_upper())
+	if _dossier.get_child_count() >= 8 and _dossier.get_child(7) is Label:
+		(_dossier.get_child(7) as Label).text = behav_txt
+
+
+func _patch_howto_controls() -> void:
+	if _stage_inner == null or _stage_inner.get_child_count() < 2:
+		return
+	var controls_panel: Node = _stage_inner.get_child(1)
+	if controls_panel.get_child_count() < 1:
+		return
+	var controls_in: Node = controls_panel.get_child(0)
+	if controls_in.get_child_count() < 2:
+		return
+	var grid := controls_in.get_child(1) as GridContainer
+	if grid == null:
+		return
+	var key_txt: String = "E"
+	if InputMap.has_action("interact"):
+		for ev: InputEvent in InputMap.action_get_events("interact"):
+			if ev is InputEventKey:
+				var ek: InputEventKey = ev as InputEventKey
+				var k: int = ek.physical_keycode if ek.physical_keycode != KEY_NONE else ek.keycode
+				if k != KEY_NONE:
+					var ks: String = OS.get_keycode_string(k)
+					if ks != "":
+						key_txt = ks.to_upper()
+						break
+			elif ev is InputEventMouseButton:
+				key_txt = "Mouse %d" % (ev as InputEventMouseButton).button_index
+				break
+	var key_lab := Label.new()
+	key_lab.text = key_txt
+	UiAtlas.apply_label(key_lab, UiAtlas.TYPE_META, UiAtlas.GOLD_MOLTEN, 14)
+	var act_lab := Label.new()
+	act_lab.text = "Interact / Channel Obelisk / Enter Portal"
+	act_lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	UiAtlas.apply_label(act_lab, UiAtlas.TYPE_META, UiAtlas.PARCHMENT, 14)
+	grid.add_child(key_lab)
+	grid.add_child(act_lab)
+
+
+func _append_crucible_ledger_panel(rec: ArchiveRecords) -> void:
+	if _stage_inner == null or rec == null:
+		return
+	var panel := PanelContainer.new()
+	panel.name = "CrucibleLedgerPanel"
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("161119e6")
+	sb.border_color = Color("9c7c3e99")
+	sb.set_border_width_all(1)
+	sb.set_content_margin_all(14)
+	panel.add_theme_stylebox_override("panel", sb)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 10)
+	panel.add_child(col)
+	var title := Label.new()
+	title.text = "%s & TRIALS" % tr("ui.menu.crucible").to_upper()
+	UiAtlas.apply_label(title, UiAtlas.TYPE_DISPLAY, UiAtlas.GOLD_MOLTEN, 16)
+	col.add_child(title)
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 10)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_child(grid)
+	var cards: Array[Array] = [
+		[
+			"RESIDUAL ESSENCE",
+			str(rec.essence_balance()),
+			"Total Distilled: %d" % int(rec.data.get("totalEssenceEarned", 0)),
+		],
+		[
+			"ASCENSION SEALS",
+			str(int(rec.data.get("maxAscensionCleared", 0))),
+			"Max Unlocked: %d" % rec.max_ascension_unlocked(),
+		],
+		[
+			"OBELISKS CHANNELED",
+			str(int(rec.data.get("obeliskClears", 0))),
+			"Active Trials Completed",
+		],
+		[
+			"TRUE ENDINGS",
+			str(int(rec.data.get("trueEndings", 0))),
+			"Prima Materia Core",
+		],
+	]
+	for entry: Array in cards:
+		var card := PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var csb := StyleBoxFlat.new()
+		csb.bg_color = Color("0e0b12e0")
+		csb.border_color = Color("7b5e2e88")
+		csb.set_border_width_all(1)
+		csb.set_content_margin_all(10)
+		card.add_theme_stylebox_override("panel", csb)
+		var cbox := VBoxContainer.new()
+		cbox.add_theme_constant_override("separation", 3)
+		card.add_child(cbox)
+		var k_lab := Label.new()
+		k_lab.text = String(entry[0])
+		UiAtlas.apply_label(k_lab, UiAtlas.TYPE_MICRO, UiAtlas.BRASS, 10)
+		cbox.add_child(k_lab)
+		var v_lab := Label.new()
+		v_lab.text = String(entry[1])
+		UiAtlas.apply_label(v_lab, UiAtlas.TYPE_DISPLAY, UiAtlas.GOLD_MOLTEN, 20)
+		cbox.add_child(v_lab)
+		var h_lab := Label.new()
+		h_lab.text = String(entry[2])
+		UiAtlas.apply_label(h_lab, UiAtlas.TYPE_MICRO, UiAtlas.ASH, 10)
+		cbox.add_child(h_lab)
+		grid.add_child(card)
+	_stage_inner.add_child(panel)
+	if _stage_inner.get_child_count() >= 3:
+		_stage_inner.move_child(panel, 2)

@@ -13,17 +13,25 @@ var aim_x: float = 0.0
 var aim_y: float = 0.0
 var laser_end_x: float = 0.0
 var laser_end_y: float = 0.0
+var dash_dir_x: float = 0.0
+var dash_dir_y: float = 0.0
+var tether_dps: float = 0.0
+var tether_range: float = 280.0
 var trail_timer: float = 0.0
 var enraged: bool = false
 var counts: Dictionary = {
 	"bolt": 0,
 	"fan": 0,
 	"meteor": 0,
+	"geyser": 0,
 	"cone": 0,
 	"prison": 0,
 	"pulse": 0,
 	"laser": 0,
 	"summon": 0,
+	"dash_slam": 0,
+	"chain_anchor": 0,
+	"ring_wave": 0,
 }
 
 
@@ -46,5 +54,9 @@ func reset() -> void:
 	aim_y = 0.0
 	laser_end_x = 0.0
 	laser_end_y = 0.0
+	dash_dir_x = 0.0
+	dash_dir_y = 0.0
+	tether_dps = 0.0
+	tether_range = 280.0
 	trail_timer = 0.0
 	enraged = false

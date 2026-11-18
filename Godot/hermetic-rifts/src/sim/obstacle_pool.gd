@@ -10,7 +10,7 @@ var next_id: int = 1
 
 
 static func obstacle_cap(counts: Dictionary, dynamic_hazards: int = 0) -> int:
-	return int(counts.get("pillar", 0)) + int(counts.get("hazard", 0)) + int(counts.get("volatile", 0)) + dynamic_hazards
+	return int(counts.get("pillar", 0)) + int(counts.get("hazard", 0)) + int(counts.get("volatile", 0)) + dynamic_hazards + 48
 
 
 static func create(pool_cap: int, cell: float) -> ObstaclePool:
@@ -27,6 +27,7 @@ static func create(pool_cap: int, cell: float) -> ObstaclePool:
 func clear() -> void:
 	for i: int in cap:
 		alive[i] = 0
+		items[i].reset()
 	grid.clear()
 
 
@@ -38,4 +39,15 @@ func count_type(kind: StringName = &"") -> int:
 		if kind != &"" and items[i].type != kind:
 			continue
 		n += 1
+	return n
+
+
+func count_dynamic_hazards() -> int:
+	var n: int = 0
+	for i: int in cap:
+		if alive[i] == 0:
+			continue
+		var obs: SimObstacle = items[i]
+		if obs.type == &"hazard" and obs.timer > 0.0:
+			n += 1
 	return n

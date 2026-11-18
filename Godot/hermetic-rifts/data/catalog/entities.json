@@ -8,6 +8,8 @@
       "lore": "Clots of ash and failed calcination that skitter out of cracked retorts. Individually brittle, they swarm any warm vessel to strip its mercury.",
       "role": "fodder",
       "tags": ["fodder", "chaser"],
+      "poolWeight": 1.0,
+      "minCoeff": 1.0,
       "stats": { "speed": 92, "maxHp": 14, "radius": 10 },
       "contact": { "dps": 3 },
       "rewards": { "xp": 3, "credits": 1 },
@@ -21,6 +23,8 @@
       "lore": "Distended husks engorged on boiling sulfur. They circle the outer kiln perimeter, hurling globules of molten slag whenever a vessel slows its stride.",
       "role": "fodder",
       "tags": ["fodder", "ranged"],
+      "poolWeight": 0.45,
+      "minCoeff": 1.0,
       "stats": { "speed": 68, "maxHp": 12, "radius": 11 },
       "contact": { "dps": 2 },
       "rewards": { "xp": 4, "credits": 1 },
@@ -38,13 +42,23 @@
       "id": "ember-chaser",
       "name": "Ember Warden",
       "title": "Furnace Overseer",
-      "lore": "A heavy amalgam of cast-iron ribs and stoked furnace slag built to herd failed transmutations. It charges across the flagstones with crushing momentum.",
+      "lore": "A heavy amalgam of cast-iron ribs and stoked furnace slag built to herd failed transmutations. It winds up wide cleaving arcs across the flagstones.",
       "role": "fodder",
-      "tags": ["fodder", "chaser"],
+      "tags": ["fodder", "cleaver"],
+      "poolWeight": 0.35,
+      "minCoeff": 1.1,
       "stats": { "speed": 102, "maxHp": 52, "radius": 18 },
       "contact": { "dps": 16 },
       "rewards": { "xp": 8, "credits": 4 },
-      "ai": { "type": "chase" },
+      "ai": {
+        "type": "cleaver",
+        "triggerRange": 72,
+        "windup": 0.65,
+        "arcDeg": 120,
+        "slashRadius": 88,
+        "cooldown": 1.5,
+        "damage": 18
+      },
       "view": { "kind": "dot", "size": 48, "inner": "#ffe8e8", "mid": "#e35d5d" }
     },
     {
@@ -73,13 +87,14 @@
             "projectile": { "speed": 230, "lifetime": 2.0, "radius": 9, "damage": 9 }
           },
           {
-            "type": "meteor",
-            "name": "Falling Clinker",
+            "type": "geyser",
+            "name": "Slag Geyser",
             "anim": "attack-meteor",
             "cooldown": 5.0,
             "windup": 0.4,
-            "delay": 1.2,
-            "radius": 58,
+            "delay": 1.05,
+            "radius": 52,
+            "count": 5,
             "damage": 24,
             "pool": { "duration": 4.0, "radius": 50, "dps": 8, "slowMul": 0.6 }
           },
@@ -104,6 +119,8 @@
       "lore": "Shards of alchemical salt and frozen mercury that skitter across the dockside stone. Quicker and harder than kiln mites, they hunt in tight, unforgiving packs.",
       "role": "fodder",
       "tags": ["fodder", "chaser"],
+      "poolWeight": 1.0,
+      "minCoeff": 1.0,
       "stats": { "speed": 104, "maxHp": 18, "radius": 10 },
       "contact": { "dps": 4 },
       "rewards": { "xp": 4, "credits": 1 },
@@ -117,6 +134,8 @@
       "lore": "Hollowed alembic creatures that siphon freezing brine from the dock fissures and spit high-velocity needles of rime across the chamber.",
       "role": "fodder",
       "tags": ["fodder", "ranged"],
+      "poolWeight": 0.45,
+      "minCoeff": 1.0,
       "stats": { "speed": 76, "maxHp": 16, "radius": 11 },
       "contact": { "dps": 2 },
       "rewards": { "xp": 5, "credits": 1 },
@@ -134,13 +153,23 @@
       "id": "frost-warden",
       "name": "Frost Warden",
       "title": "Cryo-Bound Sentinel",
-      "lore": "Heavy dockside hulks armored in glacier-thick salt plate and quenched iron. Their relentless charge shatters brittle vessels that linger along the canal.",
+      "lore": "Heavy dockside hulks armored in glacier-thick salt plate and quenched iron. They sweep wide cryo-forged cleavers at any vessel within reach.",
       "role": "fodder",
-      "tags": ["fodder", "chaser"],
+      "tags": ["fodder", "cleaver"],
+      "poolWeight": 0.35,
+      "minCoeff": 1.1,
       "stats": { "speed": 90, "maxHp": 80, "radius": 20 },
       "contact": { "dps": 20 },
       "rewards": { "xp": 10, "credits": 5 },
-      "ai": { "type": "chase" },
+      "ai": {
+        "type": "cleaver",
+        "triggerRange": 72,
+        "windup": 0.65,
+        "arcDeg": 120,
+        "slashRadius": 88,
+        "cooldown": 1.5,
+        "damage": 18
+      },
       "view": { "kind": "dot", "size": 52, "inner": "#e8f6ff", "mid": "#3d8ad4" }
     },
     {
@@ -281,7 +310,9 @@
       "title": "Ocular of the Void",
       "lore": "A disembodied brass-and-aether eye that drifts at the edge of sight. It traces a thin celestial sightline before lancing the arena—only solid pillars can break its gaze.",
       "role": "fodder",
-      "tags": ["fodder", "sniper"],
+      "tags": ["fodder", "specialist", "sniper"],
+      "poolWeight": 0.3,
+      "minCoeff": 1.05,
       "stats": { "speed": 36, "maxHp": 8, "radius": 10 },
       "contact": { "dps": 1 },
       "rewards": { "xp": 6, "credits": 2 },
@@ -294,6 +325,278 @@
         "lineWidth": 10
       },
       "view": { "kind": "dot", "size": 22, "inner": "#f0e8ff", "mid": "#7a3aff" }
+    },
+    {
+      "id": "slag-hound",
+      "name": "Slag Hound",
+      "title": "Furnace Ram",
+      "lore": "A quadruped smelter cast in blackened iron whose belly glows white-hot. Once it locks onto a stray vessel, it lunges at terrifying speed—though crashing into stone pillars stuns its core.",
+      "role": "fodder",
+      "tags": ["fodder", "charger"],
+      "poolWeight": 0.35,
+      "minCoeff": 1.15,
+      "stats": { "speed": 115, "maxHp": 64, "radius": 17 },
+      "contact": { "dps": 14 },
+      "rewards": { "xp": 9, "credits": 4 },
+      "ai": {
+        "type": "charger",
+        "lockMin": 140,
+        "lockMax": 260,
+        "windup": 0.55,
+        "dashSpeed": 540,
+        "dashDuration": 0.48,
+        "pillarStunDuration": 0.8,
+        "damage": 18,
+        "cooldown": 2.2
+      },
+      "view": { "kind": "dot", "size": 44, "inner": "#ffd6b0", "mid": "#d95b26" }
+    },
+    {
+      "id": "aether-hexer",
+      "name": "Aether Hexer",
+      "title": "Crucible Binder",
+      "lore": "Robed in tattered lead-weave, this hunched conjurer keeps its distance and scribes delayed aether rings beneath fleeing vessels to mire them in stagnant gravity.",
+      "role": "fodder",
+      "tags": ["fodder", "specialist", "hexer"],
+      "poolWeight": 0.3,
+      "minCoeff": 1.1,
+      "stats": { "speed": 72, "maxHp": 32, "radius": 13 },
+      "contact": { "dps": 6 },
+      "rewards": { "xp": 7, "credits": 3 },
+      "ai": {
+        "type": "hexer",
+        "keepMin": 240,
+        "keepMax": 340,
+        "hexDelay": 1.1,
+        "hexRadius": 44,
+        "damage": 14,
+        "slowDuration": 1.2,
+        "slowMul": 0.6,
+        "cooldown": 2.8
+      },
+      "view": { "kind": "dot", "size": 28, "inner": "#efe0ff", "mid": "#9855e8" }
+    },
+    {
+      "id": "voltaic-spire",
+      "name": "Voltaic Spire",
+      "title": "Conducting Pylon",
+      "lore": "A hammered-copper lightning rod driven straight through the flagstones by higher Guardians. While intact, it bridges searing galvanic tethers across the arena.",
+      "role": "fodder",
+      "tags": ["construct", "spire"],
+      "poolWeight": 0.0,
+      "minCoeff": 1.0,
+      "stats": { "speed": 0, "maxHp": 95, "radius": 14 },
+      "contact": { "dps": 8 },
+      "rewards": { "xp": 4, "credits": 0 },
+      "ai": { "type": "spire" },
+      "view": { "kind": "dot", "size": 30, "inner": "#fff4b8", "mid": "#e5b84b" }
+    },
+    {
+      "id": "viridian-alchemist",
+      "name": "Viridian Alchemist",
+      "title": "Mistress of Putrefactio",
+      "lore": "Once the conservatory's head botanist, she grafted living vitriol retorts into her ribcage. She drowns intruders in boiling acid geysers while rushing through the haze.",
+      "role": "boss",
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 68, "maxHp": 2250, "radius": 38 },
+      "contact": { "dps": 24 },
+      "rewards": { "xp": 80, "credits": 0 },
+      "ai": {
+        "type": "boss",
+        "keep": 240,
+        "enrage": { "hpPct": 0.5, "cooldownMul": 0.75 },
+        "attacks": [
+          {
+            "type": "fan",
+            "name": "Vitriol Fan",
+            "anim": "attack-fan",
+            "cooldown": 3.0,
+            "windup": 0.55,
+            "count": 6,
+            "spread": 65,
+            "projectile": { "speed": 260, "lifetime": 1.8, "radius": 8, "damage": 11 }
+          },
+          {
+            "type": "geyser",
+            "name": "Caustic Eruption",
+            "anim": "attack-meteor",
+            "cooldown": 5.5,
+            "windup": 0.4,
+            "delay": 1.0,
+            "radius": 52,
+            "count": 4,
+            "damage": 22,
+            "pool": { "duration": 4.5, "radius": 52, "dps": 9, "slowMul": 0.55 }
+          },
+          {
+            "type": "dash_slam",
+            "name": "Alembic Rush",
+            "anim": "attack",
+            "cooldown": 7.0,
+            "windup": 0.6,
+            "dashSpeed": 520,
+            "dashDuration": 0.42,
+            "slamRadius": 96,
+            "damage": 26
+          },
+          {
+            "type": "summon",
+            "name": "Fermented Brood",
+            "anim": "summon",
+            "cooldown": 10.0,
+            "windup": 0.35,
+            "entity": "ember-mite",
+            "count": 3,
+            "maxAlive": 6
+          }
+        ]
+      },
+      "view": { "kind": "dot", "size": 76, "inner": "#d8ffd4", "mid": "#4ab864" }
+    },
+    {
+      "id": "voltaic-regent",
+      "name": "Voltaic Regent",
+      "title": "Sovereign of the Third Kiln",
+      "lore": "A towering brass automaton animated by captive lightning. It plants copper spires into the stone to weave lethal galvanic cages across the Fulmination Foundry.",
+      "role": "boss",
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 72, "maxHp": 2500, "radius": 42 },
+      "contact": { "dps": 28 },
+      "rewards": { "xp": 95, "credits": 0 },
+      "ai": {
+        "type": "boss",
+        "keep": 260,
+        "enrage": { "hpPct": 0.5, "cooldownMul": 0.75 },
+        "attacks": [
+          {
+            "type": "bolt",
+            "name": "Arc Lance",
+            "anim": "attack-bolt",
+            "cooldown": 2.3,
+            "windup": 0.45,
+            "projectile": { "speed": 380, "lifetime": 1.75, "radius": 9, "damage": 15 }
+          },
+          {
+            "type": "chain_anchor",
+            "name": "Voltaic Anchors",
+            "anim": "summon",
+            "cooldown": 10.5,
+            "windup": 0.5,
+            "entity": "voltaic-spire",
+            "count": 2,
+            "maxAlive": 4,
+            "tetherDps": 18,
+            "range": 280
+          },
+          {
+            "type": "ring_wave",
+            "name": "Fulmination Ring",
+            "anim": "attack-pulse",
+            "cooldown": 7.5,
+            "windup": 0.65,
+            "count": 12,
+            "projectile": { "speed": 240, "lifetime": 2.2, "radius": 8, "damage": 13 }
+          },
+          {
+            "type": "dash_slam",
+            "name": "Surge Impact",
+            "anim": "attack",
+            "cooldown": 6.8,
+            "windup": 0.55,
+            "dashSpeed": 560,
+            "dashDuration": 0.4,
+            "slamRadius": 105,
+            "damage": 28
+          }
+        ]
+      },
+      "view": { "kind": "dot", "size": 84, "inner": "#fff4c2", "mid": "#e5b84b" }
+    },
+    {
+      "id": "arch-alchemist",
+      "name": "The Arch-Alchemist",
+      "title": "Architect of the Opus Magnum",
+      "lore": "The first Magister who cracked the Grand Crucible at midnight, fusing his own marrow with Prima Materia. All four elements obey his hand in the Core.",
+      "role": "boss",
+      "tags": ["boss", "ranged", "summoner"],
+      "stats": { "speed": 74, "maxHp": 3600, "radius": 46 },
+      "contact": { "dps": 32 },
+      "rewards": { "xp": 180, "credits": 0 },
+      "ai": {
+        "type": "boss",
+        "keep": 270,
+        "enrage": { "hpPct": 0.5, "cooldownMul": 0.7 },
+        "attacks": [
+          {
+            "type": "geyser",
+            "name": "Prima Eruption",
+            "anim": "attack-meteor",
+            "cooldown": 5.2,
+            "windup": 0.4,
+            "delay": 1.0,
+            "radius": 54,
+            "count": 5,
+            "damage": 26,
+            "pool": { "duration": 4.0, "radius": 50, "dps": 10, "slowMul": 0.6 }
+          },
+          {
+            "type": "dash_slam",
+            "name": "Magnum Impact",
+            "anim": "attack",
+            "cooldown": 7.5,
+            "windup": 0.6,
+            "dashSpeed": 580,
+            "dashDuration": 0.42,
+            "slamRadius": 115,
+            "damage": 32
+          },
+          {
+            "type": "chain_anchor",
+            "name": "Hermetic Pylons",
+            "anim": "summon",
+            "cooldown": 11.5,
+            "windup": 0.5,
+            "entity": "voltaic-spire",
+            "count": 2,
+            "maxAlive": 4,
+            "tetherDps": 20,
+            "range": 290
+          },
+          {
+            "type": "ring_wave",
+            "name": "Azoth Corona",
+            "anim": "attack-pulse",
+            "cooldown": 8.0,
+            "windup": 0.65,
+            "count": 14,
+            "projectile": { "speed": 260, "lifetime": 2.2, "radius": 9, "damage": 16 }
+          },
+          {
+            "type": "laser",
+            "name": "Solar Convergence Beam",
+            "anim": "attack-laser",
+            "cooldown": 10.5,
+            "windup": 0.85,
+            "duration": 2.4,
+            "trackSpeed": 230,
+            "hitRadius": 30,
+            "dps": 32,
+            "trailInterval": 0.24,
+            "trailPool": { "duration": 3.5, "radius": 34, "dps": 8, "slowMul": 0.55 }
+          },
+          {
+            "type": "summon",
+            "name": "Crucible Host",
+            "anim": "summon",
+            "cooldown": 12.5,
+            "windup": 0.35,
+            "entity": "ember-mite",
+            "count": 3,
+            "maxAlive": 6
+          }
+        ]
+      },
+      "view": { "kind": "dot", "size": 92, "inner": "#fff8d6", "mid": "#ffae42" }
     }
   ]
 }

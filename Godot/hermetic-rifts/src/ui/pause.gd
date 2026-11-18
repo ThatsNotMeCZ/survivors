@@ -12,6 +12,7 @@ const ACTION_H: float = 58.0
 const PANEL_W: float = 340.0
 const INV_PAD: float = 70.0
 const GLYPHS: Array[String] = ["⚶", "🜍", "⟁", "🜂", "☿"]
+const STEAM_WISHLIST_URL: String = "https://store.steampowered.com/app/0/"
 
 var _title_1: Label
 var _title_2: Label
@@ -22,6 +23,7 @@ var _archives_btn: Button
 var _settings_btn: Button
 var _seal_btn: Button
 var _abandon_btn: Button
+var _wishlist_btn: Button
 var _summary_rows: VBoxContainer
 var _inv_list: GridContainer
 var _inv_empty: Label
@@ -40,9 +42,8 @@ func refresh(world: SimWorld) -> void:
 	visible = true
 	_fill_summary(world)
 	_fill_inventory(world)
-	var can_seal: bool = world != null and SimLoop.can_seal(world)
 	if _seal_btn != null:
-		_seal_btn.visible = can_seal
+		_seal_btn.visible = false
 	if _resume_btn != null:
 		_resume_btn.grab_focus()
 
@@ -113,8 +114,19 @@ func _build_left() -> Control:
 	_actions.add_child(_resume_btn)
 	_actions.add_child(_archives_btn)
 	_actions.add_child(_settings_btn)
+	_seal_btn.visible = false
 	_actions.add_child(_seal_btn)
 	_actions.add_child(_abandon_btn)
+	var wish_txt: String = tr("ui.menu.wishlist")
+	if wish_txt == "ui.menu.wishlist" or wish_txt == "":
+		wish_txt = "Wishlist on Steam"
+	_wishlist_btn = _plaque(wish_txt, "✦", 0.0)
+	_wishlist_btn.name = "WishlistBtn"
+	_wishlist_btn.custom_minimum_size = Vector2(ACTION_W, 46)
+	_wishlist_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_wishlist_btn.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
+	_wishlist_btn.pressed.connect(func() -> void: OS.shell_open(STEAM_WISHLIST_URL))
+	left.add_child(_wishlist_btn)
 	return left
 
 

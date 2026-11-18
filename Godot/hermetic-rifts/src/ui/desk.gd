@@ -8,6 +8,17 @@ signal closed
 const PANEL_WIDTH: float = 640.0
 const SCROLL_MAX: float = 520.0
 const INK_HINT: Color = Color("2e2014")
+const CONTROL_ACTIONS: Array[String] = [
+	"move_up",
+	"move_down",
+	"move_left",
+	"move_right",
+	"fire_primary",
+	"fire_secondary",
+	"utility",
+	"special",
+	"interact",
+]
 
 var _dim: ColorRect
 var _panel: PanelContainer
@@ -26,6 +37,8 @@ var _bound: bool = false
 var _rebuilding: bool = false
 var _pending_snapshot: Dictionary = {}
 var _confirm_left: float = 0.0
+var _listening_action: String = ""
+var _rebind_btns: Dictionary = {}
 
 
 func _ready() -> void:
@@ -38,7 +51,51 @@ func _ready() -> void:
 		call_deferred("refresh")
 
 
+func is_listening() -> bool:
+	return _listening_action != ""
+
+
+func _input(event: InputEvent) -> void:
+	if not visible or _listening_action == "":
+		return
+	if not event.is_pressed() or event.is_echo():
+		return
+	if event is InputEventKey:
+		var k: InputEventKey = event as InputEventKey
+		if k.keycode == KEY_ESCAPE or k.physical_keycode == KEY_ESCAPE:
+			_cancel_rebind()
+			get_viewport().set_input_as_handled()
+			return
+		var key_code: Key = k.keycode
+		var phys_code: Key = k.physical_keycode
+		if key_code == 0 and phys_code == 0:
+			return
+		var new_key := InputEventKey.new()
+		new_key.device = GameSettings.ALL_DEVICES
+		new_key.keycode = key_code
+		new_key.physical_keycode = phys_code
+		_apply_rebind(_listening_action, new_key)
+		get_viewport().set_input_as_handled()
+		return
+	if event is InputEventMouseButton:
+		var mb: InputEventMouseButton = event as InputEventMouseButton
+		if mb.button_index in [
+			MOUSE_BUTTON_WHEEL_UP,
+			MOUSE_BUTTON_WHEEL_DOWN,
+			MOUSE_BUTTON_WHEEL_LEFT,
+			MOUSE_BUTTON_WHEEL_RIGHT,
+		]:
+			get_viewport().set_input_as_handled()
+			return
+		var new_mb := InputEventMouseButton.new()
+		new_mb.device = GameSettings.ALL_DEVICES
+		new_mb.button_index = mb.button_index
+		_apply_rebind(_listening_action, new_mb)
+		get_viewport().set_input_as_handled()
+
+
 func refresh() -> void:
+	_listening_action = ""
 	_rebuild_rows()
 	call_deferred("_center_panel")
 	call_deferred("focus_primary")
@@ -55,6 +112,9 @@ func focus_primary() -> void:
 func handle_back() -> bool:
 	if not visible:
 		return false
+	if _listening_action != "":
+		_cancel_rebind()
+		return true
 	_close()
 	return true
 
@@ -178,6 +238,7 @@ func _on_close() -> void:
 
 
 func _close() -> void:
+	_listening_action = ""
 	if not _pending_snapshot.is_empty():
 		_revert_display()
 	visible = false
@@ -189,6 +250,7 @@ func _rebuild_rows() -> void:
 		return
 	_rebuilding = true
 	_first_choice = null
+	_rebind_btns.clear()
 	for child: Node in _body.get_children():
 		_body.remove_child(child)
 		child.queue_free()
@@ -201,6 +263,7 @@ func _rebuild_rows() -> void:
 	_fill_display(settings)
 	_fill_audio(settings)
 	_fill_visual(settings)
+	_fill_controls()
 	_rebuilding = false
 	_clamp_scroll()
 
@@ -338,6 +401,233 @@ func _fill_visual(settings: GameSettings) -> void:
 		settings.reduce_vfx,
 		func(v: bool) -> void: _set_flag("reduce_vfx", v)
 	))
+
+
+func _fill_controls() -> void:
+	_body.add_child(_section_label(_t("ui.settings.section.controls", "Controls / Keybinds")))
+	var labels: Dictionary = {
+		"move_up": [_t("ui.settings.key.move_up", "Move Up"), _t("ui.settings.key.move_up.hint", "Step northward across the chamber.")],
+		"move_down": [_t("ui.settings.key.move_down", "Move Down"), _t("ui.settings.key.move_down.hint", "Step southward across the chamber.")],
+		"move_left": [_t("ui.settings.key.move_left", "Move Left"), _t("ui.settings.key.move_left.hint", "Step westward across the chamber.")],
+		"move_right": [_t("ui.settings.key.move_right", "Move Right"), _t("ui.settings.key.move_right.hint", "Step eastward across the chamber.")],
+		"fire_primary": [_t("ui.settings.key.primary", "Primary Art (I)"), _t("ui.settings.key.primary.hint", "Cast your vessel's primary skill.")],
+		"fire_secondary": [_t("ui.settings.key.secondary", "Secondary Art (II)"), _t("ui.settings.key.secondary.hint", "Cast secondary skill or Critical Vent.")],
+		"utility": [_t("ui.settings.key.utility", "Utility Art (III)"), _t("ui.settings.key.utility.hint", "Dash or invoke your defensive ward.")],
+		"special": [_t("ui.settings.key.special", "Special Rite (IV)"), _t("ui.settings.key.special.hint", "Unleash your ultimate alchemical skill.")],
+		"interact": [_t("ui.settings.key.interact", "Interact / Channel"), _t("ui.settings.key.interact.hint", "Activate Transmutation Circles, Obelisks, and Portals.")],
+	}
+	for action: String in CONTROL_ACTIONS:
+		var meta: Array = labels.get(action, [action, ""])
+		_body.add_child(_rebind_row(action, String(meta[0]), String(meta[1])))
+	_body.add_child(_reset_controls_row())
+
+
+func _rebind_row(action: String, title: String, hint: String) -> Control:
+	var row_wrap := _row_shell(_body.get_child_count() == 0)
+	var row := row_wrap.get_node("Row") as HBoxContainer
+	row.add_child(_copy_col(title, hint))
+	var btn := Button.new()
+	btn.name = "Bind_%s" % action
+	btn.custom_minimum_size = Vector2(220, 38)
+	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	btn.focus_mode = Control.FOCUS_ALL
+	_style_rebind_btn(btn, false)
+	btn.text = _binding_label(action)
+	var captured_action: String = action
+	btn.pressed.connect(func() -> void: _start_rebind(captured_action))
+	row.add_child(btn)
+	_rebind_btns[action] = btn
+	return row_wrap
+
+
+func _reset_controls_row() -> Control:
+	var row_wrap := _row_shell(_body.get_child_count() == 0)
+	var row := row_wrap.get_node("Row") as HBoxContainer
+	row.add_child(_copy_col(
+		_t("ui.settings.controls.reset", "Reset Controls to Default"),
+		_t("ui.settings.controls.reset.hint", "Restore all movement, skill, and interact bindings.")
+	))
+	var btn := Button.new()
+	btn.name = "ResetControlsBtn"
+	btn.custom_minimum_size = Vector2(220, 38)
+	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	btn.focus_mode = Control.FOCUS_ALL
+	btn.text = _t("ui.settings.controls.reset_btn", "Reset to Default")
+	_style_rebind_btn(btn, false)
+	btn.pressed.connect(_reset_controls)
+	row.add_child(btn)
+	return row_wrap
+
+
+func _style_rebind_btn(btn: Button, listening: bool) -> void:
+	var bg := Color("4a2818") if listening else Color("2a2018")
+	var border := Color("ffd46a") if listening else Color("6e3b1e")
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = bg
+	normal.border_color = border
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(3)
+	normal.content_margin_left = 10.0
+	normal.content_margin_right = 10.0
+	normal.content_margin_top = 4.0
+	normal.content_margin_bottom = 4.0
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = bg.lightened(0.12)
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("pressed", hover)
+	btn.add_theme_stylebox_override("focus", hover)
+	if UiAtlas.ink_font() != null:
+		btn.add_theme_font_override("font", UiAtlas.ink_font())
+	btn.add_theme_font_size_override("font_size", 13)
+	btn.add_theme_color_override("font_color", Color("ffe896") if listening else UiAtlas.PARCHMENT)
+	btn.add_theme_color_override("font_hover_color", UiAtlas.GOLD_MOLTEN)
+	btn.add_theme_color_override("font_focus_color", UiAtlas.GOLD_MOLTEN)
+
+
+func _start_rebind(action: String) -> void:
+	_play_ui("click")
+	_listening_action = action
+	_refresh_control_buttons()
+
+
+func _cancel_rebind() -> void:
+	_play_ui("close")
+	_listening_action = ""
+	_refresh_control_buttons()
+
+
+func _apply_rebind(target_action: String, new_ev: InputEvent) -> void:
+	if not InputMap.has_action(target_action):
+		InputMap.add_action(target_action)
+	var target_events: Array[InputEvent] = InputMap.action_get_events(target_action)
+	var old_primary: InputEvent = target_events[0].duplicate() as InputEvent if not target_events.is_empty() else null
+	for other: String in CONTROL_ACTIONS:
+		if other == target_action or not InputMap.has_action(other):
+			continue
+		var other_events: Array[InputEvent] = InputMap.action_get_events(other)
+		var conflict_idx: int = -1
+		for j: int in other_events.size():
+			if _events_match(other_events[j], new_ev):
+				conflict_idx = j
+				break
+		if conflict_idx >= 0:
+			var swapped: Array[InputEvent] = []
+			for j: int in other_events.size():
+				if j == conflict_idx:
+					if old_primary != null:
+						swapped.append(old_primary.duplicate() as InputEvent)
+				else:
+					swapped.append(other_events[j])
+			InputMap.action_erase_events(other)
+			for ev: InputEvent in swapped:
+				InputMap.action_add_event(other, ev)
+	var next_events: Array[InputEvent] = [new_ev]
+	for k: int in range(1, target_events.size()):
+		if not _events_match(target_events[k], new_ev):
+			next_events.append(target_events[k])
+	InputMap.action_erase_events(target_action)
+	for ev: InputEvent in next_events:
+		InputMap.action_add_event(target_action, ev)
+	var app := get_node_or_null("/root/App")
+	if app != null and app.settings != null:
+		var settings: GameSettings = app.settings
+		settings.capture_input_rebinds_from_input_map()
+		var interact_list: Array[Dictionary] = []
+		for ev: InputEvent in InputMap.action_get_events("interact"):
+			var desc: Dictionary = _event_to_descriptor(ev)
+			if not desc.is_empty():
+				interact_list.append(desc)
+		settings.input_rebinds["interact"] = interact_list
+		settings.save()
+	_listening_action = ""
+	_play_ui("confirm")
+	_refresh_control_buttons()
+
+
+func _reset_controls() -> void:
+	_listening_action = ""
+	var app := get_node_or_null("/root/App")
+	if app != null and app.settings != null:
+		var settings: GameSettings = app.settings
+		settings.reset_input_rebinds_to_default()
+		if not InputMap.has_action("interact"):
+			InputMap.add_action("interact")
+		InputMap.action_erase_events("interact")
+		var ev := InputEventKey.new()
+		ev.device = GameSettings.ALL_DEVICES
+		ev.physical_keycode = KEY_E
+		InputMap.action_add_event("interact", ev)
+		settings.save()
+	_play_ui("click")
+	_refresh_control_buttons()
+
+
+func _refresh_control_buttons() -> void:
+	for action_v: Variant in _rebind_btns.keys():
+		var action: String = String(action_v)
+		var btn: Button = _rebind_btns[action] as Button
+		if btn == null:
+			continue
+		var listening: bool = action == _listening_action
+		btn.text = _t("ui.settings.rebind.listen", "Press key/mouse... [Esc]") if listening else _binding_label(action)
+		_style_rebind_btn(btn, listening)
+
+
+func _binding_label(action: String) -> String:
+	if not InputMap.has_action(action):
+		return "—"
+	var events: Array[InputEvent] = InputMap.action_get_events(action)
+	if events.is_empty():
+		return _t("ui.settings.rebind.unbound", "Unbound")
+	return events[0].as_text().replace(" (Physical)", "")
+
+
+static func _events_match(a: InputEvent, b: InputEvent) -> bool:
+	if a is InputEventKey and b is InputEventKey:
+		var ak: InputEventKey = a as InputEventKey
+		var bk: InputEventKey = b as InputEventKey
+		var ac: int = int(ak.physical_keycode) if int(ak.physical_keycode) != 0 else int(ak.keycode)
+		var bc: int = int(bk.physical_keycode) if int(bk.physical_keycode) != 0 else int(bk.keycode)
+		return ac != 0 and ac == bc
+	if a is InputEventMouseButton and b is InputEventMouseButton:
+		return (a as InputEventMouseButton).button_index == (b as InputEventMouseButton).button_index
+	return false
+
+
+static func _event_to_descriptor(ev: InputEvent) -> Dictionary:
+	if ev is InputEventKey:
+		var k: InputEventKey = ev as InputEventKey
+		return {
+			"type": "key",
+			"keycode": int(k.keycode),
+			"physical_keycode": int(k.physical_keycode),
+		}
+	if ev is InputEventMouseButton:
+		var m: InputEventMouseButton = ev as InputEventMouseButton
+		return {
+			"type": "mouse",
+			"button_index": int(m.button_index),
+		}
+	if ev is InputEventJoypadButton:
+		var jb: InputEventJoypadButton = ev as InputEventJoypadButton
+		return {
+			"type": "joy_button",
+			"button_index": int(jb.button_index),
+		}
+	if ev is InputEventJoypadMotion:
+		var jm: InputEventJoypadMotion = ev as InputEventJoypadMotion
+		return {
+			"type": "joy_axis",
+			"axis": int(jm.axis),
+			"axis_value": float(jm.axis_value),
+		}
+	return {}
+
+
+func _t(key: String, fallback: String) -> String:
+	var val: String = tr(key)
+	return fallback if val == key else val
 
 
 func _section_label(text: String) -> Control:
@@ -656,7 +946,10 @@ func _clamp_scroll() -> void:
 	if _scroll == null or _body == null:
 		return
 	var content_h: float = _body.get_combined_minimum_size().y
-	_scroll.custom_minimum_size = Vector2(0.0, minf(content_h, SCROLL_MAX))
+	var max_h: float = SCROLL_MAX
+	if size.y > 260.0:
+		max_h = minf(SCROLL_MAX, size.y - 240.0)
+	_scroll.custom_minimum_size = Vector2(0.0, minf(content_h, max_h))
 
 
 func _center_panel() -> void:

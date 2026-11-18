@@ -5,7 +5,12 @@ const MIN_RADIUS_RATIO: float = 0.5
 const MAX_RADIUS_RATIO: float = 2.0
 
 
-static func resolve(base: Dictionary, inventory: Array[ItemInstance], catalog: Catalog) -> ResolvedStats:
+static func resolve(
+	base: Dictionary,
+	inventory: Array[ItemInstance],
+	catalog: Catalog,
+	bonus_max_hp: float = 0.0,
+) -> ResolvedStats:
 	var add: Dictionary = _zero()
 	var pct: Dictionary = _zero()
 	for inst: ItemInstance in inventory:
@@ -22,7 +27,7 @@ static func resolve(base: Dictionary, inventory: Array[ItemInstance], catalog: C
 				add[stat] = float(add.get(stat, 0.0)) + amount
 			elif op == "pct":
 				pct[stat] = float(pct.get(stat, 0.0)) + amount
-	var stats := ResolvedStats.new()
+	var stats: ResolvedStats = ResolvedStats.new()
 	var base_radius: float = float(base.get("radius", 14.0))
 	if base_radius <= 0.0:
 		base_radius = 14.0
@@ -30,10 +35,10 @@ static func resolve(base: Dictionary, inventory: Array[ItemInstance], catalog: C
 	var min_radius: float = maxf(1.0, base_radius * MIN_RADIUS_RATIO)
 	var max_radius: float = maxf(min_radius, base_radius * MAX_RADIUS_RATIO)
 	stats.speed = (float(base.get("speed", 0.0)) + float(add.get("speed", 0.0))) * (1.0 + float(pct.get("speed", 0.0)))
-	stats.max_hp = (float(base.get("maxHp", 0.0)) + float(add.get("maxHp", 0.0))) * (1.0 + float(pct.get("maxHp", 0.0)))
+	stats.max_hp = maxf(1.0, (float(base.get("maxHp", 0.0)) + bonus_max_hp + float(add.get("maxHp", 0.0))) * (1.0 + float(pct.get("maxHp", 0.0))))
 	stats.radius = clampf(raw_radius, min_radius, max_radius)
-	stats.damage_mul = (1.0 + float(add.get("damage", 0.0))) * (1.0 + float(pct.get("damage", 0.0)))
-	stats.cooldown_mul = (1.0 + float(add.get("cooldown", 0.0))) * (1.0 + float(pct.get("cooldown", 0.0)))
+	stats.damage_mul = maxf(0.1, (1.0 + float(add.get("damage", 0.0))) * (1.0 + float(pct.get("damage", 0.0))))
+	stats.cooldown_mul = maxf(0.1, (1.0 + float(add.get("cooldown", 0.0))) * (1.0 + float(pct.get("cooldown", 0.0))))
 	stats.crit_chance = clampf(float(base.get("critChance", 0.05)) + float(add.get("critChance", 0.0)) + float(pct.get("critChance", 0.0)), 0.0, 1.0)
 	stats.crit_mul = maxf(1.0, float(base.get("critDamage", 2.0)) + float(add.get("critDamage", 0.0)) + float(pct.get("critDamage", 0.0)))
 	stats.armor = clampf(float(add.get("armor", 0.0)) + float(pct.get("armor", 0.0)), -1.0, 0.75)
@@ -46,6 +51,17 @@ static func resolve(base: Dictionary, inventory: Array[ItemInstance], catalog: C
 	stats.control_duration_mul = maxf(0.25, (1.0 + float(add.get("controlDuration", 0.0))) * (1.0 + float(pct.get("controlDuration", 0.0))))
 	stats.elite_damage_mul = maxf(0.25, (1.0 + float(add.get("eliteDamage", 0.0))) * (1.0 + float(pct.get("eliteDamage", 0.0))))
 	return stats
+
+
+static func tonic_buffer_bonus(crucible_upgrades: Dictionary, catalog: Catalog) -> float:
+	var rank: int = maxi(0, int(crucible_upgrades.get("tonic-buffer", 0)))
+	if rank <= 0:
+		return 0.0
+	var per_level: float = 15.0
+	if catalog != null and catalog.has_upgrade("tonic-buffer"):
+		var eff: Dictionary = DictUtil.d(catalog.upgrade("tonic-buffer"), "effect")
+		per_level = float(eff.get("perLevel", 15.0))
+	return float(rank) * per_level
 
 
 static func on_kill_heal(inventory: Array[ItemInstance], catalog: Catalog) -> float:

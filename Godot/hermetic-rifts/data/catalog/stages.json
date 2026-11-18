@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "stages": [
+    {
+      "id": "cinder-yard",
+      "name": "Cinder Yard",
+      "kicker": "First Chamber · Nigredo & Calcination",
+      "lore": "The outer foundry where raw matter was burned to black ash. Obsidian kilns still vent superheated slag, and volatile brimstone urns litter the cracked flagstones.",
+      "fodder": "ember-mite",
+      "ranged": "ember-spitter",
+      "rangedChance": 0.22,
+      "sniper": "enemy-astral-sniper",
+      "elite": "ember-chaser",
+      "boss": "cinder-heart",
+      "firstEliteAt": 25,
+      "teleporterAt": 0.0,
+      "teleporterHold": 50,
+      "teleporterRadius": 160,
+      "view": {
+        "grid": "#443436",
+        "border": "#5a3020",
+        "zone": "#e35d5d",
+        "portal": "#ffb347"
+      }
+    },
+    {
+      "id": "rime-dock",
+      "name": "Rime Dock",
+      "kicker": "Second Chamber · Albedo & Fixation",
+      "lore": "A subterranean canal where alchemical salts and quicksilver were quenched in freezing brine. Frozen bollards block stray bolts while pressurized rime casks threaten to shatter in a numbing frost.",
+      "fodder": "frost-mite",
+      "ranged": "frost-spitter",
+      "rangedChance": 0.22,
+      "sniper": "enemy-astral-sniper",
+      "elite": "frost-warden",
+      "boss": "frost-sovereign",
+      "branchChance": 0.25,
+      "altStageId": "putrid-conservatory",
+      "firstEliteAt": 18,
+      "teleporterAt": 0.0,
+      "teleporterHold": 55,
+      "teleporterRadius": 150,
+      "view": {
+        "grid": "#142033",
+        "border": "#3a5a7a",
+        "zone": "#5ad4ff",
+        "portal": "#dff6ff"
+      }
+    },
+    {
+      "id": "fulmination-foundry",
+      "name": "Fulmination Foundry",
+      "kicker": "Third Chamber · Citrinitas & Conduction",
+      "lore": "A brass-ribbed galvanic hall where copper coils arc with trapped lightning. Fulminate Leyden jars blister with charge beside the Voltaic Regent's conducting spires.",
+      "fodder": "ember-mite",
+      "ranged": "aether-hexer",
+      "rangedChance": 0.25,
+      "sniper": "enemy-astral-sniper",
+      "elite": "slag-hound",
+      "boss": "voltaic-regent",
+      "firstEliteAt": 16,
+      "teleporterAt": 0.0,
+      "teleporterHold": 60,
+      "teleporterRadius": 150,
+      "view": {
+        "grid": "#241d34",
+        "border": "#56437a",
+        "zone": "#e5b84b",
+        "portal": "#ffe896"
+      }
+    },
+    {
+      "id": "glacial-tomb",
+      "name": "Glacial Tomb",
+      "kicker": "Fourth Chamber · Rubedo & The Great Seal",
+      "lore": "The deepest vault beneath the canal, sealed in eternal permafrost to contain the Frost Emperor. Here the Transmutation Circle demands the longest vigil before the Great Work is decided.",
+      "fodder": "frost-mite",
+      "ranged": "frost-spitter",
+      "rangedChance": 0.28,
+      "sniper": "enemy-astral-sniper",
+      "elite": "frost-warden",
+      "boss": "frost-emperor",
+      "firstEliteAt": 14,
+      "teleporterAt": 0.0,
+      "teleporterHold": 65,
+      "teleporterRadius": 140,
+      "view": {
+        "grid": "#101826",
+        "border": "#2a4a6a",
+        "zone": "#4ac4ef",
+        "portal": "#cff0ff"
+      }
+    }
+  ],
+  "specialStages": [
+    {
+      "id": "putrid-conservatory",
+      "name": "Putrid Conservatory",
+      "kicker": "Alternate Second Chamber · Putrefactio & Fermentation",
+      "lore": "An overgrown glasshouse drowned in vitriolic condensation. Fermenting flasks hiss beneath iron trellises while the Viridian Alchemist tends her caustic blooms.",
+      "fodder": "ember-mite",
+      "ranged": "aether-hexer",
+      "rangedChance": 0.25,
+      "sniper": "enemy-astral-sniper",
+      "elite": "slag-hound",
+      "boss": "viridian-alchemist",
+      "isBranch2B": true,
+      "firstEliteAt": 18,
+      "teleporterAt": 0.0,
+      "teleporterHold": 55,
+      "teleporterRadius": 150,
+      "view": {
+        "grid": "#17261e",
+        "border": "#366349",
+        "zone": "#6bd968",
+        "portal": "#bdf59b"
+      }
+    },
+    {
+      "id": "aether-vault",
+      "name": "Aether Vault",
+      "kicker": "Hidden Chamber · Quintessence & Refraction",
+      "lore": "A secret reliquary suspended outside the standard descent, locked behind three purifying waves and guarded by condensed starlight.",
+      "fodder": "frost-mite",
+      "ranged": "aether-hexer",
+      "rangedChance": 0.3,
+      "sniper": "enemy-astral-sniper",
+      "elite": "slag-hound",
+      "boss": "viridian-alchemist",
+      "isSecret": true,
+      "waves": 3,
+      "firstEliteAt": 10,
+      "teleporterAt": 0.0,
+      "teleporterHold": 30,
+      "teleporterRadius": 140,
+      "view": {
+        "grid": "#19152b",
+        "border": "#4d3c85",
+        "zone": "#a884f3",
+        "portal": "#e4d4ff"
+      }
+    },
+    {
+      "id": "prima-materia-core",
+      "name": "Prima Materia Core",
+      "kicker": "True Crucible · Opus Magnum",
+      "lore": "The molten heart of the shattered Magisterium where all four elements collapse into primal gold. Only the Arch-Alchemist stands between the vessel and true apotheosis.",
+      "fodder": "ember-mite",
+      "ranged": "aether-hexer",
+      "rangedChance": 0.3,
+      "sniper": "enemy-astral-sniper",
+      "elite": "slag-hound",
+      "boss": "arch-alchemist",
+      "isTrueEnding": true,
+      "firstEliteAt": 12,
+      "teleporterAt": 0.0,
+      "teleporterHold": 30,
+      "teleporterRadius": 150,
+      "view": {
+        "grid": "#261614",
+        "border": "#7a3b20",
+        "zone": "#ffae42",
+        "portal": "#fff0b8"
+      }
+    }
+  ]
+}

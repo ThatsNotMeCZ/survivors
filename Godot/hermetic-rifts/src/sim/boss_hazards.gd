@@ -6,10 +6,13 @@ const HAZ_POOL: int = 1
 const HAZ_PRISON: int = 2
 const HAZ_CONE: int = 3
 const HAZ_PULSE: int = 4
+const HAZ_RING: int = 5
+const HAZ_SPIRE_TETHER: int = 6
+
 const STYLE_LAVA: int = 0
 const STYLE_FROST: int = 1
 const STYLE_AETHER: int = 2
-const CAP_DEFAULT: int = 24
+const CAP_DEFAULT: int = 32
 
 var cap: int = CAP_DEFAULT
 var alive: PackedByteArray = PackedByteArray()
@@ -35,7 +38,7 @@ var pool_slow: PackedFloat32Array = PackedFloat32Array()
 
 
 static func create(pool_cap: int = CAP_DEFAULT) -> BossHazardPool:
-	var pool := BossHazardPool.new()
+	var pool: BossHazardPool = BossHazardPool.new()
 	pool.cap = pool_cap
 	pool.alive.resize(pool_cap)
 	pool.kind.resize(pool_cap)
@@ -226,6 +229,43 @@ func spawn_pulse(px: float, py: float, rad: float, windup: float, dmg: float, sl
 	pool_duration[s] = 0.45
 	pool_radius[s] = 0.0
 	pool_dps[s] = 0.0
+	pool_slow[s] = 1.0
+	return s
+
+
+func spawn_ring(
+	px: float,
+	py: float,
+	start_rad: float,
+	max_rad: float,
+	thickness: float,
+	expand_speed: float,
+	dmg: float,
+	fx_style: int = STYLE_AETHER,
+) -> int:
+	var s: int = alloc()
+	if s < 0:
+		return -1
+	var spd: float = maxf(1.0, expand_speed)
+	alive[s] = 1
+	kind[s] = HAZ_RING
+	style[s] = fx_style
+	state[s] = 0
+	x[s] = px
+	y[s] = py
+	dir_x[s] = 1.0
+	dir_y[s] = 0.0
+	radius[s] = start_rad
+	angle[s] = thickness
+	elapsed[s] = 0.0
+	duration[s] = maxf(0.1, (max_rad - start_rad) / spd)
+	damage[s] = dmg
+	slow_mul[s] = 1.0
+	slow_duration[s] = 0.0
+	root_duration[s] = 0.0
+	pool_duration[s] = 0.0
+	pool_radius[s] = max_rad
+	pool_dps[s] = spd
 	pool_slow[s] = 1.0
 	return s
 

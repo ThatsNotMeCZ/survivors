@@ -16,7 +16,7 @@ var _pause: PauseView
 var _levelup: LevelUpView
 var _recap: RecapView
 var _last_mode: StringName = &""
-var _last_offer: int = -1
+var _last_offer_key: String = ""
 
 
 func _ready() -> void:
@@ -72,12 +72,14 @@ func _process(_dt: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _desk != null and _desk.visible and _desk.is_listening():
+		return
 	var app := get_node_or_null("/root/App")
 	if app == null or event.is_echo() or not event.is_pressed():
 		return
 	if not (event.is_action("pause") or event.is_action("back")):
 		return
-	if event.is_action("pause") and (app.overlay_mode == &"menu" or app.overlay_mode == &"hall" or app.overlay_mode == &"levelup"):
+	if event.is_action("pause") and (app.overlay_mode == &"menu" or app.overlay_mode == &"hall" or app.overlay_mode == &"crucible" or app.overlay_mode == &"levelup"):
 		return
 	if app.overlay_mode == &"hidden" and app.world != null:
 		app.pause_run()
@@ -89,6 +91,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _desk != null and _desk.visible and _desk.is_listening():
+		return
 	var app := get_node_or_null("/root/App")
 	if app == null or app.overlay_mode == &"hidden":
 		return
@@ -108,6 +112,13 @@ func _input(event: InputEvent) -> void:
 		return
 	if app.overlay_mode != &"levelup":
 		return
+	if event is InputEventKey:
+		var ek: InputEventKey = event as InputEventKey
+		if ek.keycode == KEY_R or ek.physical_keycode == KEY_R:
+			if _levelup != null and _levelup.reroll(app.world):
+				_play_ui("click")
+			get_viewport().set_input_as_handled()
+			return
 	if event.is_action("offer_1"):
 		_pick(app, 0)
 		get_viewport().set_input_as_handled()
@@ -120,20 +131,21 @@ func _input(event: InputEvent) -> void:
 
 
 func _sync(app: Node) -> void:
-	var offer_n: int = 0
-	if app.world != null:
-		offer_n = app.world.offer.size()
-	if app.overlay_mode == _last_mode and not (app.overlay_mode == &"levelup" and offer_n != _last_offer):
+	var offer_key: String = ""
+	if app.world != null and app.overlay_mode == &"levelup":
+		offer_key = LevelUpView.compute_offer_key(app.world)
+	if app.overlay_mode == _last_mode and not (app.overlay_mode == &"levelup" and offer_key != _last_offer_key):
 		if app.overlay_mode == &"hidden":
 			_show_hud(app.world)
 		_raise_desk()
 		return
 	_last_mode = app.overlay_mode
-	_last_offer = offer_n
+	_last_offer_key = offer_key
 	_clear_buttons()
 	var is_menu: bool = app.overlay_mode == &"menu"
 	var is_archives: bool = app.overlay_mode == &"archives"
 	var is_hall: bool = app.overlay_mode == &"hall"
+	var is_crucible: bool = app.overlay_mode == &"crucible"
 	var is_pause: bool = app.overlay_mode == &"pause"
 	var is_levelup: bool = app.overlay_mode == &"levelup"
 	var is_recap: bool = app.overlay_mode == &"recap"
@@ -142,8 +154,8 @@ func _sync(app: Node) -> void:
 		if is_menu:
 			_root.move_child(_menu, _root.get_child_count() - 1)
 	if _hall != null:
-		_hall.visible = is_hall
-		if is_hall:
+		_hall.visible = is_hall or is_crucible
+		if is_hall or is_crucible:
 			_root.move_child(_hall, _root.get_child_count() - 1)
 	if _archives != null:
 		_archives.visible = is_archives
@@ -173,6 +185,7 @@ func _sync(app: Node) -> void:
 		not is_menu
 		and not is_archives
 		and not is_hall
+		and not is_crucible
 		and not is_pause
 		and not is_levelup
 		and not is_recap
@@ -183,6 +196,7 @@ func _sync(app: Node) -> void:
 		and not is_menu
 		and not is_archives
 		and not is_hall
+		and not is_crucible
 		and not is_recap
 	)
 	_dim.mouse_filter = Control.MOUSE_FILTER_STOP if _dim.visible else Control.MOUSE_FILTER_IGNORE
@@ -206,6 +220,9 @@ func _sync(app: Node) -> void:
 			_hide_hud()
 			if _hall != null:
 				_hall.refresh()
+			return
+		"crucible":
+			_hide_hud()
 			return
 		"hidden":
 			_title.text = ""
@@ -256,6 +273,10 @@ func _activate_primary(app: Node) -> void:
 				pass
 			else:
 				app.start_run()
+		"crucible":
+			var focused_c: Control = get_viewport().gui_get_focus_owner()
+			if focused_c is Button:
+				(focused_c as Button).emit_signal("pressed")
 		"pause":
 			var focused_p: Control = get_viewport().gui_get_focus_owner()
 			if focused_p is Button:
@@ -285,9 +306,13 @@ func _go_back(app: Node) -> void:
 	if _desk != null and _desk.visible:
 		_desk.handle_back()
 		return
+	if (app.overlay_mode == &"hall" or app.overlay_mode == &"crucible") and _hall != null and _hall.handle_back():
+		return
 	if app.overlay_mode == &"archives" and _archives != null and _archives.handle_back():
 		return
 	match String(app.overlay_mode):
+		"crucible":
+			app.overlay_mode = &"hall"
 		"hall", "archives", "settings":
 			app.overlay_mode = &"pause" if app.world != null else &"menu"
 		"pause":
@@ -314,6 +339,10 @@ func _pick(app: Node, index: int) -> void:
 	if app.world.phase == &"play":
 		app.resume_run()
 	elif app.world.phase == &"victory":
+		if app.run_outcome == &"":
+			var outcome: String = "true_victory" if app.world.true_victory else "victory"
+			app.run_outcome = StringName(outcome)
+			app.records.record_run_end(app.world, outcome)
 		app.overlay_mode = &"recap"
 
 
@@ -536,8 +565,6 @@ func _bind_pause() -> void:
 		_pause.archives_pressed.connect(_on_pause_archives)
 	if not _pause.settings_pressed.is_connected(_on_pause_settings):
 		_pause.settings_pressed.connect(_on_pause_settings)
-	if not _pause.seal_pressed.is_connected(_on_pause_seal):
-		_pause.seal_pressed.connect(_on_pause_seal)
 	if not _pause.abandon_pressed.is_connected(_on_pause_abandon):
 		_pause.abandon_pressed.connect(_on_pause_abandon)
 
@@ -560,15 +587,6 @@ func _on_pause_archives() -> void:
 func _on_pause_settings() -> void:
 	_play_ui("click")
 	_open_desk()
-
-
-func _on_pause_seal() -> void:
-	var app := get_node_or_null("/root/App")
-	if app == null or app.world == null:
-		return
-	_play_ui("confirm")
-	SimLoop.complete_working(app.world)
-	app.overlay_mode = &"recap"
 
 
 func _on_pause_abandon() -> void:
@@ -636,6 +654,8 @@ func _bind_recap() -> void:
 func _recap_kind(app: Node) -> String:
 	if app.run_outcome == &"abandon":
 		return "abandon"
+	if app.world != null and app.world.true_victory:
+		return "true_victory"
 	if app.world != null and app.world.won:
 		return "victory"
 	return "defeat"

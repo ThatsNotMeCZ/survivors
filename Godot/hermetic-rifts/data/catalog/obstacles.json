@@ -12,6 +12,12 @@
   "volatileTeleporterKeepOut": 200,
   "minSpacing": 190,
   "placeRetries": 80,
+  "circularPlacement": {
+    "rimPad": 140,
+    "playerKeepOut": 200,
+    "teleporterKeepOut": 230,
+    "minSpacing": 185
+  },
   "pillar": {
     "radius": 28
   },
@@ -31,6 +37,71 @@
     "rimeSlowDuration": 2,
     "rimeSlowMul": 0.7
   },
+  "alchemicalVent": {
+    "count": 4,
+    "radius": 55,
+    "cycleInterval": 9.0,
+    "telegraphDuration": 1.2,
+    "activeDuration": 1.0,
+    "damageCoeff": 10.0,
+    "playerFlatDamage": 12.0,
+    "knockbackImpulse": 260.0,
+    "slowDuration": 1.5,
+    "slowMul": 0.75
+  },
+  "resonanceConduit": {
+    "count": 3,
+    "radius": 22,
+    "chargesRequired": 3,
+    "dischargeRadius": 140.0,
+    "dischargeDamageCoeff": 22.0,
+    "dischargeStunDuration": 0.45,
+    "rechargeDuration": 8.0
+  },
+  "siphonObelisk": {
+    "countPerStage": {
+      "min": 1,
+      "max": 2
+    },
+    "radius": 24,
+    "interactRadius": 64,
+    "channelDuration": 2.0,
+    "variants": [
+      "obelisk-essence",
+      "obelisk-reliquary",
+      "obelisk-blood"
+    ],
+    "essence": {
+      "eliteMin": 2,
+      "eliteMax": 5
+    },
+    "reliquary": {
+      "trialDuration": 20.0,
+      "armorDebuff": -0.25,
+      "draftChoices": 3
+    },
+    "blood": {
+      "eliteMin": 2,
+      "eliteMax": 4,
+      "healPct": 0.35
+    }
+  },
+  "alchemyReactions": {
+    "reactionCooldown": 4.0,
+    "vitriolFlash": {
+      "radius": 68.0,
+      "damageCoeff": 18.0,
+      "smokeRadius": 75.0,
+      "smokeDuration": 2.0,
+      "projectileSlowMul": 0.5
+    },
+    "shatterFrost": {
+      "radius": 75.0,
+      "damageCoeff": 12.0,
+      "freezeDuration": 1.2,
+      "eliteBossFreezeDuration": 0.6
+    }
+  },
   "biomes": {
     "cinder-yard": {
       "pillar": "Obsidian Kiln",
@@ -42,10 +113,30 @@
       "hazard": "Brine Pool",
       "volatile": "Pressurized Rime Cask"
     },
+    "putrid-conservatory": {
+      "pillar": "Alchemical Trellis",
+      "hazard": "Vitriol Bog",
+      "volatile": "Fermenting Flask"
+    },
+    "fulmination-foundry": {
+      "pillar": "Copper Coil",
+      "hazard": "Voltaic Trench",
+      "volatile": "Fulminate Leyden Jar"
+    },
     "glacial-tomb": {
       "pillar": "Glacial Monolith",
       "hazard": "Permafrost Crevasse",
       "volatile": "Volatile Ice Chunk"
+    },
+    "aether-vault": {
+      "pillar": "Astral Obelisk",
+      "hazard": "Aether Rift Pool",
+      "volatile": "Condensed Aether Vessel"
+    },
+    "prima-materia-core": {
+      "pillar": "Philosopher's Column",
+      "hazard": "Prima Materia Well",
+      "volatile": "Crucible Shard"
     }
   }
 }

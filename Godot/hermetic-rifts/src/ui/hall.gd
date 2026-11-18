@@ -3,6 +3,7 @@ extends Control
 
 signal back_pressed
 signal commence_pressed
+signal crucible_pressed
 
 const SLOTS: Array[String] = ["primary", "secondary", "utility", "special"]
 const GLYPHS: Array[String] = ["I", "II", "III", "IV"]
@@ -36,6 +37,14 @@ var _commence_1: Label
 var _commence_2: Label
 var _header: PanelContainer
 var _sidebar_bg: ColorRect
+var _nav_scroll: ScrollContainer
+var _crucible_bar: HBoxContainer
+var _crucible_btn: Button
+var _seal_panel: PanelContainer
+var _seal_minus: Button
+var _seal_label: Label
+var _seal_plus: Button
+var _crucible_modal: CrucibleModal
 
 var _inspected_id: String = ""
 var _preview_t: float = 0.0
@@ -48,6 +57,7 @@ var _layout_tries: int = 0
 func _ready() -> void:
 	_resolve_nodes()
 	_apply_chrome()
+	_ensure_meta_controls()
 	_bind()
 	call_deferred("_layout_chrome")
 	if get_tree() != null and get_tree().current_scene == self:
@@ -78,11 +88,15 @@ func refresh() -> void:
 	_refresh_nav(app)
 	_refresh_dossier(app)
 	_refresh_rite(app)
+	_refresh_meta_controls(app)
 	call_deferred("_layout_chrome")
 	_refresh_commence()
 	_sync_preview_frame()
 	_sync_backdrop()
-	call_deferred("focus_primary")
+	if _crucible_modal != null and _crucible_modal.visible:
+		_crucible_modal.refresh(app.records, app.catalog)
+	else:
+		call_deferred("focus_primary")
 
 
 func inspected_id() -> String:
@@ -93,7 +107,16 @@ func is_inspected_locked() -> bool:
 	return _locked
 
 
+func handle_back() -> bool:
+	if _crucible_modal != null and _crucible_modal.visible:
+		return _crucible_modal.handle_back()
+	return false
+
+
 func focus_primary() -> void:
+	if _crucible_modal != null and _crucible_modal.visible:
+		_crucible_modal.focus_primary()
+		return
 	if _commence_btn != null and _commence_btn.is_inside_tree() and not _commence_btn.disabled:
 		_commence_btn.grab_focus()
 		return
@@ -103,6 +126,10 @@ func focus_primary() -> void:
 
 func activate_primary() -> void:
 	var focused: Control = get_viewport().gui_get_focus_owner() if get_viewport() != null else null
+	if _crucible_modal != null and _crucible_modal.visible:
+		if focused is Button and (focused as Button).is_inside_tree() and _crucible_modal.is_ancestor_of(focused):
+			(focused as Button).emit_signal("pressed")
+		return
 	if focused is Button and (focused as Button).is_inside_tree() and is_ancestor_of(focused):
 		(focused as Button).emit_signal("pressed")
 		return
@@ -163,10 +190,10 @@ func _apply_chrome() -> void:
 	if _header != null:
 		_header.add_theme_stylebox_override("panel", UiAtlas.nine_slice("hall-banner", "idle", Vector4(6, 6, 46, 6)))
 	if _dossier != null:
-		_dossier.add_theme_stylebox_override("panel", UiAtlas.nine_slice("parchment-panel", "idle", Vector4(36, 34, 36, 32)))
+		_dossier.add_theme_stylebox_override("panel", UiAtlas.nine_slice("parchment-panel", "idle", Vector4(34, 24, 34, 24)))
 		var inner := get_node_or_null("Dossier/DossierInner") as VBoxContainer
 		if inner != null:
-			inner.add_theme_constant_override("separation", 12)
+			inner.add_theme_constant_override("separation", 8)
 			inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_fit_rite_row()
 	var circle := get_node_or_null("Preview/StageCircle") as ColorRect
@@ -175,14 +202,12 @@ func _apply_chrome() -> void:
 	var pedestal := get_node_or_null("Preview/Pedestal") as ColorRect
 	if pedestal != null:
 		pedestal.color = Color(0, 0, 0, 0.0)
+	_wrap_nav_scroll()
 	if _nav != null:
-		_nav.add_theme_constant_override("separation", 18)
+		_nav.add_theme_constant_override("separation", 10)
+		_nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if _nav_arrow != null:
-		_nav_arrow.texture = UiAtlas.frame("nav-arrow")
-		_nav_arrow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		_nav_arrow.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_nav_arrow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		_nav_arrow.custom_minimum_size = Vector2(32, 32)
+		_nav_arrow.visible = false
 		_nav_arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if _preview != null:
 		_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -323,7 +348,7 @@ func _refresh_nav(app: Node) -> void:
 		var unlocked: bool = bool(unlock.get("unlocked", true))
 		var btn := Button.new()
 		btn.name = sid
-		btn.custom_minimum_size = Vector2(154, 150)
+		btn.custom_minimum_size = Vector2(154, 118)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.toggle_mode = false
 		var active: bool = sid == _inspected_id
@@ -333,11 +358,11 @@ func _refresh_nav(app: Node) -> void:
 		col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		col.offset_left = 8.0
 		col.offset_right = -8.0
-		col.offset_top = 8.0
-		col.offset_bottom = -10.0
-		col.add_theme_constant_override("separation", 8)
+		col.offset_top = 6.0
+		col.offset_bottom = -8.0
+		col.add_theme_constant_override("separation", 6)
 		var portrait := PanelContainer.new()
-		portrait.custom_minimum_size = Vector2(0, 112)
+		portrait.custom_minimum_size = Vector2(0, 76)
 		portrait.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var well := StyleBoxFlat.new()
@@ -502,15 +527,32 @@ func _fill_skills(surv: Dictionary) -> void:
 	for child: Node in _skills.get_children():
 		_skills.remove_child(child)
 		child.queue_free()
+	var app := _app()
+	var rec: ArchiveRecords = app.records if app != null else null
+	var catalog: Catalog = app.catalog if app != null else null
+	var sid: String = String(surv.get("id", _inspected_id))
 	var skills: Dictionary = DictUtil.d(surv, "skills")
+	var alt_skills: Dictionary = DictUtil.d(surv, "altSkills")
+	var loadout: Dictionary = rec.loadout_for(sid) if rec != null else {}
 	for i: int in SLOTS.size():
 		var slot: String = SLOTS[i]
-		var skill_id: String = String(skills.get(slot, ""))
+		var std_id: String = String(skills.get(slot, ""))
+		var alt_id: String = String(alt_skills.get(slot, ""))
+		var alt_def: Dictionary = catalog.skill(alt_id) if (catalog != null and alt_id != "" and catalog.has_skill(alt_id)) else {}
+		var alt_unlock: Variant = alt_def.get("unlock", null)
+		var alt_unlocked: bool = (alt_id != "") and (
+			alt_unlock == null
+			or (rec != null and (rec.is_alt_skill_unlocked(alt_id) or rec.meets_unlock(alt_unlock)))
+		)
+		var want_b: bool = String(loadout.get(slot, "A")) == "B"
+		var active_var: String = "B" if (want_b and alt_unlocked) else "A"
+		var skill_id: String = alt_id if active_var == "B" else std_id
+
 		var unit := VBoxContainer.new()
-		unit.add_theme_constant_override("separation", 6)
+		unit.add_theme_constant_override("separation", 4)
 		unit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var cell := Button.new()
-		cell.custom_minimum_size = Vector2(58, 58)
+		cell.custom_minimum_size = Vector2(54, 54)
 		cell.focus_mode = Control.FOCUS_ALL
 		var empty: bool = _locked or skill_id == ""
 		_style_skill_cell(cell, empty)
@@ -553,12 +595,88 @@ func _fill_skills(surv: Dictionary) -> void:
 		else:
 			lab.text = Loc.skill_name(skill_id)
 		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lab.custom_minimum_size = Vector2(0, 26)
 		lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		UiAtlas.apply_ink_label(lab, UiAtlas.TYPE_MICRO, UiAtlas.PARCHMENT_INK, 11)
 		lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		unit.add_child(cell)
 		unit.add_child(lab)
+		if not _locked and alt_id != "" and rec != null:
+			var pill := Button.new()
+			pill.name = "Variant_%s" % slot
+			pill.custom_minimum_size = Vector2(68, 22)
+			pill.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			pill.focus_mode = Control.FOCUS_ALL
+			if not alt_unlocked:
+				pill.text = "A | 🔒"
+				pill.disabled = true
+				_style_variant_pill(pill, false, true)
+				var u_state: Dictionary = rec.check_unlock(alt_unlock, catalog)
+				var req_txt: String = "%s (%s)" % [String(u_state.get("label", "")), String(u_state.get("progress", ""))]
+				var cap_alt: String = alt_id
+				pill.mouse_entered.connect(func() -> void: _show_tip(pill, cap_alt, req_txt))
+				pill.mouse_exited.connect(_hide_tip)
+			else:
+				pill.text = "[A] | B" if active_var == "A" else "A | [B]"
+				_style_variant_pill(pill, active_var == "B", false)
+				var cap_slot: String = slot
+				var cap_sid: String = sid
+				var cap_next: String = "B" if active_var == "A" else "A"
+				var cap_idx: int = i
+				var cap_active_skill: String = skill_id
+				pill.mouse_entered.connect(func() -> void: _show_tip(pill, cap_active_skill))
+				pill.mouse_exited.connect(_hide_tip)
+				pill.focus_entered.connect(func() -> void: _show_tip(pill, cap_active_skill))
+				pill.focus_exited.connect(_hide_tip)
+				pill.pressed.connect(func() -> void: _toggle_slot_variant(cap_sid, cap_slot, cap_next, cap_idx))
+			unit.add_child(pill)
 		_skills.add_child(unit)
+
+
+func _toggle_slot_variant(sid: String, slot: String, next_variant: String, slot_index: int) -> void:
+	var app := _app()
+	if app == null:
+		return
+	var rec: ArchiveRecords = app.records
+	rec.set_slot_variant(sid, slot, next_variant)
+	_play_ui("click")
+	_refresh_dossier(app)
+	var surv: Dictionary = app.catalog.survivor(sid) if app.catalog.has_survivor(sid) else {}
+	var skill_id: String = String(DictUtil.d(surv, "altSkills" if next_variant == "B" else "skills").get(slot, ""))
+	if _skills != null and slot_index >= 0 and slot_index < _skills.get_child_count():
+		var unit: Node = _skills.get_child(slot_index)
+		var pill: Control = unit.get_node_or_null("Variant_%s" % slot) as Control
+		if pill != null:
+			pill.grab_focus()
+			if skill_id != "":
+				_show_tip(pill, skill_id)
+
+
+func _style_variant_pill(btn: Button, is_b: bool, locked: bool) -> void:
+	var bg := Color("141016") if locked else (Color("3a2218") if is_b else Color("1d1920"))
+	var border := Color("4a414c") if locked else (UiAtlas.GOLD_MOLTEN if is_b else UiAtlas.BRASS_DIM)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.border_color = border
+	sb.set_border_width_all(1)
+	sb.content_margin_left = 6.0
+	sb.content_margin_right = 6.0
+	sb.content_margin_top = 2.0
+	sb.content_margin_bottom = 2.0
+	var hover := sb.duplicate() as StyleBoxFlat
+	hover.border_color = UiAtlas.BRASS_BRIGHT
+	btn.add_theme_stylebox_override("normal", sb)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("pressed", hover)
+	btn.add_theme_stylebox_override("disabled", sb)
+	btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
+	if UiAtlas.body_font() != null:
+		btn.add_theme_font_override("font", UiAtlas.body_font())
+	btn.add_theme_font_size_override("font_size", 11)
+	btn.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN if is_b else UiAtlas.PARCHMENT)
+	btn.add_theme_color_override("font_hover_color", UiAtlas.BRASS_BRIGHT)
+	btn.add_theme_color_override("font_disabled_color", UiAtlas.ASH)
 
 
 func _style_skill_cell(btn: Button, locked: bool) -> void:
@@ -580,9 +698,10 @@ func _style_skill_cell(btn: Button, locked: bool) -> void:
 	btn.modulate = Color(1, 1, 1, 0.5) if locked else Color.WHITE
 
 
-func _show_tip(anchor: Control, skill_id: String) -> void:
+func _show_tip(anchor: Control, skill_id: String, extra_note: String = "") -> void:
 	if _tip == null:
 		return
+	_tip.z_index = 25
 	if _tip_name != null:
 		_tip_name.text = Loc.skill_name(skill_id)
 		UiAtlas.apply_label(_tip_name, UiAtlas.TYPE_META, UiAtlas.GOLD_MOLTEN, 14)
@@ -591,8 +710,11 @@ func _show_tip(anchor: Control, skill_id: String) -> void:
 		UiAtlas.apply_label(_tip_hook, UiAtlas.TYPE_META, UiAtlas.PARCHMENT, 12)
 		_tip_hook.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if _tip_lore != null:
-		_tip_lore.text = Loc.skill_lore(skill_id)
-		UiAtlas.apply_label(_tip_lore, UiAtlas.TYPE_META, UiAtlas.ASH, 12)
+		var lore_text: String = Loc.skill_lore(skill_id)
+		if extra_note != "":
+			lore_text = "%s\n🔒 %s" % [lore_text, extra_note]
+		_tip_lore.text = lore_text
+		UiAtlas.apply_label(_tip_lore, UiAtlas.TYPE_META, UiAtlas.GOLD_MOLTEN if extra_note != "" else UiAtlas.ASH, 12)
 		_tip_lore.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tip.visible = true
 	_tip.reset_size()
@@ -600,6 +722,8 @@ func _show_tip(anchor: Control, skill_id: String) -> void:
 	_tip.position = Vector2(pos.x + anchor.size.x - 220.0, pos.y - _tip.size.y - 10.0)
 	if _tip.position.x < 8.0:
 		_tip.position.x = 8.0
+	if _tip.position.x + _tip.size.x > size.x - 8.0:
+		_tip.position.x = maxf(8.0, size.x - _tip.size.x - 8.0)
 	if _tip.position.y < 8.0:
 		_tip.position.y = pos.y + anchor.size.y + 10.0
 
@@ -720,6 +844,9 @@ func _layout_chrome() -> void:
 	_place_dossier()
 	_place_rite()
 	_place_cta()
+	_place_crucible_bar()
+	if _crucible_modal != null and _crucible_modal.get_parent() == self:
+		move_child(_crucible_modal, get_child_count() - 1)
 	_layout_tries = 0
 	_laid_out_size = size
 
@@ -973,6 +1100,186 @@ func _wire_nav_focus() -> void:
 			nxt.focus_neighbor_top = nxt.get_path_to(btn)
 		if _commence_btn != null:
 			btn.focus_neighbor_right = btn.get_path_to(_commence_btn)
+
+
+func _wrap_nav_scroll() -> void:
+	if _nav == null or _nav_scroll != null:
+		return
+	var sidebar := get_node_or_null("Sidebar") as Control
+	if sidebar == null or _nav.get_parent() != sidebar:
+		return
+	_nav_scroll = ScrollContainer.new()
+	_nav_scroll.name = "NavScroll"
+	_nav_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_nav_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_nav_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var pad_sb := StyleBoxEmpty.new()
+	pad_sb.content_margin_left = 10.0
+	pad_sb.content_margin_right = 10.0
+	pad_sb.content_margin_top = 8.0
+	pad_sb.content_margin_bottom = 8.0
+	_nav_scroll.add_theme_stylebox_override("panel", pad_sb)
+	var idx: int = _nav.get_index()
+	sidebar.remove_child(_nav)
+	sidebar.add_child(_nav_scroll)
+	sidebar.move_child(_nav_scroll, idx)
+	_nav_scroll.add_child(_nav)
+
+
+func _ensure_meta_controls() -> void:
+	if _crucible_bar == null:
+		_crucible_bar = HBoxContainer.new()
+		_crucible_bar.name = "CrucibleBar"
+		_crucible_bar.add_theme_constant_override("separation", 12)
+		_crucible_bar.alignment = BoxContainer.ALIGNMENT_END
+		add_child(_crucible_bar)
+
+		_crucible_btn = Button.new()
+		_crucible_btn.name = "CrucibleBtn"
+		_crucible_btn.custom_minimum_size = Vector2(236, 52)
+		_crucible_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		UiAtlas.apply_button_styles(_crucible_btn, "btn-plaque")
+		_crucible_btn.add_theme_font_size_override("font_size", 14)
+		_crucible_btn.pressed.connect(_open_crucible)
+		_crucible_bar.add_child(_crucible_btn)
+
+		_seal_panel = PanelContainer.new()
+		_seal_panel.name = "AscensionPanel"
+		_seal_panel.custom_minimum_size = Vector2(0, 52)
+		_seal_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color("140e12eb")
+		sb.border_color = UiAtlas.BRASS
+		sb.set_border_width_all(1)
+		sb.content_margin_left = 12.0
+		sb.content_margin_right = 12.0
+		sb.content_margin_top = 8.0
+		sb.content_margin_bottom = 8.0
+		_seal_panel.add_theme_stylebox_override("panel", sb)
+		_crucible_bar.add_child(_seal_panel)
+
+		var seal_row := HBoxContainer.new()
+		seal_row.add_theme_constant_override("separation", 8)
+		seal_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		_seal_panel.add_child(seal_row)
+
+		_seal_minus = Button.new()
+		_seal_minus.text = "-"
+		_seal_minus.custom_minimum_size = Vector2(28, 28)
+		_style_seal_btn(_seal_minus)
+		_seal_minus.pressed.connect(func() -> void: _step_seal(-1))
+		seal_row.add_child(_seal_minus)
+
+		_seal_label = Label.new()
+		UiAtlas.apply_label(_seal_label, UiAtlas.TYPE_META, UiAtlas.PARCHMENT, 13)
+		seal_row.add_child(_seal_label)
+
+		_seal_plus = Button.new()
+		_seal_plus.text = "+"
+		_seal_plus.custom_minimum_size = Vector2(28, 28)
+		_style_seal_btn(_seal_plus)
+		_seal_plus.pressed.connect(func() -> void: _step_seal(1))
+		seal_row.add_child(_seal_plus)
+
+	if _crucible_modal == null:
+		_crucible_modal = CrucibleModal.new()
+		_crucible_modal.name = "CrucibleModal"
+		_crucible_modal.closed.connect(_on_crucible_closed)
+		_crucible_modal.changed.connect(_on_crucible_changed)
+		add_child(_crucible_modal)
+
+
+func _style_seal_btn(btn: Button) -> void:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("241b22")
+	sb.border_color = UiAtlas.BRASS_DIM
+	sb.set_border_width_all(1)
+	var hover := sb.duplicate() as StyleBoxFlat
+	hover.border_color = UiAtlas.BRASS_BRIGHT
+	btn.add_theme_stylebox_override("normal", sb)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("pressed", hover)
+	btn.add_theme_stylebox_override("disabled", sb)
+	btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
+	if UiAtlas.body_font() != null:
+		btn.add_theme_font_override("font", UiAtlas.body_font())
+	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
+	btn.add_theme_color_override("font_disabled_color", UiAtlas.ASH)
+
+
+func _refresh_meta_controls(app: Node) -> void:
+	if app == null:
+		return
+	var rec: ArchiveRecords = app.records
+	if _crucible_btn != null:
+		_crucible_btn.text = "%s · %d" % [tr("ui.menu.crucible").to_upper(), rec.essence_balance()]
+	var tier: int = rec.ascension_tier()
+	var max_tier: int = rec.max_ascension_unlocked()
+	if _seal_label != null:
+		var base_txt: String = tr("ui.hall.seals").replace("{n}", str(tier))
+		if tier > 0:
+			_seal_label.text = "%s (+%d%%)" % [base_txt, tier * 15]
+			_seal_label.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
+		else:
+			_seal_label.text = "%s / %d" % [base_txt, max_tier] if max_tier > 0 else base_txt
+			_seal_label.add_theme_color_override("font_color", UiAtlas.PARCHMENT if max_tier > 0 else UiAtlas.ASH)
+	if _seal_minus != null:
+		_seal_minus.disabled = tier <= 0
+	if _seal_plus != null:
+		_seal_plus.disabled = tier >= max_tier
+
+
+func _place_crucible_bar() -> void:
+	if _crucible_bar == null:
+		return
+	_crucible_bar.anchor_left = 0.0
+	_crucible_bar.anchor_top = 1.0
+	_crucible_bar.anchor_right = 1.0
+	_crucible_bar.anchor_bottom = 1.0
+	_crucible_bar.offset_left = 254.0
+	_crucible_bar.offset_right = -332.0
+	_crucible_bar.offset_top = -78.0
+	_crucible_bar.offset_bottom = -24.0
+
+
+func _open_crucible() -> void:
+	var app := _app()
+	_play_ui("click")
+	crucible_pressed.emit()
+	if app != null:
+		app.overlay_mode = &"crucible"
+	if _crucible_modal != null:
+		_crucible_modal.open(app.records if app != null else null, app.catalog if app != null else null)
+
+
+func _on_crucible_closed() -> void:
+	var app := _app()
+	if app != null and app.overlay_mode == &"crucible":
+		app.overlay_mode = &"hall"
+	refresh()
+	if _crucible_btn != null and _crucible_btn.is_inside_tree():
+		_crucible_btn.grab_focus()
+
+
+func _on_crucible_changed() -> void:
+	var app := _app()
+	if app != null:
+		_refresh_meta_controls(app)
+
+
+func _step_seal(delta: int) -> void:
+	var app := _app()
+	if app == null:
+		return
+	var rec: ArchiveRecords = app.records
+	var cur: int = rec.ascension_tier()
+	var next: int = clampi(cur + delta, 0, rec.max_ascension_unlocked())
+	if next == cur:
+		return
+	rec.set_ascension_tier(next)
+	_play_ui("click")
+	_refresh_meta_controls(app)
 
 
 func _play_ui(kind: String) -> void:

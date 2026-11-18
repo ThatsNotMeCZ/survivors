@@ -207,7 +207,7 @@ entity.ember-spitter.title,Slag Bile Vessel
 entity.ember-spitter.lore,"Distended husks engorged on boiling sulfur. They circle the outer kiln perimeter, hurling globules of molten slag whenever a vessel slows its stride."
 entity.ember-chaser.name,Ember Warden
 entity.ember-chaser.title,Furnace Overseer
-entity.ember-chaser.lore,A heavy amalgam of cast-iron ribs and stoked furnace slag built to herd failed transmutations. It charges across the flagstones with crushing momentum.
+entity.ember-chaser.lore,A heavy amalgam of cast-iron ribs and stoked furnace slag built to herd failed transmutations. It winds up wide cleaving arcs across the flagstones.
 entity.cinder-heart.name,Cinder Heart
 entity.cinder-heart.title,Core of the First Kiln
 entity.cinder-heart.lore,"The living furnace heart that consumed its own alchemists. It awakens only when the Transmutation Circle is charged, determined to melt every vessel back into raw clay."
@@ -219,7 +219,7 @@ entity.frost-spitter.title,Brine Condenser
 entity.frost-spitter.lore,Hollowed alembic creatures that siphon freezing brine from the dock fissures and spit high-velocity needles of rime across the chamber.
 entity.frost-warden.name,Frost Warden
 entity.frost-warden.title,Cryo-Bound Sentinel
-entity.frost-warden.lore,Heavy dockside hulks armored in glacier-thick salt plate and quenched iron. Their relentless charge shatters brittle vessels that linger along the canal.
+entity.frost-warden.lore,Heavy dockside hulks armored in glacier-thick salt plate and quenched iron. They sweep wide cryo-forged cleavers at any vessel within reach.
 entity.frost-sovereign.name,Frost Sovereign
 entity.frost-sovereign.title,Regent of the Frozen Dock
 entity.frost-sovereign.lore,"An ancient transmutation frozen mid-ascension when the sea-locks broke. Crowned in pale rime, it crushes any vessel that dares open the deeper Rift."
@@ -266,7 +266,7 @@ stage.rime-dock.name,Rime Dock
 stage.rime-dock.kicker,Second Chamber · Albedo & Fixation
 stage.rime-dock.lore,A subterranean canal where alchemical salts and quicksilver were quenched in freezing brine. Frozen bollards block stray bolts while pressurized rime casks threaten to shatter in a numbing frost.
 stage.glacial-tomb.name,Glacial Tomb
-stage.glacial-tomb.kicker,Final Chamber · Rubedo & The Great Seal
+stage.glacial-tomb.kicker,Fourth Chamber · Rubedo & The Great Seal
 stage.glacial-tomb.lore,"The deepest vault beneath the canal, sealed in eternal permafrost to contain the Frost Emperor. Here the Transmutation Circle demands the longest vigil before the Great Work is decided."
 ui.archives.kicker,HERMETIC CODEX & LEDGER
 ui.archives.title,THE ARCHIVES
@@ -505,3 +505,213 @@ obstacle.rime-dock.volatile,Pressurized Rime Cask
 obstacle.glacial-tomb.pillar,Glacial Monolith
 obstacle.glacial-tomb.hazard,Permafrost Crevasse
 obstacle.glacial-tomb.volatile,Volatile Ice Chunk
+item.philosophers-catalyst.name,Philosopher's Catalyst
+item.philosophers-catalyst.lore,A luminous shard of perfected red stone recovered from the Aether Vault. Its resonant pulse sharpens every art into a decisive stroke.
+entity.slag-hound.name,Slag Hound
+entity.slag-hound.title,Furnace Ram
+entity.slag-hound.lore,"A quadruped smelter cast in blackened iron whose belly glows white-hot. Once it locks onto a stray vessel, it lunges at terrifying speed—though crashing into stone pillars stuns its core."
+entity.aether-hexer.name,Aether Hexer
+entity.aether-hexer.title,Crucible Binder
+entity.aether-hexer.lore,"Robed in tattered lead-weave, this hunched conjurer keeps its distance and scribes delayed aether rings beneath fleeing vessels to mire them in stagnant gravity."
+entity.voltaic-spire.name,Voltaic Spire
+entity.voltaic-spire.title,Conducting Pylon
+entity.voltaic-spire.lore,"A hammered-copper lightning rod driven straight through the flagstones by higher Guardians. While intact, it bridges searing galvanic tethers across the arena."
+entity.viridian-alchemist.name,Viridian Alchemist
+entity.viridian-alchemist.title,Mistress of Putrefactio
+entity.viridian-alchemist.lore,"Once the conservatory's head botanist, she grafted living vitriol retorts into her ribcage. She drowns intruders in boiling acid geysers while rushing through the haze."
+entity.voltaic-regent.name,Voltaic Regent
+entity.voltaic-regent.title,Sovereign of the Third Kiln
+entity.voltaic-regent.lore,A towering brass automaton animated by captive lightning. It plants copper spires into the stone to weave lethal galvanic cages across the Fulmination Foundry.
+entity.arch-alchemist.name,The Arch-Alchemist
+entity.arch-alchemist.title,Architect of the Opus Magnum
+entity.arch-alchemist.lore,"The first Magister who cracked the Grand Crucible at midnight, fusing his own marrow with Prima Materia. All four elements obey his hand in the Core."
+survivor.flagellant.name,The Flagellant
+survivor.flagellant.title,The Crucible Zealot
+survivor.flagellant.lore,"Bound in furnace iron and quenched in molten brass. He welcomes the horde within arm's reach, cleaving slag and hooking distant foes into his pyre."
+survivor.astromancer.name,The Astromancer
+survivor.astromancer.title,The Celestial Seer
+survivor.astromancer.lore,A fragile vessel hollowed out to house refracted starlight. She bends aether prisms across the flagstones and calls down focused solar judgment.
+skill.bolt-twin-ember.name,Twin Ember
+skill.bolt-twin-ember.lore,A forked retort nozzle that splits one breath of sulfur into twin sparks.
+skill.bolt-twin-ember.hook,Fires two angled embers toward your cursor.
+skill.skill-prism-lance.name,Prism Lance
+skill.skill-prism-lance.lore,"Cut quartz fired at speed. On first bone, it refracts into three knives."
+skill.skill-prism-lance.hook,Fires an aether lance that fractures into three piercing shards on impact.
+skill.util-quicksilver-parry.name,Quicksilver Parry
+skill.util-quicksilver-parry.lore,"Liquid silver turns rigid for half a heartbeat, flinging wrath back to its sender."
+skill.util-quicksilver-parry.hook,Raise a brief mirror ward that reflects bolts into 3 quicksilver shards and refunds cooldown on parry.
+skill.skill-mercurial-tempest.name,Mercurial Tempest
+skill.skill-mercurial-tempest.lore,The Homunculus vents its core pressure in one blinding silver ring.
+skill.skill-mercurial-tempest.hook,Erupts in an expanding tempest of quicksilver that hurls and slows surrounding foes.
+skill.skill-incense-flail.name,Incense Flail
+skill.skill-incense-flail.lore,Swung on a blackened brass chain until the ember bowl howls.
+skill.skill-incense-flail.hook,"Sweeps a burning censer in a forward arc, battering back nearby dross."
+skill.skill-salt-sigil.name,Salt Sigil
+skill.skill-salt-sigil.lore,Consecrated sea-salt cast at the cursor to fracture brittle husks.
+skill.skill-salt-sigil.hook,Inscribes a salt glyph at the cursor that detonates after a short delay.
+skill.util-censure-bell.name,Censure Bell
+skill.util-censure-bell.lore,One toll of cracked bronze drives lesser dross to their knees.
+skill.util-censure-bell.hook,"Tolls a resonant ward that shatters enemy bolts, shoves foes back, and slows them in consecrated salt."
+skill.skill-penitent-pyre.name,Penitent Pyre
+skill.skill-penitent-pyre.lore,"He carries the kiln inside his ribs; when the vow breaks, the whole floor burns."
+skill.skill-penitent-pyre.hook,Unleashes a consecrated ring of fire that knocks back and scorches every nearby foe.
+skill.skill-crucible-cleave.name,Crucible Cleave
+skill.skill-crucible-cleave.lore,A notched iron paddle meant to skim molten dross—turned to bone instead.
+skill.skill-crucible-cleave.hook,"Sweeps a wide incandescent cleave toward your cursor, staggering foes and deflecting incoming bolts."
+skill.skill-cinder-flail.name,Cinder Flail
+skill.skill-cinder-flail.lore,Three slag links whipped in a blistering circle around the wrist.
+skill.skill-cinder-flail.hook,Lashes a broad cinder arc with wide reach and steady knockback.
+skill.skill-slag-harpoon.name,Slag Harpoon
+skill.skill-slag-harpoon.lore,Barbed crucible iron on a winch. None escape the kiln.
+skill.skill-slag-harpoon.hook,Hurls a hooked iron lance that yanks struck foes straight into melee range.
+skill.skill-molten-brand.name,Molten Brand
+skill.skill-molten-brand.lore,Carves a glowing seam of slag into the stone ahead.
+skill.skill-molten-brand.hook,Brands a blazing furrow across the floor that slows and sears foes.
+skill.dash-furnace-rush.name,Furnace Rush
+skill.dash-furnace-rush.lore,A shoulder-low bull charge fueled by bellows air.
+skill.dash-furnace-rush.hook,"Surge forward in an armored rush, phasing through danger."
+skill.util-iron-bulwark.name,Iron Bulwark
+skill.util-iron-bulwark.lore,Annealed plates clamp shut while white-hot rivets punish every blow.
+skill.util-iron-bulwark.hook,"Brace behind iron plates for heavy damage reduction and knockback immunity, unleashing a counter arc."
+skill.skill-calcinatio-slam.name,Calcinatio Slam
+skill.skill-calcinatio-slam.lore,Leap to the cursor and bring the whole crucible down on the flagstones.
+skill.skill-calcinatio-slam.hook,"Bounds toward the cursor and craters the floor, venting overheat while igniting and hurling foes."
+skill.skill-kiln-overdrive.name,Kiln Overdrive
+skill.skill-kiln-overdrive.lore,Uncorks the chest furnace in a desperate blast that mends cracked clay.
+skill.skill-kiln-overdrive.hook,"Detonates an intense furnace blast around you, restoring a portion of vitality."
+skill.skill-argent-lance.name,Argent Lance
+skill.skill-argent-lance.lore,Starlight distilled into quicksilver needles.
+skill.skill-argent-lance.hook,Fires swift bolts of argent aether toward your cursor.
+skill.skill-starlight-dart.name,Starlight Dart
+skill.skill-starlight-dart.lore,Fine celestial splinters loosed in breathless cadence.
+skill.skill-starlight-dart.hook,Rapidly fires slender starlight darts with high velocity.
+skill.skill-prism-refraction.name,Prism Refraction
+skill.skill-prism-refraction.lore,One beam enters the crystal; three rays depart across the chamber.
+skill.skill-prism-refraction.hook,Deploys a refracting prism beacon at your cursor that splits primary shots passing through it into 3 rays at ±18°.
+skill.skill-lunar-orb.name,Lunar Orb
+skill.skill-lunar-orb.lore,Twin pale lunar waves loosed straight from the Astromancer's hand along a dual silver arc.
+skill.skill-lunar-orb.hook,Fires twin piercing lunar waves toward your cursor.
+skill.dash-aether-blink.name,Aether Blink
+skill.dash-aether-blink.lore,Fold the distance between two constellations.
+skill.dash-aether-blink.hook,Blink briskly through space with brief invulnerability.
+skill.util-celestial-swap.name,Celestial Swap
+skill.util-celestial-swap.lore,Trade places with a distant star-shadow and shatter the ground upon arrival.
+skill.util-celestial-swap.hook,"Swap positions with your prism or a lesser foe toward the cursor, briefly stunning nearby enemies."
+skill.skill-solar-convergence.name,Solar Convergence
+skill.skill-solar-convergence.lore,Aligns every lens on the astrolabe to burn a single corridor clean.
+skill.skill-solar-convergence.hook,"Channels a focused solar beam toward your cursor, searing all foes in its path."
+skill.skill-astral-collapse.name,Astral Collapse
+skill.skill-astral-collapse.lore,Draws down a dying star onto the cursor.
+skill.skill-astral-collapse.hook,Condenses a star-well at your cursor that implodes in an immense blast.
+stage.putrid-conservatory.name,Putrid Conservatory
+stage.putrid-conservatory.kicker,Alternate Second Chamber · Putrefactio & Fermentation
+stage.putrid-conservatory.lore,An overgrown glasshouse drowned in vitriolic condensation. Fermenting flasks hiss beneath iron trellises while the Viridian Alchemist tends her caustic blooms.
+stage.fulmination-foundry.name,Fulmination Foundry
+stage.fulmination-foundry.kicker,Third Chamber · Citrinitas & Conduction
+stage.fulmination-foundry.lore,A brass-ribbed galvanic hall where copper coils arc with trapped lightning. Fulminate Leyden jars blister with charge beside the Voltaic Regent's conducting spires.
+stage.aether-vault.name,Aether Vault
+stage.aether-vault.kicker,Hidden Chamber · Quintessence & Refraction
+stage.aether-vault.lore,"A secret reliquary suspended outside the standard descent, locked behind three purifying waves and guarded by condensed starlight."
+stage.prima-materia-core.name,Prima Materia Core
+stage.prima-materia-core.kicker,True Crucible · Opus Magnum
+stage.prima-materia-core.lore,The molten heart of the shattered Magisterium where all four elements collapse into primal gold. Only the Arch-Alchemist stands between the vessel and true apotheosis.
+obstacle.putrid-conservatory.pillar,Alchemical Trellis
+obstacle.putrid-conservatory.hazard,Vitriol Bog
+obstacle.putrid-conservatory.volatile,Fermenting Flask
+obstacle.fulmination-foundry.pillar,Copper Coil
+obstacle.fulmination-foundry.hazard,Voltaic Trench
+obstacle.fulmination-foundry.volatile,Fulminate Leyden Jar
+obstacle.aether-vault.pillar,Astral Obelisk
+obstacle.aether-vault.hazard,Aether Rift Pool
+obstacle.aether-vault.volatile,Condensed Aether Vessel
+obstacle.prima-materia-core.pillar,Philosopher's Column
+obstacle.prima-materia-core.hazard,Prima Materia Well
+obstacle.prima-materia-core.volatile,Crucible Shard
+obstacle.alchemical-vent.name,Alchemical Vent
+obstacle.resonance-conduit.name,Resonance Conduit
+obstacle.mercury-geode.name,Mercury Geode
+obstacle.obelisk-essence.name,Essence Obelisk
+obstacle.obelisk-reliquary.name,Reliquary Obelisk
+obstacle.obelisk-blood.name,Blood Obelisk
+upgrade.divination-reroll.name,Divination Reroll
+upgrade.divination-reroll.desc,Grants +1 tablet draft reroll per working per rank.
+upgrade.divination-reroll.lore,Cast the astrolabe dice anew when the first tablets reveal only dross.
+upgrade.exorcism-banish.name,Exorcism Banish
+upgrade.exorcism-banish.desc,Grants +1 tablet banish per working per rank.
+upgrade.exorcism-banish.lore,Strike an unwanted formula from the cycle so its taint never returns to the offer.
+upgrade.fixation-lock.name,Fixation Lock
+upgrade.fixation-lock.desc,Grants +1 tablet lock per working per rank.
+upgrade.fixation-lock.lore,Seal a prized tablet in wax to guarantee it appears in your next ascension draft.
+upgrade.distillation-attunement.name,Distillation Attunement
+upgrade.distillation-attunement.desc,+5% Essence gained from all sources per rank.
+upgrade.distillation-attunement.lore,Finer alembic coils trap stray quintessence before it evaporates into the ash.
+upgrade.tonic-buffer.name,Tonic Buffer
+upgrade.tonic-buffer.desc,+15 Max HP for all vessels per rank.
+upgrade.tonic-buffer.lore,Annealed clay walls and salt-tempered ribs harden the vessel before it descends.
+upgrade.bellows-valve.name,Bellows Valve
+upgrade.bellows-valve.desc,+12% overheat decay rate and -8% primary heat gain per rank.
+upgrade.bellows-valve.lore,Brass relief vents bleed excess furnace pressure between sustained volleys.
+upgrade.ascension-seals.name,Ascension Seals
+upgrade.ascension-seals.desc,Unlocks +1 Ascension Seal difficulty tier (+15% Essence reward per active seal).
+upgrade.ascension-seals.lore,Break successive hermetic seals at the Crucible to draw harsher trials and richer essence.
+unlock.boss-kill.cinder-heart.10,Slay the Cinder Heart 10 times
+unlock.boss-kill.viridian-alchemist,Slay the Viridian Alchemist
+unlock.boss-kill.voltaic-regent,Slay the Voltaic Regent
+unlock.stage-clear.fulmination-foundry,Clear the Fulmination Foundry
+unlock.elite-kills.20,Slay 20 Elites across workings
+unlock.obelisk-clears.3,Channel 3 Siphon Obelisks
+unlock.obelisk-clears.5,Channel 5 Siphon Obelisks
+unlock.ascension-clear.1,Complete a working at Ascension Seal I or higher
+unlock.true-endings.1,Shatter the Arch-Alchemist in the Prima Materia Core
+unlock.low-hp-boss-kills,Slay 3 Seal Guardians in one working below 10% HP
+unlock.low-hp-boss-kills.3,Slay 3 Seal Guardians in one working below 10% HP
+ui.archives.unlock.low_hp_boss_kills_n,{have} / {need} Low-HP Guardians Slain
+ui.archives.unlock.obelisks_n,{have} / {need} Obelisks Channeled
+ui.archives.unlock.true_endings_n,{have} / {need} True Endings Completed
+ui.archives.unlock.ascension_n,Ascension Seal {have} / {need}
+ui.menu.crucible,The Crucible
+ui.crucible.title,THE CRUCIBLE
+ui.crucible.kicker,PERMANENT TRANSMUTATION
+ui.crucible.sub,Distill raw Essence into lasting vessel refinements and Ascension Seals.
+ui.crucible.essence,Essence: {n}
+ui.crucible.rank,Rank {have} / {max}
+ui.crucible.maxed,MAX RANK
+ui.crucible.upgrade,Transmute ({cost} Essence)
+ui.crucible.insufficient,Insufficient Essence ({cost})
+ui.crucible.reset,Refund Essence
+ui.crucible.back,Return
+ui.crucible.seals.title,ASCENSION SEALS
+ui.crucible.seals.active,Active Seals: {n} / {max}
+ui.crucible.seals.bonus,Essence Reward: +{pct}%
+ui.hall.loadout.title,SKILL LOADOUT
+ui.hall.loadout.standard,Standard
+ui.hall.loadout.alternate,Alternate
+ui.hall.loadout.toggle,Swap Rite
+ui.hall.seals,Ascension Seals: {n}
+ui.hud.essence,Essence: {n}
+ui.hud.overheat,CRUCIBLE HEAT
+ui.hud.overheat.vent,CRITICAL VENT
+ui.hud.overheat.backfire,BACKFIRE
+ui.hud.obelisk.channel,Channeling Obelisk
+ui.hud.obelisk.prompt,Stand near to channel ({pct}%)
+ui.hud.reliquary.trial,Reliquary Trial: {s}s
+ui.hud.geode,Mercury Geode Collapsing: {s}s
+ui.hud.portal.branch,Descend to {stage}
+ui.hud.portal.vault,Enter the Aether Vault
+ui.hud.portal.core,Descend to the Prima Materia Core
+ui.hud.ritual.tier,Ritual Surge {n} / 3
+ui.levelup.reroll,Reroll ({n})
+ui.levelup.banish,Banish ({n})
+ui.levelup.lock,Lock ({n})
+ui.levelup.locked,LOCKED
+ui.levelup.banished,BANISHED
+ui.archives.kind.cleaver,Cleaves up close
+ui.archives.kind.charger,Charges in a line
+ui.archives.kind.hexer,Casts hexes from afar
+ui.archives.kind.spire,Conducts voltaic arcs
+ui.archives.bestiary.behavior.cleaver,Closes in and winds up a wide arc cleave.
+ui.archives.bestiary.behavior.charger,"Locks its gaze, then charges forward—lure it into stone pillars to stun it."
+ui.archives.bestiary.behavior.hexer,Maintains range and plants delayed slowing hex rings beneath you.
+ui.archives.bestiary.behavior.spire,Stationary conductor that anchors voltaic tethers until shattered.
+ui.recap.row.essence_banked,Crucible Essence
+ui.recap.row.seals,Ascension Seals

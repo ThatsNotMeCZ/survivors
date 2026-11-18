@@ -15,13 +15,24 @@ static func is_chase(world: SimWorld, index: int) -> bool:
 	if def_id == "":
 		return true
 	var ai: Dictionary = DictUtil.d(world.catalog.entity(def_id), "ai")
-	return String(ai.get("type", "chase")) == "chase"
+	var ai_type: String = String(ai.get("type", "chase"))
+	return ai_type == "chase" or ai_type == "cleaver" or ai_type == "charger"
+
+
+static func is_specialist_def(def: Dictionary) -> bool:
+	var ai: Dictionary = DictUtil.d(def, "ai")
+	var ai_type: String = String(ai.get("type", "chase"))
+	if ai_type == "ranged" or ai_type == "sniper" or ai_type == "cleaver" or ai_type == "charger" or ai_type == "hexer":
+		return true
+	for tag_v: Variant in DictUtil.a(def, "tags"):
+		var tag: String = String(tag_v)
+		if tag == "specialist" or tag == "ranged" or tag == "sniper" or tag == "cleaver" or tag == "charger" or tag == "hexer":
+			return true
+	return false
 
 
 static func clear(world: SimWorld) -> void:
-	for i: int in world.enemies.cap:
-		world.enemies.alive[i] = 0
-		world.enemies.facing[i] = 1
+	world.enemies.clear()
 	world.counts_fodder = 0
 	world.counts_elite = 0
 	world.counts_boss = 0
@@ -35,16 +46,19 @@ static func spawn(
 	is_elite: bool = false,
 	elite_affix: String = "",
 ) -> int:
-	if world.boss_defeated:
+	if world.boss_defeated or def.is_empty():
 		return -1
 	var role: int = EnemyPool.ROLE_FODDER
 	if String(def.get("role", "")) == "boss":
 		role = EnemyPool.ROLE_BOSS
 	elif is_elite:
 		role = EnemyPool.ROLE_ELITE
-	if role == EnemyPool.ROLE_FODDER and world.counts_fodder >= int(world.catalog.loop.get("maxFodder", 24)):
+	var dir: Dictionary = DictUtil.d(world.catalog.loop, "director")
+	var max_fodder: int = int(dir.get("maxFodderCap", world.catalog.loop.get("maxFodder", 42)))
+	var max_elites: int = int(dir.get("maxElitesCap", world.catalog.loop.get("maxElites", 12)))
+	if role == EnemyPool.ROLE_FODDER and world.counts_fodder >= max_fodder:
 		return -1
-	if role == EnemyPool.ROLE_ELITE and world.counts_elite >= int(world.catalog.loop.get("maxElites", 6)):
+	if role == EnemyPool.ROLE_ELITE and world.counts_elite >= max_elites:
 		return -1
 	if role == EnemyPool.ROLE_BOSS and world.counts_boss >= 1:
 		return -1
@@ -52,22 +66,29 @@ static func spawn(
 	for i: int in enemies.cap:
 		if enemies.alive[i] != 0:
 			continue
-		var coeff: float = world.coefficient
+		var coeff: float = SimLoop.difficulty_coeff(world)
 		var speed_mul: float = 1.0 + float(DictUtil.d(world.catalog.loop, "difficulty").get("speedPerCoeff", 0.0)) * (coeff - 1.0)
-		var elite_cfg: Dictionary = world.catalog.loop.get("elite", {})
+		var elite_cfg: Dictionary = DictUtil.d(world.catalog.loop, "elite")
 		var hp_mul: float = float(elite_cfg.get("hpMul", 1.0)) if role == EnemyPool.ROLE_ELITE else 1.0
 		var dmg_mul: float = float(elite_cfg.get("damageMul", 1.0)) if role == EnemyPool.ROLE_ELITE else 1.0
 		var xp_mul: float = float(elite_cfg.get("xpMul", 1.0)) if role == EnemyPool.ROLE_ELITE else 1.0
 		var cred_mul: float = float(elite_cfg.get("creditsMul", 1.0)) if role == EnemyPool.ROLE_ELITE else 1.0
 		var rad_mul: float = float(elite_cfg.get("radiusMul", 1.0)) if role == EnemyPool.ROLE_ELITE else 1.0
-		var stats: Dictionary = def.get("stats", {})
+		var stats: Dictionary = DictUtil.d(def, "stats")
 		var hp: float = float(stats.get("maxHp", 1.0)) * coeff * hp_mul
+		var rad: float = float(stats.get("radius", 12.0)) * rad_mul
+		var spawn_x: float = px
+		var spawn_y: float = py
+		if world.arena_shape == "circle":
+			var clamped: Vector2 = SimCollision.clamp_to_circle(px, py, maxf(0.0, world.arena_radius - rad - 6.0))
+			spawn_x = clamped.x
+			spawn_y = clamped.y
 		enemies.alive[i] = 1
 		enemies.role[i] = role
-		enemies.x[i] = px
-		enemies.y[i] = py
-		enemies.facing[i] = 255 if world.player.x < px else 1
-		enemies.radius[i] = float(stats.get("radius", 12.0)) * rad_mul
+		enemies.x[i] = spawn_x
+		enemies.y[i] = spawn_y
+		enemies.facing[i] = 255 if world.player.x < spawn_x else 1
+		enemies.radius[i] = rad
 		enemies.hp[i] = hp
 		enemies.max_hp[i] = hp
 		enemies.speed[i] = float(stats.get("speed", 80.0)) * speed_mul
@@ -76,30 +97,52 @@ static func spawn(
 		enemies.credits[i] = float(DictUtil.d(def, "rewards").get("credits", 0.0)) * cred_mul
 		var ai: Dictionary = DictUtil.d(def, "ai")
 		var ai_type: String = String(ai.get("type", "chase"))
-		if ai_type == "chase" or ai_type == "boss":
+		if ai_type == "chase" or ai_type == "boss" or ai_type == "spire":
 			enemies.attack_cd[i] = 0.0
 		else:
 			enemies.attack_cd[i] = float(ai.get("cooldown", 1.0)) * world.randf()
 		enemies.windup[i] = 0.0
-		enemies.aim_x[i] = px
-		enemies.aim_y[i] = py
+		enemies.aim_x[i] = spawn_x
+		enemies.aim_y[i] = spawn_y
 		enemies.slow_remain[i] = 0.0
 		enemies.slow_mul[i] = 1.0
+		enemies.source_obstacle_id[i] = -1
+		enemies.ai_state[i] = EnemyPool.AI_STATE_DEFAULT
+		enemies.state_timer[i] = 0.0
+		enemies.vel_x[i] = 0.0
+		enemies.vel_y[i] = 0.0
+		enemies.chain_cd[i] = 1.0 + world.randf() * 1.5
+		enemies.trail_cd[i] = 0.25
+		enemies.burn_remain[i] = 0.0
+		enemies.burn_dps[i] = 0.0
+		enemies.is_specialist[i] = 1 if is_specialist_def(def) else 0
 		if role == EnemyPool.ROLE_ELITE:
 			var chosen: String = elite_affix
 			if chosen == "":
-				chosen = "shielder" if world.randf() < 0.5 else "noxious"
+				var affixes: Array = DictUtil.a(world.catalog.loop, "eliteAffixes")
+				if affixes.is_empty():
+					var fallback_affixes: PackedStringArray = PackedStringArray(["noxious", "shielder", "burn", "chain_lightning"])
+					chosen = fallback_affixes[world.randi_range(0, fallback_affixes.size() - 1)]
+				else:
+					chosen = String(affixes[world.randi_range(0, affixes.size() - 1)])
+			enemies.affix[i] = chosen
 			if chosen == "shielder":
 				enemies.shielder[i] = 1
 				enemies.noxious[i] = 0
 				enemies.shield_hp[i] = hp * float(DictUtil.d(world.catalog.loop, "shielder").get("percentHp", 0.3))
 				enemies.shield_delay_remain[i] = 0.0
-			else:
+			elif chosen == "noxious":
 				enemies.shielder[i] = 0
 				enemies.noxious[i] = 1
 				enemies.shield_hp[i] = 0.0
 				enemies.shield_delay_remain[i] = 0.0
+			else:
+				enemies.shielder[i] = 0
+				enemies.noxious[i] = 0
+				enemies.shield_hp[i] = 0.0
+				enemies.shield_delay_remain[i] = 0.0
 		else:
+			enemies.affix[i] = ""
 			enemies.shielder[i] = 0
 			enemies.noxious[i] = 0
 			enemies.shield_hp[i] = 0.0
@@ -109,6 +152,7 @@ static func spawn(
 		enemies.root_duration[i] = 0.0
 		enemies.tether_dps[i] = 0.0
 		enemies.attack_remain[i] = 0.0
+		enemies.hurt_remain[i] = 0.0
 		enemies.anim_name[i] = ""
 		var id: String = String(def.get("id", ""))
 		enemies.def_id[i] = id
@@ -124,19 +168,36 @@ static func spawn(
 
 
 static func pick_spawn_point(world: SimWorld, radius: float) -> Vector2:
-	var dir: Dictionary = world.catalog.loop.get("director", {})
-	var spawn_min: float = float(dir.get("spawnMin", 420.0))
-	var spawn_max: float = float(dir.get("spawnMax", 640.0))
+	var dir: Dictionary = DictUtil.d(world.catalog.loop, "director")
+	var spawn_min: float = float(dir.get("spawnMin", 460.0))
+	var spawn_max: float = float(dir.get("spawnMax", 900.0))
 	var spawn_safe: float = float(dir.get("spawnSafeRadius", spawn_min))
-	var bounds: Dictionary = world.catalog.world
 	var px: float = world.player.x
 	var py: float = world.player.y
-	var pad_x: float = float(bounds.get("borderInsetX", 0.0)) + radius + 8.0
-	var pad_y: float = float(bounds.get("borderInsetY", 0.0)) + radius + 8.0
-	var width: float = float(bounds.get("width", 2560.0))
-	var height: float = float(bounds.get("height", 2560.0))
 	var min_d: float = maxf(spawn_min, spawn_safe)
 	var range_v: float = maxf(0.0, spawn_max - min_d)
+	if world.arena_shape == "circle":
+		var max_r: float = maxf(64.0, world.arena_radius - radius - 8.0)
+		for _a: int in 24:
+			var dist: float = min_d + world.randf() * range_v
+			var ang: float = world.randf() * TAU
+			var x: float = px + cos(ang) * dist
+			var y: float = py + sin(ang) * dist
+			if hypot(x, y) <= max_r:
+				return Vector2(x, y)
+		for _b: int in 24:
+			var r_c: float = sqrt(world.randf()) * max_r
+			var ang_c: float = world.randf() * TAU
+			var x2: float = cos(ang_c) * r_c
+			var y2: float = sin(ang_c) * r_c
+			if hypot(x2 - px, y2 - py) >= spawn_safe:
+				return Vector2(x2, y2)
+		return Vector2.INF
+	var bounds: Dictionary = world.catalog.world
+	var pad_x: float = float(bounds.get("borderInsetX", 0.0)) + radius + 8.0
+	var pad_y: float = float(bounds.get("borderInsetY", 0.0)) + radius + 8.0
+	var width: float = float(bounds.get("width", 3000.0))
+	var height: float = float(bounds.get("height", 3000.0))
 	for _a: int in 24:
 		var dist: float = min_d + world.randf() * range_v
 		var ang: float = world.randf() * TAU
@@ -160,21 +221,23 @@ static func spawn_group_around(
 	is_elite: bool = false,
 	elite_affix: String = "",
 ) -> int:
-	if count <= 0:
+	if count <= 0 or def.is_empty():
 		return 0
-	var elite_cfg: Dictionary = world.catalog.loop.get("elite", {})
+	var elite_cfg: Dictionary = DictUtil.d(world.catalog.loop, "elite")
 	var radius: float = float(DictUtil.d(def, "stats").get("radius", 12.0))
 	if is_elite:
 		radius *= float(elite_cfg.get("radiusMul", 1.0))
 	var center: Vector2 = pick_spawn_point(world, radius)
 	if center.x == INF:
 		return 0
-	var spread: float = float(DictUtil.d(world.catalog.loop, "director").get("groupSpreadRadius", 70.0))
+	var spread: float = float(DictUtil.d(world.catalog.loop, "director").get("groupSpreadRadius", 56.0))
+	var is_circle: bool = world.arena_shape == "circle"
+	var max_r: float = maxf(0.0, world.arena_radius - radius - 6.0)
 	var bounds: Dictionary = world.catalog.world
 	var pad_x: float = float(bounds.get("borderInsetX", 0.0)) + radius + 8.0
 	var pad_y: float = float(bounds.get("borderInsetY", 0.0)) + radius + 8.0
-	var width: float = float(bounds.get("width", 2560.0))
-	var height: float = float(bounds.get("height", 2560.0))
+	var width: float = float(bounds.get("width", 3000.0))
+	var height: float = float(bounds.get("height", 3000.0))
 	var spawned: int = 0
 	for s: int in count:
 		var sx: float = center.x
@@ -182,8 +245,15 @@ static func spawn_group_around(
 		if s > 0:
 			var angle: float = world.randf() * TAU
 			var dist: float = world.randf() * spread
-			sx = clampf(center.x + cos(angle) * dist, pad_x, width - pad_x)
-			sy = clampf(center.y + sin(angle) * dist, pad_y, height - pad_y)
+			sx = center.x + cos(angle) * dist
+			sy = center.y + sin(angle) * dist
+		if is_circle:
+			var clamped: Vector2 = SimCollision.clamp_to_circle(sx, sy, max_r)
+			sx = clamped.x
+			sy = clamped.y
+		else:
+			sx = clampf(sx, pad_x, width - pad_x)
+			sy = clampf(sy, pad_y, height - pad_y)
 		var idx: int = spawn(world, def, sx, sy, is_elite, elite_affix)
 		if idx >= 0:
 			spawned += 1
@@ -203,6 +273,8 @@ static func start_death(world: SimWorld, index: int) -> void:
 		enemies.hp[index] = 0.0
 		enemies.speed[index] = 0.0
 		enemies.windup[index] = 0.0
+		enemies.ai_state[index] = EnemyPool.AI_STATE_DEFAULT
+		enemies.state_timer[index] = 0.0
 		return
 	kill(world, index)
 
@@ -216,12 +288,22 @@ static func kill(world: SimWorld, index: int) -> void:
 	var px: float = enemies.x[index]
 	var py: float = enemies.y[index]
 	var xp: float = enemies.xp[index]
+	var src_obs: int = enemies.source_obstacle_id[index]
+	var spec: bool = enemies.is_specialist[index] != 0
 	world.credits += enemies.credits[index]
 	var heal: float = SimStats.on_kill_heal(world.inventory, world.catalog)
 	if heal > 0.0:
 		world.heal_player(heal)
 	world.fx.emit(FxIds.DEATH, px, py, 0xFFD35A)
 	enemies.alive[index] = 0
+	enemies.source_obstacle_id[index] = -1
+	enemies.affix[index] = ""
+	enemies.burn_remain[index] = 0.0
+	enemies.burn_dps[index] = 0.0
+	enemies.vel_x[index] = 0.0
+	enemies.vel_y[index] = 0.0
+	enemies.ai_state[index] = EnemyPool.AI_STATE_DEFAULT
+	enemies.state_timer[index] = 0.0
 	world.kills_total += 1
 	if def_id != "":
 		world.kills_by_entity[def_id] = int(world.kills_by_entity.get(def_id, 0)) + 1
@@ -238,8 +320,19 @@ static func kill(world: SimWorld, index: int) -> void:
 		world.boss_defeated = true
 		world.portal_x = px
 		world.portal_y = py
-	if not world.gems.spawn_gem(px, py, xp):
-		SimLevel.grant_xp(world, xp * world.stats.xp_mul)
+		if float(world.player.hp) / maxf(1.0, world.player.max_hp) < 0.10:
+			world.low_hp_boss_kills_run += 1
+	if src_obs > 0:
+		SimObstacles.on_enemy_killed(world, src_obs)
+	SimPickups.spawn_enemy_drops(
+		world,
+		px,
+		py,
+		xp,
+		role == EnemyPool.ROLE_ELITE,
+		role == EnemyPool.ROLE_BOSS,
+		spec,
+	)
 	if def_id != "" and not world.collected_lores.has(def_id) and not world.lores.has_active(def_id):
 		var role_key: String = "boss" if role == EnemyPool.ROLE_BOSS else ("elite" if role == EnemyPool.ROLE_ELITE else "fodder")
 		var chance: float = float(DictUtil.d(world.catalog.loop, "loreDropChance").get(role_key, 0.0))
@@ -254,6 +347,16 @@ static func count_snipers(world: SimWorld) -> int:
 			continue
 		var id: String = world.enemies.def_id[i]
 		if id != "" and String(DictUtil.d(world.catalog.entity(id), "ai").get("type", "")) == "sniper":
+			n += 1
+	return n
+
+
+static func count_specialists(world: SimWorld) -> int:
+	var n: int = 0
+	for i: int in world.enemies.cap:
+		if world.enemies.alive[i] == 0:
+			continue
+		if world.enemies.is_specialist[i] != 0:
 			n += 1
 	return n
 
@@ -286,8 +389,31 @@ static func apply_damage(world: SimWorld, index: int, damage: float) -> void:
 static func apply_noxious_contact(world: SimWorld, index: int) -> void:
 	if world.enemies.noxious[index] == 0:
 		return
-	var cfg: Dictionary = world.catalog.loop.get("noxious", {})
+	var cfg: Dictionary = DictUtil.d(world.catalog.loop, "noxious")
 	SimStatus.apply_slow(world.player, float(cfg.get("contactSlowMul", 0.5)), float(cfg.get("contactSlowDuration", 1.1)))
+
+
+static func apply_burn_to_player(world: SimWorld, attacker_idx: int) -> void:
+	if attacker_idx < 0 or attacker_idx >= world.enemies.cap:
+		return
+	if world.enemies.alive[attacker_idx] == 0:
+		return
+	if world.enemies.affix[attacker_idx] != "burn":
+		return
+	apply_burn_stack(world)
+
+
+static func apply_burn_stack(world: SimWorld) -> void:
+	if world.player.iframe_remain > 0.0 or world.player.hp <= 0.0:
+		return
+	var cfg: Dictionary = DictUtil.d(world.catalog.loop, "burn")
+	var max_stacks: int = maxi(1, int(cfg.get("maxStacks", 2)))
+	var coeff: float = SimLoop.difficulty_coeff(world)
+	var stack_dps: float = float(cfg.get("dpsCoeff", 4.5)) * coeff
+	var dur: float = float(cfg.get("duration", 3.0))
+	world.player.burn_stacks = mini(max_stacks, world.player.burn_stacks + 1)
+	world.player.burn_dps = stack_dps * float(world.player.burn_stacks)
+	world.player.burn_remain = maxf(world.player.burn_remain, dur)
 
 
 static func pillar_blocks_shot(world: SimWorld, x0: float, y0: float, x1: float, y1: float) -> bool:
@@ -303,15 +429,25 @@ static func pillar_blocks_shot(world: SimWorld, x0: float, y0: float, x1: float,
 
 
 static func ring_point(world: SimWorld, ox: float, oy: float, radius: float) -> Vector2:
-	var dir: Dictionary = world.catalog.loop.get("director", {})
-	var spawn_min: float = float(dir.get("spawnMin", 420.0))
-	var spawn_max: float = float(dir.get("spawnMax", 640.0))
+	var dir: Dictionary = DictUtil.d(world.catalog.loop, "director")
+	var spawn_min: float = float(dir.get("spawnMin", 460.0))
+	var spawn_max: float = float(dir.get("spawnMax", 900.0))
+	if world.arena_shape == "circle":
+		var max_r: float = maxf(64.0, world.arena_radius - radius - 8.0)
+		for _a: int in 10:
+			var dist: float = spawn_min + world.randf() * maxf(0.0, spawn_max - spawn_min)
+			var ang: float = world.randf() * TAU
+			var clamped: Vector2 = SimCollision.clamp_to_circle(ox + cos(ang) * dist, oy + sin(ang) * dist, max_r)
+			if hypot(clamped.x - ox, clamped.y - oy) >= spawn_min * 0.7:
+				return clamped
+		var in_ang: float = atan2(-oy, -ox) if hypot(ox, oy) > 1.0 else 0.0
+		return SimCollision.clamp_to_circle(ox + cos(in_ang) * spawn_min, oy + sin(in_ang) * spawn_min, max_r)
 	var bounds: Dictionary = world.catalog.world
 	var pad: float = radius + 8.0
-	var width: float = float(bounds.get("width", 2560.0))
-	var height: float = float(bounds.get("height", 2560.0))
+	var width: float = float(bounds.get("width", 3000.0))
+	var height: float = float(bounds.get("height", 3000.0))
 	for _a: int in 10:
-		var dist: float = spawn_min + world.randf() * (spawn_max - spawn_min)
+		var dist: float = spawn_min + world.randf() * maxf(0.0, spawn_max - spawn_min)
 		var ang: float = world.randf() * TAU
 		var x: float = clampf(ox + cos(ang) * dist, pad, width - pad)
 		var y: float = clampf(oy + sin(ang) * dist, pad, height - pad)

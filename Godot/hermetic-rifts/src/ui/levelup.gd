@@ -15,29 +15,53 @@ const RARITY_TEXT: Dictionary = {
 var _banner: PanelContainer
 var _title: Label
 var _row: HBoxContainer
+var _meta_bar: HBoxContainer
+var _reroll_btn: Button
 var _cards: Array[Button] = []
 var _built: bool = false
 var _offer_key: String = ""
+var _world: SimWorld
 
 
 func _ready() -> void:
 	_build()
 
 
+static func compute_offer_key(world: SimWorld) -> String:
+	if world == null:
+		return ""
+	var key: String = "%d|%d|%d|%s|" % [world.rerolls_left, world.banishes_left, world.locks_left, world.locked_item_id]
+	for item: Dictionary in world.offer:
+		key += String(item.get("id", "")) + "|"
+	return key
+
+
 func refresh(world: SimWorld) -> void:
 	if not _built:
 		_build()
 	visible = true
+	_world = world
 	if world == null:
 		return
-	var key: String = ""
-	for item: Dictionary in world.offer:
-		key += String(item.get("id", "")) + "|"
+	var key: String = compute_offer_key(world)
 	if key == _offer_key and _cards.size() == world.offer.size():
+		_refresh_meta_bar(world)
 		_focus_first()
 		return
 	_offer_key = key
 	_rebuild_cards(world)
+
+
+func reroll(world: SimWorld = null) -> bool:
+	var target: SimWorld = world if world != null else _world
+	if target == null:
+		return false
+	if not SimLevel.reroll_choices(target):
+		_play_ui("error")
+		return false
+	_play_ui("click")
+	refresh(target)
+	return true
 
 
 func focus_primary() -> void:
@@ -56,7 +80,7 @@ func _build() -> void:
 	add_child(stage)
 	var col := VBoxContainer.new()
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", 28)
+	col.add_theme_constant_override("separation", 18)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stage.add_child(col)
 	var header := CenterContainer.new()
@@ -82,27 +106,71 @@ func _build() -> void:
 	_row.add_theme_constant_override("separation", 28)
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_row)
+	_meta_bar = HBoxContainer.new()
+	_meta_bar.name = "MetaActionBar"
+	_meta_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	_meta_bar.add_theme_constant_override("separation", 16)
+	_meta_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(_meta_bar)
+	_reroll_btn = Button.new()
+	_reroll_btn.name = "RerollBtn"
+	_reroll_btn.custom_minimum_size = Vector2(220, 44)
+	_reroll_btn.text = "%s [R]" % tr("ui.levelup.reroll").replace("{n}", "0")
+	_style_meta_btn(_reroll_btn, Color("2e2018"), UiAtlas.GOLD_MOLTEN)
+	_reroll_btn.pressed.connect(func() -> void: reroll(_world))
+	_meta_bar.add_child(_reroll_btn)
 
 
 func _rebuild_cards(world: SimWorld) -> void:
 	for child: Node in _row.get_children():
 		_row.remove_child(child)
-		child.free()
+		child.queue_free()
 	_cards.clear()
 	for i: int in world.offer.size():
 		var item: Dictionary = world.offer[i]
+		var id: String = String(item.get("id", ""))
+		var is_locked: bool = (id != "" and world.locked_item_id == id)
 		var col := VBoxContainer.new()
 		col.alignment = BoxContainer.ALIGNMENT_CENTER
-		col.add_theme_constant_override("separation", 14)
+		col.add_theme_constant_override("separation", 10)
 		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var card := _make_card(item, i)
+		var card := _make_card(item, i, is_locked)
 		col.add_child(card)
+		var actions := HBoxContainer.new()
+		actions.alignment = BoxContainer.ALIGNMENT_CENTER
+		actions.add_theme_constant_override("separation", 8)
+		var lock_btn := Button.new()
+		lock_btn.name = "LockBtn_%d" % i
+		lock_btn.custom_minimum_size = Vector2(124, 34)
+		lock_btn.text = tr("ui.levelup.locked") if is_locked else tr("ui.levelup.lock").replace("{n}", str(world.locks_left))
+		lock_btn.disabled = (not is_locked) and (world.locks_left <= 0 and world.locked_item_id == "")
+		_style_meta_btn(
+			lock_btn,
+			Color("1c2a34") if is_locked else Color("1d1822"),
+			Color("62e0ff") if is_locked else UiAtlas.BRASS
+		)
+		var captured_lock_i: int = i
+		lock_btn.pressed.connect(func() -> void: _on_lock_pressed(captured_lock_i))
+		actions.add_child(lock_btn)
+
+		var banish_btn := Button.new()
+		banish_btn.name = "BanishBtn_%d" % i
+		banish_btn.custom_minimum_size = Vector2(124, 34)
+		banish_btn.text = tr("ui.levelup.banish").replace("{n}", str(world.banishes_left))
+		banish_btn.disabled = world.banishes_left <= 0
+		_style_meta_btn(banish_btn, Color("2c171b"), Color("b84444"))
+		var captured_banish_i: int = i
+		banish_btn.pressed.connect(func() -> void: _on_banish_pressed(captured_banish_i))
+		actions.add_child(banish_btn)
+
+		col.add_child(actions)
 		_row.add_child(col)
 		_cards.append(card)
+	_refresh_meta_bar(world)
 	_focus_first()
 
 
-func _make_card(item: Dictionary, index: int) -> Button:
+func _make_card(item: Dictionary, index: int, is_locked: bool = false) -> Button:
 	var id: String = String(item.get("id", ""))
 	var rarity: String = String(item.get("rarity", "common"))
 	var btn := Button.new()
@@ -211,7 +279,66 @@ func _make_card(item: Dictionary, index: int) -> Button:
 		btn.offset_transform_rotation = deg_to_rad(tilt)
 		btn.offset_transform_scale = Vector2.ONE
 	)
+	if is_locked:
+		var lock_badge := PanelContainer.new()
+		lock_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lock_badge.add_theme_stylebox_override("panel", _card_inset(Color("10222ce6"), Color("62e0ff"), Vector4(8, 2, 8, 2)))
+		lock_badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		lock_badge.offset_left = -92.0
+		lock_badge.offset_right = -14.0
+		lock_badge.offset_top = 8.0
+		lock_badge.offset_bottom = 30.0
+		var lock_lab := Label.new()
+		lock_lab.text = tr("ui.levelup.locked")
+		lock_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiAtlas.apply_label(lock_lab, UiAtlas.TYPE_MICRO, Color("62e0ff"), 10, true)
+		lock_badge.add_child(lock_lab)
+		btn.add_child(lock_badge)
 	return btn
+
+
+func _refresh_meta_bar(world: SimWorld) -> void:
+	if _reroll_btn == null or world == null:
+		return
+	_reroll_btn.text = "%s [R]" % tr("ui.levelup.reroll").replace("{n}", str(world.rerolls_left))
+	_reroll_btn.disabled = world.rerolls_left <= 0
+
+
+func _on_lock_pressed(index: int) -> void:
+	if _world == null:
+		return
+	if not SimLevel.toggle_lock_choice(_world, index):
+		_play_ui("error")
+		return
+	_play_ui("click")
+	refresh(_world)
+
+
+func _on_banish_pressed(index: int) -> void:
+	if _world == null:
+		return
+	if not SimLevel.banish_choice(_world, index):
+		_play_ui("error")
+		return
+	_play_ui("click")
+	refresh(_world)
+
+
+func _style_meta_btn(btn: Button, bg: Color, border: Color) -> void:
+	var normal := _card_inset(bg, border, Vector4(12, 6, 12, 6))
+	var hover := _card_inset(bg.lightened(0.14), UiAtlas.BRASS_BRIGHT, Vector4(12, 6, 12, 6))
+	var disabled := _card_inset(Color("141116"), Color("3a333e"), Vector4(12, 6, 12, 6))
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("pressed", hover)
+	btn.add_theme_stylebox_override("disabled", disabled)
+	btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
+	if UiAtlas.body_font() != null:
+		btn.add_theme_font_override("font", UiAtlas.body_font())
+	btn.add_theme_font_size_override("font_size", 13)
+	btn.add_theme_color_override("font_color", UiAtlas.PARCHMENT)
+	btn.add_theme_color_override("font_hover_color", UiAtlas.GOLD_MOLTEN)
+	btn.add_theme_color_override("font_disabled_color", UiAtlas.ASH)
 
 
 func _card_inset(fill: Color, border: Color, pad: Vector4) -> StyleBoxFlat:
@@ -231,3 +358,9 @@ func _focus_first() -> void:
 	if _cards.is_empty():
 		return
 	_cards[0].grab_focus()
+
+
+func _play_ui(kind: String) -> void:
+	var bus: Node = get_node_or_null("/root/GameAudio")
+	if bus != null:
+		bus.play_ui(kind)

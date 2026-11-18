@@ -14,6 +14,8 @@ var aim_x: float = 0.0
 var aim_y: float = 0.0
 var held: Dictionary = empty_slots()
 var pressed: Dictionary = empty_slots()
+var interact_held: bool = false
+var interact_pressed: bool = false
 
 
 static func empty_slots() -> Dictionary:

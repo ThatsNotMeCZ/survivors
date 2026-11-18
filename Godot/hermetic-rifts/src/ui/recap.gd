@@ -12,6 +12,7 @@ const CTA_W: float = 220.0
 const CTA_H: float = 58.0
 const PLAQUE_W: float = 190.0
 const BTN_H: float = 58.0
+const STEAM_WISHLIST_URL: String = "https://store.steampowered.com/app/0/"
 
 var _kicker: Label
 var _title: Label
@@ -24,6 +25,8 @@ var _tooltip: ItemTooltip
 var _catalog: Catalog
 var _again_btn: Button
 var _hall_btn: Button
+var _wishlist_btn: Button
+var _wishlist_lab: Label
 var _built: bool = false
 
 
@@ -37,9 +40,10 @@ func refresh(world: SimWorld, kind: String, rec: ArchiveRecords, catalog: Catalo
 	visible = true
 	_catalog = catalog
 	_fill_header(world, kind)
-	_fill_stats(world)
+	_fill_stats(world, rec)
 	_fill_unlocks(rec, catalog, start_items, start_survivors)
 	_fill_inventory(world)
+	_sync_wishlist_cta(world)
 	if _again_btn != null:
 		_again_btn.grab_focus()
 
@@ -131,7 +135,7 @@ func _build_stats() -> Control:
 	UiAtlas.apply_ink_label(head, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT_INK, 18)
 	inner.add_child(head)
 	_stats_rows = VBoxContainer.new()
-	_stats_rows.add_theme_constant_override("separation", 6)
+	_stats_rows.add_theme_constant_override("separation", 4)
 	inner.add_child(_stats_rows)
 	return box
 
@@ -217,7 +221,49 @@ func _build_actions() -> Control:
 	_hall_btn = _plaque_btn(tr("ui.recap.hall"))
 	_hall_btn.pressed.connect(func() -> void: hall_pressed.emit())
 	row.add_child(_hall_btn)
+	_wishlist_btn = Button.new()
+	_wishlist_btn.name = "WishlistBtn"
+	_wishlist_btn.text = ""
+	_wishlist_btn.custom_minimum_size = Vector2(PLAQUE_W + 30.0, BTN_H)
+	_wishlist_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_wishlist_btn.clip_contents = false
+	UiAtlas.apply_button_styles(_wishlist_btn, "btn-plaque")
+	_wishlist_lab = Label.new()
+	_wishlist_lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_wishlist_lab.offset_left = 14.0
+	_wishlist_lab.offset_right = -14.0
+	_wishlist_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_wishlist_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_wishlist_lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiAtlas.apply_label(_wishlist_lab, UiAtlas.TYPE_META, UiAtlas.GOLD_MOLTEN, 14, true)
+	_wishlist_btn.add_child(_wishlist_lab)
+	_wishlist_btn.pressed.connect(func() -> void: OS.shell_open(STEAM_WISHLIST_URL))
+	row.add_child(_wishlist_btn)
 	return row
+
+
+func _sync_wishlist_cta(world: SimWorld) -> void:
+	if _wishlist_btn == null or _wishlist_lab == null:
+		return
+	var app: Node = get_node_or_null("/root/App")
+	var demo_win: bool = world != null and world.demo_completed
+	var demo_active: bool = demo_win or (world != null and world.demo_mode) or (app != null and app.has_method("is_demo_mode") and bool(app.call("is_demo_mode")))
+	var label_txt: String = tr("ui.menu.wishlist")
+	if label_txt == "ui.menu.wishlist" or label_txt == "":
+		label_txt = "Wishlist on Steam"
+	_wishlist_lab.text = label_txt.to_upper() if demo_win else label_txt
+	if demo_win:
+		UiAtlas.apply_button_styles(_wishlist_btn, "btn-cta")
+		_wishlist_btn.custom_minimum_size = Vector2(CTA_W + 40.0, CTA_H)
+		UiAtlas.apply_label(_wishlist_lab, UiAtlas.TYPE_DISPLAY, UiAtlas.GOLD_MOLTEN, 16)
+	elif demo_active:
+		UiAtlas.apply_button_styles(_wishlist_btn, "btn-plaque")
+		_wishlist_btn.custom_minimum_size = Vector2(PLAQUE_W + 30.0, BTN_H)
+		UiAtlas.apply_label(_wishlist_lab, UiAtlas.TYPE_META, UiAtlas.GOLD_MOLTEN, 14, true)
+	else:
+		UiAtlas.apply_button_styles(_wishlist_btn, "btn-plaque")
+		_wishlist_btn.custom_minimum_size = Vector2(PLAQUE_W + 24.0, BTN_H)
+		UiAtlas.apply_label(_wishlist_lab, UiAtlas.TYPE_META, UiAtlas.PARCHMENT, 14, true)
 
 
 func _plaque_btn(label_text: String) -> Button:
@@ -238,23 +284,39 @@ func _plaque_btn(label_text: String) -> Button:
 
 
 func _fill_header(world: SimWorld, kind: String) -> void:
-	_kicker.text = tr("ui.recap.kicker.%s" % kind)
-	_title.text = tr("ui.recap.%s" % kind).to_upper()
-	if kind == "defeat" or kind == "abandon":
-		_title.add_theme_color_override("font_color", Color("f1dedb"))
+	var demo_done: bool = world != null and world.demo_completed
+	if demo_done:
+		_kicker.text = "HERMETIC RIFTS · DEMO SEAL BROKEN"
+		_title.text = "DEMO COMPLETE"
+		_title.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
+		_sub.text = "Wishlisting fuels the Great Work · %s" % Loc.format_time(world.run_time)
+		return
+	if kind == "true_victory":
+		var k_key: String = "ui.recap.kicker.true_victory"
+		var t_key: String = "ui.recap.true_victory"
+		var k_txt: String = tr(k_key)
+		var t_txt: String = tr(t_key)
+		_kicker.text = "PRIMA MATERIA SHATTERED" if (k_txt == k_key or k_txt == "") else k_txt
+		_title.text = ("TRUE VICTORY" if (t_txt == t_key or t_txt == "") else t_txt).to_upper()
+		_title.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
 	else:
-		_title.add_theme_color_override("font_color", UiAtlas.PARCHMENT)
+		_kicker.text = tr("ui.recap.kicker.%s" % kind)
+		_title.text = tr("ui.recap.%s" % kind).to_upper()
+		if kind == "defeat" or kind == "abandon":
+			_title.add_theme_color_override("font_color", Color("f1dedb"))
+		else:
+			_title.add_theme_color_override("font_color", UiAtlas.PARCHMENT)
 	if world == null:
 		_sub.text = ""
 		return
 	var stage: Dictionary = SimLoop.current_stage(world)
-	if kind == "victory":
+	if kind == "victory" or kind == "true_victory":
 		_sub.text = tr("ui.recap.sub.victory").replace("{time}", Loc.format_time(world.run_time))
 	else:
 		_sub.text = tr("ui.recap.sub.run").replace("{stage}", Loc.stage_name(String(stage.get("id", "")))).replace("{time}", Loc.format_time(world.run_time))
 
 
-func _fill_stats(world: SimWorld) -> void:
+func _fill_stats(world: SimWorld, rec: ArchiveRecords = null) -> void:
 	for child: Node in _stats_rows.get_children():
 		_stats_rows.remove_child(child)
 		child.free()
@@ -262,6 +324,9 @@ func _fill_stats(world: SimWorld) -> void:
 		return
 	var sid: String = String(world.survivor.get("id", ""))
 	var stage: Dictionary = SimLoop.current_stage(world)
+	var banked_essence: int = world.run_essence
+	if rec != null and rec.data.has("lastRunEssence"):
+		banked_essence = int(rec.data.get("lastRunEssence", world.run_essence))
 	var rows: Array[Array] = [
 		[tr("ui.recap.row.vessel"), Loc.survivor_name(sid)],
 		[tr("ui.recap.row.chamber"), Loc.stage_name(String(stage.get("id", "")))],
@@ -273,6 +338,8 @@ func _fill_stats(world: SimWorld) -> void:
 		[tr("ui.recap.row.taken"), _fmt_num(world.damage_taken)],
 		[tr("ui.recap.row.healed"), _fmt_num(world.healing_done)],
 		[tr("ui.recap.row.essence"), str(world.gems_collected)],
+		[tr("ui.recap.row.essence_banked"), str(banked_essence)],
+		[tr("ui.recap.row.seals"), str(world.ascension_tier)],
 	]
 	for row_v: Array in rows:
 		var row := HBoxContainer.new()

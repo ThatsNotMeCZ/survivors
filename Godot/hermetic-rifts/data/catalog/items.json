@@ -170,6 +170,18 @@
         "count": 100,
         "label": "Slay 100 Dross across workings"
       }
+    },
+    {
+      "id": "philosophers-catalyst",
+      "name": "Philosopher's Catalyst",
+      "rarity": "rare",
+      "stack": "none",
+      "secretVaultOnly": true,
+      "hooks": [
+        { "op": "pct", "stat": "damage", "value": 0.25 },
+        { "op": "pct", "stat": "critChance", "value": 0.12 }
+      ],
+      "lore": "A luminous shard of perfected red stone recovered from the Aether Vault. Its resonant pulse sharpens every art into a decisive stroke."
     }
   ]
 }

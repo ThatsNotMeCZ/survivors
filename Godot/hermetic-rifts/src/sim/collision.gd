@@ -59,3 +59,23 @@ static func point_to_segment(px: float, py: float, x0: float, y0: float, x1: flo
 
 static func hypot(dx: float, dy: float) -> float:
 	return sqrt(dx * dx + dy * dy)
+
+
+static func clamp_to_circle(px: float, py: float, max_dist: float) -> Vector2:
+	if max_dist <= 0.0:
+		return Vector2.ZERO
+	var d: float = sqrt(px * px + py * py)
+	if d > max_dist:
+		return Vector2((px / d) * max_dist, (py / d) * max_dist)
+	return Vector2(px, py)
+
+
+static func slide_along_circle_rim(
+	px: float,
+	py: float,
+	vx: float,
+	vy: float,
+	dt: float,
+	max_dist: float,
+) -> Vector2:
+	return clamp_to_circle(px + vx * dt, py + vy * dt, max_dist)

@@ -17,3 +17,7 @@ var aoe_radius_mul: float = 1.0
 var proj_speed_mul: float = 1.0
 var control_duration_mul: float = 1.0
 var elite_damage_mul: float = 1.0
+
+
+func effective_armor(armor_debuff: float = 0.0, bell_armor_bonus: float = 0.0) -> float:
+	return clampf(armor + armor_debuff + bell_armor_bonus, -0.5, 0.85)

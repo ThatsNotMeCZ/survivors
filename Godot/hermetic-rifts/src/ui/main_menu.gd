@@ -5,8 +5,11 @@ signal archives_pressed
 signal desk_pressed
 signal commence_pressed
 
+const STEAM_WISHLIST_URL: String = "https://store.steampowered.com/app/0/"
+
 var _archives_btn: Button
 var _desk_btn: Button
+var _wishlist_btn: Button
 var _commence_btn: Button
 var _commence_1: Label
 var _commence_2: Label
@@ -94,6 +97,25 @@ func _is_focus_request(event: InputEvent) -> bool:
 func _resolve_nodes() -> void:
 	_archives_btn = get_node_or_null("Content/Row/Pillar/PillarPad/PillarCol/NavWrap/Nav/ArchivesBtn") as Button
 	_desk_btn = get_node_or_null("Content/Row/Pillar/PillarPad/PillarCol/NavWrap/Nav/DeskBtn") as Button
+	var nav := get_node_or_null("Content/Row/Pillar/PillarPad/PillarCol/NavWrap/Nav") as Control
+	if nav != null:
+		_wishlist_btn = nav.get_node_or_null("WishlistBtn") as Button
+		if _wishlist_btn == null:
+			_wishlist_btn = Button.new()
+			_wishlist_btn.name = "WishlistBtn"
+			_wishlist_btn.focus_mode = Control.FOCUS_ALL
+			_wishlist_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			_wishlist_btn.custom_minimum_size = Vector2(0, 52)
+			if _desk_btn != null:
+				_wishlist_btn.theme = _desk_btn.theme
+				for st: String in ["normal", "hover", "pressed", "focus", "disabled"]:
+					if _desk_btn.has_theme_stylebox_override(st):
+						_wishlist_btn.add_theme_stylebox_override(st, _desk_btn.get_theme_stylebox(st))
+				for col_k: String in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+					if _desk_btn.has_theme_color_override(col_k):
+						_wishlist_btn.add_theme_color_override(col_k, _desk_btn.get_theme_color(col_k))
+			_wishlist_btn.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
+			nav.add_child(_wishlist_btn)
 	_commence_btn = get_node_or_null("CommenceBtn") as Button
 	_commence_1 = get_node_or_null("CommenceBtn/CommenceCopy/CommenceLine1") as Label
 	_commence_2 = get_node_or_null("CommenceBtn/CommenceCopy/CommenceLine2") as Label
@@ -116,6 +138,12 @@ func _apply_copy() -> void:
 	if _desk_btn != null:
 		_desk_btn.text = tr("ui.menu.desk").to_upper()
 		_style_nav_btn(_desk_btn)
+	if _wishlist_btn != null:
+		var wish_txt: String = tr("ui.menu.wishlist")
+		if wish_txt == "ui.menu.wishlist" or wish_txt == "":
+			wish_txt = "WISHLIST ON STEAM"
+		_wishlist_btn.text = wish_txt.to_upper()
+		_style_nav_btn(_wishlist_btn)
 	_style_cta_line(_commence_1, tr("ui.menu.commence.line1"))
 	_style_cta_line(_commence_2, tr("ui.menu.commence.line2"))
 
@@ -128,6 +156,8 @@ func _bind() -> void:
 		_archives_btn.pressed.connect(func() -> void: archives_pressed.emit())
 	if _desk_btn != null:
 		_desk_btn.pressed.connect(func() -> void: desk_pressed.emit())
+	if _wishlist_btn != null:
+		_wishlist_btn.pressed.connect(func() -> void: OS.shell_open(STEAM_WISHLIST_URL))
 	if _commence_btn != null:
 		_commence_btn.pressed.connect(func() -> void: commence_pressed.emit())
 
@@ -220,9 +250,16 @@ func _wire_focus() -> void:
 		return
 	_archives_btn.focus_neighbor_bottom = _archives_btn.get_path_to(_desk_btn)
 	_desk_btn.focus_neighbor_top = _desk_btn.get_path_to(_archives_btn)
-	_desk_btn.focus_neighbor_bottom = _desk_btn.get_path_to(_commence_btn)
-	_commence_btn.focus_neighbor_top = _commence_btn.get_path_to(_desk_btn)
-	_commence_btn.focus_neighbor_left = _commence_btn.get_path_to(_desk_btn)
+	if _wishlist_btn != null and _wishlist_btn.is_inside_tree():
+		_desk_btn.focus_neighbor_bottom = _desk_btn.get_path_to(_wishlist_btn)
+		_wishlist_btn.focus_neighbor_top = _wishlist_btn.get_path_to(_desk_btn)
+		_wishlist_btn.focus_neighbor_bottom = _wishlist_btn.get_path_to(_commence_btn)
+		_commence_btn.focus_neighbor_top = _commence_btn.get_path_to(_wishlist_btn)
+		_commence_btn.focus_neighbor_left = _commence_btn.get_path_to(_wishlist_btn)
+	else:
+		_desk_btn.focus_neighbor_bottom = _desk_btn.get_path_to(_commence_btn)
+		_commence_btn.focus_neighbor_top = _commence_btn.get_path_to(_desk_btn)
+		_commence_btn.focus_neighbor_left = _commence_btn.get_path_to(_desk_btn)
 
 
 func _layout_chrome() -> void:
@@ -259,6 +296,8 @@ func _fit_nav() -> bool:
 		_archives_btn.custom_minimum_size = Vector2(w, 52)
 	if _desk_btn != null and not is_equal_approx(_desk_btn.custom_minimum_size.x, w):
 		_desk_btn.custom_minimum_size = Vector2(w, 52)
+	if _wishlist_btn != null and not is_equal_approx(_wishlist_btn.custom_minimum_size.x, w):
+		_wishlist_btn.custom_minimum_size = Vector2(w, 52)
 	return true
 
 
