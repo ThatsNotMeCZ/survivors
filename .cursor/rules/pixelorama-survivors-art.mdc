@@ -12,15 +12,25 @@ Before drawing or editing pixel art, read `.agents/skills/pixelorama-survivors/S
 
 Only colors from [`tools/pixelorama/resurrect-64.pal`](../../tools/pixelorama/resurrect-64.pal) plus **`#000000`**. Outline and dark lines are black. Do not use `#120a0d` or any hex outside palette + black.
 
+## Style & Sibling Consistency (Mandatory)
+
+Before drawing any new sprite, icon, or UI component, **inspect 1–2 completed siblings** in the same sheet/category (`capture_canvas_image` + a small `get_region` sample) to match:
+- Border thickness, bevel depth, corner treatment (chamfers, rivets, brass caps, stone notches — **never** plain 90° boxes).
+- Top-left light source with 3–4 value ramps per material (`#000000` outline → shadow → midtone → highlight).
+- Detail density, weathering, and Dark Hermetic motifs (tarnished brass, dark iron, cracked slate, occult runes).
+
+**No programmer art:** never ship raw 1px-bordered rectangles, unshaded circles, stick-line icons, or pillow-shaded blobs. Every embedded icon needs a `#000000` outline, 3–4 tone shading, and a cast shadow.
+
 ## Noise
 
 Do not fill large areas with one color. Existing sprites have internal noise — preserve it. Do not rewrite pixels outside the change bbox.
 
-On existing entity / item / fx art, do not use `fill_area`, large `draw_rect`, global `color_replace`, or `remap_to_palette` (they flatten noise).
+On existing entity / item / fx art, do not use `fill_area`, large `draw_rect`, global `color_replace`, or `remap_to_palette` (they flatten noise). For UI chrome, only the inner stretchable 9-slice content well may be uniform; frames, corners, dividers, and icons must be richly shaded.
 
 ## MCP defaults
 
 1. `open_project` the existing `tools/pixelorama/{id}.pxo` when it exists.
 2. `switch_palette` to Resurrect 64.
-3. Patch with `draw_pixels_fast` stride 3 `[x, y, '#hex', ...]`.
-4. `capture_canvas_image` at most 1–2 times, then export once at the end.
+3. Study a sibling frame (`capture_canvas_image` + `get_region`) before designing new art.
+4. Patch with `draw_pixels_fast` stride 3 `[x, y, '#hex', ...]`.
+5. `capture_canvas_image` to verify against the sibling: if it looks flat, geometric, or out of style, **iterate and fix** before `save_project` / `export_image`.

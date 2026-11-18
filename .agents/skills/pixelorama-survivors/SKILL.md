@@ -43,24 +43,36 @@ Keep every pixel outside the change bbox.
 
 **Forbidden on entity / item / skill / fx sheets:** `fill_area`, large `draw_rect`, `apply_gradient` on whole shapes, `color_replace` of a body color, `remap_to_palette`, `clean_isolated_pixels` (eats noise), `generate_sprite` without a region read.
 
-## New sprite
+## New sprite or UI component
 
-1. Silhouette, then 1px `#000000` outline.
-2. Body in 3–5 px clusters, rotating 2–3 palette shades (not flat fills).
-3. Frame sizes and 1-based tags (`idle`, `walk`, `attack` / `attack-*`): `knowledge/tech/pixelorama-mcp.md`. Creature faces **right**.
+Never improvise raw geometric primitives (`draw_rect`, unshaded circles, 1px stick icons). Follow this pipeline:
+
+1. **Study siblings first (mandatory):** Inspect 1–2 completed assets of the same kind (`capture_canvas_image` on a sibling frame + `get_region` on a small 24×24 corner/detail sample). In `gui_agent.pxo`, study `hud-skill-dock`, `hud-inventory`, `btn-plaque`, and `parchment-panel` before designing any HUD element. Extract the exact Resurrect 64 material ramps, border thickness, corner ornaments, and detail density.
+2. **Plan in memory before drawing:** Define silhouette, top-left light direction, 3–4 value ramps per material (`#000000` outline → shadow → midtone → highlight), focal icon/motif, and cast shadows.
+3. **Pixel-art hygiene:** Avoid jagged 1px stair-steps ("jaggies"), accidental 2px curve "doubles", and pillow shading. Use clean 2–3px segment curves and 1px `#000000` outer silhouettes.
+4. **Entities / items / FX:** Silhouette + 1px `#000000` outline → body in 3–5 px clusters rotating 2–3 adjacent palette shades (not flat fills). Frame sizes and 1-based tags (`idle`, `walk`, `attack` / `attack-*`): `knowledge/tech/pixelorama-mcp.md`. Creature faces **right**.
+5. **UI chrome (`gui*.pxo`, `button.pxo`):**
+   - Multi-stop beveled frame (5–8px total border depth: 1px `#000000` outer outline → top/left highlight & bottom/right shadow bevel → midtone dark iron/stone/brass body with chamfered/notched corners, rivets, or filigree → 1px dark inner recess lip).
+   - Embedded icons (compass/astrolabe, timer dial, flask, runes) must be full miniature pixel-art pieces with 1px `#000000` outline, 3–4 tone shading, specular glint, and a 1–2px cast shadow onto the frame behind them.
+   - Respect 9-slice margins if the component is 9-sliced in `atlas.json` (ornaments stay in corners/edges, stretchable center stays clean).
 
 ## Exceptions (flat fill OK)
 
 - Procedural env tiles in `tools/pixelorama/world.pxo` via `eval_gdscript` (never for Godot game scripts).
-- UI chrome in `button.pxo` / `gui*.pxo` only when the brief says flat.
+- Only the **inner stretchable 9-slice content well** of a UI panel may be a uniform dark slate/parchment fill (with subtle corner vignette/edge weathering); frames, borders, corners, dividers, and icons are **never** flat.
 
 ## QA then ship
 
-One batch on the frames you touched:
+On the frames you touched:
 
 1. `validate_sprite` (`check_holes`, `check_orphans`).
 2. `get_palette_usage` — unique colors must be Resurrect 64 + `#000000` only.
-3. One `capture_canvas_image` (magnify the bbox; crop with `x,y,width,height`).
-4. `save_project` → `export_image` → `./tools/pixelorama/publish-sprite.sh <kind> <id>`.
+3. **Visual QA Gate:** `capture_canvas_image` (magnified crop `x,y,width,height`, `scale` 4–8) and compare directly against the sibling studied in step 1:
+   - Does it match the sibling's craft, material ramps, and detail density (not MS-Paint / programmer art)?
+   - Are borders beveled/ornate and top-left lit (not a flat 1px box)?
+   - Do embedded icons have `#000000` outlines, multi-tone shading, and cast shadows?
+   - Is surface noise/weathering present without hurting readability?
+   If **any** check fails, fix it and re-capture (up to 3–4 captures for new art; 1–2 for small edits).
+4. Only after visual QA passes: `save_project` → `export_image` → `./tools/pixelorama/publish-sprite.sh <kind> <id>` (or `python3 tools/pixelorama/pack_ui_atlas_from_gui.py` for `gui_agent.pxo`).
 
 There is no MCP publish tool. Do not export until QA passes.
