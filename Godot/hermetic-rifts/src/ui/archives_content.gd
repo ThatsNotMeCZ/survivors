@@ -66,7 +66,7 @@ static func fill_howto(parent: Control, rec: ArchiveRecords, catalog: Catalog, v
 	for surv: Dictionary in catalog.survivors:
 		var sid: String = String(surv.get("id", ""))
 		var unlocked: bool = bool(rec.check_unlock(surv.get("unlock", null), catalog).get("unlocked", true))
-		var pill := _filter_pill(Loc.survivor_name(sid) if unlocked else "🔒 %s" % Loc.unseen(), sid == vessel_id, unlocked)
+		var pill := _filter_pill(Loc.survivor_name(sid) if unlocked else Loc.unseen(), sid == vessel_id, unlocked, not unlocked)
 		if unlocked:
 			pill.pressed.connect(func() -> void: on_vessel.call(sid))
 		pills.add_child(pill)
@@ -382,9 +382,16 @@ static func _entity_card(entity: Dictionary, rec: ArchiveRecords, active: bool, 
 	var tally: String = Loc.t("ui.archives.bestiary.unencountered")
 	if seen:
 		tally = Loc.t("ui.archives.bestiary.slain").replace("{n}", str(kills))
-		if has_lore:
-			tally += " · ☉"
-	col.add_child(_tile_line(tally, 10, ASH, false))
+	if seen and has_lore:
+		var tally_row := HBoxContainer.new()
+		tally_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		tally_row.add_theme_constant_override("separation", 4)
+		tally_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tally_row.add_child(_tile_line(tally, 10, ASH, false))
+		tally_row.add_child(UiAtlas.make_icon("icon-lore", 14))
+		col.add_child(tally_row)
+	else:
+		col.add_child(_tile_line(tally, 10, ASH, false))
 	card.add_child(col)
 	card.pressed.connect(func() -> void: on_select.call(eid))
 	return card
@@ -523,7 +530,7 @@ static func _ledger_totals(rec: ArchiveRecords, catalog: Catalog) -> Control:
 	if furthest_i >= 0 and furthest_i < stages.size():
 		furthest = Loc.stage_name(String(stages[furthest_i].get("id", "cinder-yard")))
 	var fastest_v: Variant = d.get("fastestVictoryTime", null)
-	var fastest: String = "—" if fastest_v == null else Loc.format_time(float(fastest_v))
+	var fastest: String = "-" if fastest_v == null else Loc.format_time(float(fastest_v))
 	var metrics: Array[Array] = [
 		[Loc.t("ui.archives.ledger.metric.runs"), str(runs), Loc.t("ui.archives.ledger.metric.runs.sub").replace("{wins}", str(wins)).replace("{defeats}", str(int(d.get("defeats", 0)))).replace("{abandons}", str(int(d.get("abandons", 0))))],
 		[Loc.t("ui.archives.ledger.metric.rate"), rate, Loc.t("ui.archives.ledger.metric.rate.sub").replace("{n}", str(int(d.get("stagesCleared", 0))))],
@@ -573,7 +580,7 @@ static func _ledger_vessels(rec: ArchiveRecords, catalog: Catalog) -> Control:
 			chips.add_child(_chip(Loc.t("ui.archives.chip.victories"), str(int(s_rec.get("victories", 0)))))
 			chips.add_child(_chip(Loc.t("ui.archives.chip.slain"), str(int(s_rec.get("kills", 0)))))
 			chips.add_child(_chip(Loc.t("ui.archives.chip.best"), Loc.format_time(float(s_rec.get("bestTime", 0.0)))))
-			chips.add_child(_chip(Loc.t("ui.archives.chip.fastest"), "—" if fastest_v == null else Loc.format_time(float(fastest_v))))
+			chips.add_child(_chip(Loc.t("ui.archives.chip.fastest"), "-" if fastest_v == null else Loc.format_time(float(fastest_v))))
 			chips.add_child(_chip(Loc.t("ui.archives.chip.peak"), Loc.t("ui.archives.chip.lv").replace("{n}", str(int(s_rec.get("highestLevel", 1))))))
 		else:
 			chips.add_child(_chip(Loc.t("ui.archives.chip.status"), Loc.t("ui.archives.chip.sealed").replace("{n}", String(state.get("progress", "")))))
@@ -924,9 +931,14 @@ static func _tile_line(text: String, size: int, color: Color, two_line: bool) ->
 	return l
 
 
-static func _filter_pill(text: String, active: bool, enabled: bool) -> Button:
+static func _filter_pill(text: String, active: bool, enabled: bool, show_lock: bool = false) -> Button:
 	var btn := Button.new()
 	btn.text = text.to_upper()
+	if show_lock:
+		btn.icon = UiAtlas.frame("icon-lock")
+		btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		btn.expand_icon = true
+		btn.add_theme_constant_override("icon_max_width", 16)
 	btn.disabled = not enabled
 	btn.custom_minimum_size = Vector2(0, 28)
 	var bg := Color("42281c") if active else Color("100d12e6")

@@ -5,7 +5,7 @@
       "id": "divination-reroll",
       "name": "Divination Reroll",
       "maxLevel": 3,
-      "costs": [15, 30, 55],
+      "costs": [40, 75, 140],
       "effect": {
         "stat": "rerolls",
         "perLevel": 1
@@ -17,7 +17,7 @@
       "id": "exorcism-banish",
       "name": "Exorcism Banish",
       "maxLevel": 2,
-      "costs": [20, 45],
+      "costs": [50, 110],
       "effect": {
         "stat": "banishes",
         "perLevel": 1
@@ -29,7 +29,7 @@
       "id": "fixation-lock",
       "name": "Fixation Lock",
       "maxLevel": 2,
-      "costs": [20, 45],
+      "costs": [50, 110],
       "effect": {
         "stat": "locks",
         "perLevel": 1
@@ -41,7 +41,7 @@
       "id": "distillation-attunement",
       "name": "Distillation Attunement",
       "maxLevel": 5,
-      "costs": [12, 24, 40, 60, 85],
+      "costs": [30, 60, 100, 150, 210],
       "effect": {
         "stat": "essenceGainPct",
         "perLevel": 0.05
@@ -53,7 +53,7 @@
       "id": "tonic-buffer",
       "name": "Tonic Buffer",
       "maxLevel": 3,
-      "costs": [18, 35, 60],
+      "costs": [45, 90, 150],
       "effect": {
         "stat": "maxHp",
         "perLevel": 15
@@ -65,7 +65,7 @@
       "id": "bellows-valve",
       "name": "Bellows Valve",
       "maxLevel": 3,
-      "costs": [18, 38, 65],
+      "costs": [45, 95, 160],
       "effect": {
         "stat": "overheatControl",
         "decayPerLevel": 0.12,
@@ -78,7 +78,7 @@
       "id": "ascension-seals",
       "name": "Ascension Seals",
       "maxLevel": 5,
-      "costs": [25, 45, 70, 100, 140],
+      "costs": [60, 110, 175, 250, 350],
       "effect": {
         "stat": "ascensionTier",
         "perLevel": 1,

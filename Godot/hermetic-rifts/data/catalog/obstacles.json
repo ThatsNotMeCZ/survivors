@@ -1,22 +1,22 @@
 {
   "version": 1,
   "counts": {
-    "pillar": 14,
-    "hazard": 8,
-    "volatile": 9
+    "pillar": 48,
+    "hazard": 26,
+    "volatile": 30
   },
   "dynamicHazards": 8,
-  "borderPad": 160,
-  "playerKeepOut": 200,
-  "teleporterKeepOut": 230,
-  "volatileTeleporterKeepOut": 200,
-  "minSpacing": 190,
+  "borderPad": 320,
+  "playerKeepOut": 400,
+  "teleporterKeepOut": 460,
+  "volatileTeleporterKeepOut": 400,
+  "minSpacing": 250,
   "placeRetries": 80,
   "circularPlacement": {
-    "rimPad": 140,
-    "playerKeepOut": 200,
-    "teleporterKeepOut": 230,
-    "minSpacing": 185
+    "rimPad": 280,
+    "playerKeepOut": 400,
+    "teleporterKeepOut": 460,
+    "minSpacing": 240
   },
   "pillar": {
     "radius": 28
@@ -38,7 +38,7 @@
     "rimeSlowMul": 0.7
   },
   "alchemicalVent": {
-    "count": 4,
+    "count": 12,
     "radius": 55,
     "cycleInterval": 9.0,
     "telegraphDuration": 1.2,
@@ -50,7 +50,7 @@
     "slowMul": 0.75
   },
   "resonanceConduit": {
-    "count": 3,
+    "count": 10,
     "radius": 22,
     "chargesRequired": 3,
     "dischargeRadius": 140.0,
@@ -60,8 +60,8 @@
   },
   "siphonObelisk": {
     "countPerStage": {
-      "min": 1,
-      "max": 2
+      "min": 2,
+      "max": 3
     },
     "radius": 24,
     "interactRadius": 64,

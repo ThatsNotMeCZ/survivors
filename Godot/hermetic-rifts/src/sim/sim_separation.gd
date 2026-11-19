@@ -70,10 +70,12 @@ static func _player_enemies(world: SimWorld) -> void:
 			continue
 		if not SimCollision.aabb_overlap(world.player.x, world.player.y, world.player.radius, world.enemies.x[i], world.enemies.y[i], world.enemies.radius[i]):
 			continue
+		var p_share: float = 1.0 if (world.enemies.role[i] == EnemyPool.ROLE_BOSS and world.boss.emerge_remain > 0.0) else PLAYER_SHARE
+		var e_share: float = 1.0 - p_share
 		var split: Vector4 = _separate(
 			world.player.x, world.player.y, world.player.radius,
 			world.enemies.x[i], world.enemies.y[i], world.enemies.radius[i],
-			PLAYER_SHARE, ENEMY_SHARE,
+			p_share, e_share,
 		)
 		world.player.x = split.x
 		world.player.y = split.y
@@ -117,8 +119,8 @@ static func _clamp_actors(world: SimWorld) -> void:
 	var bounds: Dictionary = world.catalog.world
 	var inset_x: float = float(bounds.get("borderInsetX", 0.0))
 	var inset_y: float = float(bounds.get("borderInsetY", 0.0))
-	var width: float = float(bounds.get("width", 2560.0))
-	var height: float = float(bounds.get("height", 2560.0))
+	var width: float = float(bounds.get("width", 6000.0))
+	var height: float = float(bounds.get("height", 6000.0))
 	var ppx: float = inset_x + world.player.radius
 	var ppy: float = inset_y + world.player.radius
 	world.player.x = clampf(world.player.x, ppx, width - ppx)

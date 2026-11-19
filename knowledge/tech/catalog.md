@@ -8,9 +8,10 @@ Phaser reads JSON `name` / `lore` / `title` as English display. Godot looks up `
 
 | File | Contains |
 |---|---|
-| `world.json` | map size, camera `viewZoom`, border insets, default survivor/enemy, projectile pool (128) |
-| `loop.json` | 3 stages (incl. `kicker`, `lore`), director, XP curve (`xpBase` 32, `xpGrowth` 1.30), teleporter, caps, elite/noxious/shielder, `loreDropChance`, rarity weights |
-| `obstacles.json` | pillar / hazard / volatile counts, radii, keep-outs, biome display names (Cinder / Rime / Glacial) |
+| `world.json` | map size (`arenaRadius` 3000, `width`/`height` 6000 on Godot), camera `viewZoom` 2.2, border insets, default survivor/enemy, projectile pool |
+| `loop.json` | stages (incl. `kicker`, `lore`), director (`spawnMin` 920, `spawnMax` 1800 on Godot), XP curve (`xpBase` 32, `xpGrowth` 1.30), teleporter (`minDistFromCenter` 1200, `maxDistFromCenter` 2400, `ruptureKnockbackImpulse` 580 on Godot), overheat (`backfireKnockbackImpulse` 450 on Godot), caps, elite affixes, `loreDropChance`, rarity weights |
+| `obstacles.json` | pillar / hazard / volatile / vent / conduit counts (`48 / 26 / 30 / 12 / 10` on Godot), radii, keep-outs (`borderPad` 320, `playerKeepOut` 400, `teleporterKeepOut` 460, `minSpacing` 250; circular `rimPad` 280, `minSpacing` 240 on Godot), biome display names |
+| `crucible_upgrades.json` | Godot persistent meta upgrades (`divination-reroll` 40/75/140, `exorcism-banish` 50/110, `fixation-lock` 50/110, `distillation-attunement` 30/60/100/150/210, `tonic-buffer` 45/90/150, `bellows-valve` 45/95/160, `ascension-seals` 60/110/175/250/350) |
 | `survivors.json` | stats, 4 skill slots, starting items, view, optional `unlock` |
 | `skills.json` | primary / secondary / utility / special |
 | `entities.json` | fodder / elite-host / boss, tags, AI (`chase`, `ranged`, `sniper`, `boss`), contact DPS, rewards, view, `title` + `lore` |

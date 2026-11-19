@@ -25,7 +25,7 @@ static func step_gems(world: SimWorld, dt: float) -> void:
 				SimLevel.grant_xp(world, world.gems.xp[i] * world.stats.xp_mul)
 			continue
 		if dist < magnet and dist > 0.001:
-			var step_v: float = (magnet_speed * dt) / dist
+			var step_v: float = minf(1.0, (magnet_speed * dt) / dist)
 			world.gems.x[i] += dx * step_v
 			world.gems.y[i] += dy * step_v
 
@@ -52,7 +52,7 @@ static func step_lores(world: SimWorld, dt: float) -> void:
 				world.newly_collected_lores.append(entity_id)
 			continue
 		if dist < magnet and dist > 0.001:
-			var step_v: float = (magnet_speed * dt) / dist
+			var step_v: float = minf(1.0, (magnet_speed * dt) / dist)
 			world.lores.x[i] += dx * step_v
 			world.lores.y[i] += dy * step_v
 
@@ -228,8 +228,8 @@ static func _scatter_drop_pos(world: SimWorld, px: float, py: float, spread: flo
 static func _clamp_drop_pos(world: SimWorld, px: float, py: float) -> Vector2:
 	var bounds: Dictionary = world.catalog.world
 	if world.arena_shape == "circle":
-		var max_r: float = maxf(0.0, float(bounds.get("arenaRadius", 1500.0)) - 24.0)
+		var max_r: float = maxf(0.0, world.arena_radius - 24.0)
 		return SimCollision.clamp_to_circle(px, py, max_r)
-	var width: float = float(bounds.get("width", 3000.0))
-	var height: float = float(bounds.get("height", 3000.0))
+	var width: float = float(bounds.get("width", 6000.0))
+	var height: float = float(bounds.get("height", 6000.0))
 	return Vector2(clampf(px, 24.0, width - 24.0), clampf(py, 24.0, height - 24.0))

@@ -77,7 +77,7 @@ var cycle_index: int = 0
 var run_seed: int = 0
 var daily_date: String = ""
 var arena_shape: String = "circle"
-var arena_radius: float = 1500.0
+var arena_radius: float = 3000.0
 var arena_rim_thickness: float = 24.0
 var stage_id: String = "cinder-yard"
 var return_stage_index: int = 1
@@ -145,7 +145,7 @@ static func create(
 	var world: SimWorld = SimWorld.new()
 	world.catalog = cat
 	world.arena_shape = String(cat.world.get("arenaShape", "circle"))
-	world.arena_radius = float(cat.world.get("arenaRadius", 1500.0))
+	world.arena_radius = float(cat.world.get("arenaRadius", 3000.0))
 	world.arena_rim_thickness = float(cat.world.get("arenaRimThickness", 24.0))
 	world.demo_mode = bool(run_config.get("demo_mode", run_config.get("demoMode", false)))
 	world.ascension_tier = maxi(0, int(run_config.get("ascension_tier", run_config.get("ascensionTier", 0))))
@@ -186,8 +186,8 @@ static func create(
 		world.player.x = 0.0
 		world.player.y = 0.0
 	else:
-		world.player.x = float(cat.world.get("width", 2560.0)) * 0.5
-		world.player.y = float(cat.world.get("height", 2560.0)) * 0.5
+		world.player.x = float(cat.world.get("width", 6000.0)) * 0.5
+		world.player.y = float(cat.world.get("height", 6000.0)) * 0.5
 	world.player.radius = world.stats.radius
 	world.player.hp = world.stats.max_hp
 	world.player.max_hp = world.stats.max_hp
@@ -509,8 +509,8 @@ func _move_player(input: InputFrame, dt: float) -> void:
 	else:
 		var pad_x: float = float(bounds.get("borderInsetX", 0.0)) + player.radius
 		var pad_y: float = float(bounds.get("borderInsetY", 0.0)) + player.radius
-		player.x = clampf(player.x, pad_x, float(bounds.get("width", 2560.0)) - pad_x)
-		player.y = clampf(player.y, pad_y, float(bounds.get("height", 2560.0)) - pad_y)
+		player.x = clampf(player.x, pad_x, float(bounds.get("width", 6000.0)) - pad_x)
+		player.y = clampf(player.y, pad_y, float(bounds.get("height", 6000.0)) - pad_y)
 	if dt > 0.0001:
 		player.vx = (player.x - old_x) / dt
 		player.vy = (player.y - old_y) / dt
@@ -760,6 +760,8 @@ func _contact_damage(dt: float) -> void:
 		if not touching:
 			continue
 		if enemies.corpse_remain[idx] > 0.0:
+			continue
+		if enemies.role[idx] == EnemyPool.ROLE_BOSS and boss.emerge_remain > 0.0:
 			continue
 		if enemies.attack_remain[idx] <= 0.0 and enemies.attack_cd[idx] <= 0.0:
 			enemies.attack_remain[idx] = EnemyPool.CHASE_ATTACK_DURATION

@@ -1,7 +1,5 @@
 extends Node2D
 
-const WAYPOINT_DIST: float = 80.0
-const WAYPOINT_PAD: float = 52.0
 const GHOST_CAP: int = 10
 const SPARK_CAP: int = 24
 const IMPACT_CAP: int = 12
@@ -39,6 +37,8 @@ var _hazard_ring_mats: Array[ShaderMaterial] = []
 var _obstacle_sprites: Array[Sprite2D] = []
 var _obs_mats: Array[Dictionary] = []
 var _volatile_glows: Array[Sprite2D] = []
+var _vent_overlays: Array[Sprite2D] = []
+var _vent_mats: Array[ShaderMaterial] = []
 var _zone_sprites: Array[Sprite2D] = []
 var _zone_mats: Array[Dictionary] = []
 var _portal_sprites: Array[Sprite2D] = []
@@ -75,24 +75,26 @@ var _hurt_mat: ShaderMaterial
 var _mat_tether: ShaderMaterial
 var _mat_impact: ShaderMaterial
 var _mat_brim: ShaderMaterial
-var _mat_charge: ShaderMaterial
+var _mat_cracks: ShaderMaterial
 var _mat_ritual_ring: ShaderMaterial
-var _mat_heat: ShaderMaterial
+var _mat_boss_emerge: ShaderMaterial
 var _mat_laser: ShaderMaterial
 var _laser: Sprite2D
 var _ambient: Sprite2D
-var _floor: Sprite2D
+var _floor_root: Node2D
+var _floor_void: Sprite2D
+var _floor_chunks: Array[Sprite2D] = []
 var _circle: Sprite2D
 var _ritual_ring: Sprite2D
-var _charge: Sprite2D
+var _circle_cracks: Sprite2D
+var _boss_emerge: Sprite2D
 var _portal: Sprite2D
 var _player_glow: Sprite2D
-var _heat_aura: Sprite2D
 var _decoy: Sprite2D
-var _waypoint: Sprite2D
 var _gem_layers: Array[MultiMeshInstance2D] = []
 var _lut_tex: Texture2D
 var _prism_tex: Texture2D
+var _pickup_spark_tex: Texture2D
 var _charge_active: float = 0.0
 var _tex_cache: Dictionary = {}
 var _last_px: float = 0.0
@@ -131,11 +133,22 @@ func _ready() -> void:
 		world_root.add_child(crosshair)
 	_lut_tex = UiAtlas.lut_tex()
 	_prism_tex = _make_prism_texture()
-	_floor = Sprite2D.new()
-	_floor.centered = false
-	_floor.z_index = -30
-	_floor.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_child(_floor)
+	_pickup_spark_tex = _make_pickup_spark_texture()
+	_floor_root = Node2D.new()
+	_floor_root.z_index = -30
+	add_child(_floor_root)
+	_floor_void = Sprite2D.new()
+	_floor_void.texture = _placeholder(FloorStamp.VOID_COLOR, 16)
+	_floor_void.z_index = -1
+	_floor_root.add_child(_floor_void)
+	_circle_cracks = Sprite2D.new()
+	_circle_cracks.z_index = -20
+	_circle_cracks.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_circle_cracks.texture = _placeholder(Color.WHITE, 64)
+	_mat_cracks = _mat_lut("res://assets/shaders/circle_cracks.gdshader")
+	_circle_cracks.material = _mat_cracks
+	_circle_cracks.visible = false
+	add_child(_circle_cracks)
 	_ambient = Sprite2D.new()
 	_ambient.centered = false
 	_ambient.z_index = 40
@@ -155,13 +168,14 @@ func _ready() -> void:
 	_ritual_ring.material = _mat_ritual_ring
 	_ritual_ring.visible = false
 	world_root.add_child(_ritual_ring)
-	_charge = Sprite2D.new()
-	_charge.z_index = -6
-	_charge.texture = _placeholder(Color(1, 1, 1, 1), 64)
-	_mat_charge = _mat_lut("res://assets/shaders/teleporter_tether.gdshader")
-	_charge.material = _mat_charge
-	_charge.visible = false
-	world_root.add_child(_charge)
+	_boss_emerge = Sprite2D.new()
+	_boss_emerge.z_index = 6
+	_boss_emerge.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_boss_emerge.texture = _placeholder(Color.WHITE, 64)
+	_mat_boss_emerge = _mat_lut("res://assets/shaders/boss_emerge.gdshader")
+	_boss_emerge.material = _mat_boss_emerge
+	_boss_emerge.visible = false
+	world_root.add_child(_boss_emerge)
 	_portal = Sprite2D.new()
 	_portal.z_index = -7
 	_portal.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -171,24 +185,10 @@ func _ready() -> void:
 	_player_glow.z_index = 5
 	_player_glow.texture = _radial(Color(1.0, 0.87, 0.56, 0.5), 48)
 	world_root.add_child(_player_glow)
-	_heat_aura = Sprite2D.new()
-	_heat_aura.z_index = 4
-	_heat_aura.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_heat_aura.texture = _placeholder(Color(1, 1, 1, 1), 64)
-	_mat_heat = _mat_lut("res://assets/shaders/heat_shimmer.gdshader")
-	_heat_aura.material = _mat_heat
-	_heat_aura.visible = false
-	world_root.add_child(_heat_aura)
 	_decoy = Sprite2D.new()
 	_decoy.z_index = 5
 	_decoy.visible = false
 	world_root.add_child(_decoy)
-	_waypoint = Sprite2D.new()
-	_waypoint.z_index = 20
-	_waypoint.texture = UiAtlas.frame("nav-arrow")
-	_waypoint.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_waypoint.visible = false
-	world_root.add_child(_waypoint)
 	_hurt_mat = _mat("res://assets/shaders/player_hurt.gdshader")
 	_mat_tether = _mat("res://assets/shaders/tether.gdshader")
 	_mat_impact = _mat("res://assets/shaders/skill_impact.gdshader")
@@ -253,7 +253,7 @@ func _ready() -> void:
 func _init_gem_layers() -> void:
 	_gem_layers.clear()
 	for k: int in GEM_TEXTURE_PATHS.size():
-		var tex: Texture2D = UiAtlas.generated_tex(GEM_TEXTURE_PATHS[k], GEM_FALLBACK_SIZES[k], GEM_FALLBACK_COLORS[k])
+		var tex: Texture2D = _load_pickup_tex(GEM_TEXTURE_PATHS[k], GEM_FALLBACK_SIZES[k], GEM_FALLBACK_COLORS[k])
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_2D
 		var gw: float = maxf(float(GEM_FALLBACK_SIZES[k]), float(tex.get_width()))
@@ -307,8 +307,10 @@ func _sync_menu_camera() -> void:
 	camera.offset = Vector2.ZERO
 	camera.zoom = Vector2(0.92, 0.92)
 	_ambient.visible = false
-	if _floor != null:
-		_floor.visible = false
+	if _floor_root != null:
+		_floor_root.visible = false
+	if _circle_cracks != null:
+		_circle_cracks.visible = false
 	if world_root != null:
 		world_root.visible = false
 	queue_redraw()
@@ -318,8 +320,8 @@ func _sync(world: SimWorld, dt: float, reduce_vfx: bool, screenshake: bool) -> v
 	if world_root != null:
 		world_root.visible = true
 	_ambient.visible = not reduce_vfx
-	if _floor != null:
-		_floor.visible = true
+	if _floor_root != null:
+		_floor_root.visible = true
 	var stage: Dictionary = SimLoop.current_stage(world)
 	var stage_id: String = String(stage.get("id", ""))
 	var biome: String = ArenaBiome.from_stage(stage_id)
@@ -353,7 +355,6 @@ func _sync(world: SimWorld, dt: float, reduce_vfx: bool, screenshake: bool) -> v
 	_sync_laser(world, reduce_vfx)
 	_sync_gems(world)
 	_sync_lores(world)
-	_sync_waypoint(world)
 	_step_ghosts(dt)
 	_step_sparks(dt)
 	_step_impacts(dt, world.run_time, reduce_vfx)
@@ -362,18 +363,38 @@ func _sync(world: SimWorld, dt: float, reduce_vfx: bool, screenshake: bool) -> v
 
 
 func _apply_stage_art(world: SimWorld, theme: String) -> void:
-	if world.arena_shape == "circle":
-		var r: float = world.arena_radius
-		var dim: int = maxi(64, int(ceil(r * 2.0)))
-		_floor.texture = FloorStamp.texture_for(theme, dim, dim, true, r)
-		_floor.position = Vector2(-r, -r)
-		_floor.scale = Vector2.ONE
-		return
-	var width: int = int(world.catalog.world.get("width", 3000))
-	var height: int = int(world.catalog.world.get("height", 3000))
-	_floor.texture = FloorStamp.texture_for(theme, width, height, false, 0.0)
-	_floor.position = Vector2.ZERO
-	_floor.scale = Vector2.ONE
+	var circular: bool = world.arena_shape == "circle"
+	var r: float = world.arena_radius
+	var width: int = maxi(64, int(ceil(r * 2.0))) if circular else int(world.catalog.world.get("width", 6000))
+	var height: int = maxi(64, int(ceil(r * 2.0))) if circular else int(world.catalog.world.get("height", 6000))
+	var chunks: Array[Dictionary] = FloorStamp.build_chunks(theme, width, height, circular, r)
+	if _floor_void != null:
+		if circular:
+			var span: float = r * 2.0 + 4096.0
+			_floor_void.position = Vector2.ZERO
+			_floor_void.scale = Vector2(span / 16.0, span / 16.0)
+		else:
+			var pad_w: float = float(width) + 4096.0
+			var pad_h: float = float(height) + 4096.0
+			_floor_void.position = Vector2(float(width) * 0.5, float(height) * 0.5)
+			_floor_void.scale = Vector2(pad_w / 16.0, pad_h / 16.0)
+	while _floor_chunks.size() < chunks.size():
+		var cspr := Sprite2D.new()
+		cspr.centered = false
+		cspr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		_floor_root.add_child(cspr)
+		_floor_chunks.append(cspr)
+	for i: int in chunks.size():
+		var cdict: Dictionary = chunks[i]
+		var rect: Rect2 = cdict.get("rect", Rect2())
+		var tex: Texture2D = cdict.get("texture", null)
+		var cspr: Sprite2D = _floor_chunks[i]
+		cspr.texture = tex
+		cspr.position = rect.position
+		cspr.scale = Vector2.ONE
+		cspr.visible = tex != null
+	for i: int in range(chunks.size(), _floor_chunks.size()):
+		_floor_chunks[i].visible = false
 
 
 func _sync_player(world: SimWorld, dt: float, biome: String, reduce_vfx: bool) -> void:
@@ -399,15 +420,6 @@ func _sync_player(world: SimWorld, dt: float, biome: String, reduce_vfx: bool) -
 	_player_glow.position = player_sprite.position
 	_player_glow.modulate = Color(1.0, 0.87, 0.56, 0.48 if biome == "cinder" else 0.32)
 	_player_glow.visible = not reduce_vfx
-	var show_heat: bool = not reduce_vfx and (world.player.heat >= 0.70 or world.player.overheat_lockout_remain > 0.0)
-	_heat_aura.visible = show_heat
-	if show_heat:
-		_heat_aura.position = player_sprite.position
-		_heat_aura.scale = Vector2(1.25, 1.25)
-		if _mat_heat != null:
-			_mat_heat.set_shader_parameter("u_heat", clampf(world.player.heat, 0.0, 1.0))
-			_mat_heat.set_shader_parameter("u_time", world.run_time)
-			_mat_heat.set_shader_parameter("u_overheated", 1.0 if world.player.overheat_lockout_remain > 0.0 else 0.0)
 	if world.decoy.active:
 		_decoy.visible = true
 		_decoy.texture = player_sprite.texture
@@ -478,22 +490,26 @@ func _sync_circle(
 	if reduce_vfx or not charging:
 		_charge_active = maxf(0.0, _charge_active - dt * 4.0)
 	else:
-		var target: float = 1.0 if in_zone else 0.0
+		var target: float = 1.0 if in_zone else 0.72
 		_charge_active += (target - _charge_active) * minf(1.0, dt * 5.0)
-	_charge.visible = _charge_active > 0.01
-	if _charge.visible:
-		_charge.position = Vector2(world.teleporter_x, world.teleporter_y)
-		var diam: float = tel_r * 2.15
-		_charge.scale = Vector2(diam / 64.0, diam / 64.0)
-		if _mat_charge != null:
-			var r: float = maxf(1.0, tel_r)
-			var ox: float = clampf((world.player.x - world.teleporter_x) / r, -1.0, 1.0)
-			var oy: float = clampf((world.player.y - world.teleporter_y) / r, -1.0, 1.0)
-			_mat_charge.set_shader_parameter("u_time", world.run_time)
-			_mat_charge.set_shader_parameter("u_charge", prog)
-			_mat_charge.set_shader_parameter("u_active", _charge_active)
-			_mat_charge.set_shader_parameter("u_player_offset", Vector2(ox, oy))
-			_mat_charge.set_shader_parameter("u_style", style)
+	if _circle_cracks != null:
+		_circle_cracks.visible = not reduce_vfx and _charge_active > 0.01
+		if _circle_cracks.visible:
+			var is_circ: bool = world.arena_shape == "circle"
+			var span_w: float = world.arena_radius * 2.0 if is_circ else float(world.catalog.world.get("width", 6000.0))
+			var span_h: float = world.arena_radius * 2.0 if is_circ else float(world.catalog.world.get("height", 6000.0))
+			_circle_cracks.position = Vector2.ZERO if is_circ else Vector2(span_w * 0.5, span_h * 0.5)
+			_circle_cracks.scale = Vector2(maxf(1.0, span_w) / 64.0, maxf(1.0, span_h) / 64.0)
+			if _mat_cracks != null:
+				var cuv_x: float = 0.5 + world.teleporter_x / maxf(span_w, 1.0) if is_circ else world.teleporter_x / maxf(span_w, 1.0)
+				var cuv_y: float = 0.5 + world.teleporter_y / maxf(span_h, 1.0) if is_circ else world.teleporter_y / maxf(span_h, 1.0)
+				_mat_cracks.set_shader_parameter("u_time", world.run_time)
+				_mat_cracks.set_shader_parameter("u_progress", prog)
+				_mat_cracks.set_shader_parameter("u_tier", float(world.ritual_tier))
+				_mat_cracks.set_shader_parameter("u_active", _charge_active)
+				_mat_cracks.set_shader_parameter("u_circle_uv", Vector2(cuv_x, cuv_y))
+				_mat_cracks.set_shader_parameter("u_circular", 1.0 if is_circ else 0.0)
+				_mat_cracks.set_shader_parameter("u_grid_px", clampf(maxf(span_w, span_h) * 0.5, 256.0, 6000.0))
 
 
 func _sync_portal(world: SimWorld, _reduce_vfx: bool) -> void:
@@ -567,6 +583,18 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 		glow.visible = false
 		world_root.add_child(glow)
 		_volatile_glows.append(glow)
+		var vent_ov := Sprite2D.new()
+		vent_ov.texture = _placeholder(Color.WHITE, 64)
+		vent_ov.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		vent_ov.offset = Vector2(0.0, -12.0)
+		vent_ov.scale = Vector2(136.0 / 64.0, 192.0 / 64.0)
+		vent_ov.z_index = 1
+		vent_ov.visible = false
+		var vmat: ShaderMaterial = _mat_lut("res://assets/shaders/vent_erupt.gdshader")
+		vent_ov.material = vmat
+		world_root.add_child(vent_ov)
+		_vent_overlays.append(vent_ov)
+		_vent_mats.append(vmat)
 	var hazard_frame: int = 0 if int(floor(world.run_time / 0.45)) % 2 == 0 else 1
 	var vent_cfg: Dictionary = DictUtil.d(world.catalog.obstacles, "alchemicalVent")
 	var ob_cfg: Dictionary = DictUtil.d(world.catalog.obstacles, "siphonObelisk")
@@ -574,11 +602,15 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 	for i: int in world.obstacles.cap:
 		var spr: Sprite2D = _obstacle_sprites[i]
 		var glow: Sprite2D = _volatile_glows[i]
+		var vent_ov: Sprite2D = _vent_overlays[i]
 		if world.obstacles.alive[i] == 0:
 			spr.visible = false
 			glow.visible = false
+			vent_ov.visible = false
 			continue
 		var obs: SimObstacle = world.obstacles.items[i]
+		if obs.type != &"vent":
+			vent_ov.visible = false
 		spr.visible = true
 		spr.position = Vector2(obs.x, obs.y)
 		spr.centered = true
@@ -587,7 +619,7 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 		spr.offset = Vector2.ZERO
 		spr.scale = Vector2.ONE
 		if obs.type == &"vent":
-			_sync_vent_obstacle(spr, glow, i, obs, vent_cfg, world.run_time)
+			_sync_vent_obstacle(spr, glow, vent_ov, _vent_mats[i], i, obs, vent_cfg, world.run_time, reduce_vfx)
 		elif obs.type == &"conduit":
 			_sync_conduit_obstacle(spr, glow, i, obs, world.run_time, reduce_vfx)
 		elif obs.type == &"obelisk":
@@ -607,10 +639,13 @@ func _sync_obstacles(world: SimWorld, biome: String, theme: String, reduce_vfx: 
 func _sync_vent_obstacle(
 	spr: Sprite2D,
 	glow: Sprite2D,
+	vent_ov: Sprite2D,
+	ov_mat: ShaderMaterial,
 	slot: int,
 	obs: SimObstacle,
 	vent_cfg: Dictionary,
 	run_time: float,
+	reduce_vfx: bool,
 ) -> void:
 	spr.remove_meta("env_id")
 	spr.texture = UiAtlas.generated_tex("env/env-vent-grate.png", 32, Color("d47a32"))
@@ -636,6 +671,18 @@ func _sync_vent_obstacle(
 		mat.set_shader_parameter("u_state", st)
 		mat.set_shader_parameter("u_progress", prog)
 		mat.set_shader_parameter("u_time", run_time)
+	if obs.state == &"telegraph" or obs.state == &"erupting":
+		vent_ov.visible = true
+		vent_ov.z_index = 1 if (obs.state == &"telegraph" or reduce_vfx) else 6
+		vent_ov.position = Vector2(obs.x, obs.y - 0.5) if obs.state == &"telegraph" else Vector2(obs.x, obs.y)
+		if ov_mat != null:
+			ov_mat.set_shader_parameter("u_state", st)
+			ov_mat.set_shader_parameter("u_progress", prog)
+			ov_mat.set_shader_parameter("u_time", run_time)
+			ov_mat.set_shader_parameter("u_seed", float(obs.id) * 1.37)
+			ov_mat.set_shader_parameter("u_reduce", 1.0 if reduce_vfx else 0.0)
+	else:
+		vent_ov.visible = false
 
 
 func _sync_conduit_obstacle(
@@ -955,6 +1002,7 @@ func _sync_elites(world: SimWorld, reduce_vfx: bool) -> void:
 	if _chain_winding_prev.size() < world.enemies.cap:
 		_chain_winding_prev.resize(world.enemies.cap)
 	var n: int = 0
+	var boss_emerging: bool = false
 	for i: int in world.enemies.cap:
 		if world.enemies.alive[i] == 0:
 			_chain_winding_prev[i] = 0
@@ -973,6 +1021,8 @@ func _sync_elites(world: SimWorld, reduce_vfx: bool) -> void:
 		spr.visible = true
 		spr.position = Vector2(world.enemies.x[i], world.enemies.y[i])
 		spr.flip_h = world.enemies.facing[i] == 255
+		spr.scale = Vector2.ONE
+		spr.offset = Vector2.ZERO
 		if _enemy_last_x.size() < world.enemies.cap:
 			_enemy_last_x.resize(world.enemies.cap)
 			_enemy_last_y.resize(world.enemies.cap)
@@ -998,6 +1048,22 @@ func _sync_elites(world: SimWorld, reduce_vfx: bool) -> void:
 		if tex != null:
 			spr.texture = tex
 		spr.modulate = _entity_modulate(def_id)
+		if world.enemies.role[i] == EnemyPool.ROLE_BOSS and world.boss.enemy_index == i and world.boss.emerge_remain > 0.0:
+			boss_emerging = true
+			var e_prog: float = 1.0 - clampf(world.boss.emerge_remain / BossState.EMERGE_DURATION, 0.0, 1.0)
+			if not reduce_vfx:
+				spr.offset = Vector2(0.0, lerpf(10.0, 0.0, e_prog))
+				spr.scale = Vector2(lerpf(0.72, 1.0, e_prog), lerpf(0.50, 1.0, e_prog))
+			if _boss_emerge != null:
+				var span_e: float = maxf(world.enemies.radius[i] * 3.4, 96.0)
+				_boss_emerge.visible = true
+				_boss_emerge.position = Vector2(world.enemies.x[i], world.enemies.y[i])
+				_boss_emerge.scale = Vector2(span_e / 64.0, span_e / 64.0)
+				if _mat_boss_emerge != null:
+					_mat_boss_emerge.set_shader_parameter("u_progress", e_prog)
+					_mat_boss_emerge.set_shader_parameter("u_time", world.run_time)
+					_mat_boss_emerge.set_shader_parameter("u_style", _boss_emerge_style(def_id))
+					_mat_boss_emerge.set_shader_parameter("u_reduce", 1.0 if reduce_vfx else 0.0)
 		var affix_val: float = 0.0
 		var shield_on: float = 0.0
 		var corpse: float = 1.0 if world.enemies.corpse_remain[i] > 0.0 else 0.0
@@ -1022,6 +1088,18 @@ func _sync_elites(world: SimWorld, reduce_vfx: bool) -> void:
 		n += 1
 	for i: int in range(n, _elite_sprites.size()):
 		_elite_sprites[i].visible = false
+	if not boss_emerging and _boss_emerge != null:
+		_boss_emerge.visible = false
+
+
+func _boss_emerge_style(def_id: String) -> float:
+	if def_id == "frost-sovereign" or def_id == "frost-emperor":
+		return 1.0
+	if def_id == "viridian-alchemist":
+		return 2.0
+	if def_id == "voltaic-regent":
+		return 3.0
+	return 0.0
 
 
 func _entity_modulate(def_id: String) -> Color:
@@ -1467,34 +1545,6 @@ func _sync_lores(world: SimWorld) -> void:
 		glow.scale = Vector2(1.6 + 0.2 * sin(world.run_time * 5.0), 1.6)
 
 
-func _sync_waypoint(world: SimWorld) -> void:
-	var objective: Dictionary = SimLoop.current_objective(world)
-	if not bool(objective.get("has_target", false)):
-		_waypoint.visible = false
-		return
-	var tx: float = float(objective.get("target_x", 0.0))
-	var ty: float = float(objective.get("target_y", 0.0))
-	var vis: Rect2 = _view_rect()
-	var on_screen: bool = (
-		tx > vis.position.x + WAYPOINT_PAD
-		and tx < vis.position.x + vis.size.x - WAYPOINT_PAD
-		and ty > vis.position.y + WAYPOINT_PAD
-		and ty < vis.position.y + vis.size.y - WAYPOINT_PAD
-	)
-	if on_screen:
-		_waypoint.visible = false
-		return
-	var dx: float = tx - world.player.x
-	var dy: float = ty - world.player.y
-	var dist: float = sqrt(dx * dx + dy * dy)
-	if dist < 1.0:
-		_waypoint.visible = false
-		return
-	_waypoint.visible = true
-	_waypoint.position = Vector2(world.player.x + (dx / dist) * WAYPOINT_DIST, world.player.y + (dy / dist) * WAYPOINT_DIST)
-	_waypoint.rotation = atan2(dy, dx) - PI * 0.5
-
-
 func _clamp_arena_camera(world: SimWorld, focus: Vector2) -> Vector2:
 	var zx: float = camera.zoom.x if absf(camera.zoom.x) > 0.0001 else 1.0
 	var zy: float = camera.zoom.y if absf(camera.zoom.y) > 0.0001 else 1.0
@@ -1508,7 +1558,7 @@ func _clamp_arena_camera(world: SimWorld, focus: Vector2) -> Vector2:
 			return focus * (max_r / dist)
 		return focus
 	var bounds: Dictionary = world.catalog.world
-	var arena := Rect2(0.0, 0.0, float(bounds.get("width", 3000.0)), float(bounds.get("height", 3000.0)))
+	var arena := Rect2(0.0, 0.0, float(bounds.get("width", 6000.0)), float(bounds.get("height", 6000.0)))
 	return Vector2(
 		_clamp_camera_axis(focus.x, arena.position.x, arena.end.x, half.x),
 		_clamp_camera_axis(focus.y, arena.position.y, arena.end.y, half.y),
@@ -1574,15 +1624,7 @@ func _draw_obstacle_telegraphs(world: SimWorld, flash: bool) -> void:
 			continue
 		var obs: SimObstacle = world.obstacles.items[i]
 		var opos := Vector2(obs.x, obs.y)
-		if obs.type == &"vent":
-			if obs.state == &"telegraph":
-				var col := Color(1.0, 0.48, 0.14, 0.72) if flash else Color(1.0, 0.78, 0.25, 0.45)
-				draw_circle(opos, obs.radius, Color(1.0, 0.36, 0.10, 0.14))
-				draw_arc(opos, obs.radius, 0.0, TAU, 28, col, 2.0)
-			elif obs.state == &"erupting":
-				draw_circle(opos, obs.radius, Color(1.0, 0.62, 0.18, 0.28))
-				draw_arc(opos, obs.radius, 0.0, TAU, 28, Color("fff0b8"), 2.5)
-		elif obs.type == &"obelisk":
+		if obs.type == &"obelisk":
 			if obs.state == &"channeling" and obs.progress > 0.0:
 				var pct: float = clampf(obs.progress / chan_dur, 0.0, 1.0)
 				var col_o := Color("e5c878") if obs.sub_kind == "obelisk-reliquary" else (Color("e83b3b") if obs.sub_kind == "obelisk-blood" else Color("5ad4ff"))
@@ -1793,7 +1835,9 @@ func _shake_for_fx(kind: int, tint: int) -> float:
 		FxIds.CONDUIT_DISCHARGE:
 			return 6.5
 		FxIds.VENT_ERUPT:
-			return 4.5
+			return 0.0
+		FxIds.BOSS_EMERGE:
+			return 7.5
 		FxIds.ALCHEMY_FLASH:
 			return 6.5
 		FxIds.ALCHEMY_FROST:
@@ -1845,8 +1889,8 @@ func _consume_fx(app: Node) -> void:
 				_spawn_impact(fx_x, fx_y, 0.0, maxf(fx_r, 75.0), 0.36, false)
 			FxIds.CONDUIT_DISCHARGE:
 				_spawn_impact(fx_x, fx_y, 2.0, maxf(fx_r, 90.0), 0.44, false)
-			FxIds.VENT_ERUPT:
-				_spawn_impact(fx_x, fx_y, 0.0, maxf(fx_r, 55.0), 0.38, false)
+			FxIds.VENT_ERUPT, FxIds.BOSS_EMERGE:
+				pass
 			FxIds.ALCHEMY_FLASH:
 				_spawn_impact(fx_x, fx_y, 1.0, maxf(fx_r, 75.0), 0.42, true)
 			FxIds.ALCHEMY_FROST:
@@ -1859,7 +1903,7 @@ func _consume_fx(app: Node) -> void:
 				if fx_r > 0.0:
 					_spawn_impact(fx_x, fx_y, 0.0, fx_r, 0.32, false)
 			FxIds.HIT, FxIds.MUZZLE, FxIds.DEATH, FxIds.GEM, FxIds.ESSENCE_PICKUP:
-				_spawn_spark(fx_x, fx_y, kind)
+				_spawn_spark(fx_x, fx_y, kind, tint)
 	var bus := get_node_or_null("/root/GameAudio")
 	if bus != null:
 		for i: int in world.fx.count:
@@ -1947,24 +1991,39 @@ func _spawn_impact(px: float, py: float, kind: float, radius: float, duration: f
 	mat.set_shader_parameter("u_time", 0.0)
 
 
-func _spawn_spark(px: float, py: float, kind: int) -> void:
+func _spawn_spark(px: float, py: float, kind: int, tint: int = 0) -> void:
 	for i: int in SPARK_CAP:
 		if _spark_life[i] > 0.0:
 			continue
-		_spark_life[i] = 0.18
+		_spark_life[i] = 0.14 if (kind == FxIds.GEM or kind == FxIds.ESSENCE_PICKUP) else 0.18
+		if kind == FxIds.GEM or kind == FxIds.ESSENCE_PICKUP:
+			_sparks[i].texture = _pickup_spark_tex if _pickup_spark_tex != null else _placeholder(Color(0.55, 0.9, 1.0), 6)
+			_sparks[i].texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			_sparks[i].position = Vector2(px, py)
+			_sparks[i].visible = true
+			if kind == FxIds.ESSENCE_PICKUP:
+				_sparks[i].modulate = Color("e84a5f")
+			elif tint != 0:
+				_sparks[i].modulate = Color(
+					float((tint >> 16) & 0xFF) / 255.0,
+					float((tint >> 8) & 0xFF) / 255.0,
+					float(tint & 0xFF) / 255.0,
+					1.0,
+				)
+			else:
+				_sparks[i].modulate = Color("8ce8ff")
+			return
 		var id: String = "hit"
 		if kind == FxIds.MUZZLE:
 			id = "muzzle"
 		elif kind == FxIds.DEATH:
 			id = "death"
-		elif kind == FxIds.GEM or kind == FxIds.ESSENCE_PICKUP:
-			id = "gem"
 		_sparks[i].texture = _fx_texture(id)
 		if _sparks[i].texture == null:
 			_sparks[i].texture = _placeholder(Color(1.0, 0.8, 0.3), 8)
 		_sparks[i].position = Vector2(px, py)
 		_sparks[i].visible = true
-		_sparks[i].modulate = Color("e84a5f") if kind == FxIds.ESSENCE_PICKUP else Color.WHITE
+		_sparks[i].modulate = Color.WHITE
 		return
 
 
@@ -2084,12 +2143,28 @@ func _fx_texture(id: String) -> Texture2D:
 func _cached_tex(path: String) -> Texture2D:
 	if _tex_cache.has(path):
 		return _tex_cache[path]
-	if not ResourceLoader.exists(path):
-		_tex_cache[path] = null
-		return null
-	var tex: Texture2D = load(path)
+	var tex: Texture2D = null
+	if ResourceLoader.exists(path):
+		var loaded: Variant = load(path)
+		if loaded is Texture2D:
+			tex = loaded as Texture2D
+	if tex == null:
+		var abs_path: String = ProjectSettings.globalize_path(path)
+		if FileAccess.file_exists(path) or FileAccess.file_exists(abs_path):
+			var img: Image = Image.load_from_file(abs_path)
+			if img == null or img.is_empty():
+				img = Image.load_from_file(path)
+			if img != null and not img.is_empty():
+				tex = ImageTexture.create_from_image(img)
 	_tex_cache[path] = tex
 	return tex
+
+
+func _load_pickup_tex(rel_path: String, fallback_size: int, fallback_color: Color) -> Texture2D:
+	var tex: Texture2D = _cached_tex("res://assets/sprites/generated/%s" % rel_path)
+	if tex != null:
+		return tex
+	return UiAtlas.generated_tex(rel_path, fallback_size, fallback_color)
 
 
 func _apply_pillar_origin(spr: Sprite2D, radius: float, frame_h: float) -> void:
@@ -2166,6 +2241,21 @@ func _radial(color: Color, size: int) -> Texture2D:
 			var d: float = Vector2(float(x), float(y)).distance_to(c) / c.x
 			var a: float = clampf(1.0 - d, 0.0, 1.0)
 			img.set_pixel(x, y, Color(color.r, color.g, color.b, color.a * a * a))
+	return ImageTexture.create_from_image(img)
+
+
+func _make_pickup_spark_texture() -> Texture2D:
+	var img := Image.create(7, 7, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var bright := Color(1.0, 1.0, 1.0, 1.0)
+	var mid := Color(1.0, 1.0, 1.0, 0.72)
+	for o: int in range(-2, 3):
+		img.set_pixel(3 + o, 3, bright if abs(o) <= 1 else mid)
+		img.set_pixel(3, 3 + o, bright if abs(o) <= 1 else mid)
+	img.set_pixel(2, 2, mid)
+	img.set_pixel(4, 2, mid)
+	img.set_pixel(2, 4, mid)
+	img.set_pixel(4, 4, mid)
 	return ImageTexture.create_from_image(img)
 
 

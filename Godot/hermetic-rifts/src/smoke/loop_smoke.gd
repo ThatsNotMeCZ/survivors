@@ -163,11 +163,15 @@ func _safest_offer(world: SimWorld) -> int:
 
 
 func _assert_obstacles(world: SimWorld, tag: String) -> void:
+	var expected: Dictionary = world.catalog.obstacles.get("counts", {})
+	var exp_pillar: int = int(expected.get("pillar", 0))
+	var exp_hazard: int = int(expected.get("hazard", 0))
+	var exp_volatile: int = int(expected.get("volatile", 0))
 	var pillar: int = world.obstacles.count_type(&"pillar")
 	var hazard: int = world.obstacles.count_type(&"hazard")
 	var volatile: int = world.obstacles.count_type(&"volatile")
-	if pillar != 14 or hazard != 8 or volatile != 9:
-		push_error("%s obstacle counts pillar=%d hazard=%d volatile=%d" % [tag, pillar, hazard, volatile])
+	if pillar != exp_pillar or hazard != exp_hazard or volatile != exp_volatile:
+		push_error("%s obstacle counts pillar=%d hazard=%d volatile=%d (expected %d/%d/%d)" % [tag, pillar, hazard, volatile, exp_pillar, exp_hazard, exp_volatile])
 		quit(1)
 	if world.counts_fodder != 0 or world.counts_elite != 0 or world.counts_boss != 0:
 		push_error("%s expected empty enemy pools" % tag)

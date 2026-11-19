@@ -182,8 +182,8 @@ static func begin_stage_by_id(world: SimWorld, target_id: String, next_stage_ind
 		world.player.x = 0.0
 		world.player.y = 0.0
 	else:
-		world.player.x = float(world.catalog.world.get("width", 3000.0)) * 0.5
-		world.player.y = float(world.catalog.world.get("height", 3000.0)) * 0.5
+		world.player.x = float(world.catalog.world.get("width", 6000.0)) * 0.5
+		world.player.y = float(world.catalog.world.get("height", 6000.0)) * 0.5
 	world.player.hp = world.stats.max_hp
 	world.player.reset_stage_states()
 	world.decoy.reset()
@@ -231,16 +231,18 @@ static func spawn_stage_boss(world: SimWorld) -> void:
 		return
 	var def: Dictionary = world.catalog.entity(boss_id)
 	var boss_r: float = float(DictUtil.d(def, "stats").get("radius", 28.0))
-	var point: Vector2 = SimEnemies.ring_point(world, world.teleporter_x, world.teleporter_y, boss_r)
+	var point: Vector2 = Vector2(world.teleporter_x, world.teleporter_y)
 	if world.arena_shape == "circle":
-		var max_r: float = maxf(0.0, float(world.catalog.world.get("arenaRadius", 1500.0)) - boss_r - 16.0)
+		var max_r: float = maxf(0.0, world.arena_radius - boss_r - 16.0)
 		point = SimCollision.clamp_to_circle(point.x, point.y, max_r)
 	var idx: int = SimEnemies.spawn(world, def, point.x, point.y)
 	if idx < 0:
 		return
 	if String(DictUtil.d(def, "ai").get("type", "")) == "boss":
 		SimBoss.init_state(world, idx, DictUtil.d(def, "ai"))
+	world.boss.emerge_remain = BossState.EMERGE_DURATION
 	world.boss_spawned = true
+	world.fx.emit(FxIds.BOSS_EMERGE, point.x, point.y, SimBoss.boss_tint(boss_id), boss_r * 2.5)
 
 
 static func open_stage_portals(world: SimWorld) -> void:
@@ -351,25 +353,11 @@ static func _step_teleporter(world: SimWorld, dt: float) -> void:
 	if world.teleporter_charge >= world.teleporter_hold and world.ritual_tier < 3:
 		world.ritual_tier = 3
 		var pad: float = float(tel_cfg.get("ruptureKnockbackPad", 60.0))
-		var imp: float = float(tel_cfg.get("ruptureKnockbackImpulse", 420.0))
+		var imp: float = float(tel_cfg.get("ruptureKnockbackImpulse", 580.0))
 		var kb_r: float = world.teleporter_radius + pad
 		world.fx.emit(FxIds.RITUAL_RUPTURE, world.teleporter_x, world.teleporter_y, 0xFFF0B8, kb_r)
 		world.hit_stop_remain = maxf(world.hit_stop_remain, float(tel_cfg.get("ruptureHitstop", 0.14)))
-		var kb_r2: float = kb_r * kb_r
-		for e: int in world.enemies.cap:
-			if world.enemies.alive[e] == 0 or world.enemies.corpse_remain[e] > 0.0:
-				continue
-			if world.enemies.role[e] != EnemyPool.ROLE_FODDER:
-				continue
-			var edx: float = world.enemies.x[e] - world.teleporter_x
-			var edy: float = world.enemies.y[e] - world.teleporter_y
-			var ed2: float = edx * edx + edy * edy
-			if ed2 > kb_r2:
-				continue
-			var edist: float = sqrt(ed2)
-			var enx: float = 1.0 if edist <= 0.001 else edx / edist
-			var eny: float = 0.0 if edist <= 0.001 else edy / edist
-			world.enemies.apply_knockback(e, enx * imp, eny * imp)
+		SimEnemies.knockback_radial(world, world.teleporter_x, world.teleporter_y, kb_r, imp, 0.35)
 		world.teleporter_state = &"done"
 		spawn_stage_boss(world)
 
@@ -459,12 +447,12 @@ static func _make_portal(
 static func _clamp_portal_pos(world: SimWorld, px: float, py: float, radius: float) -> Vector2:
 	var bounds: Dictionary = world.catalog.world
 	if world.arena_shape == "circle":
-		var arena_r: float = float(bounds.get("arenaRadius", 1500.0))
+		var arena_r: float = world.arena_radius
 		var max_r: float = maxf(0.0, arena_r - radius - 16.0)
 		return SimCollision.clamp_to_circle(px, py, max_r)
 	var pad: float = radius + 16.0
-	var width: float = float(bounds.get("width", 3000.0))
-	var height: float = float(bounds.get("height", 3000.0))
+	var width: float = float(bounds.get("width", 6000.0))
+	var height: float = float(bounds.get("height", 6000.0))
 	return Vector2(clampf(px, pad, width - pad), clampf(py, pad, height - pad))
 
 
@@ -528,9 +516,9 @@ static func _reserve_teleporter(world: SimWorld) -> void:
 		)
 	var pad: float = float(stage.get("teleporterRadius", 160.0)) + 48.0
 	if world.arena_shape == "circle":
-		var arena_r: float = float(bounds.get("arenaRadius", 1500.0))
-		var min_d: float = float(tel_cfg.get("minDistFromCenter", 680.0))
-		var max_d: float = minf(float(tel_cfg.get("maxDistFromCenter", 1220.0)), maxf(min_d, arena_r - pad))
+		var arena_r: float = world.arena_radius
+		var min_d: float = float(tel_cfg.get("minDistFromCenter", 1200.0))
+		var max_d: float = minf(float(tel_cfg.get("maxDistFromCenter", 2400.0)), maxf(min_d, arena_r - pad))
 		var dist: float = min_d + world.stage_rng.next() * maxf(0.0, max_d - min_d)
 		var ang: float = world.stage_rng.next() * TAU
 		world.teleporter_x = cos(ang) * dist
@@ -538,8 +526,8 @@ static func _reserve_teleporter(world: SimWorld) -> void:
 		return
 	var ox: float = world.player.x
 	var oy: float = world.player.y
-	var width: float = float(bounds.get("width", 3000.0))
-	var height: float = float(bounds.get("height", 3000.0))
+	var width: float = float(bounds.get("width", 6000.0))
+	var height: float = float(bounds.get("height", 6000.0))
 	for _a: int in 24:
 		var dist_r: float = 480.0 + world.stage_rng.next() * 320.0
 		var ang_r: float = world.stage_rng.next() * TAU

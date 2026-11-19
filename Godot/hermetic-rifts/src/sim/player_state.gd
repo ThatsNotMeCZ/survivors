@@ -105,23 +105,9 @@ func add_primary_heat(amount: float, world: SimWorld) -> bool:
 		overheat_lockout_remain = float(cfg.get("backfireLockDuration", 1.2))
 		backfire_count += 1
 		var kb_radius: float = float(cfg.get("backfireKnockbackRadius", 95.0))
-		var imp: float = float(cfg.get("backfireKnockbackImpulse", 310.0))
+		var imp: float = float(cfg.get("backfireKnockbackImpulse", 450.0))
 		world.fx.emit(FxIds.OVERHEAT_BACKFIRE, x, y, 0xFF5522, kb_radius)
-		var kb_r2: float = kb_radius * kb_radius
-		for e: int in world.enemies.cap:
-			if world.enemies.alive[e] == 0 or world.enemies.corpse_remain[e] > 0.0:
-				continue
-			if world.enemies.role[e] != EnemyPool.ROLE_FODDER:
-				continue
-			var edx: float = world.enemies.x[e] - x
-			var edy: float = world.enemies.y[e] - y
-			var d2: float = edx * edx + edy * edy
-			if d2 > kb_r2:
-				continue
-			var dist: float = sqrt(d2)
-			var nx: float = 1.0 if dist <= 0.001 else edx / dist
-			var ny: float = 0.0 if dist <= 0.001 else edy / dist
-			world.enemies.apply_knockback(e, nx * imp, ny * imp)
+		SimEnemies.knockback_radial(world, x, y, kb_radius, imp, 0.32)
 		return true
 	return false
 

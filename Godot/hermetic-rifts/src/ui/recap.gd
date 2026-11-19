@@ -8,8 +8,8 @@ const STATS_W: float = 390.0
 const DETAILS_W: float = 520.0
 const INV_PAD: float = 64.0
 const INV_H: float = 220.0
-const CTA_W: float = 220.0
-const CTA_H: float = 58.0
+const CTA_W: float = 248.0
+const CTA_H: float = 84.0
 const PLAQUE_W: float = 190.0
 const BTN_H: float = 58.0
 const STEAM_WISHLIST_URL: String = "https://store.steampowered.com/app/0/"
@@ -207,12 +207,14 @@ func _build_actions() -> Control:
 	var again_lab := Label.new()
 	again_lab.text = tr("ui.recap.again")
 	again_lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	again_lab.offset_left = 28.0
-	again_lab.offset_right = -28.0
-	again_lab.offset_top = 0.0
-	again_lab.offset_bottom = 0.0
+	again_lab.offset_left = 26.0
+	again_lab.offset_right = -26.0
+	again_lab.offset_top = 12.0
+	again_lab.offset_bottom = -12.0
 	again_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	again_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	again_lab.autowrap_mode = TextServer.AUTOWRAP_OFF
+	again_lab.clip_text = false
 	UiAtlas.apply_label(again_lab, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, UiAtlas.SIZE_CTA)
 	again_lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_again_btn.add_child(again_lab)
@@ -230,10 +232,14 @@ func _build_actions() -> Control:
 	UiAtlas.apply_button_styles(_wishlist_btn, "btn-plaque")
 	_wishlist_lab = Label.new()
 	_wishlist_lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_wishlist_lab.offset_left = 14.0
-	_wishlist_lab.offset_right = -14.0
+	_wishlist_lab.offset_left = 20.0
+	_wishlist_lab.offset_right = -20.0
+	_wishlist_lab.offset_top = 12.0
+	_wishlist_lab.offset_bottom = -12.0
 	_wishlist_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_wishlist_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_wishlist_lab.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_wishlist_lab.clip_text = false
 	_wishlist_lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiAtlas.apply_label(_wishlist_lab, UiAtlas.TYPE_META, UiAtlas.GOLD_MOLTEN, 14, true)
 	_wishlist_btn.add_child(_wishlist_lab)
@@ -255,7 +261,7 @@ func _sync_wishlist_cta(world: SimWorld) -> void:
 	if demo_win:
 		UiAtlas.apply_button_styles(_wishlist_btn, "btn-cta")
 		_wishlist_btn.custom_minimum_size = Vector2(CTA_W + 40.0, CTA_H)
-		UiAtlas.apply_label(_wishlist_lab, UiAtlas.TYPE_DISPLAY, UiAtlas.GOLD_MOLTEN, 16)
+		UiAtlas.apply_label(_wishlist_lab, UiAtlas.TYPE_DISPLAY, UiAtlas.GOLD_MOLTEN, UiAtlas.SIZE_CTA)
 	elif demo_active:
 		UiAtlas.apply_button_styles(_wishlist_btn, "btn-plaque")
 		_wishlist_btn.custom_minimum_size = Vector2(PLAQUE_W + 30.0, BTN_H)

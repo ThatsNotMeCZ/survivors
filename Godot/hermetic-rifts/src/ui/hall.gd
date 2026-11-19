@@ -7,7 +7,7 @@ signal crucible_pressed
 
 const SLOTS: Array[String] = ["primary", "secondary", "utility", "special"]
 const GLYPHS: Array[String] = ["I", "II", "III", "IV"]
-const STAT_ICONS: Array[String] = ["♥", "⚔", "🥾", "🛡"]
+const STAT_ICON_IDS: Array[String] = ["icon-vitality", "icon-role", "icon-stride", "icon-frame"]
 
 var _back_btn: Button
 var _brand: Label
@@ -288,6 +288,8 @@ func _ink_label(label: Label, size_px: int, display: bool) -> void:
 func _style_cta_line(label: Label) -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = false
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiAtlas.apply_label(label, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, UiAtlas.SIZE_CTA)
@@ -505,10 +507,7 @@ func _fill_stats(surv: Dictionary, unlock: Dictionary) -> void:
 		cell.add_theme_constant_override("separation", 6)
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cell.custom_minimum_size = Vector2(150, 22)
-		var ic := Label.new()
-		ic.text = STAT_ICONS[i]
-		UiAtlas.apply_ink_label(ic, UiAtlas.TYPE_META, Color("6e3b1e"), 14)
-		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var ic: TextureRect = UiAtlas.make_icon(STAT_ICON_IDS[i], 24)
 		var tx := Label.new()
 		tx.text = texts[i]
 		UiAtlas.apply_ink_label(tx, UiAtlas.TYPE_META, UiAtlas.PARCHMENT_INK, 12)
@@ -534,6 +533,7 @@ func _fill_skills(surv: Dictionary) -> void:
 	var skills: Dictionary = DictUtil.d(surv, "skills")
 	var alt_skills: Dictionary = DictUtil.d(surv, "altSkills")
 	var loadout: Dictionary = rec.loadout_for(sid) if rec != null else {}
+	var col_rows: Array[Array] = []
 	for i: int in SLOTS.size():
 		var slot: String = SLOTS[i]
 		var std_id: String = String(skills.get(slot, ""))
@@ -546,95 +546,130 @@ func _fill_skills(surv: Dictionary) -> void:
 		)
 		var want_b: bool = String(loadout.get(slot, "A")) == "B"
 		var active_var: String = "B" if (want_b and alt_unlocked) else "A"
-		var skill_id: String = alt_id if active_var == "B" else std_id
 
 		var unit := VBoxContainer.new()
-		unit.add_theme_constant_override("separation", 4)
+		unit.add_theme_constant_override("separation", 6)
 		unit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var cell := Button.new()
-		cell.custom_minimum_size = Vector2(54, 54)
-		cell.focus_mode = Control.FOCUS_ALL
-		var empty: bool = _locked or skill_id == ""
-		_style_skill_cell(cell, empty)
-		if empty:
-			cell.text = "?" if _locked else "—"
-			cell.disabled = true
-		else:
-			cell.text = ""
-			var icon := TextureRect.new()
-			icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-			icon.offset_left = 6.0
-			icon.offset_top = 6.0
-			icon.offset_right = -6.0
-			icon.offset_bottom = -6.0
-			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			var tex: Texture2D = UiAtlas.skill_tex(skill_id)
-			if tex != null:
-				icon.texture = tex
-			else:
-				var glyph := Label.new()
-				glyph.text = GLYPHS[i]
-				glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-				glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-				glyph.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-				UiAtlas.apply_label(glyph, UiAtlas.TYPE_META, UiAtlas.PARCHMENT, 14)
-				glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
-				cell.add_child(glyph)
-			cell.add_child(icon)
-			var captured: String = skill_id
-			cell.mouse_entered.connect(func() -> void: _show_tip(cell, captured))
-			cell.mouse_exited.connect(_hide_tip)
-			cell.focus_entered.connect(func() -> void: _show_tip(cell, captured))
-			cell.focus_exited.connect(_hide_tip)
-		var lab := Label.new()
-		if empty:
-			lab.text = tr("ui.prompt.???") if _locked else tr("ui.hall.skill.empty")
-		else:
-			lab.text = Loc.skill_name(skill_id)
-		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lab.custom_minimum_size = Vector2(0, 26)
-		lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		UiAtlas.apply_ink_label(lab, UiAtlas.TYPE_MICRO, UiAtlas.PARCHMENT_INK, 11)
-		lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		unit.add_child(cell)
-		unit.add_child(lab)
-		if not _locked and alt_id != "" and rec != null:
-			var pill := Button.new()
-			pill.name = "Variant_%s" % slot
-			pill.custom_minimum_size = Vector2(68, 22)
-			pill.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-			pill.focus_mode = Control.FOCUS_ALL
-			if not alt_unlocked:
-				pill.text = "A | 🔒"
-				pill.disabled = true
-				_style_variant_pill(pill, false, true)
-				var u_state: Dictionary = rec.check_unlock(alt_unlock, catalog)
-				var req_txt: String = "%s (%s)" % [String(u_state.get("label", "")), String(u_state.get("progress", ""))]
-				var cap_alt: String = alt_id
-				pill.mouse_entered.connect(func() -> void: _show_tip(pill, cap_alt, req_txt))
-				pill.mouse_exited.connect(_hide_tip)
-			else:
-				pill.text = "[A] | B" if active_var == "A" else "A | [B]"
-				_style_variant_pill(pill, active_var == "B", false)
-				var cap_slot: String = slot
-				var cap_sid: String = sid
-				var cap_next: String = "B" if active_var == "A" else "A"
-				var cap_idx: int = i
-				var cap_active_skill: String = skill_id
-				pill.mouse_entered.connect(func() -> void: _show_tip(pill, cap_active_skill))
-				pill.mouse_exited.connect(_hide_tip)
-				pill.focus_entered.connect(func() -> void: _show_tip(pill, cap_active_skill))
-				pill.focus_exited.connect(_hide_tip)
-				pill.pressed.connect(func() -> void: _toggle_slot_variant(cap_sid, cap_slot, cap_next, cap_idx))
-			unit.add_child(pill)
+
+		var row_a: Button = _build_skill_row(slot, i, "A", std_id, active_var == "A", false, "", sid, catalog, rec)
+		var req_txt: String = ""
+		if alt_id != "" and not alt_unlocked and rec != null and catalog != null:
+			var u_state: Dictionary = rec.check_unlock(alt_unlock, catalog)
+			req_txt = "%s (%s)" % [String(u_state.get("label", "")), String(u_state.get("progress", ""))]
+		var b_locked: bool = (alt_id != "" and not alt_unlocked)
+		var row_b: Button = _build_skill_row(slot, i, "B", alt_id, active_var == "B", b_locked, req_txt, sid, catalog, rec)
+
+		unit.add_child(row_a)
+		unit.add_child(row_b)
 		_skills.add_child(unit)
+		col_rows.append([row_a, row_b])
+
+	for i: int in col_rows.size():
+		var pair: Array = col_rows[i]
+		var top_btn := pair[0] as Button
+		var bot_btn := pair[1] as Button
+		if top_btn != null and bot_btn != null:
+			top_btn.focus_neighbor_bottom = top_btn.get_path_to(bot_btn)
+			bot_btn.focus_neighbor_top = bot_btn.get_path_to(top_btn)
+		if i > 0:
+			var prev: Array = col_rows[i - 1]
+			for r: int in 2:
+				var cur_b := pair[r] as Button
+				var prev_b := prev[r] as Button
+				if cur_b != null and prev_b != null:
+					cur_b.focus_neighbor_left = cur_b.get_path_to(prev_b)
+					prev_b.focus_neighbor_right = prev_b.get_path_to(cur_b)
 
 
-func _toggle_slot_variant(sid: String, slot: String, next_variant: String, slot_index: int) -> void:
+func _build_skill_row(
+	slot: String,
+	slot_index: int,
+	variant: String,
+	skill_id: String,
+	selected: bool,
+	variant_locked: bool,
+	lock_req_txt: String,
+	sid: String,
+	_catalog: Catalog,
+	_rec: ArchiveRecords
+) -> Button:
+	var btn := Button.new()
+	btn.name = "Skill_%s_%s" % [slot, variant]
+	btn.text = ""
+	btn.custom_minimum_size = Vector2(96, 52)
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.focus_mode = Control.FOCUS_ALL
+	var empty: bool = _locked or skill_id == ""
+	_style_skill_row(btn, empty, selected, variant_locked)
+	if empty:
+		btn.text = "?" if (_locked and variant == "A") else "-"
+		btn.disabled = true
+		return btn
+
+	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 5.0
+	row.offset_right = -5.0
+	row.offset_top = 4.0
+	row.offset_bottom = -4.0
+	row.add_theme_constant_override("separation", 5)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var icon_box := Control.new()
+	icon_box.custom_minimum_size = Vector2(24, 24)
+	icon_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tex: Texture2D = UiAtlas.skill_tex(skill_id)
+	if tex != null:
+		var icon := TextureRect.new()
+		icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		icon.texture = tex
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_box.add_child(icon)
+	else:
+		var glyph := Label.new()
+		glyph.text = GLYPHS[slot_index]
+		glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		glyph.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		UiAtlas.apply_label(glyph, UiAtlas.TYPE_META, UiAtlas.PARCHMENT, 13)
+		glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_box.add_child(glyph)
+	row.add_child(icon_box)
+
+	var lab := Label.new()
+	lab.text = Loc.skill_name(skill_id)
+	lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var text_col: Color = UiAtlas.GOLD_MOLTEN if selected else (UiAtlas.ASH if variant_locked else UiAtlas.PARCHMENT)
+	UiAtlas.apply_label(lab, UiAtlas.TYPE_MICRO, text_col, 10)
+	lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(lab)
+
+	if variant_locked:
+		var lock_ic: TextureRect = UiAtlas.make_icon("icon-lock", 16)
+		row.add_child(lock_ic)
+
+	btn.add_child(row)
+	var cap_id: String = skill_id
+	var cap_note: String = lock_req_txt if variant_locked else ""
+	btn.mouse_entered.connect(func() -> void: _show_tip(btn, cap_id, cap_note))
+	btn.mouse_exited.connect(_hide_tip)
+	btn.focus_entered.connect(func() -> void: _show_tip(btn, cap_id, cap_note))
+	btn.focus_exited.connect(_hide_tip)
+	btn.pressed.connect(func() -> void: _select_slot_variant(sid, slot, variant, slot_index, variant_locked))
+	return btn
+
+
+func _select_slot_variant(sid: String, slot: String, next_variant: String, slot_index: int, variant_locked: bool) -> void:
+	if variant_locked:
+		_play_ui("error")
+		return
 	var app := _app()
 	if app == null:
 		return
@@ -646,48 +681,34 @@ func _toggle_slot_variant(sid: String, slot: String, next_variant: String, slot_
 	var skill_id: String = String(DictUtil.d(surv, "altSkills" if next_variant == "B" else "skills").get(slot, ""))
 	if _skills != null and slot_index >= 0 and slot_index < _skills.get_child_count():
 		var unit: Node = _skills.get_child(slot_index)
-		var pill: Control = unit.get_node_or_null("Variant_%s" % slot) as Control
-		if pill != null:
-			pill.grab_focus()
+		var btn: Control = unit.get_node_or_null("Skill_%s_%s" % [slot, next_variant]) as Control
+		if btn != null:
+			btn.grab_focus()
 			if skill_id != "":
-				_show_tip(pill, skill_id)
+				_show_tip(btn, skill_id)
 
 
-func _style_variant_pill(btn: Button, is_b: bool, locked: bool) -> void:
-	var bg := Color("141016") if locked else (Color("3a2218") if is_b else Color("1d1920"))
-	var border := Color("4a414c") if locked else (UiAtlas.GOLD_MOLTEN if is_b else UiAtlas.BRASS_DIM)
+func _style_skill_row(btn: Button, empty: bool, selected: bool, locked_variant: bool) -> void:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg
-	sb.border_color = border
-	sb.set_border_width_all(1)
-	sb.content_margin_left = 6.0
-	sb.content_margin_right = 6.0
-	sb.content_margin_top = 2.0
-	sb.content_margin_bottom = 2.0
+	if empty:
+		sb.bg_color = Color("161116")
+		sb.border_color = Color("443322")
+		sb.set_border_width_all(1)
+	elif selected:
+		sb.bg_color = Color("2e1d16")
+		sb.border_color = UiAtlas.BRASS_BRIGHT
+		sb.set_border_width_all(2)
+	elif locked_variant:
+		sb.bg_color = Color("131016")
+		sb.border_color = Color("3a333c")
+		sb.set_border_width_all(1)
+	else:
+		sb.bg_color = Color("19151c")
+		sb.border_color = UiAtlas.BRASS_DIM
+		sb.set_border_width_all(1)
 	var hover := sb.duplicate() as StyleBoxFlat
-	hover.border_color = UiAtlas.BRASS_BRIGHT
-	btn.add_theme_stylebox_override("normal", sb)
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("pressed", hover)
-	btn.add_theme_stylebox_override("disabled", sb)
-	btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
-	if UiAtlas.body_font() != null:
-		btn.add_theme_font_override("font", UiAtlas.body_font())
-	btn.add_theme_font_size_override("font_size", 11)
-	btn.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN if is_b else UiAtlas.PARCHMENT)
-	btn.add_theme_color_override("font_hover_color", UiAtlas.BRASS_BRIGHT)
-	btn.add_theme_color_override("font_disabled_color", UiAtlas.ASH)
-
-
-func _style_skill_cell(btn: Button, locked: bool) -> void:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color("181214")
-	sb.border_color = Color("5c4224")
-	sb.set_border_width_all(2)
-	if locked:
-		sb.border_color = Color("5c4224")
-	var hover := sb.duplicate() as StyleBoxFlat
-	hover.border_color = UiAtlas.BRASS_BRIGHT
+	if not empty and not locked_variant:
+		hover.border_color = UiAtlas.GOLD_MOLTEN if selected else UiAtlas.BRASS
 	btn.add_theme_stylebox_override("normal", sb)
 	btn.add_theme_stylebox_override("hover", hover)
 	btn.add_theme_stylebox_override("pressed", hover)
@@ -695,7 +716,12 @@ func _style_skill_cell(btn: Button, locked: bool) -> void:
 	btn.add_theme_stylebox_override("disabled", sb)
 	btn.add_theme_color_override("font_color", UiAtlas.PARCHMENT)
 	btn.add_theme_color_override("font_disabled_color", UiAtlas.ASH)
-	btn.modulate = Color(1, 1, 1, 0.5) if locked else Color.WHITE
+	if empty or locked_variant:
+		btn.modulate = Color(1, 1, 1, 0.52)
+	elif selected:
+		btn.modulate = Color.WHITE
+	else:
+		btn.modulate = Color(1, 1, 1, 0.72)
 
 
 func _show_tip(anchor: Control, skill_id: String, extra_note: String = "") -> void:
@@ -712,7 +738,7 @@ func _show_tip(anchor: Control, skill_id: String, extra_note: String = "") -> vo
 	if _tip_lore != null:
 		var lore_text: String = Loc.skill_lore(skill_id)
 		if extra_note != "":
-			lore_text = "%s\n🔒 %s" % [lore_text, extra_note]
+			lore_text = "%s\nUnlock: %s" % [lore_text, extra_note]
 		_tip_lore.text = lore_text
 		UiAtlas.apply_label(_tip_lore, UiAtlas.TYPE_META, UiAtlas.GOLD_MOLTEN if extra_note != "" else UiAtlas.ASH, 12)
 		_tip_lore.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -898,7 +924,7 @@ func _place_preview() -> void:
 	_preview_host.anchor_bottom = 1.0
 	_preview_host.offset_left = 230.0
 	_preview_host.offset_top = 0.0
-	_preview_host.offset_right = -380.0
+	_preview_host.offset_right = -492.0
 	_preview_host.offset_bottom = 0.0
 	if _preview != null:
 		_center_rect(_preview, 280.0, 280.0)
@@ -909,8 +935,8 @@ func _place_dossier() -> void:
 	if _dossier == null:
 		return
 	const MARGIN_R: float = 32.0
-	const WIDTH: float = 378.0
-	const CLEAR_BOTTOM: float = 228.0
+	const WIDTH: float = 452.0
+	const CLEAR_BOTTOM: float = 252.0
 	const MARGIN_TOP: float = 24.0
 	_dossier.anchor_left = 1.0
 	_dossier.anchor_top = 0.0
@@ -954,9 +980,9 @@ func _place_rite() -> void:
 	rite.anchor_right = 1.0
 	rite.anchor_bottom = 1.0
 	rite.offset_right = -28.0
-	rite.offset_bottom = -132.0
-	rite.offset_left = -28.0 - 280.0
-	rite.offset_top = -132.0 - h
+	rite.offset_bottom = -128.0
+	rite.offset_left = -28.0 - 276.0
+	rite.offset_top = -128.0 - h
 	rite.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	rite.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	move_child(rite, get_child_count() - 1)
@@ -1043,8 +1069,8 @@ func _place_cta() -> void:
 		return
 	const PAD_L: float = 28.0
 	const PAD_R: float = 28.0
-	const PAD_T: float = 8.0
-	const PAD_B: float = 8.0
+	const PAD_T: float = 14.0
+	const PAD_B: float = 14.0
 	var copy := _commence_btn.get_node_or_null("CommenceCopy") as VBoxContainer
 	if copy != null:
 		copy.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1054,8 +1080,8 @@ func _place_cta() -> void:
 		copy.offset_bottom = -PAD_B
 		copy.alignment = BoxContainer.ALIGNMENT_CENTER
 		copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var w: float = 240.0
-	var h: float = 68.0
+	var w: float = 276.0
+	var h: float = 92.0
 	_commence_btn.clip_contents = false
 	_commence_btn.anchor_left = 1.0
 	_commence_btn.anchor_top = 1.0
@@ -1238,7 +1264,7 @@ func _place_crucible_bar() -> void:
 	_crucible_bar.anchor_right = 1.0
 	_crucible_bar.anchor_bottom = 1.0
 	_crucible_bar.offset_left = 254.0
-	_crucible_bar.offset_right = -332.0
+	_crucible_bar.offset_right = -324.0
 	_crucible_bar.offset_top = -78.0
 	_crucible_bar.offset_bottom = -24.0
 

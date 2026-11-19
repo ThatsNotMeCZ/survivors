@@ -23,7 +23,7 @@ static func step(world: SimWorld, dt: float) -> void:
 			var kdef: Vector2 = _deflect(world, enemies.x[i], enemies.y[i], enemies.radius[i], kvx, kvy, enemies.x[i] + kvx, enemies.y[i] + kvy)
 			enemies.x[i] += kdef.x
 			enemies.y[i] += kdef.y
-			var decay: float = maxf(0.0, 1.0 - 8.0 * dt)
+			var decay: float = maxf(0.0, 1.0 - 6.0 * dt)
 			enemies.vel_x[i] *= decay
 			enemies.vel_y[i] *= decay
 			if absf(enemies.vel_x[i]) < 0.5:
@@ -122,8 +122,8 @@ static func step(world: SimWorld, dt: float) -> void:
 			var inset_y: float = float(bounds.get("borderInsetY", 0.0))
 			var pad_x: float = inset_x + enemies.radius[i] + 8.0
 			var pad_y: float = inset_y + enemies.radius[i] + 8.0
-			enemies.x[i] = clampf(enemies.x[i], pad_x, float(bounds.get("width", 3000.0)) - pad_x)
-			enemies.y[i] = clampf(enemies.y[i], pad_y, float(bounds.get("height", 3000.0)) - pad_y)
+			enemies.x[i] = clampf(enemies.x[i], pad_x, float(bounds.get("width", 6000.0)) - pad_x)
+			enemies.y[i] = clampf(enemies.y[i], pad_y, float(bounds.get("height", 6000.0)) - pad_y)
 		var move_x: float = enemies.x[i] - start_x
 		if enemies.windup[i] > 0.0:
 			var aim_dx: float = enemies.aim_x[i] - enemies.x[i]

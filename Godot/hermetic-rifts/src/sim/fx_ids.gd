@@ -24,3 +24,4 @@ const ALCHEMY_FROST: int = 18
 const GEODE_CRACK: int = 19
 const PARRY_REFLECT: int = 20
 const ESSENCE_PICKUP: int = 21
+const BOSS_EMERGE: int = 22

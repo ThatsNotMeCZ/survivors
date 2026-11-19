@@ -193,14 +193,19 @@ func _suite_03_arena_clamping(cat: Catalog) -> bool:
 	var ok: bool = true
 	var world: SimWorld = SimWorld.create(cat, "runner", [], [], 0x1111)
 	ok = _check(world.arena_shape == "circle", "Suite 3: arena_shape == circle") and ok
-	ok = _check(is_equal_approx(world.arena_radius, 1500.0), "Suite 3: arena_radius == 1500.0") and ok
+	ok = _check(is_equal_approx(world.arena_radius, 3000.0), "Suite 3: arena_radius == 3000.0") and ok
 	ok = _check(is_equal_approx(world.player.x, 0.0) and is_equal_approx(world.player.y, 0.0), "Suite 3: player starts at (0, 0)") and ok
+	var tel_d: float = sqrt(world.teleporter_x * world.teleporter_x + world.teleporter_y * world.teleporter_y)
+	ok = _check(tel_d >= 1200.0 - 0.5 and tel_d <= 2400.0 + 0.5, "Suite 3: teleporter in [1200, 2400] (%.1f)" % tel_d) and ok
+	var sp: Vector2 = SimEnemies.pick_spawn_point(world, 12.0)
+	var sp_d: float = sp.distance_to(Vector2(world.player.x, world.player.y))
+	ok = _check(sp.x != INF and sp_d >= 920.0 - 0.5 and sp.length() <= world.arena_radius, "Suite 3: spawn point >= 920px from player (%.1f)" % sp_d) and ok
 
 	var input: InputFrame = InputFrame.empty()
 	input.move_x = 1.0
 	input.move_y = 0.25
-	world.player.x = 1650.0
-	world.player.y = 300.0
+	world.player.x = 3300.0
+	world.player.y = 600.0
 	var dt: float = 1.0 / 60.0
 	for _f: int in 10:
 		var frames: Array[InputFrame] = [input]
@@ -209,17 +214,17 @@ func _suite_03_arena_clamping(cat: Catalog) -> bool:
 	ok = _check(p_dist <= world.arena_radius - world.player.radius + 0.5, "Suite 3: player clamped inside circle (%.2f)" % p_dist) and ok
 
 	var mite_def: Dictionary = cat.entity("ember-mite")
-	var e1: int = SimEnemies.spawn(world, mite_def, 1750.0, 200.0)
+	var e1: int = SimEnemies.spawn(world, mite_def, 3500.0, 400.0)
 	ok = _check(e1 >= 0, "Suite 3: enemy spawned") and ok
 	if e1 >= 0:
-		world.enemies.x[e1] = 1750.0
-		world.enemies.y[e1] = 200.0
+		world.enemies.x[e1] = 3500.0
+		world.enemies.y[e1] = 400.0
 		SimEnemiesStep.step(world, dt)
 		var d_step: float = sqrt(world.enemies.x[e1] * world.enemies.x[e1] + world.enemies.y[e1] * world.enemies.y[e1])
 		ok = _check(d_step <= world.arena_radius - world.enemies.radius[e1] + 0.5, "Suite 3: SimEnemiesStep clamps enemy (%.2f)" % d_step) and ok
 
-		world.enemies.x[e1] = -1680.0
-		world.enemies.y[e1] = 400.0
+		world.enemies.x[e1] = -3360.0
+		world.enemies.y[e1] = 800.0
 		SimSeparation.resolve(world)
 		var d_sep: float = sqrt(world.enemies.x[e1] * world.enemies.x[e1] + world.enemies.y[e1] * world.enemies.y[e1])
 		ok = _check(d_sep <= world.arena_radius - world.enemies.radius[e1] + 0.5, "Suite 3: SimSeparation clamps enemy (%.2f)" % d_sep) and ok
@@ -453,6 +458,8 @@ func _suite_05_teleporter_overheat_drops(cat: Catalog) -> bool:
 	var saw_tier2: bool = false
 	var fodder_spawned_for_rupture: bool = false
 	var mite_idx: int = -1
+	var spec_idx: int = -1
+	var elite_idx: int = -1
 	for _s: int in 3200:
 		w.player.iframe_remain = 120.0
 		w.player.x = w.teleporter_x
@@ -464,13 +471,63 @@ func _suite_05_teleporter_overheat_drops(cat: Catalog) -> bool:
 		if not fodder_spawned_for_rupture and w.teleporter_charge >= w.teleporter_hold - 0.05:
 			fodder_spawned_for_rupture = true
 			mite_idx = SimEnemies.spawn(w, cat.entity("ember-mite"), w.teleporter_x + 80.0, w.teleporter_y)
+			spec_idx = SimEnemies.spawn(w, cat.entity("ember-spitter"), w.teleporter_x, w.teleporter_y + 90.0)
+			elite_idx = SimEnemies.spawn(w, cat.entity("ember-chaser"), w.teleporter_x - 85.0, w.teleporter_y, true, "burn")
 		w.step([hold_in], dt)
 		if w.ritual_tier == 3:
 			break
 	ok = _check(saw_tier1 and saw_tier2 and w.ritual_tier == 3, "Suite 5: ritual tiers 1 -> 2 -> 3 reached") and ok
 	ok = _check(w.hit_stop_remain >= 0.10, "Suite 5: rupture hit_stop_remain >= 0.10 (got %.3f)" % w.hit_stop_remain) and ok
 	ok = _check(mite_idx >= 0 and w.enemies.vel_x[mite_idx] > 100.0, "Suite 5: rupture applies radial knockback to nearby fodder") and ok
+	ok = _check(spec_idx >= 0 and w.enemies.vel_y[spec_idx] > 100.0, "Suite 5: rupture applies radial knockback to nearby specialist") and ok
+	ok = _check(elite_idx >= 0 and w.enemies.vel_x[elite_idx] < -100.0, "Suite 5: rupture applies radial knockback to nearby elite") and ok
 	ok = _check(w.boss_spawned and w.counts_boss == 1, "Suite 5: rupture spawns stage boss") and ok
+	var boss_idx: int = w.boss.enemy_index
+	ok = _check(boss_idx >= 0 and is_equal_approx(w.enemies.x[boss_idx], w.teleporter_x) and is_equal_approx(w.enemies.y[boss_idx], w.teleporter_y), "Suite 5: stage boss spawns at teleporter center") and ok
+	ok = _check(w.boss.emerge_remain > 0.0, "Suite 5: stage boss starts with emerge_remain > 0.0") and ok
+	var saw_emerge_fx: bool = false
+	for fx_i: int in w.fx.count:
+		if int(w.fx.kind[fx_i]) == FxIds.BOSS_EMERGE:
+			saw_emerge_fx = true
+			break
+	ok = _check(saw_emerge_fx, "Suite 5: spawn_stage_boss emits FxIds.BOSS_EMERGE") and ok
+
+	# Step past hitstop while verifying displacement + zero boss contact damage during emerge
+	for _s2: int in 25:
+		w.player.iframe_remain = 120.0
+		w.player.x = w.teleporter_x
+		w.player.y = w.teleporter_y
+		w.step([hold_in], dt)
+	ok = _check(w.enemies.x[mite_idx] > w.teleporter_x + 125.0, "Suite 5: rupture shoves fodder outward significantly (dx=%.1f)" % (w.enemies.x[mite_idx] - w.teleporter_x)) and ok
+	ok = _check(w.enemies.y[spec_idx] > w.teleporter_y + 135.0, "Suite 5: rupture shoves specialist outward significantly (dy=%.1f)" % (w.enemies.y[spec_idx] - w.teleporter_y)) and ok
+	ok = _check(w.enemies.x[elite_idx] < w.teleporter_x - 130.0, "Suite 5: rupture shoves elite outward significantly (dx=%.1f)" % (w.enemies.x[elite_idx] - w.teleporter_x)) and ok
+	ok = _check(w.boss.emerge_remain > 0.0 and is_equal_approx(w.enemies.x[boss_idx], w.teleporter_x) and is_equal_approx(w.enemies.y[boss_idx], w.teleporter_y), "Suite 5: boss stays stationary at circle center during emerge") and ok
+	# Clear non-boss enemies so only emerging boss overlaps player with iframe=0
+	for e: int in w.enemies.cap:
+		if w.enemies.alive[e] != 0 and w.enemies.role[e] != EnemyPool.ROLE_BOSS:
+			w.enemies.alive[e] = 0
+			if w.enemies.role[e] == EnemyPool.ROLE_FODDER:
+				w.counts_fodder = maxi(0, w.counts_fodder - 1)
+			else:
+				w.counts_elite = maxi(0, w.counts_elite - 1)
+	w.projectiles.clear()
+	w.obstacles.clear()
+	SimObstacles.rebuild_hash(w)
+	w.player.iframe_remain = 0.0
+	w.player.parry_remain = 0.0
+	w.player.dash_remain = 0.0
+	w.player.x = w.enemies.x[boss_idx]
+	w.player.y = w.enemies.y[boss_idx]
+	var dmg_before_emerge: float = w.damage_taken
+	for _s3: int in 10:
+		w.player.x = w.enemies.x[boss_idx]
+		w.player.y = w.enemies.y[boss_idx]
+		w.step([hold_in], dt)
+	ok = _check(is_equal_approx(w.damage_taken, dmg_before_emerge) and w.boss.emerge_remain > 0.0, "Suite 5: zero contact damage from emerging boss while emerge_remain > 0.0") and ok
+	for _s4: int in 60:
+		w.player.iframe_remain = 10.0
+		w.step([hold_in], dt)
+	ok = _check(is_equal_approx(w.boss.emerge_remain, 0.0), "Suite 5: boss emerge_remain finishes cleanly") and ok
 
 	# Step outside teleporter during charging flips flawless hold to false
 	var w_out: SimWorld = SimWorld.create(cat, "runner", [], [], 0x5556)
@@ -513,11 +570,19 @@ func _suite_05_teleporter_overheat_drops(cat: Catalog) -> bool:
 	w_oh.player.overheat_lockout_remain = 0.0
 	w_oh.player.skill_cd[InputFrame.SLOT_PRIMARY] = 0.0
 	var kb_mite: int = SimEnemies.spawn(w_oh, cat.entity("ember-mite"), w_oh.player.x, w_oh.player.y + 70.0)
+	var kb_elite: int = SimEnemies.spawn(w_oh, cat.entity("ember-chaser"), w_oh.player.x + 70.0, w_oh.player.y, true, "burn")
+	var kb_boss: int = SimEnemies.spawn(w_oh, cat.entity("cinder-heart"), w_oh.player.x - 70.0, w_oh.player.y)
 	var hp_before_bf: float = w_oh.player.hp
 	w_oh.step([fire_p], dt)
 	ok = _check(w_oh.player.backfire_count == 1 and w_oh.player.overheat_lockout_remain > 0.0, "Suite 5: Backfire locks primary") and ok
 	ok = _check(is_equal_approx(w_oh.player.hp, hp_before_bf), "Suite 5: Backfire leaves player HP untouched (before=%.2f after=%.2f)" % [hp_before_bf, w_oh.player.hp]) and ok
 	ok = _check(kb_mite >= 0 and w_oh.enemies.alive[kb_mite] != 0 and w_oh.enemies.vel_y[kb_mite] > 50.0, "Suite 5: Backfire knocks back fodder within 95px (vel_y=%.1f)" % (w_oh.enemies.vel_y[kb_mite] if kb_mite >= 0 else 0.0)) and ok
+	ok = _check(kb_elite >= 0 and w_oh.enemies.alive[kb_elite] != 0 and w_oh.enemies.vel_x[kb_elite] > 50.0, "Suite 5: Backfire knocks back elite within 95px (vel_x=%.1f)" % (w_oh.enemies.vel_x[kb_elite] if kb_elite >= 0 else 0.0)) and ok
+	ok = _check(kb_boss >= 0 and is_equal_approx(w_oh.enemies.vel_x[kb_boss], 0.0) and is_equal_approx(w_oh.enemies.vel_y[kb_boss], 0.0), "Suite 5: Boss remains immune to Backfire knockback") and ok
+	for _bf: int in 12:
+		w_oh.player.iframe_remain = 10.0
+		w_oh.step([InputFrame.empty()], dt)
+	ok = _check(w_oh.enemies.y[kb_mite] > w_oh.player.y + 100.0 and w_oh.enemies.x[kb_elite] > w_oh.player.x + 100.0, "Suite 5: Backfire stun lets fodder & elite shove significantly outward") and ok
 
 	w_oh.projectiles.clear()
 	w_oh.player.skill_cd[InputFrame.SLOT_PRIMARY] = 0.0
@@ -1017,19 +1082,19 @@ func _suite_08_persistence(cat: Catalog) -> bool:
 	# Crucible upgrades + 100% refund math + selectedLoadouts + ascensionTier
 	var rec: ArchiveRecords = ArchiveRecords.new()
 	rec.data = ArchiveRecords._empty()
-	rec.grant_essence(100)
-	ok = _check(rec.spend_essence(15), "Suite 8: spend 15 essence") and ok
+	rec.grant_essence(250)
+	ok = _check(rec.spend_essence(40), "Suite 8: spend 40 essence") and ok
 	rec.set_upgrade_level("divination-reroll", 1)
-	ok = _check(rec.spend_essence(30), "Suite 8: spend 30 essence") and ok
+	ok = _check(rec.spend_essence(75), "Suite 8: spend 75 essence") and ok
 	rec.set_upgrade_level("divination-reroll", 2)
-	ok = _check(rec.spend_essence(25), "Suite 8: spend 25 essence") and ok
+	ok = _check(rec.spend_essence(60), "Suite 8: spend 60 essence") and ok
 	rec.set_upgrade_level("ascension-seals", 1)
 	rec.set_ascension_tier(1)
 	rec.set_slot_variant("runner", "primary", "B")
 	rec.set_slot_variant("astromancer", "special", "B")
 
 	var loaded_rec: ArchiveRecords = ArchiveRecords.load_or_default()
-	ok = _check(loaded_rec.essence_balance() == 30, "Suite 8: reloaded essence == 30 (got %d)" % loaded_rec.essence_balance()) and ok
+	ok = _check(loaded_rec.essence_balance() == 75, "Suite 8: reloaded essence == 75 (got %d)" % loaded_rec.essence_balance()) and ok
 	ok = _check(loaded_rec.upgrade_level("divination-reroll") == 2, "Suite 8: reloaded upgrade level == 2") and ok
 	ok = _check(loaded_rec.ascension_tier() == 1, "Suite 8: reloaded ascensionTier == 1") and ok
 	ok = _check(String(loaded_rec.loadout_for("runner").get("primary", "A")) == "B", "Suite 8: reloaded selectedLoadouts runner.primary == B") and ok
@@ -1038,12 +1103,12 @@ func _suite_08_persistence(cat: Catalog) -> bool:
 	var modal: CrucibleModal = CrucibleModal.new()
 	var refund: int = modal._total_spent_essence(loaded_rec, cat)
 	modal.free()
-	ok = _check(refund == 70, "Suite 8: 100%% Crucible refund math == 70 (got %d)" % refund) and ok
+	ok = _check(refund == 175, "Suite 8: 100%% Crucible refund math == 175 (got %d)" % refund) and ok
 	loaded_rec.grant_essence(refund)
 	for upg: Dictionary in cat.crucible_upgrades:
 		loaded_rec.set_upgrade_level(String(upg.get("id", "")), 0)
 	loaded_rec.set_ascension_tier(0)
-	ok = _check(loaded_rec.essence_balance() == 100 and loaded_rec.ascension_tier() == 0, "Suite 8: post-refund essence == 100 and ascension == 0") and ok
+	ok = _check(loaded_rec.essence_balance() == 250 and loaded_rec.ascension_tier() == 0, "Suite 8: post-refund essence == 250 and ascension == 0") and ok
 
 	# GameSettings keybind serialization including "interact"
 	if not InputMap.has_action("interact"):

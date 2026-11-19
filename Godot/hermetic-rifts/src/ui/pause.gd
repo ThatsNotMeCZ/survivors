@@ -11,7 +11,7 @@ const ACTION_W: float = 288.0
 const ACTION_H: float = 58.0
 const PANEL_W: float = 340.0
 const INV_PAD: float = 70.0
-const GLYPHS: Array[String] = ["⚶", "🜍", "⟁", "🜂", "☿"]
+const ICON_IDS: Array[String] = ["icon-resume", "icon-archives", "icon-settings", "icon-seal", "icon-abandon"]
 const STEAM_WISHLIST_URL: String = "https://store.steampowered.com/app/0/"
 
 var _title_1: Label
@@ -100,12 +100,12 @@ func _build_left() -> Control:
 	_actions.position = Vector2(0, 80)
 	_actions.size = Vector2(320, 260)
 	tablet_stage.add_child(_actions)
-	_resume_btn = _plaque(tr("ui.pause.resume"), GLYPHS[0], 0.0)
+	_resume_btn = _plaque(tr("ui.pause.resume"), ICON_IDS[0], 0.0)
 	_resume_btn.name = "ResumeBtn"
-	_archives_btn = _plaque(tr("ui.pause.archives"), GLYPHS[1], 12.0)
-	_settings_btn = _plaque(tr("ui.pause.settings"), GLYPHS[2], 24.0)
-	_seal_btn = _plaque(tr("ui.pause.seal"), GLYPHS[3], 36.0)
-	_abandon_btn = _plaque(tr("ui.pause.abandon"), GLYPHS[4], 36.0)
+	_archives_btn = _plaque(tr("ui.pause.archives"), ICON_IDS[1], 12.0)
+	_settings_btn = _plaque(tr("ui.pause.settings"), ICON_IDS[2], 24.0)
+	_seal_btn = _plaque(tr("ui.pause.seal"), ICON_IDS[3], 36.0)
+	_abandon_btn = _plaque(tr("ui.pause.abandon"), ICON_IDS[4], 36.0)
 	_resume_btn.pressed.connect(func() -> void: resume_pressed.emit())
 	_archives_btn.pressed.connect(func() -> void: archives_pressed.emit())
 	_settings_btn.pressed.connect(func() -> void: settings_pressed.emit())
@@ -120,11 +120,13 @@ func _build_left() -> Control:
 	var wish_txt: String = tr("ui.menu.wishlist")
 	if wish_txt == "ui.menu.wishlist" or wish_txt == "":
 		wish_txt = "Wishlist on Steam"
-	_wishlist_btn = _plaque(wish_txt, "✦", 0.0)
+	_wishlist_btn = _plaque(wish_txt, "icon-spark", 0.0)
 	_wishlist_btn.name = "WishlistBtn"
 	_wishlist_btn.custom_minimum_size = Vector2(ACTION_W, 46)
 	_wishlist_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_wishlist_btn.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
+	var wish_lab := _wishlist_btn.get_node_or_null("Row/Label") as Label
+	if wish_lab != null:
+		wish_lab.add_theme_color_override("font_color", UiAtlas.GOLD_MOLTEN)
 	_wishlist_btn.pressed.connect(func() -> void: OS.shell_open(STEAM_WISHLIST_URL))
 	left.add_child(_wishlist_btn)
 	return left
@@ -262,15 +264,36 @@ func _fill_inventory(world: SimWorld) -> void:
 		_inv_list.add_child(chip)
 
 
-func _plaque(text: String, glyph: String, indent: float) -> Button:
+func _plaque(text: String, icon_id: String, indent: float) -> Button:
 	var btn := Button.new()
-	btn.text = "%s    %s" % [text.to_upper(), glyph]
+	btn.text = ""
 	btn.custom_minimum_size = Vector2(ACTION_W, ACTION_H)
 	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	btn.offset_transform_enabled = true
 	btn.offset_transform_position = Vector2(indent, 0.0)
 	UiAtlas.apply_button_styles(btn, "btn-plaque")
-	btn.add_theme_font_size_override("font_size", 16)
+	var row := HBoxContainer.new()
+	row.name = "Row"
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 20.0
+	row.offset_right = -20.0
+	row.offset_top = 6.0
+	row.offset_bottom = -6.0
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 10)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var lab := Label.new()
+	lab.name = "Label"
+	lab.text = text.to_upper()
+	lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	UiAtlas.apply_label(lab, UiAtlas.TYPE_BODY, UiAtlas.PARCHMENT, 16, true)
+	var ic: TextureRect = UiAtlas.make_icon(icon_id, 24)
+	row.add_child(lab)
+	row.add_child(ic)
+	btn.add_child(row)
 	return btn
 
 

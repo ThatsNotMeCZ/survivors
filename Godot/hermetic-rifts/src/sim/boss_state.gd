@@ -2,8 +2,10 @@ class_name BossState
 extends RefCounted
 
 const MAX_ATTACKS: int = 8
+const EMERGE_DURATION: float = 0.85
 
 var enemy_index: int = -1
+var emerge_remain: float = 0.0
 var cooldowns: Array[float] = []
 var active_attack: int = -1
 var phase: StringName = &"none"
@@ -43,6 +45,7 @@ func _init() -> void:
 
 func reset() -> void:
 	enemy_index = -1
+	emerge_remain = 0.0
 	cooldowns.resize(MAX_ATTACKS)
 	for i: int in MAX_ATTACKS:
 		cooldowns[i] = 0.0

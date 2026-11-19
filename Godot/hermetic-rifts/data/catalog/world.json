@@ -1,11 +1,11 @@
 {
   "version": 1,
   "arenaShape": "circle",
-  "arenaRadius": 1500,
+  "arenaRadius": 3000,
   "arenaRimThickness": 24,
-  "width": 3000,
-  "height": 3000,
-  "viewZoom": 2.5,
+  "width": 6000,
+  "height": 6000,
+  "viewZoom": 2.2,
   "maxProjectiles": 160,
   "defaultSurvivor": "runner",
   "defaultEnemy": "ember-mite"

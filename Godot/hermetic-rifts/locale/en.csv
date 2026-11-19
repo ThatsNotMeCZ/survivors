@@ -31,7 +31,7 @@ ui.hall.stat.stride.measured,STRIDE: MEASURED
 ui.hall.stat.stride.hidden,STRIDE: ???
 ui.hall.stat.frame,FRAME: COMPACT
 ui.hall.stat.seal,SEAL: {n}
-ui.hall.skill.empty,—
+ui.hall.skill.empty,-
 ui.pause.title,Simulation Paused
 ui.pause.title.line1,SIMULATION
 ui.pause.title.line2,PAUSED
@@ -66,9 +66,9 @@ ui.recap.hall.hint,[Esc]
 ui.recap.copy,Copy Summary
 ui.recap.copy.hint,[C]
 ui.recap.copy.done,Copied
-ui.recap.copy.victory,TRANSMUTATION COMPLETE 🜂
-ui.recap.copy.defeat,VESSEL SHATTERED 🜍
-ui.recap.copy.abandon,VESSEL DISSOLVED ☿
+ui.recap.copy.victory,TRANSMUTATION COMPLETE
+ui.recap.copy.defeat,VESSEL SHATTERED
+ui.recap.copy.abandon,VESSEL DISSOLVED
 ui.recap.copy.seed,Seed: {tag}
 ui.recap.copy.seed.daily,Seed: {tag} · Daily Rite {date}
 ui.recap.copy.line.vessel,Vessel: {vessel} · Cycle: {cycle} · Chamber: {stage}
@@ -106,6 +106,7 @@ ui.settings.lead,"Display, audio, and visual clarity."
 ui.settings.section.display,Display
 ui.settings.section.audio,Audio
 ui.settings.section.visual,Visual
+ui.settings.section.controls,Controls
 ui.settings.window_mode,Display Mode
 ui.settings.window_mode.hint,How the game fills the monitor.
 ui.settings.window_mode.windowed,Windowed
@@ -228,7 +229,7 @@ entity.frost-emperor.title,Monarch of Absolute Zero
 entity.frost-emperor.lore,Entombed at the bottom of the Great Work where heat and motion cease. It is the final seal-keeper; to shatter its glacial hull is to complete the transmutation.
 entity.enemy-astral-sniper.name,Astral Watcher
 entity.enemy-astral-sniper.title,Ocular of the Void
-entity.enemy-astral-sniper.lore,A disembodied brass-and-aether eye that drifts at the edge of sight. It traces a thin celestial sightline before lancing the arena—only solid pillars can break its gaze.
+entity.enemy-astral-sniper.lore,A disembodied brass-and-aether eye that drifts at the edge of sight. It traces a thin celestial sightline before lancing the arena - only solid pillars can break its gaze.
 survivor.runner.name,Homunculus
 survivor.runner.title,The Runner
 survivor.runner.lore,"Clay and quicksilver, stolen from a failed Great Work. You kite the dross until the seal holds."
@@ -270,7 +271,7 @@ stage.glacial-tomb.kicker,Fourth Chamber · Rubedo & The Great Seal
 stage.glacial-tomb.lore,"The deepest vault beneath the canal, sealed in eternal permafrost to contain the Frost Emperor. Here the Transmutation Circle demands the longest vigil before the Great Work is decided."
 ui.archives.kicker,HERMETIC CODEX & LEDGER
 ui.archives.title,THE ARCHIVES
-ui.archives.foot,☉ ☽ ☿ ♀ ♂ ♃ ♄
+ui.archives.foot,SOL · LUNA · MERCURY · VENUS · MARS · JOVE · SATURN
 ui.archives.ribbon.workings,Workings
 ui.archives.ribbon.transmutations,Transmutations
 ui.archives.ribbon.dross,Dross Slain
@@ -319,10 +320,10 @@ ui.archives.howto.beat.1.title,Harvest Mercury Drops & Ascend
 ui.archives.howto.beat.1.body,"Slay the lesser dross. Mercury Drops rise from the husks. Each ascent pauses the chamber and offers three tablets. Pick one."
 ui.archives.howto.beat.2.step,02 · CONVERGENCE
 ui.archives.howto.beat.2.title,Channel the Transmutation Circle
-ui.archives.howto.beat.2.body,"When the Transmutation Circle appears, a chevron points you to it. Stand inside to charge. Step out and the seal cools."
+ui.archives.howto.beat.2.body,"When the Transmutation Circle appears, seek the ring etched into the flagstones and stand inside to charge. Step out and the seal cools."
 ui.archives.howto.beat.3.step,03 · THE GUARDIAN
 ui.archives.howto.beat.3.title,Shatter the Seal Guardian & Descend
-ui.archives.howto.beat.3.body,"A full seal wakes the chamber’s Guardian. Slay it to tear open the Rift. After the Frost Emperor, stand in the gold gate for Cycle II, or press F (or pause → Seal the Working) to complete the transmutation."
+ui.archives.howto.beat.3.body,"A full seal wakes the chamber's Guardian. Slay it to tear open the Rift. After the Frost Emperor, stand in the gold gate for Cycle II, or press F (or pause -> Seal the Working) to complete the transmutation."
 ui.archives.lore.banner.kicker,Hermetic Chronicles
 ui.archives.lore.banner.title,APOCRYPHA OF THE GREAT WORK
 ui.archives.lore.banner.sub,"Treatises recovered from the outer foundry, the frozen sea-locks, and the sealed glacial vault."
@@ -332,24 +333,24 @@ ui.archives.lore.sub.chambers,III. The Three Chambers
 ui.archives.lore.work.1.kicker,FOLIO I · THE SHATTERED CRUCIBLE
 ui.archives.lore.work.1.title,When the Magisterium Burned
 ui.archives.lore.work.1.p1,"The Great Work was meant to distill immortal quintessence from base lead, sulfur, and sea-salt. Instead, the Grand Crucible cracked at the midnight conjunction, flooding the subterranean vaults with volatile humors."
-ui.archives.lore.work.1.p2,"The alchemists were consumed in the first flash of calcination. What remained in the ash were the failed transmutations—skittering clots of slag, brine-swollen husks, and the colossal furnace cores that now guard the lower seals."
+ui.archives.lore.work.1.p2,"The alchemists were consumed in the first flash of calcination. What remained in the ash were the failed transmutations - skittering clots of slag, brine-swollen husks, and the colossal furnace cores that now guard the lower seals."
 ui.archives.lore.work.2.kicker,FOLIO II · MERCURY
 ui.archives.lore.work.2.title,The Circulation of Quicksilver
-ui.archives.lore.work.2.p1,"No natural flesh can breathe the fumes of the Rifts. Only constructed or consecrated Vessels—animated by refined quicksilver—can walk the flagstones without dissolving into dross."
+ui.archives.lore.work.2.p1,"No natural flesh can breathe the fumes of the Rifts. Only constructed or consecrated Vessels - animated by refined quicksilver - can walk the flagstones without dissolving into dross."
 ui.archives.lore.work.2.p2,"Every fallen abomination releases a bead of stolen Mercury. A Vessel that gathers them grows in potency, binding hermetic tablets into its frame."
 ui.archives.lore.work.3.kicker,FOLIO III · TRANSMUTATION CIRCLES
 ui.archives.lore.work.3.title,Seals of Passage
-ui.archives.lore.work.3.p1,"Each chamber is locked by a heavy Transmutation Circle etched into the stone. Only when the chamber’s temporal alignment arrives can a Vessel stand inside the hexagram and channel its own vital heat into the ring."
-ui.archives.lore.work.3.p2,"The channeling acts as a beacon: the chamber’s hordes converge on the circle, and the Seal Guardian awakens to crush the intruder before the Rift can tear open."
+ui.archives.lore.work.3.p1,"Each chamber is locked by a heavy Transmutation Circle etched into the stone. Only when the chamber's temporal alignment arrives can a Vessel stand inside the hexagram and channel its own vital heat into the ring."
+ui.archives.lore.work.3.p2,"The channeling acts as a beacon: the chamber's hordes converge on the circle, and the Seal Guardian awakens to crush the intruder before the Rift can tear open."
 ui.archives.lore.work.4.kicker,FOLIO IV · THE THREE OPERATIONS
 ui.archives.lore.work.4.title,"Nigredo, Albedo, Rubedo"
 ui.archives.lore.work.4.p1,"The descent follows the three classical stages of hermetic transmutation: first Nigredo in the blackened ash of the Cinder Yard; second Albedo in the white salt-frost of the Rime Dock; and finally Rubedo in the deep Glacial Tomb."
-ui.archives.lore.work.4.p2,"Slaying the Frost Emperor opens the gold Ouroboros. Seal the working there, or descend again — Cinder Yard, every tablet still bound, the chambers no kinder for the second passage."
+ui.archives.lore.work.4.p2,"Slaying the Frost Emperor opens the gold Ouroboros. Seal the working there, or descend again  -  Cinder Yard, every tablet still bound, the chambers no kinder for the second passage."
 ui.archives.lore.vessel.sealed_kicker,SEALED VESSEL · UNCONSECRATED FRAME
 ui.archives.lore.vessel.dossier,{title} · VESSEL DOSSIER
-ui.archives.lore.vessel.sealed_req,Vessel Sealed — Requirement: {label} ({progress}).
+ui.archives.lore.vessel.sealed_req,Vessel Sealed  -  Requirement: {label} ({progress}).
 ui.archives.lore.chamber.unseen_kicker,CHAMBER {n} · UNCHARTERED SEAL
-ui.archives.lore.chamber.unseen_lore,Uncharted Chamber — Descend through the Rifts to unseal this chamber’s chronicle and survey its hazards.
+ui.archives.lore.chamber.unseen_lore,Uncharted Chamber  -  Descend through the Rifts to unseal this chamber's chronicle and survey its hazards.
 ui.archives.lore.chamber.denizens,WHO WALKS HERE
 ui.archives.lore.chamber.props,IN THE CHAMBER
 ui.archives.lore.chamber.denizens.seen,"Hunts you: {hunts}. Spits from afar: {spits}. Lances from the rim: {lances}. Warden: {warden}. Guards the seal: {guardian}."
@@ -406,8 +407,8 @@ ui.archives.reliquary.status.bound,BOUND
 ui.archives.reliquary.status.unbound,UNBOUND
 ui.archives.reliquary.status.sealed,SEALED
 ui.archives.reliquary.hooks.hidden,ALCHEMICAL PROPERTIES UNCHARTED (???)
-ui.archives.reliquary.lore.sealed,Sealed Relic — Requirement: {label} ({progress}).
-ui.archives.reliquary.lore.unbound,Unbound Augmentation — Bind this tablet during Vessel Ascension in the Rifts to inscribe its record.
+ui.archives.reliquary.lore.sealed,Sealed Relic  -  Requirement: {label} ({progress}).
+ui.archives.reliquary.lore.unbound,Unbound Augmentation  -  Bind this tablet during Vessel Ascension in the Rifts to inscribe its record.
 ui.archives.hook.on_kill,{sign}{value} HP on kill
 ui.archives.hook.on_crit,-{value}s CD on crit
 ui.archives.ledger.banner.kicker,Ledger of Workings
@@ -509,7 +510,7 @@ item.philosophers-catalyst.name,Philosopher's Catalyst
 item.philosophers-catalyst.lore,A luminous shard of perfected red stone recovered from the Aether Vault. Its resonant pulse sharpens every art into a decisive stroke.
 entity.slag-hound.name,Slag Hound
 entity.slag-hound.title,Furnace Ram
-entity.slag-hound.lore,"A quadruped smelter cast in blackened iron whose belly glows white-hot. Once it locks onto a stray vessel, it lunges at terrifying speed—though crashing into stone pillars stuns its core."
+entity.slag-hound.lore,"A quadruped smelter cast in blackened iron whose belly glows white-hot. Once it locks onto a stray vessel, it lunges at terrifying speed - though crashing into stone pillars stuns its core."
 entity.aether-hexer.name,Aether Hexer
 entity.aether-hexer.title,Crucible Binder
 entity.aether-hexer.lore,"Robed in tattered lead-weave, this hunched conjurer keeps its distance and scribes delayed aether rings beneath fleeing vessels to mire them in stagnant gravity."
@@ -556,7 +557,7 @@ skill.skill-penitent-pyre.name,Penitent Pyre
 skill.skill-penitent-pyre.lore,"He carries the kiln inside his ribs; when the vow breaks, the whole floor burns."
 skill.skill-penitent-pyre.hook,Unleashes a consecrated ring of fire that knocks back and scorches every nearby foe.
 skill.skill-crucible-cleave.name,Crucible Cleave
-skill.skill-crucible-cleave.lore,A notched iron paddle meant to skim molten dross—turned to bone instead.
+skill.skill-crucible-cleave.lore,A notched iron paddle meant to skim molten dross - turned to bone instead.
 skill.skill-crucible-cleave.hook,"Sweeps a wide incandescent cleave toward your cursor, staggering foes and deflecting incoming bolts."
 skill.skill-cinder-flail.name,Cinder Flail
 skill.skill-cinder-flail.lore,Three slag links whipped in a blistering circle around the wrist.
@@ -710,7 +711,7 @@ ui.archives.kind.charger,Charges in a line
 ui.archives.kind.hexer,Casts hexes from afar
 ui.archives.kind.spire,Conducts voltaic arcs
 ui.archives.bestiary.behavior.cleaver,Closes in and winds up a wide arc cleave.
-ui.archives.bestiary.behavior.charger,"Locks its gaze, then charges forward—lure it into stone pillars to stun it."
+ui.archives.bestiary.behavior.charger,"Locks its gaze, then charges forward - lure it into stone pillars to stun it."
 ui.archives.bestiary.behavior.hexer,Maintains range and plants delayed slowing hex rings beneath you.
 ui.archives.bestiary.behavior.spire,Stationary conductor that anchors voltaic tethers until shattered.
 ui.recap.row.essence_banked,Crucible Essence

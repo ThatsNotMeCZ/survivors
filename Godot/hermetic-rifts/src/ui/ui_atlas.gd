@@ -295,6 +295,48 @@ static func apply_button_styles(button: Button, id: String) -> void:
 	button.add_theme_constant_override("outline_size", 2)
 
 
+static func make_icon(id: String, size_px: int = 24) -> TextureRect:
+	ensure_loaded()
+	var tex_rect := TextureRect.new()
+	tex_rect.texture = frame(id)
+	tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.custom_minimum_size = Vector2(float(size_px), float(size_px))
+	tex_rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	tex_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return tex_rect
+
+
+static func style_desk_tab(button: Button, active: bool) -> void:
+	ensure_loaded()
+	if button == null:
+		return
+	var entry: Dictionary = _ui_frames.get("desk-tab", {})
+	var margins: Dictionary = {}
+	var nine: Variant = entry.get("nineSlice", null)
+	if typeof(nine) == TYPE_DICTIONARY:
+		margins = (nine as Dictionary).get("margins", {})
+	var normal_state: String = "active" if active else "idle"
+	var hover_state: String = "active" if active else "hover"
+	button.add_theme_stylebox_override("normal", _stylebox("desk-tab", normal_state, margins))
+	button.add_theme_stylebox_override("hover", _stylebox("desk-tab", hover_state, margins))
+	button.add_theme_stylebox_override("pressed", _stylebox("desk-tab", "active", margins))
+	button.add_theme_stylebox_override("focus", empty_focus())
+	button.add_theme_stylebox_override("disabled", _stylebox("desk-tab", "idle", margins))
+	if body_font() != null:
+		button.add_theme_font_override("font", body_font())
+	button.add_theme_font_size_override("font_size", SIZE_META)
+	var col: Color = BRASS_BRIGHT if active else PARCHMENT
+	button.add_theme_color_override("font_color", col)
+	button.add_theme_color_override("font_hover_color", BRASS_BRIGHT)
+	button.add_theme_color_override("font_pressed_color", BRASS_BRIGHT)
+	button.add_theme_color_override("font_focus_color", BRASS_BRIGHT)
+	button.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	button.add_theme_constant_override("outline_size", 2)
+
+
 static func empty_focus() -> StyleBoxEmpty:
 	return StyleBoxEmpty.new()
 
@@ -575,11 +617,18 @@ static func _stylebox(id: String, state: String, margins: Dictionary, outset: Di
 	sb.expand_margin_top = out_t
 	sb.expand_margin_right = out_r
 	sb.expand_margin_bottom = out_b
-	# Keep content padding smaller than 9-slice margins so labels don't inflate the button.
-	sb.content_margin_left = 20.0
-	sb.content_margin_right = 20.0
-	sb.content_margin_top = 8.0
-	sb.content_margin_bottom = 8.0
+	var pad_lr: float = 20.0
+	var pad_tb: float = 8.0
+	if id == "btn-cta":
+		pad_lr = 24.0
+		pad_tb = 14.0
+	elif id == "desk-tab":
+		pad_lr = 14.0
+		pad_tb = 6.0
+	sb.content_margin_left = pad_lr
+	sb.content_margin_right = pad_lr
+	sb.content_margin_top = pad_tb
+	sb.content_margin_bottom = pad_tb
 	sb.draw_center = true
 	return sb
 

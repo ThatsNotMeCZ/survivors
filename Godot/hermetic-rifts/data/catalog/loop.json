@@ -36,9 +36,9 @@
     "maxSpecialistsBase": 2,
     "maxSpecialistsPerCoeff": 2.0,
     "maxSpecialistsCap": 9,
-    "spawnMin": 460,
-    "spawnMax": 900,
-    "spawnSafeRadius": 460,
+    "spawnMin": 920,
+    "spawnMax": 1800,
+    "spawnSafeRadius": 920,
     "groupSizeMin": 3,
     "groupSizeMax": 6,
     "eliteGroupSizeMin": 1,
@@ -51,14 +51,14 @@
   },
   "teleporter": {
     "spawnFromStart": true,
-    "minDistFromCenter": 680,
-    "maxDistFromCenter": 1220,
+    "minDistFromCenter": 1200,
+    "maxDistFromCenter": 2400,
     "discoveryRadius": 340,
     "showChevronBeforeDiscovery": false,
     "ritualTiers": [0.33, 0.66, 1.0],
     "ruptureHitstop": 0.14,
     "ruptureKnockbackPad": 60,
-    "ruptureKnockbackImpulse": 420
+    "ruptureKnockbackImpulse": 580
   },
   "overheat": {
     "enabled": true,
@@ -72,7 +72,7 @@
     "criticalVentCooldownRefund": 0.25,
     "backfireLockDuration": 1.2,
     "backfireKnockbackRadius": 95,
-    "backfireKnockbackImpulse": 310
+    "backfireKnockbackImpulse": 450
   },
   "drops": {
     "xpVariancePct": 0.35,

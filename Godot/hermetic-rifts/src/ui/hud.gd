@@ -2,7 +2,7 @@ class_name HudView
 extends Control
 
 const DIFF_SEG_W: float = 72.0
-const DIFF_MARKER_X: float = 44.0
+const DIFF_MARKER_X: float = 43.0
 const SKILL_SLOTS: Array[StringName] = [&"primary", &"secondary", &"utility", &"special"]
 const SKILL_GLYPHS: Array[String] = ["I", "II", "III", "IV"]
 const SKILL_KEYS: Array[String] = ["ui.hud.key.primary", "ui.hud.key.secondary", "ui.hud.key.utility", "ui.hud.key.special"]
@@ -29,6 +29,7 @@ var _vignette: ColorRect
 var _vignette_mat: ShaderMaterial
 var _draw_layer: Control
 var _corner: TextureRect
+var _obj_root: VBoxContainer
 var _kicker: Label
 var _objective: Label
 var _obj_fill: ColorRect
@@ -92,6 +93,9 @@ func sync(world: SimWorld) -> void:
 	)
 	var ouroboros: bool = SimLoop.can_seal(world)
 	var outside: bool = (world.teleporter_state == &"charging" and not tel_in) or (world.portal_open and not portal_in)
+	var obj_kind: StringName = objective.get("kind", &"wait")
+	if _obj_root != null:
+		_obj_root.visible = obj_kind != &"wait"
 	var copy: Dictionary = _objective_copy(world, objective, outside, ouroboros, tel_in)
 	_kicker.text = String(copy.get("kicker", ""))
 	_kicker.visible = _kicker.text != ""
@@ -178,6 +182,7 @@ func _build() -> void:
 
 func _build_objective() -> void:
 	var root := VBoxContainer.new()
+	_obj_root = root
 	root.alignment = BoxContainer.ALIGNMENT_CENTER
 	root.add_theme_constant_override("separation", 0)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -264,12 +269,11 @@ func _build_run_panel() -> void:
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(bg)
 	var col := VBoxContainer.new()
-	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	col.offset_left = 56.0
+	col.offset_left = 57.0
 	col.offset_top = 34.0
-	col.offset_right = -12.0
-	col.offset_bottom = -10.0
-	col.add_theme_constant_override("separation", 6)
+	col.offset_right = 228.0
+	col.offset_bottom = 70.0
+	col.add_theme_constant_override("separation", 2)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(col)
 	var timer_row := HBoxContainer.new()
@@ -287,8 +291,12 @@ func _build_run_panel() -> void:
 	_stage.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	col.add_child(_stage)
 	var header := HBoxContainer.new()
+	header.offset_left = 57.0
+	header.offset_top = 75.0
+	header.offset_right = 228.0
+	header.offset_bottom = 92.0
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(header)
+	root.add_child(header)
 	_diff_tier = _label(10, DIFF_COLORS[0], UiAtlas.TYPE_MICRO)
 	_diff_tier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_diff_tier)
@@ -296,10 +304,15 @@ func _build_run_panel() -> void:
 	_diff_coeff.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	header.add_child(_diff_coeff)
 	var viewport := Control.new()
-	viewport.custom_minimum_size = Vector2(0, 16)
+	viewport.name = "DiffViewport"
+	viewport.offset_left = 57.0
+	viewport.offset_top = 98.0
+	viewport.offset_right = 228.0
+	viewport.offset_bottom = 117.0
+	viewport.custom_minimum_size = Vector2(171, 19)
 	viewport.clip_contents = true
 	viewport.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(viewport)
+	root.add_child(viewport)
 	_diff_tape = HBoxContainer.new()
 	_diff_tape.add_theme_constant_override("separation", 0)
 	_diff_tape.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -308,7 +321,7 @@ func _build_run_panel() -> void:
 	var roman: Array[String] = ["I", "II", "III", "IV", "V", "VI"]
 	for i: int in 6:
 		var seg := ColorRect.new()
-		seg.custom_minimum_size = Vector2(DIFF_SEG_W, 16)
+		seg.custom_minimum_size = Vector2(DIFF_SEG_W, 19)
 		seg.color = DIFF_COLORS[i].darkened(0.45)
 		seg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_diff_tape.add_child(seg)

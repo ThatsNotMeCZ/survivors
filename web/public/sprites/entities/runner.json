@@ -2,7 +2,7 @@
   "frameWidth": 48,
   "frameHeight": 48,
   "anims": {
-    "idle": { "frames": [3, 4], "frameRate": 1.5, "repeat": -1 },
+    "idle": { "frames": [3, 4], "frameRate": 1, "repeat": -1 },
     "walk": { "frames": [0, 1, 2], "frameRate": 2.5, "repeat": -1 }
   }
 }

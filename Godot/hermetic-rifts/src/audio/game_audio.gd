@@ -107,11 +107,11 @@ func _sfx_id(kind: int, tint: int) -> String:
 			return "muzzle"
 		FxIds.DASH:
 			return "dash"
-		FxIds.STRIKE:
+		FxIds.STRIKE, FxIds.BOSS_EMERGE:
 			return "strike"
 		FxIds.HURT:
 			return "hurt"
-		FxIds.GEM:
+		FxIds.GEM, FxIds.ESSENCE_PICKUP:
 			return "gem"
 		_:
 			return "hit"

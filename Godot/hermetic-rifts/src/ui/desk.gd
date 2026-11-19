@@ -5,9 +5,16 @@ const Display := preload("res://src/data/display_settings.gd")
 
 signal closed
 
-const PANEL_WIDTH: float = 640.0
+const PANEL_WIDTH: float = 700.0
 const SCROLL_MAX: float = 520.0
 const INK_HINT: Color = Color("2e2014")
+const TAB_KEYS: Array[StringName] = [&"display", &"audio", &"visual", &"controls"]
+const TAB_ICONS: Dictionary = {
+	&"display": "icon-display",
+	&"audio": "icon-audio",
+	&"visual": "icon-visual",
+	&"controls": "icon-controls",
+}
 const CONTROL_ACTIONS: Array[String] = [
 	"move_up",
 	"move_down",
@@ -25,6 +32,7 @@ var _panel: PanelContainer
 var _kicker: Label
 var _title: Label
 var _lead: Label
+var _tab_strip: HBoxContainer
 var _scroll: ScrollContainer
 var _body: VBoxContainer
 var _confirm_bar: Control
@@ -33,6 +41,8 @@ var _keep_btn: Button
 var _revert_btn: Button
 var _close_btn: Button
 var _first_choice: Control
+var _active_tab: StringName = &"display"
+var _tab_btns: Dictionary = {}
 var _bound: bool = false
 var _rebuilding: bool = false
 var _pending_snapshot: Dictionary = {}
@@ -102,11 +112,23 @@ func refresh() -> void:
 
 
 func focus_primary() -> void:
-	if _first_choice != null and _first_choice.is_inside_tree() and not _first_choice.disabled:
+	if _is_focusable_control(_first_choice):
 		_first_choice.grab_focus()
 		return
-	if _close_btn != null and _close_btn.is_inside_tree():
+	if _is_focusable_control(_close_btn):
 		_close_btn.grab_focus()
+
+
+func _is_focusable_control(ctrl: Control) -> bool:
+	if ctrl == null or not is_instance_valid(ctrl) or not ctrl.is_inside_tree():
+		return false
+	if not ctrl.is_visible_in_tree() or ctrl.focus_mode == Control.FOCUS_NONE:
+		return false
+	if ctrl is BaseButton:
+		return not (ctrl as BaseButton).disabled
+	if ctrl is Slider:
+		return (ctrl as Slider).editable
+	return true
 
 
 func handle_back() -> bool:
@@ -135,6 +157,13 @@ func _resolve_nodes() -> void:
 	_kicker = get_node_or_null("Panel/Inner/Kicker") as Label
 	_title = get_node_or_null("Panel/Inner/Title") as Label
 	_lead = get_node_or_null("Panel/Inner/Lead") as Label
+	_tab_strip = get_node_or_null("Panel/Inner/TabStrip") as HBoxContainer
+	if _tab_strip == null:
+		var inner := get_node_or_null("Panel/Inner") as VBoxContainer
+		if inner != null:
+			_tab_strip = HBoxContainer.new()
+			_tab_strip.name = "TabStrip"
+			inner.add_child(_tab_strip)
 	_scroll = get_node_or_null("Panel/Inner/Scroll") as ScrollContainer
 	_body = get_node_or_null("Panel/Inner/Scroll/Body") as VBoxContainer
 	if _body == null:
@@ -163,6 +192,10 @@ func _apply_chrome() -> void:
 		_lead.text = tr("ui.settings.lead")
 		UiAtlas.apply_ink_label(_lead, UiAtlas.TYPE_BODY, Color("2e2014"), UiAtlas.SIZE_BODY)
 		_lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if _tab_strip != null:
+		_tab_strip.add_theme_constant_override("separation", 8)
+		_tab_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_build_tabs()
 	if _scroll != null:
 		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -194,15 +227,103 @@ func _apply_chrome() -> void:
 		_move_named(inner, _kicker, 0)
 		_move_named(inner, _title, 1)
 		_move_named(inner, _lead, 2)
+		var next_idx: int = 3
+		if _tab_strip != null:
+			_move_named(inner, _tab_strip, next_idx)
+			next_idx += 1
 		if _scroll != null:
-			_move_named(inner, _scroll, 3)
+			_move_named(inner, _scroll, next_idx)
+			next_idx += 1
 		elif _body != null:
-			_move_named(inner, _body, 3)
+			_move_named(inner, _body, next_idx)
+			next_idx += 1
 		if _confirm_bar != null:
-			_move_named(inner, _confirm_bar, 4)
+			_move_named(inner, _confirm_bar, next_idx)
+			next_idx += 1
 		if _close_btn != null:
-			_move_named(inner, _close_btn, 5)
+			_move_named(inner, _close_btn, next_idx)
 	_center_panel()
+
+
+func _build_tabs() -> void:
+	if _tab_strip == null or not _tab_btns.is_empty():
+		return
+	for i: int in TAB_KEYS.size():
+		var key: StringName = TAB_KEYS[i]
+		var btn := Button.new()
+		btn.name = "Tab_%s" % String(key)
+		btn.text = ""
+		btn.custom_minimum_size = Vector2(0, 38)
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.focus_mode = Control.FOCUS_ALL
+		var row := HBoxContainer.new()
+		row.name = "Row"
+		row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		row.offset_left = 10.0
+		row.offset_right = -10.0
+		row.offset_top = 4.0
+		row.offset_bottom = -4.0
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 6)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(UiAtlas.make_icon(String(TAB_ICONS[key]), 24))
+		var lab := Label.new()
+		lab.name = "Label"
+		var section_key: String = "ui.settings.section.%s" % String(key)
+		lab.text = _t(section_key, String(key).capitalize()).to_upper()
+		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		UiAtlas.apply_label(lab, UiAtlas.TYPE_META, UiAtlas.PARCHMENT, 13, true)
+		row.add_child(lab)
+		btn.add_child(row)
+		var cap_key: StringName = key
+		btn.pressed.connect(func() -> void: _select_tab(cap_key))
+		_tab_strip.add_child(btn)
+		_tab_btns[key] = btn
+	_refresh_tab_styles()
+
+
+func _refresh_tab_styles() -> void:
+	for key: StringName in TAB_KEYS:
+		var btn := _tab_btns.get(key) as Button
+		if btn == null:
+			continue
+		var active: bool = key == _active_tab
+		UiAtlas.style_desk_tab(btn, active)
+		var lab := btn.get_node_or_null("Row/Label") as Label
+		if lab != null:
+			lab.add_theme_color_override("font_color", UiAtlas.BRASS_BRIGHT if active else UiAtlas.PARCHMENT)
+
+
+func _select_tab(key: StringName) -> void:
+	if key == _active_tab:
+		return
+	_active_tab = key
+	_listening_action = ""
+	_play_ui("click")
+	_rebuild_rows()
+	call_deferred("_center_panel")
+	call_deferred("focus_primary")
+
+
+func _wire_focus() -> void:
+	var target: Control = _first_choice if (_first_choice != null and _first_choice.is_inside_tree()) else _close_btn
+	for i: int in TAB_KEYS.size():
+		var key: StringName = TAB_KEYS[i]
+		var btn := _tab_btns.get(key) as Button
+		if btn == null or not btn.is_inside_tree():
+			continue
+		if i > 0:
+			var prev := _tab_btns.get(TAB_KEYS[i - 1]) as Button
+			if prev != null:
+				btn.focus_neighbor_left = btn.get_path_to(prev)
+				prev.focus_neighbor_right = prev.get_path_to(btn)
+		if target != null:
+			btn.focus_neighbor_bottom = btn.get_path_to(target)
+	var active_tab_btn := _tab_btns.get(_active_tab) as Button
+	if _first_choice != null and _first_choice.is_inside_tree() and active_tab_btn != null and active_tab_btn.is_inside_tree():
+		_first_choice.focus_neighbor_top = _first_choice.get_path_to(active_tab_btn)
 
 
 func _move_named(inner: VBoxContainer, node: Node, index: int) -> void:
@@ -251,6 +372,7 @@ func _rebuild_rows() -> void:
 	_rebuilding = true
 	_first_choice = null
 	_rebind_btns.clear()
+	_refresh_tab_styles()
 	for child: Node in _body.get_children():
 		_body.remove_child(child)
 		child.queue_free()
@@ -260,16 +382,21 @@ func _rebuild_rows() -> void:
 		return
 	var settings: GameSettings = app.settings
 	Display.sanitize(settings)
-	_fill_display(settings)
-	_fill_audio(settings)
-	_fill_visual(settings)
-	_fill_controls()
+	match _active_tab:
+		&"audio":
+			_fill_audio(settings)
+		&"visual":
+			_fill_visual(settings)
+		&"controls":
+			_fill_controls()
+		_:
+			_fill_display(settings)
 	_rebuilding = false
 	_clamp_scroll()
+	_wire_focus()
 
 
 func _fill_display(settings: GameSettings) -> void:
-	_body.add_child(_section_label(tr("ui.settings.section.display")))
 	var mode_items: Array[String] = [
 		tr("ui.settings.window_mode.windowed"),
 		tr("ui.settings.window_mode.borderless"),
@@ -360,7 +487,6 @@ func _fill_display(settings: GameSettings) -> void:
 
 
 func _fill_audio(settings: GameSettings) -> void:
-	_body.add_child(_section_label(tr("ui.settings.section.audio")))
 	_body.add_child(_range_row(
 		tr("ui.settings.master"),
 		tr("ui.settings.master.hint"),
@@ -388,7 +514,6 @@ func _fill_audio(settings: GameSettings) -> void:
 
 
 func _fill_visual(settings: GameSettings) -> void:
-	_body.add_child(_section_label(tr("ui.settings.section.visual")))
 	_body.add_child(_check_row(
 		tr("ui.settings.shake"),
 		tr("ui.settings.shake.hint"),
@@ -404,7 +529,6 @@ func _fill_visual(settings: GameSettings) -> void:
 
 
 func _fill_controls() -> void:
-	_body.add_child(_section_label(_t("ui.settings.section.controls", "Controls / Keybinds")))
 	var labels: Dictionary = {
 		"move_up": [_t("ui.settings.key.move_up", "Move Up"), _t("ui.settings.key.move_up.hint", "Step northward across the chamber.")],
 		"move_down": [_t("ui.settings.key.move_down", "Move Down"), _t("ui.settings.key.move_down.hint", "Step southward across the chamber.")],
@@ -437,6 +561,8 @@ func _rebind_row(action: String, title: String, hint: String) -> Control:
 	btn.pressed.connect(func() -> void: _start_rebind(captured_action))
 	row.add_child(btn)
 	_rebind_btns[action] = btn
+	if _first_choice == null:
+		_first_choice = btn
 	return row_wrap
 
 
@@ -576,7 +702,7 @@ func _refresh_control_buttons() -> void:
 
 func _binding_label(action: String) -> String:
 	if not InputMap.has_action(action):
-		return "—"
+		return "-"
 	var events: Array[InputEvent] = InputMap.action_get_events(action)
 	if events.is_empty():
 		return _t("ui.settings.rebind.unbound", "Unbound")
@@ -630,18 +756,6 @@ func _t(key: String, fallback: String) -> String:
 	return fallback if val == key else val
 
 
-func _section_label(text: String) -> Control:
-	var heading := MarginContainer.new()
-	heading.add_theme_constant_override("margin_top", 10)
-	heading.add_theme_constant_override("margin_bottom", 4)
-	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var lab := Label.new()
-	lab.text = text.to_upper()
-	UiAtlas.apply_ink_label(lab, UiAtlas.TYPE_META, Color("6e3b1e"), 12)
-	heading.add_child(lab)
-	return heading
-
-
 func _choice_row(
 	title: String,
 	hint: String,
@@ -667,7 +781,7 @@ func _choice_row(
 	for i: int in range(items.size()):
 		box.add_item(items[i], i)
 	if items.is_empty():
-		box.add_item("—", 0)
+		box.add_item("-", 0)
 	box.select(clampi(selected, 0, maxi(box.item_count - 1, 0)))
 	box.disabled = disabled or items.is_empty()
 	box.item_selected.connect(func(idx: int) -> void:
@@ -708,6 +822,8 @@ func _range_row(title: String, hint: String, value: float, cb: Callable) -> Cont
 	control.add_child(slider)
 	control.add_child(readout)
 	row.add_child(control)
+	if _first_choice == null:
+		_first_choice = slider
 	return row_wrap
 
 
@@ -718,6 +834,11 @@ func _check_row(title: String, hint: String, value: bool, cb: Callable) -> Contr
 	var box := CheckBox.new()
 	box.button_pressed = value
 	box.focus_mode = Control.FOCUS_ALL
+	box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	box.add_theme_icon_override("checked", UiAtlas.frame("desk-check-on"))
+	box.add_theme_icon_override("unchecked", UiAtlas.frame("desk-check-off"))
+	box.add_theme_icon_override("checked_disabled", UiAtlas.frame("desk-check-on"))
+	box.add_theme_icon_override("unchecked_disabled", UiAtlas.frame("desk-check-off"))
 	if UiAtlas.ink_font() != null:
 		box.add_theme_font_override("font", UiAtlas.ink_font())
 	box.add_theme_font_size_override("font_size", UiAtlas.SIZE_META)
@@ -727,6 +848,8 @@ func _check_row(title: String, hint: String, value: bool, cb: Callable) -> Contr
 		cb.call(v)
 	)
 	row.add_child(box)
+	if _first_choice == null:
+		_first_choice = box
 	return row_wrap
 
 

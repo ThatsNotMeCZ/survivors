@@ -651,11 +651,11 @@ static func _try_place(world: SimWorld, type: StringName, rng: SimRng, placed: A
 	var retries: int = int(cfg.get("placeRetries", 80))
 	if world.arena_shape == "circle":
 		var circ: Dictionary = DictUtil.d(cfg, "circularPlacement")
-		var rim_pad: float = float(circ.get("rimPad", 140.0))
+		var rim_pad: float = float(circ.get("rimPad", 280.0))
 		var max_r: float = maxf(0.0, world.arena_radius - rim_pad)
-		var p_keep: float = float(circ.get("playerKeepOut", cfg.get("playerKeepOut", 200.0)))
-		var t_keep: float = float(circ.get("teleporterKeepOut", cfg.get("teleporterKeepOut", 230.0)))
-		var spacing: float = float(circ.get("minSpacing", cfg.get("minSpacing", 185.0)))
+		var p_keep: float = float(circ.get("playerKeepOut", cfg.get("playerKeepOut", 400.0)))
+		var t_keep: float = float(circ.get("teleporterKeepOut", cfg.get("teleporterKeepOut", 460.0)))
+		var spacing: float = float(circ.get("minSpacing", cfg.get("minSpacing", 370.0)))
 		for _a: int in retries:
 			var r: float = sqrt(rng.next()) * max_r
 			var ang: float = rng.next() * TAU
@@ -674,12 +674,12 @@ static func _try_place(world: SimWorld, type: StringName, rng: SimRng, placed: A
 				continue
 			return Vector2(x, y)
 		return Vector2.INF
-	var width: float = float(world.catalog.world.get("width", 2560.0))
-	var height: float = float(world.catalog.world.get("height", 2560.0))
-	var border_pad: float = float(cfg.get("borderPad", 160.0))
-	var p_keep_rect: float = float(cfg.get("playerKeepOut", 200.0))
-	var tel_keep: float = float(cfg.get("volatileTeleporterKeepOut", 200.0)) if type == &"volatile" else float(cfg.get("teleporterKeepOut", 230.0))
-	var spacing_rect: float = float(cfg.get("minSpacing", 190.0))
+	var width: float = float(world.catalog.world.get("width", 6000.0))
+	var height: float = float(world.catalog.world.get("height", 6000.0))
+	var border_pad: float = float(cfg.get("borderPad", 320.0))
+	var p_keep_rect: float = float(cfg.get("playerKeepOut", 400.0))
+	var tel_keep: float = float(cfg.get("volatileTeleporterKeepOut", 400.0)) if type == &"volatile" else float(cfg.get("teleporterKeepOut", 460.0))
+	var spacing_rect: float = float(cfg.get("minSpacing", 380.0))
 	for _a: int in retries:
 		var x: float = border_pad + rng.next() * (width - border_pad * 2.0)
 		var y: float = border_pad + rng.next() * (height - border_pad * 2.0)

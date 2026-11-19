@@ -4,7 +4,7 @@ extends Control
 signal back_pressed
 
 const TAB_IDS: Array[StringName] = [&"howto", &"lore", &"entities", &"reliquary", &"stats"]
-const TAB_GLYPHS: Array[String] = ["⚶", "☉", "🜂", "🜍", "☿"]
+const TAB_ICONS: Array[String] = ["icon-howto", "icon-lore", "icon-bestiary", "icon-reliquary", "icon-stats"]
 
 var _back_btn: Button
 var _kicker: Label
@@ -223,14 +223,9 @@ func _style_tab_buttons() -> void:
 		row.offset_top = 8.0
 		row.offset_bottom = -8.0
 		row.add_theme_constant_override("separation", 10)
-		var glyph := Label.new()
-		glyph.text = TAB_GLYPHS[i]
-		glyph.custom_minimum_size = Vector2(28, 28)
-		glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		glyph.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		UiAtlas.apply_label(glyph, UiAtlas.TYPE_META, UiAtlas.GOLD_MOLTEN, 14)
-		glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(glyph)
+		var ic: TextureRect = UiAtlas.make_icon(TAB_ICONS[i], 24)
+		ic.custom_minimum_size = Vector2(28, 28)
+		row.add_child(ic)
 		var copy := VBoxContainer.new()
 		copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		copy.mouse_filter = Control.MOUSE_FILTER_IGNORE

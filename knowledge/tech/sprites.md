@@ -9,8 +9,8 @@ Drop finished art into `web/public/sprites/`. Vite rewrites `manifest.json` on `
 | `entities/{id}.png` | Vessel / enemy spritesheet. Id matches `survivors.json` or `entities.json`. |
 | `entities/{id}.json` | Optional sidecar. Canonical form is compact anims (`frameWidth` / `frameHeight` / `anims` with per-clip `frameRate`). Pixelorama / Aseprite JSON still parse as a drop-in fallback. Skip if frames are square and idle is frame 0. |
 | `items/{id}.png` | HUD / level-up icon (24px). Id matches `items.json`. |
-| `skills/{id}.png` | HUD / hall icon (24px). Id matches `skills.json`. |
-| `ui/atlas.png` + `ui/atlas.json` | Shared HUD / menu texture atlas (`logo`, `btn-plaque`, `btn-cta`, `hall-banner`, `parchment-panel`, `pause-tablet`, `pause-inventory`, `hud-objective`, `hud-timer` (243×158 run panel: timer + diff track chrome), `hud-flask`, `hud-skill-dock`, `hud-inventory`, `card-{rarity}`, `portrait-{id}`). Supports 3-state buttons (`idle`, `hover`, `active`) and 9-slice (`nineSlice.margins` + `nineSlice.expandable`). CSS/SVG fallback renders when missing. |
+| `skills/{id}.png` | HUD / hall icon (24px new batch / 32x29 legacy; all 32 catalog skill ids present in Godot). Source batch: `tools/pixelorama/skills_batch.pxo`. |
+| `ui/atlas.png` + `ui/atlas.json` | Shared HUD / menu texture atlas (`logo`, `btn-plaque`, `btn-cta` 141x84 / 141x124 hover, `desk-tab` 110x36 x 3 states, `desk-check-off`/`desk-check-on` 24x24, 20 `icon-*` 24x24 glyphs, `hall-banner`, `parchment-panel`, `pause-tablet`, `pause-inventory`, `hud-objective`, `hud-timer` 243x158, `hud-flask`, `hud-skill-dock`, `hud-inventory`, `card-{rarity}`, `portrait-{id}`). Supports 3-state buttons (`idle`, `hover`, `active`) and 9-slice (`nineSlice.margins` + `nineSlice.expandable`). |
 | `env/` | Future authored stage blocks (not random tile stamps). |
 | `fx/` | Optional VFX stills. Id matches a skill, a biome spit, or a sim FX kind (`hit`, `dash`, …). |
 
@@ -33,7 +33,7 @@ Compact example:
   "frameWidth": 32,
   "frameHeight": 48,
   "anims": {
-    "idle": { "frames": [3, 4], "frameRate": 6, "repeat": -1 },
+    "idle": { "frames": [3, 4], "frameRate": 1, "repeat": -1 },
     "walk": { "frames": [0, 1, 2], "frameRate": 6, "repeat": -1 },
     "attack-fan": { "frames": [5, 6, 7, 8], "durations": [60, 60, 140, 80], "frameRate": 10, "repeat": 0 }
   }

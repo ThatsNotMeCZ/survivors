@@ -18,6 +18,7 @@ static func load_en() -> void:
 		if row.size() < 2:
 			continue
 		translation.add_message(row[0], row[1])
+	TranslationServer.clear()
 	TranslationServer.add_translation(translation)
 	TranslationServer.set_locale("en")
 

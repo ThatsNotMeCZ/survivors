@@ -188,6 +188,8 @@ func _style_cta_line(label: Label, text: String) -> void:
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.clip_text = false
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UiAtlas.apply_label(label, UiAtlas.TYPE_DISPLAY, UiAtlas.PARCHMENT, UiAtlas.SIZE_CTA)
@@ -198,10 +200,10 @@ func _place_cta() -> void:
 		return
 	const PAD_L: float = 28.0
 	const PAD_R: float = 28.0
-	const PAD_T: float = 8.0
-	const PAD_B: float = 8.0
-	const MIN_W: float = 240.0
-	const MIN_H: float = 58.0
+	const PAD_T: float = 14.0
+	const PAD_B: float = 14.0
+	const MIN_W: float = 276.0
+	const MIN_H: float = 92.0
 	var copy := _commence_btn.get_node_or_null("CommenceCopy") as VBoxContainer
 	if copy != null:
 		copy.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

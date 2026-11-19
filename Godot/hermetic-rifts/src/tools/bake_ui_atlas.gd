@@ -17,7 +17,7 @@ const CONTENT_MARGIN_R: float = 20.0
 const CONTENT_MARGIN_T: float = 8.0
 const CONTENT_MARGIN_B: float = 8.0
 
-const STYLE_IDS: PackedStringArray = ["btn-plaque", "btn-cta"]
+const STYLE_IDS: PackedStringArray = ["btn-plaque", "btn-cta", "desk-tab"]
 const STYLE_STATES: PackedStringArray = ["idle", "hover", "active"]
 
 
@@ -132,10 +132,18 @@ func _save_stylebox(id: String, state: String, margins: Dictionary, outset: Dict
 	sb.expand_margin_top = out_t
 	sb.expand_margin_right = out_r
 	sb.expand_margin_bottom = out_b
-	sb.content_margin_left = CONTENT_MARGIN_L
-	sb.content_margin_right = CONTENT_MARGIN_R
-	sb.content_margin_top = CONTENT_MARGIN_T
-	sb.content_margin_bottom = CONTENT_MARGIN_B
+	var pad_lr: float = CONTENT_MARGIN_L
+	var pad_tb: float = CONTENT_MARGIN_T
+	if id == "btn-cta":
+		pad_lr = 24.0
+		pad_tb = 14.0
+	elif id == "desk-tab":
+		pad_lr = 14.0
+		pad_tb = 6.0
+	sb.content_margin_left = pad_lr
+	sb.content_margin_right = pad_lr
+	sb.content_margin_top = pad_tb
+	sb.content_margin_bottom = pad_tb
 	sb.draw_center = true
 	return _save(sb, "%s/styleboxes/%s_%s.tres" % [OUT_ROOT, _safe(id), _safe(state)])
 

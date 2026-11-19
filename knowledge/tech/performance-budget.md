@@ -16,6 +16,7 @@ Live pools (2026-11):
 | XP gems | 999 | GPU layer; magnetized pickup |
 | Lore drops | 8 | CPU pool, one live per entity id |
 | Obstacles | 39 | 14 pillars + 8 hazards + 9 volatiles + 8 dynamic acid pools |
+| Arena floor (Godot) | 6000x6000 | Cached 1024x1024 `FloorStamp.build_chunks` tiles (outer chunks culled outside `arenaRadius` 3000; stays under 4096px GPU texture limits) |
 | VFX particles | ~8_000 | GPU only (arena spark layer 256; 20k measured headroom) |
 | Target | 60 fps | 1080p |
 

@@ -667,8 +667,8 @@ static func _clamp_pos(world: SimWorld, px: float, py: float, r: float) -> Vecto
 	var pad_x: float = float(bounds.get("borderInsetX", 0.0)) + r
 	var pad_y: float = float(bounds.get("borderInsetY", 0.0)) + r
 	return Vector2(
-		clampf(px, pad_x, float(bounds.get("width", 2560.0)) - pad_x),
-		clampf(py, pad_y, float(bounds.get("height", 2560.0)) - pad_y),
+		clampf(px, pad_x, float(bounds.get("width", 6000.0)) - pad_x),
+		clampf(py, pad_y, float(bounds.get("height", 6000.0)) - pad_y),
 	)
 
 

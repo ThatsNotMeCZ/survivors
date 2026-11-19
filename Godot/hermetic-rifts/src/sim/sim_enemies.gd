@@ -169,8 +169,8 @@ static func spawn(
 
 static func pick_spawn_point(world: SimWorld, radius: float) -> Vector2:
 	var dir: Dictionary = DictUtil.d(world.catalog.loop, "director")
-	var spawn_min: float = float(dir.get("spawnMin", 460.0))
-	var spawn_max: float = float(dir.get("spawnMax", 900.0))
+	var spawn_min: float = float(dir.get("spawnMin", 920.0))
+	var spawn_max: float = float(dir.get("spawnMax", 1800.0))
 	var spawn_safe: float = float(dir.get("spawnSafeRadius", spawn_min))
 	var px: float = world.player.x
 	var py: float = world.player.y
@@ -196,8 +196,8 @@ static func pick_spawn_point(world: SimWorld, radius: float) -> Vector2:
 	var bounds: Dictionary = world.catalog.world
 	var pad_x: float = float(bounds.get("borderInsetX", 0.0)) + radius + 8.0
 	var pad_y: float = float(bounds.get("borderInsetY", 0.0)) + radius + 8.0
-	var width: float = float(bounds.get("width", 3000.0))
-	var height: float = float(bounds.get("height", 3000.0))
+	var width: float = float(bounds.get("width", 6000.0))
+	var height: float = float(bounds.get("height", 6000.0))
 	for _a: int in 24:
 		var dist: float = min_d + world.randf() * range_v
 		var ang: float = world.randf() * TAU
@@ -236,8 +236,8 @@ static func spawn_group_around(
 	var bounds: Dictionary = world.catalog.world
 	var pad_x: float = float(bounds.get("borderInsetX", 0.0)) + radius + 8.0
 	var pad_y: float = float(bounds.get("borderInsetY", 0.0)) + radius + 8.0
-	var width: float = float(bounds.get("width", 3000.0))
-	var height: float = float(bounds.get("height", 3000.0))
+	var width: float = float(bounds.get("width", 6000.0))
+	var height: float = float(bounds.get("height", 6000.0))
 	var spawned: int = 0
 	for s: int in count:
 		var sx: float = center.x
@@ -430,8 +430,8 @@ static func pillar_blocks_shot(world: SimWorld, x0: float, y0: float, x1: float,
 
 static func ring_point(world: SimWorld, ox: float, oy: float, radius: float) -> Vector2:
 	var dir: Dictionary = DictUtil.d(world.catalog.loop, "director")
-	var spawn_min: float = float(dir.get("spawnMin", 460.0))
-	var spawn_max: float = float(dir.get("spawnMax", 900.0))
+	var spawn_min: float = float(dir.get("spawnMin", 920.0))
+	var spawn_max: float = float(dir.get("spawnMax", 1800.0))
 	if world.arena_shape == "circle":
 		var max_r: float = maxf(64.0, world.arena_radius - radius - 8.0)
 		for _a: int in 10:
@@ -444,8 +444,8 @@ static func ring_point(world: SimWorld, ox: float, oy: float, radius: float) -> 
 		return SimCollision.clamp_to_circle(ox + cos(in_ang) * spawn_min, oy + sin(in_ang) * spawn_min, max_r)
 	var bounds: Dictionary = world.catalog.world
 	var pad: float = radius + 8.0
-	var width: float = float(bounds.get("width", 3000.0))
-	var height: float = float(bounds.get("height", 3000.0))
+	var width: float = float(bounds.get("width", 6000.0))
+	var height: float = float(bounds.get("height", 6000.0))
 	for _a: int in 10:
 		var dist: float = spawn_min + world.randf() * maxf(0.0, spawn_max - spawn_min)
 		var ang: float = world.randf() * TAU
@@ -454,6 +454,35 @@ static func ring_point(world: SimWorld, ox: float, oy: float, radius: float) -> 
 		if hypot(x - ox, y - oy) >= spawn_min * 0.7:
 			return Vector2(x, y)
 	return Vector2(clampf(ox + spawn_min, pad, width - pad), clampf(oy, pad, height - pad))
+
+
+static func knockback_radial(
+	world: SimWorld,
+	ox: float,
+	oy: float,
+	radius: float,
+	impulse: float,
+	stun_dur: float = 0.32,
+) -> void:
+	if radius <= 0.0 or impulse <= 0.0:
+		return
+	var r2: float = radius * radius
+	for e: int in world.enemies.cap:
+		if world.enemies.alive[e] == 0 or world.enemies.corpse_remain[e] > 0.0:
+			continue
+		if world.enemies.role[e] == EnemyPool.ROLE_BOSS:
+			continue
+		var edx: float = world.enemies.x[e] - ox
+		var edy: float = world.enemies.y[e] - oy
+		var d2: float = edx * edx + edy * edy
+		if d2 > r2:
+			continue
+		var dist: float = sqrt(d2)
+		var nx: float = 1.0 if dist <= 0.001 else edx / dist
+		var ny: float = 0.0 if dist <= 0.001 else edy / dist
+		world.enemies.apply_knockback(e, nx * impulse, ny * impulse)
+		if stun_dur > 0.0:
+			world.enemies.apply_stun(e, stun_dur)
 
 
 static func facing_sign(value: int) -> int:

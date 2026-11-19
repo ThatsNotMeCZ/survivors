@@ -57,7 +57,7 @@ static func _boss_hazard_style(def_id: String) -> int:
 	return BossHazardPool.STYLE_FROST
 
 
-static func _boss_tint(def_id: String) -> int:
+static func boss_tint(def_id: String) -> int:
 	if def_id == "cinder-heart":
 		return 0xFF7A3A
 	if def_id == "viridian-alchemist":
@@ -67,6 +67,10 @@ static func _boss_tint(def_id: String) -> int:
 	if def_id == "arch-alchemist":
 		return 0xFFAE42
 	return 0x7AD4FF
+
+
+static func _boss_tint(def_id: String) -> int:
+	return boss_tint(def_id)
 
 
 static func step(
@@ -83,6 +87,9 @@ static func step(
 	var boss: BossState = world.boss
 	if boss.enemy_index != i:
 		init_state(world, i, ai)
+	if boss.emerge_remain > 0.0:
+		boss.emerge_remain = maxf(0.0, boss.emerge_remain - dt)
+		return
 	var enrage: Dictionary = DictUtil.d(ai, "enrage")
 	if not enrage.is_empty() and not boss.enraged and enemies.max_hp[i] > 0.0 and enemies.hp[i] / enemies.max_hp[i] <= float(enrage.get("hpPct", 0.5)):
 		boss.enraged = true
@@ -220,8 +227,8 @@ static func _tick_channel(world: SimWorld, i: int, ai: Dictionary, dt: float) ->
 		boss.aim_y = clamped_aim.y
 	else:
 		var bounds: Dictionary = world.catalog.world
-		boss.aim_x = clampf(boss.aim_x, 40.0, float(bounds.get("width", 3000.0)) - 40.0)
-		boss.aim_y = clampf(boss.aim_y, 40.0, float(bounds.get("height", 3000.0)) - 40.0)
+		boss.aim_x = clampf(boss.aim_x, 40.0, float(bounds.get("width", 6000.0)) - 40.0)
+		boss.aim_y = clampf(boss.aim_y, 40.0, float(bounds.get("height", 6000.0)) - 40.0)
 	enemies.aim_x[i] = boss.aim_x
 	enemies.aim_y[i] = boss.aim_y
 	var end: Vector2 = _clamp_beam(world, enemies.x[i], enemies.y[i], boss.aim_x, boss.aim_y)
@@ -390,8 +397,8 @@ static func _spawn_geysers(world: SimWorld, i: int, atk: Dictionary, t: String, 
 	var max_r: float = maxf(64.0, world.arena_radius - rad - 8.0)
 	var bounds: Dictionary = world.catalog.world
 	var pad: float = rad + 16.0
-	var width: float = float(bounds.get("width", 3000.0))
-	var height: float = float(bounds.get("height", 3000.0))
+	var width: float = float(bounds.get("width", 6000.0))
+	var height: float = float(bounds.get("height", 6000.0))
 	for k: int in count:
 		var gx: float = pred_x
 		var gy: float = pred_y
@@ -571,8 +578,8 @@ static func _clamp_summon_pos(world: SimWorld, px: float, py: float, pad: float)
 		return SimCollision.clamp_to_circle(px, py, maxf(64.0, world.arena_radius - pad))
 	var bounds: Dictionary = world.catalog.world
 	return Vector2(
-		clampf(px, pad, float(bounds.get("width", 3000.0)) - pad),
-		clampf(py, pad, float(bounds.get("height", 3000.0)) - pad),
+		clampf(px, pad, float(bounds.get("width", 6000.0)) - pad),
+		clampf(py, pad, float(bounds.get("height", 6000.0)) - pad),
 	)
 
 
