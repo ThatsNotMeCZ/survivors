@@ -116,6 +116,9 @@ static func _try_warden(world: SimWorld) -> void:
 	if elite_id == "":
 		return
 	var def: Dictionary = world.catalog.entity(elite_id)
+	var coeff: float = SimLoop.difficulty_coeff(world)
+	if float(def.get("minCoeff", 1.0)) > coeff:
+		return
 	var hard_cap: int = -1
 	if SimEnemies.is_specialist_def(def):
 		hard_cap = maxi(0, current_specialist_cap(world) - SimEnemies.count_specialists(world))
@@ -145,14 +148,14 @@ static func _pick_weighted_fodder(
 		var base_w: float = float(def.get("poolWeight", 0.0))
 		if base_w <= 0.0:
 			continue
-		if float(def.get("minCoeff", 1.0)) > coeff:
+		var id: String = String(def.get("id", ""))
+		if id != native_fodder and float(def.get("minCoeff", 1.0)) > coeff:
 			continue
 		var is_spec: bool = SimEnemies.is_specialist_def(def)
 		if is_spec and not allow_spec:
 			continue
 		if String(DictUtil.d(def, "ai").get("type", "")) == "sniper" and active_snipers >= max_snipers:
 			continue
-		var id: String = String(def.get("id", ""))
 		var w: float = base_w
 		if id == native_fodder or id == native_ranged or id == native_elite:
 			w *= 2.5

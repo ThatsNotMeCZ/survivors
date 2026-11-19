@@ -66,6 +66,18 @@
       "w": 96,
       "h": 96
     },
+    "portrait-flagellant": {
+      "x": 215,
+      "y": 400,
+      "w": 96,
+      "h": 96
+    },
+    "portrait-astromancer": {
+      "x": 320,
+      "y": 400,
+      "w": 96,
+      "h": 96
+    },
     "parchment-panel": {
       "x": 5,
       "y": 500,
@@ -215,6 +227,104 @@
       "y": 620,
       "w": 32,
       "h": 32
-    }
+    },
+    "icon-sol": { "x": 780, "y": 152, "w": 24, "h": 24 },
+    "icon-luna": { "x": 808, "y": 152, "w": 24, "h": 24 },
+    "icon-mercury": { "x": 836, "y": 152, "w": 24, "h": 24 },
+    "icon-venus": { "x": 864, "y": 152, "w": 24, "h": 24 },
+    "icon-mars": { "x": 892, "y": 152, "w": 24, "h": 24 },
+    "icon-jove": { "x": 920, "y": 152, "w": 24, "h": 24 },
+    "icon-saturn": { "x": 948, "y": 152, "w": 24, "h": 24 },
+    "menu-pillar": {
+      "x": 8,
+      "y": 1760,
+      "w": 96,
+      "h": 256,
+      "nineSlice": {
+        "margins": { "top": 44, "right": 18, "bottom": 44, "left": 18 },
+        "expandable": { "x": 18, "y": 44, "w": 60, "h": 168 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "pillar-ornament": { "x": 116, "y": 1760, "w": 130, "h": 76 },
+    "archives-card": {
+      "x": 260,
+      "y": 1760,
+      "w": 128,
+      "h": 160,
+      "states": {
+        "idle": { "x": 260, "y": 1760, "w": 128, "h": 160 },
+        "hover": { "x": 396, "y": 1760, "w": 128, "h": 160 },
+        "active": { "x": 532, "y": 1760, "w": 128, "h": 160 }
+      },
+      "nineSlice": {
+        "margins": { "top": 16, "right": 16, "bottom": 28, "left": 16 },
+        "expandable": { "x": 16, "y": 16, "w": 96, "h": 116 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "archives-info-card": {
+      "x": 668,
+      "y": 1760,
+      "w": 160,
+      "h": 96,
+      "nineSlice": {
+        "margins": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
+        "expandable": { "x": 16, "y": 16, "w": 128, "h": 64 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "archives-tab": {
+      "x": 116,
+      "y": 1936,
+      "w": 160,
+      "h": 64,
+      "states": {
+        "idle": { "x": 116, "y": 1936, "w": 160, "h": 64 },
+        "hover": { "x": 284, "y": 1936, "w": 160, "h": 64 },
+        "active": { "x": 452, "y": 1936, "w": 160, "h": 64 }
+      },
+      "nineSlice": {
+        "margins": { "top": 12, "right": 20, "bottom": 12, "left": 42 },
+        "expandable": { "x": 42, "y": 12, "w": 98, "h": 40 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "hall-vessel-card": {
+      "x": 116,
+      "y": 2012,
+      "w": 160,
+      "h": 128,
+      "states": {
+        "idle": { "x": 116, "y": 2012, "w": 160, "h": 128 },
+        "hover": { "x": 284, "y": 2012, "w": 160, "h": 128 },
+        "active": { "x": 452, "y": 2012, "w": 160, "h": 128 }
+      },
+      "nineSlice": {
+        "margins": { "top": 16, "right": 16, "bottom": 22, "left": 16 },
+        "expandable": { "x": 16, "y": 16, "w": 128, "h": 90 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "hud-obelisk-meter": { "x": 840, "y": 1760, "w": 64, "h": 64 },
+    "hud-essence": {
+      "x": 916,
+      "y": 1760,
+      "w": 184,
+      "h": 32,
+      "nineSlice": {
+        "margins": { "top": 8, "right": 18, "bottom": 8, "left": 18 },
+        "expandable": { "x": 18, "y": 8, "w": 148, "h": 16 },
+        "repeat": "stretch",
+        "scale": 1
+      }
+    },
+    "hud-diff-pointer": { "x": 1112, "y": 1760, "w": 11, "h": 23 },
+    "hud-diff-tape": { "x": 668, "y": 1868, "w": 432, "h": 19 }
   }
 }

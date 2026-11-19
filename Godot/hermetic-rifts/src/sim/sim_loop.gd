@@ -352,12 +352,12 @@ static func _step_teleporter(world: SimWorld, dt: float) -> void:
 				SimEnemies.spawn_group_around(world, world.catalog.entity(elite_id), 1, true)
 	if world.teleporter_charge >= world.teleporter_hold and world.ritual_tier < 3:
 		world.ritual_tier = 3
-		var pad: float = float(tel_cfg.get("ruptureKnockbackPad", 60.0))
-		var imp: float = float(tel_cfg.get("ruptureKnockbackImpulse", 580.0))
-		var kb_r: float = world.teleporter_radius + pad
+		var pad: float = float(tel_cfg.get("ruptureKnockbackPad", 72.0))
+		var imp: float = float(tel_cfg.get("ruptureKnockbackImpulse", 720.0))
+		var kb_r: float = eff_r + pad
 		world.fx.emit(FxIds.RITUAL_RUPTURE, world.teleporter_x, world.teleporter_y, 0xFFF0B8, kb_r)
 		world.hit_stop_remain = maxf(world.hit_stop_remain, float(tel_cfg.get("ruptureHitstop", 0.14)))
-		SimEnemies.knockback_radial(world, world.teleporter_x, world.teleporter_y, kb_r, imp, 0.35)
+		SimEnemies.knockback_radial(world, world.teleporter_x, world.teleporter_y, kb_r, imp, 0.35, kb_r)
 		world.teleporter_state = &"done"
 		spawn_stage_boss(world)
 

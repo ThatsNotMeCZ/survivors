@@ -17,6 +17,7 @@ static func step(world: SimWorld, dt: float) -> void:
 			if pool.elapsed[i] >= pool.duration[i]:
 				var tint: int = 0xFF7A3A if pool.style[i] == BossHazardPool.STYLE_LAVA else (0x6BD968 if pool.style[i] == BossHazardPool.STYLE_AETHER else 0x7AD4FF)
 				world.fx.emit(FxIds.STRIKE, pool.x[i], pool.y[i], tint)
+				world.fx.emit(FxIds.GEYSER_BURST, pool.x[i], pool.y[i], pool.style[i], pool.radius[i])
 				if player.iframe_remain <= 0.0 and SimCollision.circles_overlap(pool.x[i], pool.y[i], pool.radius[i], player.x, player.y, player.radius):
 					world.fx.emit(FxIds.HURT, player.x, player.y, tint)
 					world.damage_player(pool.damage[i])

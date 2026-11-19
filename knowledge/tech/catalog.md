@@ -73,7 +73,8 @@ Display names elsewhere: survivor `runner` → **Homunculus**; `penitent` → **
 
 - `chase` — seek player (fodder peel toward an Ash Step decoy if one is live)
 - `ranged` — keep `keep`–`range`, windup telegraph, then `projectile` bolt (enemy team)
-- `sniper` — stay at `keep`, 1.5s laser telegraph, hitscan. Pillars block. Directed separately (`sniperCost`, `maxSnipers` 3)
+- `sniper` — stay at `keep`, 1.5s laser telegraph locked to a committed far heading at windup start (no mid-windup tracking; holds position during windup), hitscan. Pillars block. Directed separately (`sniperCost`, `maxSnipers` 3)
+- `cleaver` — melee enemy (`triggerRange`, `windup`, `arcDeg`, `slashRadius`, `cooldown`, `damage`, optional `fx`: `"ember"` | `"rime"`). Telegraphs cone fissures then sweeps a pixel-snapped slash via `cleave_slash.gdshader`
 - `boss` — dedicated duel AI. `keep` range, optional `enrage` (`hpPct` + `cooldownMul`), `attacks[]` with per-attack `anim` + windup. Types: `bolt`, `fan`, `meteor` (+ optional lava/frost `pool`), `cone`, `prison`, `pulse`, `laser` (tracking beam + trail pools), `summon` (`entity`, `count`, `maxAlive`). Optional `initialCooldown` overrides the default first-cast delay. Optional `recovery` floors every other attack's remaining cooldown when that attack resolves (pulse: end of windup; laser: end of channel). Cases live in Godot `src/sim/sim_boss.gd` + `sim_boss_hazards.gd` (Phaser `sim/boss.ts` + `sim/boss-hazards.ts` on a web-named task)
 
 Elites are not catalog rows. Any non-boss spawn can mutate; the elite then rolls **50/50 Shielder vs Noxious** (`sim/enemies.ts`).

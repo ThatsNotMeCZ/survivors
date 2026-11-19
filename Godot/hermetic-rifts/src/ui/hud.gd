@@ -319,41 +319,80 @@ func _build_run_panel() -> void:
 	_diff_tape.position = Vector2(DIFF_MARKER_X, 0.0)
 	viewport.add_child(_diff_tape)
 	var roman: Array[String] = ["I", "II", "III", "IV", "V", "VI"]
-	for i: int in 6:
-		var seg := ColorRect.new()
-		seg.custom_minimum_size = Vector2(DIFF_SEG_W, 19)
-		seg.color = DIFF_COLORS[i].darkened(0.45)
-		seg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_diff_tape.add_child(seg)
-		var lab := _label(9, Color.WHITE, UiAtlas.TYPE_MICRO)
-		lab.text = roman[i]
-		lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		seg.add_child(lab)
+	var has_tape_art: bool = UiAtlas.has_frame("hud-diff-tape")
+	if has_tape_art:
+		var tape_wrap := Control.new()
+		tape_wrap.custom_minimum_size = Vector2(DIFF_SEG_W * 6.0, 19.0)
+		tape_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_diff_tape.add_child(tape_wrap)
+		var tape_tex := TextureRect.new()
+		tape_tex.texture = UiAtlas.frame("hud-diff-tape")
+		tape_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tape_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tape_tex.stretch_mode = TextureRect.STRETCH_SCALE
+		tape_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		tape_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tape_wrap.add_child(tape_tex)
+		for i: int in 6:
+			var lab := _label(9, Color.WHITE, UiAtlas.TYPE_MICRO)
+			lab.text = roman[i]
+			lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			lab.position = Vector2(float(i) * DIFF_SEG_W, 0.0)
+			lab.size = Vector2(DIFF_SEG_W, 19.0)
+			tape_wrap.add_child(lab)
+	else:
+		for i: int in 6:
+			var seg := ColorRect.new()
+			seg.custom_minimum_size = Vector2(DIFF_SEG_W, 19)
+			seg.color = DIFF_COLORS[i].darkened(0.45)
+			seg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_diff_tape.add_child(seg)
+			var lab := _label(9, Color.WHITE, UiAtlas.TYPE_MICRO)
+			lab.text = roman[i]
+			lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			lab.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			seg.add_child(lab)
+	if UiAtlas.has_frame("hud-diff-pointer"):
+		var ptr := TextureRect.new()
+		ptr.name = "DiffPointer"
+		ptr.texture = UiAtlas.frame("hud-diff-pointer")
+		ptr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		ptr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ptr.stretch_mode = TextureRect.STRETCH_SCALE
+		ptr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ptr.position = Vector2(viewport.offset_left + DIFF_MARKER_X - 5.0, viewport.offset_top - 2.0)
+		ptr.size = Vector2(11.0, 23.0)
+		root.add_child(ptr)
 	_essence_panel = PanelContainer.new()
 	_essence_panel.name = "EssenceBadge"
 	_essence_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_essence_panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_essence_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	_essence_panel.anchor_left = 1.0
 	_essence_panel.anchor_right = 1.0
 	_essence_panel.offset_left = -196.0
 	_essence_panel.offset_right = -12.0
 	_essence_panel.offset_top = 166.0
-	_essence_panel.offset_bottom = 194.0
-	var ess_sb := StyleBoxFlat.new()
-	ess_sb.bg_color = Color("140d14d9")
-	ess_sb.border_color = UiAtlas.BRASS_DIM
-	ess_sb.set_border_width_all(1)
-	ess_sb.content_margin_left = 10.0
-	ess_sb.content_margin_right = 10.0
-	ess_sb.content_margin_top = 3.0
-	ess_sb.content_margin_bottom = 3.0
-	_essence_panel.add_theme_stylebox_override("panel", ess_sb)
+	_essence_panel.offset_bottom = 198.0
+	if UiAtlas.has_frame("hud-essence"):
+		_essence_panel.add_theme_stylebox_override("panel", UiAtlas.nine_slice("hud-essence", "idle", Vector4(16, 4, 16, 4)))
+	else:
+		var ess_sb := StyleBoxFlat.new()
+		ess_sb.bg_color = Color("140d14d9")
+		ess_sb.border_color = UiAtlas.BRASS_DIM
+		ess_sb.set_border_width_all(1)
+		ess_sb.content_margin_left = 10.0
+		ess_sb.content_margin_right = 10.0
+		ess_sb.content_margin_top = 3.0
+		ess_sb.content_margin_bottom = 3.0
+		_essence_panel.add_theme_stylebox_override("panel", ess_sb)
 	add_child(_essence_panel)
 	_essence_lab = _label(12, Color("ff809a"), UiAtlas.TYPE_META)
 	_essence_lab.text = tr("ui.hud.essence").replace("{n}", "0")
 	_essence_lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_essence_lab.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_essence_panel.add_child(_essence_lab)
 
 
@@ -377,14 +416,6 @@ func _build_vitals() -> void:
 	flask.clip_contents = false
 	flask.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(flask)
-	var flask_tex := TextureRect.new()
-	flask_tex.texture = UiAtlas.frame("hud-flask")
-	flask_tex.stretch_mode = TextureRect.STRETCH_SCALE
-	flask_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	flask_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	flask_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	flask_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	flask.add_child(flask_tex)
 	_hp_fill = ColorRect.new()
 	_hp_fill.color = Color("9e1b24")
 	_hp_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -400,6 +431,14 @@ func _build_vitals() -> void:
 	_hp_mat.set_shader_parameter("fill", 1.0)
 	_hp_fill.material = _hp_mat
 	flask.add_child(_hp_fill)
+	var flask_tex := TextureRect.new()
+	flask_tex.texture = UiAtlas.frame("hud-flask")
+	flask_tex.stretch_mode = TextureRect.STRETCH_SCALE
+	flask_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	flask_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	flask_tex.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	flask_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flask.add_child(flask_tex)
 	_hp = _label(11, UiAtlas.PARCHMENT, UiAtlas.TYPE_MICRO)
 	_hp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hp.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -927,16 +966,17 @@ func _draw_world_rings(world: SimWorld) -> void:
 				continue
 			if obs.state == &"channeling":
 				var pct: float = clampf(obs.progress / channel_dur, 0.0, 1.0)
-				_draw_ring_meter(spos, 26.0, pct, UiAtlas.GOLD_MOLTEN)
+				_draw_obelisk_dual_meter(spos, pct, 0.0, _obelisk_outer_color(obs.sub_kind))
 			elif obs.sub_kind == "obelisk-reliquary":
 				var pct_r: float = clampf(obs.trial_timer / rel_dur, 0.0, 1.0)
-				_draw_ring_meter(spos, 28.0, pct_r, Color("ff7a6e"))
+				_draw_obelisk_dual_meter(spos, 1.0, pct_r, _obelisk_outer_color(obs.sub_kind))
 				if font != null:
-					_draw_layer.draw_string(font, spos + Vector2(-28.0, -34.0), "%.1fs" % maxf(0.0, obs.trial_timer), HORIZONTAL_ALIGNMENT_CENTER, 56.0, 10, Color("ff9e94"))
+					_draw_layer.draw_string(font, spos + Vector2(-28.0, -36.0), "%.1fs" % maxf(0.0, obs.trial_timer), HORIZONTAL_ALIGNMENT_CENTER, 56.0, 10, UiAtlas.BRASS_BRIGHT)
 			else:
-				_draw_ring_meter(spos, 28.0, 1.0, Color("f04f78"))
+				var outer_pct: float = 1.0 if obs.trial_remaining > 0 else 0.0
+				_draw_obelisk_dual_meter(spos, 1.0, outer_pct, _obelisk_outer_color(obs.sub_kind))
 				if font != null and obs.trial_remaining > 0:
-					_draw_layer.draw_string(font, spos + Vector2(-24.0, -34.0), "%d left" % obs.trial_remaining, HORIZONTAL_ALIGNMENT_CENTER, 48.0, 10, UiAtlas.PARCHMENT)
+					_draw_layer.draw_string(font, spos + Vector2(-24.0, -36.0), "%d left" % obs.trial_remaining, HORIZONTAL_ALIGNMENT_CENTER, 48.0, 10, UiAtlas.PARCHMENT)
 		elif obs.type == &"geode" and obs.state == &"intact" and obs.collapse_timer >= 0.0:
 			var gpos: Vector2 = _world_to_hud(obs.x, obs.y)
 			if not hud_bounds.has_point(gpos):
@@ -945,6 +985,27 @@ func _draw_world_rings(world: SimWorld) -> void:
 			_draw_ring_meter(gpos, 24.0, pct_g, Color("7ee8fa"))
 			if font != null:
 				_draw_layer.draw_string(font, gpos + Vector2(-28.0, -30.0), "%.1fs" % maxf(0.0, obs.collapse_timer), HORIZONTAL_ALIGNMENT_CENTER, 56.0, 10, Color("a8f5ff"))
+
+
+func _obelisk_outer_color(sub_kind: String) -> Color:
+	if sub_kind == "obelisk-blood":
+		return Color("e83b3b")
+	if sub_kind == "obelisk-reliquary":
+		return Color("e5c878")
+	return Color("5ad4ff")
+
+
+func _draw_obelisk_dual_meter(center: Vector2, inner_pct: float, outer_pct: float, outer_col: Color) -> void:
+	if UiAtlas.has_frame("hud-obelisk-meter"):
+		var tex: Texture2D = UiAtlas.frame("hud-obelisk-meter")
+		if tex != null:
+			_draw_layer.draw_texture_rect(tex, Rect2(center - Vector2(32.0, 32.0), Vector2(64.0, 64.0)), false)
+			if inner_pct > 0.005:
+				_draw_layer.draw_arc(center, 17.75, -PI * 0.5, -PI * 0.5 + TAU * clampf(inner_pct, 0.0, 1.0), 28, UiAtlas.BRASS_BRIGHT, 2.5, true)
+			if outer_pct > 0.005:
+				_draw_layer.draw_arc(center, 27.0, -PI * 0.5, -PI * 0.5 + TAU * clampf(outer_pct, 0.0, 1.0), 32, outer_col, 2.5, true)
+			return
+	_draw_ring_meter(center, 26.0, outer_pct if outer_pct > 0.005 else inner_pct, outer_col if outer_pct > 0.005 else UiAtlas.GOLD_MOLTEN)
 
 
 func _draw_ring_meter(center: Vector2, radius: float, pct: float, color: Color) -> void:

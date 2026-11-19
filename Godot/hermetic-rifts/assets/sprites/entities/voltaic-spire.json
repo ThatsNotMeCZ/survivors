@@ -4,7 +4,8 @@
   "anims": {
     "idle": {
       "frames": [
-        0
+        0,
+        1
       ],
       "frameRate": 4,
       "repeat": -1

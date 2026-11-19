@@ -125,6 +125,22 @@ func _resolve_nodes() -> void:
 	_seal = get_node_or_null("Content/Row/Stage/Seal") as TextureRect
 	_preview = get_node_or_null("Content/Row/Stage/Preview") as TextureRect
 	_stage = get_node_or_null("Content/Row/Stage") as Control
+	_apply_pillar_sprite()
+
+
+func _apply_pillar_sprite() -> void:
+	var pillar := get_node_or_null("Content/Row/Pillar") as Control
+	if pillar == null or not UiAtlas.has_frame("menu-pillar"):
+		return
+	for old_name: String in ["PillarBg", "BorderL", "BorderR"]:
+		var old_node := pillar.get_node_or_null(old_name) as CanvasItem
+		if old_node != null:
+			old_node.visible = false
+	var old_panel := pillar.get_node_or_null("PillarFrame")
+	if old_panel != null and not old_panel.has_method("configure"):
+		pillar.remove_child(old_panel)
+		old_panel.queue_free()
+	UiAtlas.mount_fifteen_slice(pillar, "menu-pillar", "idle", "PillarFrame")
 
 
 func _apply_copy() -> void:

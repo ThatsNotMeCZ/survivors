@@ -599,6 +599,13 @@ static func _step_sniper(
 	if enemies.ai_state[i] == EnemyPool.AI_STATE_STUN:
 		enemies.windup[i] = 0.0
 		return
+	if enemies.windup[i] > 0.0:
+		enemies.windup[i] -= dt
+		if enemies.windup[i] <= 0.0:
+			_fire_sniper(world, i, ai)
+			enemies.attack_cd[i] = float(ai.get("cooldown", 3.2))
+			enemies.windup[i] = 0.0
+		return
 	if dist > 0.001:
 		var nx: float = dx / dist
 		var ny: float = dy / dist
@@ -613,20 +620,12 @@ static func _step_sniper(
 		var defl: Vector2 = _deflect(world, enemies.x[i], enemies.y[i], enemies.radius[i], mx, my, world.player.x, world.player.y)
 		enemies.x[i] += defl.x
 		enemies.y[i] += defl.y
-	if enemies.windup[i] > 0.0:
-		if enemies.windup[i] > 0.30:
-			enemies.aim_x[i] = world.player.x
-			enemies.aim_y[i] = world.player.y
-		enemies.windup[i] -= dt
-		if enemies.windup[i] <= 0.0:
-			_fire_sniper(world, i, ai)
-			enemies.attack_cd[i] = float(ai.get("cooldown", 3.2))
-			enemies.windup[i] = 0.0
-		return
 	if enemies.attack_cd[i] <= 0.0:
 		enemies.windup[i] = float(ai.get("windup", 1.5))
-		enemies.aim_x[i] = world.player.x
-		enemies.aim_y[i] = world.player.y
+		var dir_x: float = 1.0 if dist <= 0.001 else dx / dist
+		var dir_y: float = 0.0 if dist <= 0.001 else dy / dist
+		enemies.aim_x[i] = enemies.x[i] + dir_x * 980.0
+		enemies.aim_y[i] = enemies.y[i] + dir_y * 980.0
 		enemies.anim_name[i] = String(ai.get("anim", "attack"))
 
 

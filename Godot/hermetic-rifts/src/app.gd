@@ -1,6 +1,9 @@
 extends Node
 
 const Display := preload("res://src/data/display_settings.gd")
+const CURSOR_POINTER: Texture2D = preload("res://assets/ui/cursors/cursor_pointer.png")
+const CURSOR_AIM: Texture2D = preload("res://assets/ui/cursors/cursor_aim.png")
+const CURSOR_AIM_ACTIVE: Texture2D = preload("res://assets/ui/cursors/cursor_aim_active.png")
 
 var catalog: Catalog
 var settings: GameSettings
@@ -13,6 +16,7 @@ var run_outcome: StringName = &""
 var run_start_items: Dictionary = {}
 var run_start_survivors: Dictionary = {}
 var demo_mode: bool = false
+var _cursor_state: StringName = &""
 
 
 func _ready() -> void:
@@ -27,6 +31,33 @@ func _ready() -> void:
 	selected_survivor = settings.survivor_id
 	Display.sanitize(settings)
 	Display.apply(settings)
+	Input.set_custom_mouse_cursor(CURSOR_POINTER, Input.CURSOR_POINTING_HAND, Vector2(1.0, 1.0))
+	_sync_cursor()
+
+
+func _process(_dt: float) -> void:
+	_sync_cursor()
+
+
+func _sync_cursor() -> void:
+	var next_state: StringName = &"pointer"
+	if overlay_mode == &"hidden" and world != null and not is_sim_paused():
+		var firing: bool = (
+			Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+			or (InputMap.has_action("primary") and Input.is_action_pressed("primary"))
+		)
+		var hot: bool = world.player.overheat_lockout_remain > 0.0 or world.player.heat >= 0.80
+		next_state = &"aim_active" if (firing or hot) else &"aim"
+	if next_state == _cursor_state:
+		return
+	_cursor_state = next_state
+	match next_state:
+		&"aim":
+			Input.set_custom_mouse_cursor(CURSOR_AIM, Input.CURSOR_ARROW, Vector2(12.0, 12.0))
+		&"aim_active":
+			Input.set_custom_mouse_cursor(CURSOR_AIM_ACTIVE, Input.CURSOR_ARROW, Vector2(12.0, 12.0))
+		_:
+			Input.set_custom_mouse_cursor(CURSOR_POINTER, Input.CURSOR_ARROW, Vector2(1.0, 1.0))
 
 
 func is_demo_mode() -> bool:

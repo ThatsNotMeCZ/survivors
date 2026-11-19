@@ -463,10 +463,15 @@ static func knockback_radial(
 	radius: float,
 	impulse: float,
 	stun_dur: float = 0.32,
+	min_exit_radius: float = 0.0,
 ) -> void:
 	if radius <= 0.0 or impulse <= 0.0:
 		return
 	var r2: float = radius * radius
+	var is_circ: bool = world.arena_shape == "circle"
+	var bounds: Dictionary = world.catalog.world
+	var width: float = float(bounds.get("width", 6000.0))
+	var height: float = float(bounds.get("height", 6000.0))
 	for e: int in world.enemies.cap:
 		if world.enemies.alive[e] == 0 or world.enemies.corpse_remain[e] > 0.0:
 			continue
@@ -483,6 +488,18 @@ static func knockback_radial(
 		world.enemies.apply_knockback(e, nx * impulse, ny * impulse)
 		if stun_dur > 0.0:
 			world.enemies.apply_stun(e, stun_dur)
+		if min_exit_radius > 0.0 and dist < min_exit_radius:
+			var tx: float = ox + nx * min_exit_radius
+			var ty: float = oy + ny * min_exit_radius
+			var pad: float = world.enemies.radius[e] + 8.0
+			if is_circ:
+				var max_r: float = maxf(64.0, world.arena_radius - pad)
+				var cl: Vector2 = SimCollision.clamp_to_circle(tx, ty, max_r)
+				world.enemies.x[e] = cl.x
+				world.enemies.y[e] = cl.y
+			else:
+				world.enemies.x[e] = clampf(tx, pad, width - pad)
+				world.enemies.y[e] = clampf(ty, pad, height - pad)
 
 
 static func facing_sign(value: int) -> int:

@@ -5,6 +5,7 @@ signal back_pressed
 
 const TAB_IDS: Array[StringName] = [&"howto", &"lore", &"entities", &"reliquary", &"stats"]
 const TAB_ICONS: Array[String] = ["icon-howto", "icon-lore", "icon-bestiary", "icon-reliquary", "icon-stats"]
+const PLANET_ICONS: Array[String] = ["icon-sol", "icon-luna", "icon-mercury", "icon-venus", "icon-mars", "icon-jove", "icon-saturn"]
 
 var _back_btn: Button
 var _kicker: Label
@@ -127,9 +128,7 @@ func _apply_copy() -> void:
 		_title.text = tr("ui.archives.title")
 		_style_title(_title)
 	if _foot != null:
-		_foot.text = tr("ui.archives.foot")
-		_foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		UiAtlas.apply_label(_foot, UiAtlas.TYPE_MICRO, UiAtlas.BRASS_DIM, 12)
+		_mount_foot_planets()
 	_style_header()
 	_style_back_btn()
 	if _nav != null:
@@ -208,30 +207,38 @@ func _style_tab_buttons() -> void:
 			btn.remove_child(child)
 			child.queue_free()
 		btn.text = ""
-		var bg := Color("3c251c") if active else Color("1a161c")
-		var border := UiAtlas.GOLD_MOLTEN if active else Color("4e4a54")
-		var hover := _tab_sb(Color("2a221c"), UiAtlas.BRASS_BRIGHT)
-		btn.add_theme_stylebox_override("normal", _tab_sb(bg, border))
-		btn.add_theme_stylebox_override("hover", hover)
-		btn.add_theme_stylebox_override("pressed", _tab_sb(Color("3c251c"), UiAtlas.GOLD_MOLTEN))
+		btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		if UiAtlas.has_frame("archives-tab"):
+			var normal_st: String = "active" if active else "idle"
+			var hover_st: String = "active" if active else "hover"
+			btn.add_theme_stylebox_override("normal", UiAtlas.nine_slice("archives-tab", normal_st, Vector4.ZERO))
+			btn.add_theme_stylebox_override("hover", UiAtlas.nine_slice("archives-tab", hover_st, Vector4.ZERO))
+			btn.add_theme_stylebox_override("pressed", UiAtlas.nine_slice("archives-tab", "active", Vector4.ZERO))
+		else:
+			var bg := Color("3c251c") if active else Color("1a161c")
+			var border := UiAtlas.GOLD_MOLTEN if active else Color("4e4a54")
+			var hover := _tab_sb(Color("2a221c"), UiAtlas.BRASS_BRIGHT)
+			btn.add_theme_stylebox_override("normal", _tab_sb(bg, border))
+			btn.add_theme_stylebox_override("hover", hover)
+			btn.add_theme_stylebox_override("pressed", _tab_sb(Color("3c251c"), UiAtlas.GOLD_MOLTEN))
 		btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
 		var row := HBoxContainer.new()
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		row.offset_left = 10.0
-		row.offset_right = -10.0
+		row.offset_right = -12.0
 		row.offset_top = 8.0
 		row.offset_bottom = -8.0
-		row.add_theme_constant_override("separation", 10)
+		row.add_theme_constant_override("separation", 12)
 		var ic: TextureRect = UiAtlas.make_icon(TAB_ICONS[i], 24)
-		ic.custom_minimum_size = Vector2(28, 28)
+		ic.custom_minimum_size = Vector2(24, 24)
 		row.add_child(ic)
 		var copy := VBoxContainer.new()
 		copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var lab := Label.new()
 		lab.text = tr("ui.archives.tab.%s" % String(id))
-		UiAtlas.apply_label(lab, UiAtlas.TYPE_META, UiAtlas.PARCHMENT, 13)
+		UiAtlas.apply_label(lab, UiAtlas.TYPE_META, UiAtlas.BRASS_BRIGHT if active else UiAtlas.PARCHMENT, 13)
 		lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var sub := Label.new()
 		sub.text = tr("ui.archives.tab.%s.sub" % String(id))
@@ -241,6 +248,33 @@ func _style_tab_buttons() -> void:
 		copy.add_child(sub)
 		row.add_child(copy)
 		btn.add_child(row)
+
+
+func _mount_foot_planets() -> void:
+	var parent: Node = _foot.get_parent()
+	if parent == null:
+		return
+	var existing := parent.get_node_or_null("FootPlanets") as HBoxContainer
+	if existing != null:
+		existing.visible = true
+		_foot.visible = false
+		return
+	if not UiAtlas.has_frame(PLANET_ICONS[0]):
+		_foot.text = tr("ui.archives.foot")
+		_foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		UiAtlas.apply_label(_foot, UiAtlas.TYPE_MICRO, UiAtlas.BRASS_DIM, 12)
+		return
+	_foot.visible = false
+	var row := HBoxContainer.new()
+	row.name = "FootPlanets"
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 6)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for icon_id: String in PLANET_ICONS:
+		row.add_child(UiAtlas.make_icon(icon_id, 20))
+	parent.add_child(row)
+	parent.move_child(row, _foot.get_index())
 
 
 func _refresh_ribbon(rec: ArchiveRecords, catalog: Catalog) -> void:
@@ -383,18 +417,45 @@ func _style_dossier() -> void:
 		return
 	host.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	host.clip_contents = true
+	host.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_dossier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color("1c161cf0")
-	sb.border_color = UiAtlas.BRASS_DIM
-	sb.set_border_width_all(2)
-	sb.content_margin_left = 24.0
-	sb.content_margin_right = 24.0
-	sb.content_margin_top = 22.0
-	sb.content_margin_bottom = 22.0
-	sb.shadow_color = Color(0, 0, 0, 0.85)
-	sb.shadow_size = 10
-	host.add_theme_stylebox_override("panel", sb)
+	if _split_host is HBoxContainer:
+		(_split_host as HBoxContainer).add_theme_constant_override("separation", 16)
+	if UiAtlas.has_frame("archives-panel-ornate"):
+		var parent: Node = host.get_parent()
+		var wrapper: Control = parent as Control
+		if parent != null and parent.name != "DossierFrame":
+			wrapper = Control.new()
+			wrapper.name = "DossierFrame"
+			wrapper.custom_minimum_size = Vector2(388, 0)
+			wrapper.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			wrapper.size_flags_horizontal = Control.SIZE_SHRINK_END
+			var idx: int = host.get_index()
+			parent.remove_child(host)
+			parent.add_child(wrapper)
+			parent.move_child(wrapper, idx)
+			wrapper.add_child(host)
+		UiAtlas.mount_fifteen_slice(wrapper, "archives-panel-ornate", "idle", "OrnateBg")
+		host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		host.offset_left = 22.0
+		host.offset_top = 26.0
+		host.offset_right = -22.0
+		host.offset_bottom = -24.0
+		host.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	elif UiAtlas.has_frame("archives-info-card"):
+		host.add_theme_stylebox_override("panel", UiAtlas.nine_slice("archives-info-card", "idle", Vector4(24, 22, 24, 22)))
+	else:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color("1c161cf0")
+		sb.border_color = UiAtlas.BRASS_DIM
+		sb.set_border_width_all(2)
+		sb.content_margin_left = 24.0
+		sb.content_margin_right = 24.0
+		sb.content_margin_top = 22.0
+		sb.content_margin_bottom = 22.0
+		sb.shadow_color = Color(0, 0, 0, 0.85)
+		sb.shadow_size = 10
+		host.add_theme_stylebox_override("panel", sb)
 
 
 func _sync_anim_frames() -> void:
@@ -534,6 +595,10 @@ func _style_ribbon_pill(box: Node) -> void:
 
 
 func _apply_ribbon_pill_sb(panel: PanelContainer) -> void:
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if UiAtlas.has_frame("archives-panel-inset"):
+		panel.add_theme_stylebox_override("panel", UiAtlas.nine_slice("archives-panel-inset", "idle", Vector4(12, 6, 12, 6)))
+		return
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color("0c0a0ec7")
 	sb.border_color = Color("c4a35a59")
@@ -598,12 +663,13 @@ func _patch_bestiary(rec: ArchiveRecords, catalog: Catalog) -> void:
 			if kind_txt == "" or kind_txt.begins_with("ui.archives.kind."):
 				continue
 			var card: Node = cards.get_child(i)
-			if card.get_child_count() >= 1:
-				var col: Node = card.get_child(0)
-				if col.get_child_count() >= 1:
-					var badge: Node = col.get_child(0)
-					if badge.get_child_count() >= 1 and badge.get_child(0) is Label:
-						(badge.get_child(0) as Label).text = kind_txt.to_upper()
+			var col: Node = card.get_node_or_null("CardInner")
+			if col == null and card.get_child_count() >= 1:
+				col = card.get_child(card.get_child_count() - 1)
+			if col != null and col.get_child_count() >= 1:
+				var badge: Node = col.get_child(0)
+				if badge.get_child_count() >= 1 and badge.get_child(0) is Label:
+					(badge.get_child(0) as Label).text = kind_txt.to_upper()
 	var sel_entity: Dictionary = {}
 	for entity: Dictionary in filtered:
 		if String(entity.get("id", "")) == _selected_entity:
@@ -671,12 +737,16 @@ func _append_crucible_ledger_panel(rec: ArchiveRecords) -> void:
 		return
 	var panel := PanelContainer.new()
 	panel.name = "CrucibleLedgerPanel"
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color("161119e6")
-	sb.border_color = Color("9c7c3e99")
-	sb.set_border_width_all(1)
-	sb.set_content_margin_all(14)
-	panel.add_theme_stylebox_override("panel", sb)
+	panel.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if UiAtlas.has_frame("archives-info-card"):
+		panel.add_theme_stylebox_override("panel", UiAtlas.nine_slice("archives-info-card", "idle", Vector4(20, 18, 20, 18)))
+	else:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color("161119e6")
+		sb.border_color = Color("9c7c3e99")
+		sb.set_border_width_all(1)
+		sb.set_content_margin_all(14)
+		panel.add_theme_stylebox_override("panel", sb)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	panel.add_child(col)
@@ -715,12 +785,16 @@ func _append_crucible_ledger_panel(rec: ArchiveRecords) -> void:
 	for entry: Array in cards:
 		var card := PanelContainer.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var csb := StyleBoxFlat.new()
-		csb.bg_color = Color("0e0b12e0")
-		csb.border_color = Color("7b5e2e88")
-		csb.set_border_width_all(1)
-		csb.set_content_margin_all(10)
-		card.add_theme_stylebox_override("panel", csb)
+		card.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		if UiAtlas.has_frame("archives-panel-card"):
+			card.add_theme_stylebox_override("panel", UiAtlas.nine_slice("archives-panel-card", "idle", Vector4(14, 12, 14, 12)))
+		else:
+			var csb := StyleBoxFlat.new()
+			csb.bg_color = Color("0e0b12e0")
+			csb.border_color = Color("7b5e2e88")
+			csb.set_border_width_all(1)
+			csb.set_content_margin_all(10)
+			card.add_theme_stylebox_override("panel", csb)
 		var cbox := VBoxContainer.new()
 		cbox.add_theme_constant_override("separation", 3)
 		card.add_child(cbox)

@@ -4,6 +4,7 @@ extends Control
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	custom_minimum_size = Vector2(130, 76)
 	queue_redraw()
 
@@ -14,6 +15,11 @@ func _notification(what: int) -> void:
 
 
 func _draw() -> void:
+	if not Engine.is_editor_hint() and UiAtlas.has_frame("pillar-ornament"):
+		var tex: Texture2D = UiAtlas.frame("pillar-ornament")
+		if tex != null:
+			draw_texture_rect(tex, Rect2(Vector2.ZERO, size), false)
+			return
 	var c := Color(UiAtlas.BRASS_DIM, 0.8)
 	var sx: float = size.x / 120.0
 	var sy: float = size.y / 80.0

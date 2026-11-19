@@ -25,3 +25,4 @@ const GEODE_CRACK: int = 19
 const PARRY_REFLECT: int = 20
 const ESSENCE_PICKUP: int = 21
 const BOSS_EMERGE: int = 22
+const GEYSER_BURST: int = 23

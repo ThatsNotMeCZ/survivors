@@ -15,9 +15,10 @@ func _init() -> void:
 	_run_suite(8, "Persistence (ArchiveRecords & GameSettings)", func() -> bool: return _suite_08_persistence(cat))
 	_run_suite(9, "Shaders & Generated Assets Integrity", _suite_09_shaders_and_assets)
 	_run_suite(10, "Anti-Idle Compliance", func() -> bool: return _suite_10_anti_idle(cat))
+	_run_suite(11, "SFX Range Fade & Culling", _suite_11_sfx_range_fade)
 
 	if _failures.is_empty():
-		print("[SUMMARY] All 10 QA suites passed.")
+		print("[SUMMARY] All 11 QA suites passed.")
 		quit(0)
 	else:
 		print("[SUMMARY] %d failure(s):" % _failures.size())
@@ -498,9 +499,13 @@ func _suite_05_teleporter_overheat_drops(cat: Catalog) -> bool:
 		w.player.x = w.teleporter_x
 		w.player.y = w.teleporter_y
 		w.step([hold_in], dt)
-	ok = _check(w.enemies.x[mite_idx] > w.teleporter_x + 125.0, "Suite 5: rupture shoves fodder outward significantly (dx=%.1f)" % (w.enemies.x[mite_idx] - w.teleporter_x)) and ok
-	ok = _check(w.enemies.y[spec_idx] > w.teleporter_y + 135.0, "Suite 5: rupture shoves specialist outward significantly (dy=%.1f)" % (w.enemies.y[spec_idx] - w.teleporter_y)) and ok
-	ok = _check(w.enemies.x[elite_idx] < w.teleporter_x - 130.0, "Suite 5: rupture shoves elite outward significantly (dx=%.1f)" % (w.enemies.x[elite_idx] - w.teleporter_x)) and ok
+	var eff_tel_r: float = SimLoop.effective_teleporter_radius(w)
+	var mite_dist: float = Vector2(w.enemies.x[mite_idx] - w.teleporter_x, w.enemies.y[mite_idx] - w.teleporter_y).length()
+	var spec_dist: float = Vector2(w.enemies.x[spec_idx] - w.teleporter_x, w.enemies.y[spec_idx] - w.teleporter_y).length()
+	var elite_dist: float = Vector2(w.enemies.x[elite_idx] - w.teleporter_x, w.enemies.y[elite_idx] - w.teleporter_y).length()
+	ok = _check(mite_dist > eff_tel_r, "Suite 5: rupture shoves fodder outside circle (dist=%.1f > %.1f)" % [mite_dist, eff_tel_r]) and ok
+	ok = _check(spec_dist > eff_tel_r, "Suite 5: rupture shoves specialist outside circle (dist=%.1f > %.1f)" % [spec_dist, eff_tel_r]) and ok
+	ok = _check(elite_dist > eff_tel_r, "Suite 5: rupture shoves elite outside circle (dist=%.1f > %.1f)" % [elite_dist, eff_tel_r]) and ok
 	ok = _check(w.boss.emerge_remain > 0.0 and is_equal_approx(w.enemies.x[boss_idx], w.teleporter_x) and is_equal_approx(w.enemies.y[boss_idx], w.teleporter_y), "Suite 5: boss stays stationary at circle center during emerge") and ok
 	# Clear non-boss enemies so only emerging boss overlaps player with iframe=0
 	for e: int in w.enemies.cap:
@@ -743,6 +748,30 @@ func _suite_06_enemies_elites_bosses(cat: Catalog) -> bool:
 		w_sp.player.iframe_remain = 10.0
 		SimEnemiesStep.step(w_sp, dt)
 	ok = _check(w_sp.obstacles.items[vol_idx].state == &"detonated", "Suite 6: cleaver detonates volatile barrel") and ok
+
+	SimEnemies.clear(w_sp)
+	w_sp.obstacles.clear()
+	SimObstacles.rebuild_hash(w_sp)
+	w_sp.player.x = 0.0
+	w_sp.player.y = 0.0
+	var sniper: int = SimEnemies.spawn(w_sp, cat.entity("enemy-astral-sniper"), 320.0, 0.0)
+	w_sp.enemies.attack_cd[sniper] = 0.0
+	SimEnemiesStep.step(w_sp, dt)
+	var lock_sx: float = w_sp.enemies.x[sniper]
+	var lock_sy: float = w_sp.enemies.y[sniper]
+	var lock_ax: float = w_sp.enemies.aim_x[sniper]
+	var lock_ay: float = w_sp.enemies.aim_y[sniper]
+	for _s: int in 30:
+		w_sp.player.y += 6.0
+		SimEnemiesStep.step(w_sp, dt)
+	var sniper_locked: bool = (
+		w_sp.enemies.windup[sniper] > 0.0
+		and is_equal_approx(w_sp.enemies.x[sniper], lock_sx)
+		and is_equal_approx(w_sp.enemies.y[sniper], lock_sy)
+		and is_equal_approx(w_sp.enemies.aim_x[sniper], lock_ax)
+		and is_equal_approx(w_sp.enemies.aim_y[sniper], lock_ay)
+	)
+	ok = _check(sniper_locked, "Suite 6: astral-sniper locks aim and holds position during windup") and ok
 
 	# 6. Boss attacks: geyser, dash_slam, chain_anchor, single-hit ring_wave
 	ok = _check(_test_boss_attack(cat, "cinder-heart", "geyser"), "Suite 6: cinder-heart executes geyser") and ok
@@ -1308,4 +1337,22 @@ func _suite_10_anti_idle(cat: Catalog) -> bool:
 		var rx_cheat: RegEx = RegEx.new()
 		rx_cheat.compile("is_action_just_pressed\\(\\s*\"confirm\"\\s*\\)")
 		ok = _check(rx_cheat.search(av_txt) == null, "Suite 10: arena_view.gd has no confirm -> complete_working shortcut") and ok
+	return ok
+
+
+func _suite_11_sfx_range_fade() -> bool:
+	var ok: bool = true
+	var audio_script: GDScript = load("res://src/audio/game_audio.gd") as GDScript
+	if not _check(audio_script != null, "Suite 11: load game_audio.gd"):
+		return false
+	var audio: Node = audio_script.new()
+	ok = _check(is_equal_approx(audio._distance_gain(FxIds.HIT, 0.0), 1.0), "Suite 11: distance 0.0 -> gain 1.0") and ok
+	ok = _check(is_equal_approx(audio._distance_gain(FxIds.HIT, 160.0), 1.0), "Suite 11: distance 160.0 -> gain 1.0") and ok
+	ok = _check(is_equal_approx(audio._distance_gain(FxIds.HIT, 340.0), 0.25), "Suite 11: distance 340.0 (midpoint) -> gain 0.25") and ok
+	ok = _check(is_equal_approx(audio._distance_gain(FxIds.HIT, 520.0), 0.0), "Suite 11: distance 520.0 -> gain 0.0") and ok
+	ok = _check(is_equal_approx(audio._distance_gain(FxIds.DEATH, 900.0), 0.0), "Suite 11: distance 900.0 -> gain 0.0") and ok
+	ok = _check(is_equal_approx(audio._distance_gain(FxIds.BOSS_EMERGE, 900.0), 1.0), "Suite 11: BOSS_EMERGE bypasses range fade") and ok
+	ok = _check(is_equal_approx(audio._distance_gain(FxIds.HURT, 900.0), 1.0), "Suite 11: HURT bypasses range fade") and ok
+	ok = _check(is_equal_approx(audio._distance_gain(FxIds.DASH, 900.0), 1.0), "Suite 11: DASH bypasses range fade") and ok
+	audio.free()
 	return ok

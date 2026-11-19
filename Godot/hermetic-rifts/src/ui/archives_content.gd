@@ -6,9 +6,9 @@ const PANEL: Color = Color("100d12e0")
 const CARD: Color = Color("121015e0")
 const BORDER: Color = Color("c4a35a59")
 const LOCKED: Color = Color("3a322ccc")
-const CARD_SIZE: Vector2 = Vector2(112, 148)
+const CARD_SIZE: Vector2 = Vector2(152, 208)
 const CARD_ART: float = 64.0
-const CARD_GAP: int = 8
+const CARD_GAP: int = 10
 const CARD_BORDER: Color = Color("4d4852")
 const CARD_BG: Color = Color("1b181f")
 const CARD_BG_ACTIVE: Color = Color("38231b")
@@ -336,7 +336,9 @@ static func _skills_grid(surv: Dictionary) -> Control:
 		if skill_id == "":
 			continue
 		var card := PanelContainer.new()
-		card.add_theme_stylebox_override("panel", _sb(Color("0c0a0db3"), BORDER, 1))
+		card.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var skill_sb: StyleBox = UiAtlas.nine_slice("archives-panel-card", "idle", Vector4(14, 12, 14, 12)) if UiAtlas.has_frame("archives-panel-card") else _sb(Color("0c0a0db3"), BORDER, 1)
+		card.add_theme_stylebox_override("panel", skill_sb)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 12)
 		var icon_wrap := _art_box(44, 4)
@@ -559,7 +561,7 @@ static func _ledger_vessels(rec: ArchiveRecords, catalog: Catalog) -> Control:
 		var state: Dictionary = rec.check_unlock(surv.get("unlock", null), catalog)
 		var unlocked: bool = bool(state.get("unlocked", true))
 		var s_rec: Dictionary = rec.survivor_record(sid)
-		var card := _panel()
+		var card := _sub_card()
 		var card_in := _inner(card)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 14)
@@ -611,9 +613,14 @@ static func _ledger_history(rec: ArchiveRecords, catalog: Catalog) -> Control:
 
 
 static func _history_row(run: Dictionary, catalog: Catalog) -> Control:
+	var wrap := PanelContainer.new()
+	wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	wrap.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var wsb: StyleBox = UiAtlas.nine_slice("archives-panel-inset", "idle", Vector4(12, 8, 12, 8)) if UiAtlas.has_frame("archives-panel-inset") else _sb(Color("0e0b12cc"), BORDER, 1, 8)
+	wrap.add_theme_stylebox_override("panel", wsb)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	row.custom_minimum_size = Vector2(0, 48)
+	row.custom_minimum_size = Vector2(0, 44)
 	var outcome: String = String(run.get("outcome", "defeat"))
 	var badge := _label(Loc.t("ui.archives.ledger.outcome.%s" % outcome), 11, UiAtlas.GOLD_MOLTEN)
 	badge.custom_minimum_size = Vector2(110, 0)
@@ -652,7 +659,8 @@ static func _history_row(run: Dictionary, catalog: Catalog) -> Control:
 			chip.add_child(n)
 		items.add_child(chip)
 	row.add_child(items)
-	return row
+	wrap.add_child(row)
+	return wrap
 
 
 static func _denizen_line(stage: Dictionary, rec: ArchiveRecords, catalog: Catalog, visited: bool) -> String:
@@ -801,7 +809,9 @@ static func _banner(kicker_key: String, title_key: String, sub_key: String) -> C
 static func _panel() -> PanelContainer:
 	var holder := PanelContainer.new()
 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	holder.add_theme_stylebox_override("panel", _sb(PANEL, BORDER, 1, 16))
+	holder.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var sb: StyleBox = UiAtlas.nine_slice("archives-info-card", "idle", Vector4(20, 18, 20, 18)) if UiAtlas.has_frame("archives-info-card") else _sb(PANEL, BORDER, 1, 16)
+	holder.add_theme_stylebox_override("panel", sb)
 	var inner := VBoxContainer.new()
 	inner.name = "Inner"
 	inner.add_theme_constant_override("separation", 12)
@@ -809,25 +819,57 @@ static func _panel() -> PanelContainer:
 	return holder
 
 
-static func _parchment() -> PanelContainer:
+static func _sub_card() -> PanelContainer:
 	var holder := PanelContainer.new()
 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	holder.add_theme_stylebox_override("panel", _sb(Color("100d12e0"), BORDER, 1, 18))
+	holder.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var sb: StyleBox = UiAtlas.nine_slice("archives-panel-card", "idle", Vector4(16, 14, 16, 14)) if UiAtlas.has_frame("archives-panel-card") else _sb(CARD, BORDER, 1, 14)
+	holder.add_theme_stylebox_override("panel", sb)
 	var inner := VBoxContainer.new()
 	inner.name = "Inner"
-	inner.add_theme_constant_override("separation", 8)
+	inner.add_theme_constant_override("separation", 10)
 	holder.add_child(inner)
 	return holder
 
 
+static func _parchment() -> PanelContainer:
+	var holder := PanelContainer.new()
+	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	holder.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var inner := VBoxContainer.new()
+	inner.name = "Inner"
+	inner.add_theme_constant_override("separation", 8)
+	if UiAtlas.has_frame("archives-panel-ornate"):
+		holder.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		UiAtlas.mount_fifteen_slice(holder, "archives-panel-ornate", "idle", "OrnateBg")
+		var pad := MarginContainer.new()
+		pad.name = "Pad"
+		pad.add_theme_constant_override("margin_left", 22)
+		pad.add_theme_constant_override("margin_top", 24)
+		pad.add_theme_constant_override("margin_right", 22)
+		pad.add_theme_constant_override("margin_bottom", 22)
+		pad.add_child(inner)
+		holder.add_child(pad)
+	else:
+		var sb: StyleBox = UiAtlas.nine_slice("archives-info-card", "idle", Vector4(20, 18, 20, 18)) if UiAtlas.has_frame("archives-info-card") else _sb(Color("100d12e0"), BORDER, 1, 18)
+		holder.add_theme_stylebox_override("panel", sb)
+		holder.add_child(inner)
+	return holder
+
+
 static func _inner(panel: PanelContainer) -> VBoxContainer:
-	return panel.get_node("Inner") as VBoxContainer
+	var direct := panel.get_node_or_null("Inner") as VBoxContainer
+	if direct != null:
+		return direct
+	return panel.get_node("Pad/Inner") as VBoxContainer
 
 
 static func _info_card(kicker: String, title: String, body: String) -> Control:
 	var holder := PanelContainer.new()
 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	holder.add_theme_stylebox_override("panel", _sb(CARD, BORDER, 1, 14))
+	holder.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var sb: StyleBox = UiAtlas.nine_slice("archives-panel-card", "idle", Vector4(16, 14, 16, 14)) if UiAtlas.has_frame("archives-panel-card") else _sb(CARD, BORDER, 1, 14)
+	holder.add_theme_stylebox_override("panel", sb)
 	var inner := VBoxContainer.new()
 	inner.add_theme_constant_override("separation", 6)
 	inner.add_child(_kicker(kicker))
@@ -842,7 +884,9 @@ static func _info_card(kicker: String, title: String, body: String) -> Control:
 static func _metric_card(label: String, value: String, hint: String) -> Control:
 	var holder := PanelContainer.new()
 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	holder.add_theme_stylebox_override("panel", _sb(CARD, BORDER, 1, 12))
+	holder.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var sb: StyleBox = UiAtlas.nine_slice("archives-panel-card", "idle", Vector4(16, 14, 16, 14)) if UiAtlas.has_frame("archives-panel-card") else _sb(CARD, BORDER, 1, 12)
+	holder.add_theme_stylebox_override("panel", sb)
 	var inner := VBoxContainer.new()
 	inner.add_child(_kicker(label))
 	inner.add_child(_label(value, 22, UiAtlas.GOLD_MOLTEN))
@@ -885,13 +929,14 @@ static func _setup_tile_card(card: Button) -> void:
 
 static func _tile_inner() -> VBoxContainer:
 	var col := VBoxContainer.new()
+	col.name = "CardInner"
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.set_anchors_preset(Control.PRESET_FULL_RECT)
-	col.offset_left = 8.0
-	col.offset_top = 6.0
-	col.offset_right = -8.0
-	col.offset_bottom = -8.0
-	col.add_theme_constant_override("separation", 4)
+	col.offset_left = 14.0
+	col.offset_top = 14.0
+	col.offset_right = -14.0
+	col.offset_bottom = -34.0
+	col.add_theme_constant_override("separation", 5)
 	col.alignment = BoxContainer.ALIGNMENT_BEGIN
 	return col
 
@@ -900,12 +945,12 @@ static func _role_badge(text: String, color: Color) -> Control:
 	var chip := PanelContainer.new()
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	chip.custom_maximum_size = Vector2(96.0, 22.0)
+	chip.custom_maximum_size = Vector2(124.0, 26.0)
 	chip.clip_contents = true
-	var border := Color(color, 0.4)
+	var border := Color(color, 0.45)
 	var sb := _sb(Color("0a080ccc"), border, 1, 0)
-	sb.content_margin_left = 6.0
-	sb.content_margin_right = 6.0
+	sb.content_margin_left = 7.0
+	sb.content_margin_right = 7.0
 	sb.content_margin_top = 2.0
 	sb.content_margin_bottom = 2.0
 	chip.add_theme_stylebox_override("panel", sb)
@@ -913,7 +958,7 @@ static func _role_badge(text: String, color: Color) -> Control:
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.clip_text = true
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	l.custom_maximum_size = Vector2(84.0, 18.0)
+	l.custom_maximum_size = Vector2(114.0, 20.0)
 	chip.add_child(l)
 	return chip
 
@@ -927,7 +972,7 @@ static func _tile_line(text: String, size: int, color: Color, two_line: bool) ->
 	if two_line:
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l.max_lines_visible = 2
-		l.custom_minimum_size.y = 32.0
+		l.custom_minimum_size.y = 36.0
 	return l
 
 
@@ -993,7 +1038,9 @@ static func _chip(label: String, value: String) -> Control:
 	holder.add_theme_constant_override("separation", 5)
 	var bg := PanelContainer.new()
 	bg.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	bg.add_theme_stylebox_override("panel", _sb(Color("0a080cd9"), BORDER, 1, 8))
+	bg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var sb: StyleBox = UiAtlas.nine_slice("archives-panel-inset", "idle", Vector4(10, 6, 10, 6)) if UiAtlas.has_frame("archives-panel-inset") else _sb(Color("0a080cd9"), BORDER, 1, 8)
+	bg.add_theme_stylebox_override("panel", sb)
 	holder.add_child(_label("%s:" % label, 11, ASH))
 	holder.add_child(_label(value, 11, UiAtlas.GOLD_MOLTEN))
 	bg.add_child(holder)
@@ -1006,13 +1053,17 @@ static func _art_box(side: float, inset: float = 0.0) -> Control:
 	box.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	box.clip_contents = true
-	box.add_theme_stylebox_override("panel", _sb(Color("120f14"), Color("8a6a3266"), 2, int(inset)))
+	box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var p: float = maxf(4.0, inset)
+	var sb: StyleBox = UiAtlas.nine_slice("archives-panel-inset", "idle", Vector4(p, p, p, p)) if UiAtlas.has_frame("archives-panel-inset") else _sb(Color("120f14"), Color("8a6a3266"), 2, int(inset))
+	box.add_theme_stylebox_override("panel", sb)
 	return box
 
 
 static func _art_well(width: float, height: float, border_w: int) -> Control:
 	var box := PanelContainer.new()
 	box.clip_contents = true
+	box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	if width <= 0.0:
 		box.custom_minimum_size = Vector2(0.0, height)
 		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1020,9 +1071,13 @@ static func _art_well(width: float, height: float, border_w: int) -> Control:
 		box.custom_minimum_size = Vector2(width, height)
 		box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	var border: Color = UiAtlas.BRASS_DIM if border_w >= 2 else ART_WELL_BORDER
-	var bg: Color = Color("141014") if border_w >= 2 else Color("100d12")
-	box.add_theme_stylebox_override("panel", _sb(bg, border, border_w, 0))
+	if UiAtlas.has_frame("archives-panel-inset"):
+		var pad: float = 6.0 if border_w >= 2 else 4.0
+		box.add_theme_stylebox_override("panel", UiAtlas.nine_slice("archives-panel-inset", "idle", Vector4(pad, pad, pad, pad)))
+	else:
+		var border: Color = UiAtlas.BRASS_DIM if border_w >= 2 else ART_WELL_BORDER
+		var bg: Color = Color("141014") if border_w >= 2 else Color("100d12")
+		box.add_theme_stylebox_override("panel", _sb(bg, border, border_w, 0))
 	return box
 
 
@@ -1068,13 +1123,18 @@ static func _mount_skill(box: Control, id: String) -> void:
 
 
 static func _style_select_card(btn: Button, active: bool, seen: bool, idle_border: Color = CARD_BORDER) -> void:
-	var border: Color = UiAtlas.GOLD_MOLTEN if active else idle_border
-	var bg: Color = CARD_BG_ACTIVE if active else (CARD_BG if seen else CARD_BG_UNSEEN)
-	var hover_border: Color = UiAtlas.GOLD_MOLTEN if active else UiAtlas.BRASS_BRIGHT
-	var hover := _card_sb(Color("2a221c"), hover_border, active)
-	btn.add_theme_stylebox_override("normal", _card_sb(bg, border, active))
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("pressed", _card_sb(CARD_BG_ACTIVE, UiAtlas.GOLD_MOLTEN, true))
+	btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if UiAtlas.has_frame("archives-card"):
+		UiAtlas.style_fifteen_slice_button(btn, "archives-card", active)
+		btn.modulate = Color.WHITE if (seen or active) else Color(0.72, 0.70, 0.76, 1.0)
+	else:
+		var border: Color = UiAtlas.GOLD_MOLTEN if active else idle_border
+		var bg: Color = CARD_BG_ACTIVE if active else (CARD_BG if seen else CARD_BG_UNSEEN)
+		var hover_border: Color = UiAtlas.GOLD_MOLTEN if active else UiAtlas.BRASS_BRIGHT
+		var hover := _card_sb(Color("2a221c"), hover_border, active)
+		btn.add_theme_stylebox_override("normal", _card_sb(bg, border, active))
+		btn.add_theme_stylebox_override("hover", hover)
+		btn.add_theme_stylebox_override("pressed", _card_sb(CARD_BG_ACTIVE, UiAtlas.GOLD_MOLTEN, true))
 	btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
 	btn.add_theme_color_override("font_color", Color(0, 0, 0, 0))
 	btn.add_theme_color_override("font_hover_color", Color(0, 0, 0, 0))

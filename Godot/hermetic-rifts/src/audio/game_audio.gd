@@ -2,6 +2,8 @@ extends Node
 
 const VOICE_CAP: int = 12
 const WINDOW_MS: int = 1000
+const SFX_FULL_RANGE: float = 160.0
+const SFX_MAX_RANGE: float = 520.0
 const RATE: Dictionary = {
 	"hit": 8,
 	"death": 6,
@@ -75,7 +77,10 @@ func set_chill(on: bool) -> void:
 		_apply()
 
 
-func play_fx(kind: int, tint: int = 0) -> void:
+func play_fx(kind: int, tint: int = 0, distance: float = 0.0) -> void:
+	var gain: float = _distance_gain(kind, distance)
+	if gain <= 0.01:
+		return
 	var id: String = _sfx_id(kind, tint)
 	if not _allowed(id):
 		return
@@ -85,9 +90,21 @@ func play_fx(kind: int, tint: int = 0) -> void:
 	var voice: AudioStreamPlayer = _free_voice()
 	if voice == null:
 		return
+	voice.volume_db = linear_to_db(gain)
 	voice.pitch_scale = randf_range(0.94, 1.06)
 	voice.stream = stream
 	voice.play()
+
+
+func _distance_gain(kind: int, distance: float) -> float:
+	if kind == FxIds.BOSS_EMERGE or kind == FxIds.HURT or kind == FxIds.DASH:
+		return 1.0
+	if distance <= SFX_FULL_RANGE:
+		return 1.0
+	if distance >= SFX_MAX_RANGE:
+		return 0.0
+	var t: float = (distance - SFX_FULL_RANGE) / (SFX_MAX_RANGE - SFX_FULL_RANGE)
+	return (1.0 - t) * (1.0 - t)
 
 
 func play_ui(kind: String) -> void:

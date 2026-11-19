@@ -1,0 +1,192 @@
+[gd_scene format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/vent_erupt.gdshader" id="1_vent"]
+[ext_resource type="Shader" path="res://assets/shaders/hazard_pool.gdshader" id="2_hazard"]
+[ext_resource type="Shader" path="res://assets/shaders/boss_geyser.gdshader" id="3_geyser"]
+[ext_resource type="Shader" path="res://assets/shaders/miasma_pool.gdshader" id="4_miasma"]
+[ext_resource type="Shader" path="res://assets/shaders/cleave_slash.gdshader" id="5_cleave"]
+[ext_resource type="Shader" path="res://assets/shaders/boss_shockwave.gdshader" id="6_shock"]
+[ext_resource type="Shader" path="res://assets/shaders/skill_impact.gdshader" id="7_impact"]
+[ext_resource type="Shader" path="res://assets/shaders/brimstone_line.gdshader" id="8_brim"]
+[ext_resource type="Shader" path="res://assets/shaders/boss_laser.gdshader" id="9_laser"]
+[ext_resource type="Shader" path="res://assets/shaders/circle_cracks.gdshader" id="10_cracks"]
+
+[sub_resource type="ShaderMaterial" id="Mat_VentGround"]
+shader = ExtResource("1_vent")
+shader_parameter/u_state = 2.0
+shader_parameter/u_progress = 0.5
+shader_parameter/u_layer = 0.0
+
+[sub_resource type="ShaderMaterial" id="Mat_Vent"]
+shader = ExtResource("1_vent")
+shader_parameter/u_state = 2.0
+shader_parameter/u_progress = 0.5
+shader_parameter/u_layer = 1.0
+
+[sub_resource type="ShaderMaterial" id="Mat_GeyserTele"]
+shader = ExtResource("2_hazard")
+shader_parameter/u_kind = 0.0
+shader_parameter/u_style = 0.0
+shader_parameter/u_progress = 0.65
+shader_parameter/u_quad_px = Vector2(110, 110)
+
+[sub_resource type="ShaderMaterial" id="Mat_GeyserBurstGround"]
+shader = ExtResource("3_geyser")
+shader_parameter/u_style = 0.0
+shader_parameter/u_progress = 0.45
+shader_parameter/u_layer = 0.0
+shader_parameter/u_quad_px = Vector2(136, 192)
+
+[sub_resource type="ShaderMaterial" id="Mat_GeyserBurst"]
+shader = ExtResource("3_geyser")
+shader_parameter/u_style = 0.0
+shader_parameter/u_progress = 0.45
+shader_parameter/u_layer = 1.0
+shader_parameter/u_quad_px = Vector2(136, 192)
+
+[sub_resource type="ShaderMaterial" id="Mat_AcidPuddle"]
+shader = ExtResource("4_miasma")
+shader_parameter/u_kind = 0.0
+shader_parameter/u_progress = 0.35
+shader_parameter/u_quad_px = Vector2(136, 136)
+
+[sub_resource type="ShaderMaterial" id="Mat_CleaveSlamGround"]
+shader = ExtResource("5_cleave")
+shader_parameter/u_state = 2.0
+shader_parameter/u_progress = 0.35
+shader_parameter/u_kind = 0.0
+shader_parameter/u_layer = 0.0
+shader_parameter/u_quad_px = Vector2(176, 176)
+
+[sub_resource type="ShaderMaterial" id="Mat_CleaveSlam"]
+shader = ExtResource("5_cleave")
+shader_parameter/u_state = 2.0
+shader_parameter/u_progress = 0.35
+shader_parameter/u_kind = 0.0
+shader_parameter/u_layer = 1.0
+shader_parameter/u_quad_px = Vector2(176, 176)
+
+[sub_resource type="ShaderMaterial" id="Mat_Shockwave"]
+shader = ExtResource("6_shock")
+shader_parameter/u_progress = 0.6
+shader_parameter/u_style = 4.0
+shader_parameter/u_quad_px = Vector2(128, 128)
+
+[sub_resource type="ShaderMaterial" id="Mat_Impact"]
+shader = ExtResource("7_impact")
+shader_parameter/u_kind = 1.0
+shader_parameter/u_progress = 0.4
+shader_parameter/u_quad_px = Vector2(140, 140)
+
+[sub_resource type="ShaderMaterial" id="Mat_Brimstone"]
+shader = ExtResource("8_brim")
+shader_parameter/u_progress = 0.4
+shader_parameter/u_quad_px = Vector2(220, 36)
+
+[sub_resource type="ShaderMaterial" id="Mat_Laser"]
+shader = ExtResource("9_laser")
+shader_parameter/u_channeling = 1.0
+shader_parameter/u_style = 5.0
+shader_parameter/u_quad_px = Vector2(260, 48)
+
+[sub_resource type="ShaderMaterial" id="Mat_Cracks"]
+shader = ExtResource("10_cracks")
+shader_parameter/u_active = 1.0
+shader_parameter/u_guide_active = 1.0
+shader_parameter/u_progress = 0.45
+shader_parameter/u_grid_px = 400.0
+shader_parameter/u_span_px = Vector2(800, 800)
+shader_parameter/u_circle_r = 48.0
+
+[node name="FxGallery" type="Node2D"]
+
+[node name="VentRefGround" type="ColorRect" parent="."]
+material = SubResource("Mat_VentGround")
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 176.0
+offset_bottom = 232.0
+
+[node name="VentRef" type="ColorRect" parent="."]
+material = SubResource("Mat_Vent")
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 176.0
+offset_bottom = 232.0
+
+[node name="GeyserTele" type="ColorRect" parent="."]
+material = SubResource("Mat_GeyserTele")
+offset_left = 220.0
+offset_top = 80.0
+offset_right = 330.0
+offset_bottom = 190.0
+
+[node name="GeyserBurstGround" type="ColorRect" parent="."]
+material = SubResource("Mat_GeyserBurstGround")
+offset_left = 370.0
+offset_top = 40.0
+offset_right = 506.0
+offset_bottom = 232.0
+
+[node name="GeyserBurst" type="ColorRect" parent="."]
+material = SubResource("Mat_GeyserBurst")
+offset_left = 370.0
+offset_top = 40.0
+offset_right = 506.0
+offset_bottom = 232.0
+
+[node name="AcidPuddle" type="ColorRect" parent="."]
+material = SubResource("Mat_AcidPuddle")
+offset_left = 550.0
+offset_top = 68.0
+offset_right = 686.0
+offset_bottom = 204.0
+
+[node name="CleaveSlamGround" type="ColorRect" parent="."]
+material = SubResource("Mat_CleaveSlamGround")
+offset_left = 730.0
+offset_top = 48.0
+offset_right = 906.0
+offset_bottom = 224.0
+
+[node name="CleaveSlam" type="ColorRect" parent="."]
+material = SubResource("Mat_CleaveSlam")
+offset_left = 730.0
+offset_top = 48.0
+offset_right = 906.0
+offset_bottom = 224.0
+
+[node name="Shockwave" type="ColorRect" parent="."]
+material = SubResource("Mat_Shockwave")
+offset_left = 40.0
+offset_top = 280.0
+offset_right = 168.0
+offset_bottom = 408.0
+
+[node name="SkillImpact" type="ColorRect" parent="."]
+material = SubResource("Mat_Impact")
+offset_left = 210.0
+offset_top = 274.0
+offset_right = 350.0
+offset_bottom = 414.0
+
+[node name="Brimstone" type="ColorRect" parent="."]
+material = SubResource("Mat_Brimstone")
+offset_left = 390.0
+offset_top = 326.0
+offset_right = 610.0
+offset_bottom = 362.0
+
+[node name="Laser" type="ColorRect" parent="."]
+material = SubResource("Mat_Laser")
+offset_left = 650.0
+offset_top = 320.0
+offset_right = 910.0
+offset_bottom = 368.0
+
+[node name="CircleCracks" type="ColorRect" parent="."]
+material = SubResource("Mat_Cracks")
+offset_left = 960.0
+offset_top = 40.0
+offset_right = 1360.0
+offset_bottom = 440.0

@@ -2,8 +2,30 @@
   "frameWidth": 42,
   "frameHeight": 45,
   "anims": {
-    "idle": { "frames": [0], "frameRate": 1, "repeat": -1 },
-    "walk": { "frames": [1, 2, 3], "frameRate": 3, "repeat": -1 },
-    "attack": { "frames": [4, 5], "frameRate": 3, "repeat": 0 }
+    "idle": {
+      "frames": [
+        0,
+        6
+      ],
+      "frameRate": 1,
+      "repeat": -1
+    },
+    "walk": {
+      "frames": [
+        1,
+        2,
+        3
+      ],
+      "frameRate": 3,
+      "repeat": -1
+    },
+    "attack": {
+      "frames": [
+        4,
+        5
+      ],
+      "frameRate": 3,
+      "repeat": 0
+    }
   }
 }

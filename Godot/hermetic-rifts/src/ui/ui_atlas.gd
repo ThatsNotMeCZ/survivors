@@ -9,6 +9,7 @@ const MANIFEST: String = "res://assets/sprites/manifest.json"
 const LUT_PATH: String = "res://assets/sprites/generated/resurrect-64-32x.png"
 const FONT_PATH: String = "res://assets/fonts/BillJilly.ttf"
 const INK_FONT_PATH: String = "res://assets/fonts/source-sans-3-latin-600-normal.woff"
+const FIFTEEN_SLICE_PATH: String = "res://src/ui/fifteen_slice_frame.gd"
 
 const ENTITY_GENERATED_PATHS: Dictionary = {
 	"flagellant": "players/vessel-flagellant.png",
@@ -71,6 +72,7 @@ static var _sidecar_defs: Dictionary = {}
 static var _sidecar_mtime: Dictionary = {}
 static var _loaded: bool = false
 static var _splash_tex: Texture2D
+static var _fifteen_slice_script: Script
 
 
 static func ensure_loaded() -> void:
@@ -194,6 +196,78 @@ static func _display_tracking(px: int) -> int:
 	if px >= 22:
 		return 2
 	return 0
+
+
+static func has_frame(id: String) -> bool:
+	ensure_loaded()
+	return _ui_frames.has(id)
+
+
+static func ui_atlas_tex() -> Texture2D:
+	ensure_loaded()
+	return _ui_tex
+
+
+static func frame_meta(id: String) -> Dictionary:
+	ensure_loaded()
+	return _ui_frames.get(id, {})
+
+
+static func frame_region(id: String, state: String = "idle") -> Rect2:
+	ensure_loaded()
+	return _rect_for(_ui_frames, id, state)
+
+
+static func mount_fifteen_slice(host: Control, id: String, state: String = "idle", node_name: String = "OrnateFrame") -> Control:
+	if host == null:
+		return null
+	if _fifteen_slice_script == null:
+		_fifteen_slice_script = load(FIFTEEN_SLICE_PATH) as Script
+	if _fifteen_slice_script == null:
+		return null
+	var frame_node := host.get_node_or_null(node_name) as Control
+	if frame_node == null or not frame_node.has_method("configure"):
+		if frame_node != null:
+			host.remove_child(frame_node)
+			frame_node.queue_free()
+		frame_node = _fifteen_slice_script.new() as Control
+		frame_node.name = node_name
+		host.add_child(frame_node)
+		host.move_child(frame_node, 0)
+	frame_node.call("configure", id, state)
+	return frame_node
+
+
+static func style_fifteen_slice_button(btn: Button, id: String, active: bool) -> void:
+	if btn == null:
+		return
+	var empty := StyleBoxEmpty.new()
+	btn.add_theme_stylebox_override("normal", empty)
+	btn.add_theme_stylebox_override("hover", empty)
+	btn.add_theme_stylebox_override("pressed", empty)
+	btn.add_theme_stylebox_override("disabled", empty)
+	btn.add_theme_stylebox_override("focus", empty_focus())
+	var base_st: String = "active" if active else "idle"
+	var hover_st: String = "active" if active else "hover"
+	var frame_node: Control = mount_fifteen_slice(btn, id, base_st, "CardFrame")
+	if frame_node == null:
+		return
+	btn.mouse_entered.connect(func() -> void:
+		if is_instance_valid(frame_node):
+			frame_node.call("set_state", hover_st)
+	)
+	btn.mouse_exited.connect(func() -> void:
+		if is_instance_valid(frame_node):
+			frame_node.call("set_state", base_st)
+	)
+	btn.button_down.connect(func() -> void:
+		if is_instance_valid(frame_node):
+			frame_node.call("set_state", "active")
+	)
+	btn.button_up.connect(func() -> void:
+		if is_instance_valid(frame_node):
+			frame_node.call("set_state", hover_st if btn.is_hovered() else base_st)
+	)
 
 
 static func frame(id: String) -> AtlasTexture:
@@ -630,6 +704,11 @@ static func _stylebox(id: String, state: String, margins: Dictionary, outset: Di
 	sb.content_margin_top = pad_tb
 	sb.content_margin_bottom = pad_tb
 	sb.draw_center = true
+	var entry: Dictionary = _ui_frames.get(id, {})
+	var nine_v: Variant = entry.get("nineSlice", null)
+	if typeof(nine_v) == TYPE_DICTIONARY and String((nine_v as Dictionary).get("repeat", "stretch")) == "tile":
+		sb.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+		sb.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	return sb
 
 

@@ -1,0 +1,8 @@
+[gd_resource type="AtlasTexture" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/atlas.png" id="1_pvtgf"]
+
+[resource]
+atlas = ExtResource("1_pvtgf")
+region = Rect2(8, 1760, 96, 256)
+filter_clip = true

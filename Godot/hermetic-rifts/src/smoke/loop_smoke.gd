@@ -342,8 +342,6 @@ func _steer(world: SimWorld, input: InputFrame, t: float, allow_portal_gems: boo
 			continue
 		if ai_t != "sniper" and ai_t != "charger":
 			continue
-		if ai_t == "sniper" and world.enemies.windup[i] > 0.34:
-			continue
 		var sdx: float = world.enemies.aim_x[i] - world.enemies.x[i]
 		var sdy: float = world.enemies.aim_y[i] - world.enemies.y[i]
 		var slen: float = sqrt(sdx * sdx + sdy * sdy)

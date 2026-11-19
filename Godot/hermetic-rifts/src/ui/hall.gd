@@ -358,30 +358,39 @@ func _refresh_nav(app: Node) -> void:
 		var col := VBoxContainer.new()
 		col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		col.offset_left = 8.0
-		col.offset_right = -8.0
-		col.offset_top = 6.0
-		col.offset_bottom = -8.0
-		col.add_theme_constant_override("separation", 6)
+		col.offset_left = 10.0
+		col.offset_right = -10.0
+		col.offset_top = 8.0
+		col.offset_bottom = -16.0
+		col.add_theme_constant_override("separation", 4)
 		var portrait := PanelContainer.new()
-		portrait.custom_minimum_size = Vector2(0, 76)
+		portrait.custom_minimum_size = Vector2(0, 74)
 		portrait.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var well := StyleBoxFlat.new()
-		well.bg_color = Color("120f14")
-		well.border_color = Color(0.769, 0.639, 0.353, 0.35)
-		well.set_border_width_all(1)
-		portrait.add_theme_stylebox_override("panel", well)
+		var portrait_id: String = "portrait-%s" % sid
+		var has_portrait: bool = UiAtlas.has_frame(portrait_id)
+		if has_portrait:
+			portrait.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		else:
+			var well := StyleBoxFlat.new()
+			well.bg_color = Color("120f14")
+			well.border_color = Color(0.769, 0.639, 0.353, 0.35)
+			well.set_border_width_all(1)
+			portrait.add_theme_stylebox_override("panel", well)
 		var art := TextureRect.new()
 		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		art.set_meta("hall_anim", sid)
-		art.modulate = Color.WHITE if unlocked else Color(0.0, 0.0, 0.0, 0.38)
-		var tex: Texture2D = UiAtlas.entity_frame(sid, "idle", 0.0)
-		if tex != null:
-			art.texture = tex
+		if has_portrait:
+			art.texture = UiAtlas.frame(portrait_id)
+			art.modulate = Color.WHITE if unlocked else Color(0.24, 0.22, 0.28, 0.92)
+		else:
+			art.set_meta("hall_anim", sid)
+			art.modulate = Color.WHITE if unlocked else Color(0.0, 0.0, 0.0, 0.38)
+			var tex: Texture2D = UiAtlas.entity_frame(sid, "idle", 0.0)
+			if tex != null:
+				art.texture = tex
 		portrait.add_child(art)
 		col.add_child(portrait)
 		var plate := Label.new()
@@ -410,12 +419,21 @@ func _select_vessel(sid: String, unlocked: bool) -> void:
 
 
 func _style_vessel_pick(btn: Button, active: bool, unlocked: bool) -> void:
-	var bg := Color("3a241c") if active else (Color("161319") if not unlocked else Color("1c191e"))
-	var border := UiAtlas.GOLD_MOLTEN if active else (Color("35303b") if not unlocked else Color("585c66"))
-	var hover := _pick_sb(Color("2a221c"), UiAtlas.BRASS_BRIGHT, active)
-	btn.add_theme_stylebox_override("normal", _pick_sb(bg, border, active))
-	btn.add_theme_stylebox_override("hover", hover)
-	btn.add_theme_stylebox_override("pressed", _pick_sb(Color("3a241c"), UiAtlas.GOLD_MOLTEN, true))
+	btn.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if UiAtlas.has_frame("hall-vessel-card"):
+		var normal_st: String = "active" if active else "idle"
+		var hover_st: String = "active" if active else "hover"
+		btn.add_theme_stylebox_override("normal", UiAtlas.nine_slice("hall-vessel-card", normal_st, Vector4.ZERO))
+		btn.add_theme_stylebox_override("hover", UiAtlas.nine_slice("hall-vessel-card", hover_st, Vector4.ZERO))
+		btn.add_theme_stylebox_override("pressed", UiAtlas.nine_slice("hall-vessel-card", "active", Vector4.ZERO))
+		btn.modulate = Color.WHITE if (unlocked or active) else Color(0.76, 0.74, 0.80, 1.0)
+	else:
+		var bg := Color("3a241c") if active else (Color("161319") if not unlocked else Color("1c191e"))
+		var border := UiAtlas.GOLD_MOLTEN if active else (Color("35303b") if not unlocked else Color("585c66"))
+		var hover := _pick_sb(Color("2a221c"), UiAtlas.BRASS_BRIGHT, active)
+		btn.add_theme_stylebox_override("normal", _pick_sb(bg, border, active))
+		btn.add_theme_stylebox_override("hover", hover)
+		btn.add_theme_stylebox_override("pressed", _pick_sb(Color("3a241c"), UiAtlas.GOLD_MOLTEN, true))
 	btn.add_theme_stylebox_override("focus", UiAtlas.empty_focus())
 	btn.add_theme_color_override("font_color", Color(0, 0, 0, 0))
 

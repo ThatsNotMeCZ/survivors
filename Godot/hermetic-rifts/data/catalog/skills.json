@@ -7,7 +7,7 @@
       "slot": "primary",
       "input": "hold",
       "cooldown": 0.28,
-      "heatGain": 0.065,
+      "heatGain": 0.045,
       "element": "fire",
       "lore": "A needle of fire. It only flies where you point.",
       "hook": "Fires searing bolts of flame toward your cursor.",
