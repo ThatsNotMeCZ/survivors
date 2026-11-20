@@ -1312,8 +1312,8 @@ func _suite_09_shaders_and_assets() -> bool:
 					off_count += 1
 		ok = _check(off_count == 0, "Suite 9: %s all pixels in resurrect-64 + #000000 (off=%d)" % [rel, off_count]) and ok
 
-	# 3. Check flagellant.json & astromancer.json anims
-	for ent_id: String in ["flagellant", "astromancer"]:
+	# 3. Check vessel JSON anims (runner, penitent, flagellant, astromancer) + dead frame not rotated idle
+	for ent_id: String in ["runner", "penitent", "flagellant", "astromancer"]:
 		var jpath: String = "res://assets/sprites/entities/%s.json" % ent_id
 		var jf: FileAccess = FileAccess.open(jpath, FileAccess.READ)
 		if not _check(jf != null, "Suite 9: open %s" % jpath):
@@ -1324,8 +1324,36 @@ func _suite_09_shaders_and_assets() -> bool:
 		if typeof(parsed) == TYPE_DICTIONARY:
 			var jd: Dictionary = parsed
 			var anims: Dictionary = DictUtil.d(jd, "anims")
-			ok = _check(int(jd.get("frameWidth", 0)) == 32 and int(jd.get("frameHeight", 0)) == 32, "Suite 9: %s frame size 32x32" % ent_id) and ok
-			ok = _check(anims.has("walk") and anims.has("idle") and anims.has("attack"), "Suite 9: %s has walk/idle/attack anims" % ent_id) and ok
+			var fw: int = int(jd.get("frameWidth", 0))
+			var fh: int = int(jd.get("frameHeight", 0))
+			if ent_id == "flagellant" or ent_id == "astromancer":
+				ok = _check(fw == 32 and fh == 32, "Suite 9: %s frame size 32x32" % ent_id) and ok
+				ok = _check(anims.has("walk") and anims.has("idle") and anims.has("attack") and anims.has("dead"), "Suite 9: %s has walk/idle/attack/dead anims" % ent_id) and ok
+			else:
+				ok = _check(fw == 48 and fh == 48, "Suite 9: %s frame size 48x48" % ent_id) and ok
+				ok = _check(anims.has("walk") and anims.has("idle") and anims.has("dead"), "Suite 9: %s has walk/idle/dead anims" % ent_id) and ok
+			var p_abs: String = ProjectSettings.globalize_path("res://assets/sprites/entities/%s.png" % ent_id)
+			var e_img: Image = Image.load_from_file(p_abs)
+			if _check(e_img != null and not e_img.is_empty(), "Suite 9: load entity PNG %s" % ent_id):
+				var idle_frames: Array = DictUtil.a(DictUtil.d(anims, "idle"), "frames")
+				var dead_frames: Array = DictUtil.a(DictUtil.d(anims, "dead"), "frames")
+				var f_idle: int = int(idle_frames[0]) if not idle_frames.is_empty() else 0
+				var f_dead: int = int(dead_frames[0]) if not dead_frames.is_empty() else 0
+				var idle_px: int = 0
+				var dead_px: int = 0
+				var rot_matches: int = 0
+				for y: int in fh:
+					for x: int in fw:
+						var ci: Color = e_img.get_pixel(f_idle * fw + x, y)
+						var cd: Color = e_img.get_pixel(f_dead * fw + x, y)
+						if ci.a8 > 0:
+							idle_px += 1
+						if cd.a8 > 0:
+							dead_px += 1
+						var cr: Color = e_img.get_pixel(f_idle * fw + y, fw - 1 - x)
+						if cd.a8 > 0 and cd == cr:
+							rot_matches += 1
+				ok = _check(dead_px > 50 and rot_matches < int(float(dead_px) * 0.65), "Suite 9: %s dead frame is authored corpse still (not rotated idle)" % ent_id) and ok
 	return ok
 
 
