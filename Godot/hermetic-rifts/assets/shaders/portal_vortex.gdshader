@@ -40,7 +40,7 @@ void fragment() {
 		c_hot = vec3(0.84, 0.98, 0.68);
 	}
 
-	float spin = u_time * (2.6 + u_hold * 4.0);
+	float spin = u_time * 0.75;
 	float arm = 0.5 + 0.5 * sin(ang * 3.0 - r * 7.5 + spin);
 	float swirl_band = smoothstep(0.88, 0.18, r) * (0.45 + 0.55 * step(0.42, arm));
 	float core = 1.0 - smoothstep(0.10, 0.38 + u_hold * 0.18, r);

@@ -1077,6 +1077,31 @@ func _suite_07_vessels_draft_portals(cat: Catalog) -> bool:
 	ok = _check(not demo_p.is_empty(), "Suite 7: demo_mode spawns demo-seal portal on Stage 2") and ok
 	SimLoop._activate_portal(w_demo, demo_p)
 	ok = _check(w_demo.demo_completed and w_demo.won, "Suite 7: demo-seal portal sets demo_completed = true") and ok
+
+	var w_gate: SimWorld = SimWorld.create(cat, "runner", [], [], 0x7010)
+	w_gate.boss_defeated = true
+	SimLoop.open_stage_portals(w_gate)
+	ok = _check(not w_gate.portals.is_empty(), "Suite 7: portal opens after boss for interact test") and ok
+	if not w_gate.portals.is_empty():
+		var gate_p: Dictionary = w_gate.portals[0]
+		var stage_before: String = w_gate.stage_id
+		w_gate.player.x = float(gate_p.get("x", 0.0))
+		w_gate.player.y = float(gate_p.get("y", 0.0))
+		w_gate.interact_pressed = false
+		SimLoop.step(w_gate, 2.0)
+		ok = _check(w_gate.stage_id == stage_before, "Suite 7: standing in portal does not activate") and ok
+		w_gate.interact_pressed = true
+		SimLoop.step(w_gate, 0.016)
+		ok = _check(w_gate.stage_id != stage_before, "Suite 7: interact activates portal") and ok
+
+	var w_die: SimWorld = SimWorld.create(cat, "runner", [], [], 0x7011)
+	w_die.player.hp = 0.0
+	SimLoop.step(w_die, 0.016)
+	ok = _check(w_die.phase == &"play" and w_die.dying, "Suite 7: HP 0 starts death linger in play") and ok
+	SimLoop.step(w_die, 1.0)
+	ok = _check(w_die.phase == &"play", "Suite 7: death linger still play after 1s") and ok
+	SimLoop.step(w_die, 1.1)
+	ok = _check(w_die.phase == &"defeat", "Suite 7: death linger opens defeat after 2s") and ok
 	return ok
 
 
@@ -1238,11 +1263,12 @@ func _suite_09_shaders_and_assets() -> bool:
 		"env/env-conduit-mask.png": Vector2i(32, 48),
 		"env/env-vent-grate.png": Vector2i(32, 32),
 		"env/mercury-geode.png": Vector2i(96, 32),
-		"env/obelisk-blood.png": Vector2i(32, 48),
-		"env/obelisk-essence.png": Vector2i(32, 48),
-		"env/obelisk-mask.png": Vector2i(32, 48),
-		"env/obelisk-reliquary.png": Vector2i(32, 48),
+		"env/obelisk-blood.png": Vector2i(64, 96),
+		"env/obelisk-essence.png": Vector2i(64, 96),
+		"env/obelisk-mask.png": Vector2i(64, 96),
+		"env/obelisk-reliquary.png": Vector2i(64, 96),
 		"pickups/essence-crystal.png": Vector2i(16, 16),
+		"pickups/treatise-scroll.png": Vector2i(16, 16),
 		"pickups/xp-cluster-gold.png": Vector2i(20, 20),
 		"pickups/xp-drop-medium.png": Vector2i(16, 16),
 		"pickups/xp-drop-small.png": Vector2i(12, 12),

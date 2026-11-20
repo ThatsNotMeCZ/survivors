@@ -10,7 +10,7 @@ signal abandon_pressed
 const ACTION_W: float = 288.0
 const ACTION_H: float = 58.0
 const PANEL_W: float = 340.0
-const INV_PAD: float = 70.0
+const INV_PAD: float = 28.0
 const ICON_IDS: Array[String] = ["icon-resume", "icon-archives", "icon-settings", "icon-seal", "icon-abandon"]
 const STEAM_WISHLIST_URL: String = "https://store.steampowered.com/app/0/"
 
@@ -178,8 +178,8 @@ func _build_right() -> Control:
 	inv_box.add_child(inv_stage)
 	_inv_list = GridContainer.new()
 	_inv_list.columns = 4
-	_inv_list.add_theme_constant_override("h_separation", 6)
-	_inv_list.add_theme_constant_override("v_separation", 6)
+	_inv_list.add_theme_constant_override("h_separation", 4)
+	_inv_list.add_theme_constant_override("v_separation", 4)
 	_inv_list.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	inv_stage.add_child(_inv_list)
 	_inv_empty = Label.new()
@@ -242,7 +242,7 @@ func _fill_inventory(world: SimWorld) -> void:
 		if _catalog != null and _catalog.has_item(inst.id):
 			rarity = String(_catalog.item(inst.id).get("rarity", "common"))
 		var chip := Button.new()
-		chip.custom_minimum_size = Vector2(36, 36)
+		chip.custom_minimum_size = Vector2(48, 48)
 		chip.flat = true
 		UiAtlas.attach_rarity_splash(chip, rarity)
 		var icon := TextureRect.new()

@@ -38,10 +38,9 @@ static func can_seal(world: SimWorld) -> bool:
 
 static func current_objective(world: SimWorld) -> Dictionary:
 	if world.portal_open:
-		var need: float = float(world.catalog.loop.get("portalHold", 1.4))
 		return {
 			"kind": &"portal",
-			"pct": clampf(world.portal_hold / maxf(need, 0.001), 0.0, 1.0) if need > 0.0 else 0.0,
+			"pct": 1.0 if world.portal_hold > 0.0 else 0.0,
 			"target_x": world.portal_x,
 			"target_y": world.portal_y,
 			"has_target": true,
@@ -219,7 +218,12 @@ static func step(world: SimWorld, dt: float) -> void:
 	_step_portal(world, dt)
 	_update_focus(world)
 	if world.player.hp <= 0.0 and not world.won:
-		world.phase = &"defeat"
+		if not world.dying:
+			world.dying = true
+			world.death_linger_remain = float(world.catalog.loop.get("deathLinger", 2.0))
+		world.death_linger_remain -= dt
+		if world.death_linger_remain <= 0.0:
+			world.phase = &"defeat"
 
 
 static func spawn_stage_boss(world: SimWorld) -> void:
@@ -367,24 +371,20 @@ static func _step_portal(world: SimWorld, dt: float) -> void:
 		open_stage_portals(world)
 	if not world.portal_open or world.portals.is_empty():
 		return
-	var hold_need: float = float(world.catalog.loop.get("portalHold", 1.4))
-	var active_hold: float = 0.0
+	var in_any: bool = false
 	for i: int in world.portals.size():
 		var portal: Dictionary = world.portals[i]
 		var px: float = float(portal.get("x", 0.0))
 		var py: float = float(portal.get("y", 0.0))
 		var pr: float = float(portal.get("radius", float(world.catalog.loop.get("portalRadius", 70.0))))
 		var dist: float = sqrt((world.player.x - px) ** 2.0 + (world.player.y - py) ** 2.0)
+		portal["hold"] = 0.0
 		if dist <= pr:
-			var h: float = float(portal.get("hold", 0.0)) + dt
-			portal["hold"] = h
-			active_hold = maxf(active_hold, h)
-			if h >= hold_need or world.interact_pressed:
+			in_any = true
+			if world.interact_pressed and world.player.hp > 0.0:
 				_activate_portal(world, portal)
 				return
-		else:
-			portal["hold"] = 0.0
-	world.portal_hold = active_hold
+	world.portal_hold = 1.0 if in_any else 0.0
 
 
 static func _activate_portal(world: SimWorld, portal: Dictionary) -> void:

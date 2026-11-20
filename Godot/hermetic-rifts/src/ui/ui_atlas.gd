@@ -541,6 +541,10 @@ static func resolve_entity_anim(id: String, anim: String) -> String:
 	var anims: Dictionary = def.get("anims", {})
 	if anims.has(anim):
 		return anim
+	if anim == "dead":
+		if anims.has("idle"):
+			return "idle"
+		return anim
 	if anim != "idle" and anim != "walk" and anims.has("attack"):
 		return "attack"
 	if anim == "walk" and anims.has("idle"):

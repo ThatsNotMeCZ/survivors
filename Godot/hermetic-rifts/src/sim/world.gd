@@ -51,6 +51,8 @@ var portal_open: bool = false
 var portal_x: float = 0.0
 var portal_y: float = 0.0
 var portal_hold: float = 0.0
+var dying: bool = false
+var death_linger_remain: float = 0.0
 var focus_kind: StringName = &"none"
 var focus_hp: float = 0.0
 var focus_max_hp: float = 0.0
@@ -296,8 +298,13 @@ func step(frames: Array[InputFrame], dt: float) -> void:
 		if player.burn_remain <= 0.0:
 			player.burn_stacks = 0
 			player.burn_dps = 0.0
-	SimSkills.try_skills(self, input)
-	_move_player(input, dt)
+	if player.hp > 0.0:
+		SimSkills.try_skills(self, input)
+		_move_player(input, dt)
+	else:
+		player.vx = 0.0
+		player.vy = 0.0
+		player.dash_remain = 0.0
 	projectiles.step(dt)
 	_detonate_impacts()
 	SimDirector.step(self, dt)

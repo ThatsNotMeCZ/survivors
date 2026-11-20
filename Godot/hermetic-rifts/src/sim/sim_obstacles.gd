@@ -765,7 +765,7 @@ static func _radius_for(world: SimWorld, type: StringName) -> float:
 	if type == &"conduit":
 		return float(DictUtil.d(cfg, "resonanceConduit").get("radius", 22.0))
 	if type == &"obelisk":
-		return float(DictUtil.d(cfg, "siphonObelisk").get("radius", 24.0))
+		return float(DictUtil.d(cfg, "siphonObelisk").get("radius", 20.0))
 	if type == &"geode":
 		return float(DictUtil.d(world.catalog.loop, "mercuryGeode").get("radius", 24.0))
 	if type == &"burn_trail":

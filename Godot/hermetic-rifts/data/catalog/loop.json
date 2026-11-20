@@ -15,6 +15,7 @@
   "levelChoices": 3,
   "portalRadius": 70,
   "portalHold": 1.4,
+  "deathLinger": 2.0,
   "director": {
     "creditRate": 3.0,
     "fodderCost": 6,

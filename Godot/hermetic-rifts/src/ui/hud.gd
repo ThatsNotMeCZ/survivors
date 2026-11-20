@@ -733,10 +733,13 @@ func _objective_copy(world: SimWorld, objective: Dictionary, outside: bool, ouro
 	if kind == &"hold" and outside:
 		sub = tr("ui.hud.sub.return")
 	elif kind == &"portal":
+		var key_txt: String = _action_key_label("interact", "E")
 		if ouroboros:
-			sub = tr("ui.hud.sub.cycle").replace("{n}", SimRng.cycle_numeral(world.cycle_index + 1)) if outside else tr("ui.hud.sub.seal")
+			sub = tr("ui.hud.sub.cycle").replace("{n}", SimRng.cycle_numeral(world.cycle_index + 1)).replace("{key}", key_txt) if outside else tr("ui.hud.sub.seal")
 		elif outside:
-			sub = tr("ui.hud.sub.stand")
+			sub = tr("ui.hud.sub.stand").replace("{key}", key_txt)
+		else:
+			sub = tr("ui.hud.sub.enter").replace("{key}", key_txt)
 	if kind == &"wait":
 		return {"kicker": "", "label": tr("ui.hud.seal"), "detail": "%d%%" % pct, "sub": ""}
 	if kind == &"hold":
@@ -961,7 +964,8 @@ func _draw_world_rings(world: SimWorld) -> void:
 		if obs.type == &"obelisk":
 			if obs.state != &"channeling" and obs.state != &"trial_active":
 				continue
-			var spos: Vector2 = _world_to_hud(obs.x, obs.y)
+			var ob_r: float = maxf(1.0, float(ob_cfg.get("radius", 20.0)))
+			var spos: Vector2 = _world_to_hud(obs.x, obs.y - (48.0 - ob_r))
 			if not hud_bounds.has_point(spos):
 				continue
 			if obs.state == &"channeling":

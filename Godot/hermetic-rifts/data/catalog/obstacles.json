@@ -63,7 +63,7 @@
       "min": 2,
       "max": 3
     },
-    "radius": 24,
+    "radius": 20,
     "interactRadius": 64,
     "channelDuration": 2.0,
     "variants": [

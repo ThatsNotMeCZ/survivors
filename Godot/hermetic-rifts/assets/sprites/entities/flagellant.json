@@ -3,28 +3,23 @@
   "frameHeight": 32,
   "anims": {
     "walk": {
-      "frames": [
-        0,
-        1,
-        2
-      ],
+      "frames": [0, 1, 2],
       "frameRate": 6,
       "repeat": -1
     },
     "idle": {
-      "frames": [
-        3,
-        4
-      ],
+      "frames": [3, 4],
       "frameRate": 1,
       "repeat": -1
     },
     "attack": {
-      "frames": [
-        4,
-        5
-      ],
+      "frames": [4, 5],
       "frameRate": 8,
+      "repeat": 0
+    },
+    "dead": {
+      "frames": [6],
+      "frameRate": 1,
       "repeat": 0
     }
   }

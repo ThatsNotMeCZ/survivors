@@ -16,7 +16,7 @@ static func grant_xp(world: SimWorld, amount: float) -> void:
 		world.level += 1
 		world.pending_levels += 1
 		world.xp_need = xp_for_level(float(loop.get("xpBase", 32.0)), float(loop.get("xpGrowth", 1.3)), world.level)
-	if world.pending_levels > 0 and world.phase == &"play":
+	if world.pending_levels > 0 and world.phase == &"play" and world.player.hp > 0.0:
 		world.is_bonus_draft = false
 		world.phase = &"levelup"
 		world.offer = roll_choices(world)
@@ -154,7 +154,7 @@ static func toggle_lock_choice(world: SimWorld, index: int) -> bool:
 
 
 static func open_bonus_draft_if_ready(world: SimWorld) -> bool:
-	if world.pending_bonus_drafts <= 0 or world.phase != &"play":
+	if world.pending_bonus_drafts <= 0 or world.phase != &"play" or world.player.hp <= 0.0:
 		return false
 	world.phase = &"levelup"
 	world.is_bonus_draft = true

@@ -3,6 +3,7 @@
   "frameHeight": 48,
   "anims": {
     "idle": { "frames": [3, 4], "frameRate": 1, "repeat": -1 },
-    "walk": { "frames": [0, 1, 2], "frameRate": 6, "repeat": -1 }
+    "walk": { "frames": [0, 1, 2], "frameRate": 6, "repeat": -1 },
+    "dead": { "frames": [5], "frameRate": 1, "repeat": 0 }
   }
 }

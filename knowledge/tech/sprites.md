@@ -13,6 +13,7 @@ Drop finished art into `web/public/sprites/`. Vite rewrites `manifest.json` on `
 | `ui/atlas.png` + `ui/atlas.json` | Shared HUD / menu texture atlas (`logo`, `btn-plaque`, `btn-cta` 141x84 / 141x124 hover, `desk-tab` 110x36 x 3 states, `desk-check-off`/`desk-check-on` 24x24, 20 `icon-*` 24x24 glyphs, `hall-banner`, `parchment-panel`, `pause-tablet`, `pause-inventory`, `hud-objective`, `hud-timer` 243x158, `hud-flask`, `hud-skill-dock`, `hud-inventory`, `card-{rarity}`, `portrait-{id}`). Supports 3-state buttons (`idle`, `hover`, `active`) and 9-slice (`nineSlice.margins` + `nineSlice.expandable`). |
 | `env/` | Future authored stage blocks (not random tile stamps). |
 | `fx/` | Optional VFX stills. Id matches a skill, a biome spit, or a sim FX kind (`hit`, `dash`, …). |
+| `generated/pickups/` | Godot arena drops (`xp-drop-*`, `essence-crystal`, `treatise-scroll` 16×16 lore parchment). |
 
 Do not put biome in the filename. The same Homunculus / mite ships in Cinder, Rime, and Glacial. A different look is a new catalog id with its own sheet.
 
@@ -35,6 +36,7 @@ Compact example:
   "anims": {
     "idle": { "frames": [3, 4], "frameRate": 1, "repeat": -1 },
     "walk": { "frames": [0, 1, 2], "frameRate": 6, "repeat": -1 },
+    "dead": { "frames": [9], "frameRate": 1, "repeat": 0 },
     "attack-fan": { "frames": [5, 6, 7, 8], "durations": [60, 60, 140, 80], "frameRate": 10, "repeat": 0 }
   }
 }
@@ -98,6 +100,7 @@ Themes map per stage: `cinder` (`cinder-yard`), `rime` (`rime-dock`), `glacial` 
 - **Hazards** (`radius: 68` -> `64×64 px` or `128×128 px`): `{theme}-hazard-0`, `{theme}-hazard-1` (frame 1 falls back to frame 0). Web feathers those frames into `env-blended-*` canvases and overlays `env-hazard-shader.ts`. Godot blits the same frames via `UiAtlas.env_image` and runs `env_hazard.gdshader` on the sprite (radial feather + Bayer rim, liquid-only bubble overlay).
 - **Volatiles** (`radius: 14` -> `32×32 px` or `24×24 px`): `{theme}-volatile` (`cinder-volatile`, `rime-volatile`, `glacial-volatile`).
 - **Objectives**: `{theme}-circle` (Transmutation Circle, `160×160 px` or `320×320 px`), `{theme}-portal` (The Rift, `96×96 px` or `140×140 px`).
+- **Siphon obelisks** (Godot standalone `generated/env/`, `radius: 20`): `obelisk-essence`, `obelisk-reliquary`, `obelisk-blood`, plus `obelisk-mask` for the state shader. **64×96 px** so they read taller than the vessel (32–48). Feet origin; collision disc matches the ~40 px painted plinth, not the empty canvas.
 - **Ambient specks** (`8×8 px` / `16×16 px`): `ambient-ash`, `ambient-ember`, `ambient-snow`, `ambient-mist`.
 
 ## Production (Pixelorama MCP)

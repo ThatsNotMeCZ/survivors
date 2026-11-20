@@ -471,7 +471,8 @@ func _apply_stage_art(world: SimWorld, theme: String) -> void:
 
 func _sync_player(world: SimWorld, dt: float, biome: String, reduce_vfx: bool) -> void:
 	var sid: String = String(world.survivor.get("id", "runner"))
-	var moving: bool = absf(world.player.x - _last_px) + absf(world.player.y - _last_py) > 0.4
+	var dead: bool = world.player.hp <= 0.0 or world.dying
+	var moving: bool = not dead and absf(world.player.x - _last_px) + absf(world.player.y - _last_py) > 0.4
 	_last_px = world.player.x
 	_last_py = world.player.y
 	if moving and world.player.dash_remain <= 0.0:
@@ -479,7 +480,7 @@ func _sync_player(world: SimWorld, dt: float, biome: String, reduce_vfx: bool) -
 	var bob: float = sin(_walk_phase) * 1.5 if moving else 0.0
 	if absf(_last_move_x) >= absf(_last_move_y) and not is_zero_approx(_last_move_x):
 		_last_facing_left = _last_move_x < 0.0
-	var ptex: Texture2D = UiAtlas.entity_frame(sid, "walk" if moving else "idle", world.run_time)
+	var ptex: Texture2D = UiAtlas.entity_frame(sid, "dead" if dead else ("walk" if moving else "idle"), 0.0 if dead else world.run_time)
 	if ptex != null:
 		player_sprite.texture = ptex
 	player_sprite.position = Vector2(world.player.x, world.player.y + bob)
@@ -1907,7 +1908,7 @@ func _sync_lores(world: SimWorld) -> void:
 		world_root.add_child(glow)
 		_lore_glows.append(glow)
 		var spr := Sprite2D.new()
-		spr.texture = _placeholder(Color("ffd35a"), 10)
+		spr.texture = _load_pickup_tex("pickups/treatise-scroll.png", 16, Color("ffd35a"))
 		spr.z_index = 3
 		world_root.add_child(spr)
 		_lore_sprites.append(spr)

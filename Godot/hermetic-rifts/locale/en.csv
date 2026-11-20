@@ -157,8 +157,9 @@ ui.hud.seal,The Seal Manifests
 ui.hud.kicker.guardian,Seal Guardian
 ui.hud.kicker.ouroboros,The Ouroboros Loop
 ui.hud.sub.return,The seal cools · Return to the Transmutation Circle
-ui.hud.sub.stand,Stand in the gate to descend
-ui.hud.sub.cycle,Stand in the gate for Cycle {n} · Press F to seal the working
+ui.hud.sub.stand,Approach the gate · Press {key} to descend
+ui.hud.sub.enter,Press {key} to descend
+ui.hud.sub.cycle,Press {key} for Cycle {n} · Press F to seal the working
 ui.hud.sub.seal,Press F to seal the working
 ui.hud.timer,Rift Timer
 ui.hud.cycle,Cycle {n}
